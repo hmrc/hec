@@ -1,9 +1,37 @@
+import scoverage.ScoverageKeys
 import uk.gov.hmrc.DefaultBuildSettings.integrationTestSettings
 import uk.gov.hmrc.sbtdistributables.SbtDistributablesPlugin.publishingSettings
+import wartremover.Wart
+import wartremover.WartRemover.autoImport.wartremoverErrors
 
 val appName = "hec"
 
 val silencerVersion = "1.7.3"
+
+lazy val wartremoverSettings =
+  Seq(
+    (Compile / compile / wartremoverErrors) ++= Warts.allBut(
+      Wart.DefaultArguments,
+      Wart.ImplicitConversion,
+      Wart.ImplicitParameter,
+      Wart.Nothing,
+      Wart.Overloading,
+      Wart.ToString
+    ),
+    wartremover.WartRemover.autoImport.wartremoverExcluded ++=
+      (Compile / routes).value ++
+        (baseDirectory.value ** "*.sc").get ++
+        Seq(sourceManaged.value / "main" / "sbt-buildinfo" / "BuildInfo.scala"),
+    (Test / compile / wartremoverErrors) --= Seq(Wart.Any, Wart.NonUnitStatements, Wart.Null, Wart.PublicInference)
+  )
+
+lazy val scoverageSettings =
+  Seq(
+    ScoverageKeys.coverageExcludedPackages := "<empty>;.*Reverse.*;.*(config|testonly|views).*;.*(BuildInfo|Routes).*",
+    ScoverageKeys.coverageMinimumStmtTotal := 80.00,
+    ScoverageKeys.coverageFailOnMinimum := true,
+    ScoverageKeys.coverageHighlighting := true
+  )
 
 lazy val microservice = Project(appName, file("."))
   .enablePlugins(play.sbt.PlayScala, SbtAutoBuildPlugin, SbtGitVersioning, SbtDistributablesPlugin)
@@ -24,3 +52,7 @@ lazy val microservice = Project(appName, file("."))
   .configs(IntegrationTest)
   .settings(integrationTestSettings(): _*)
   .settings(resolvers += Resolver.jcenterRepo)
+  .settings(wartremoverSettings: _*)
+  .settings(scoverageSettings: _*)
+  .settings(scalafmtOnCompile := true)
+  .settings(PlayKeys.playDefaultPort := 10105)
