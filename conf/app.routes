@@ -1,3 +1,2 @@
 # microservice specific routes
-
-GET        /hello-world             uk.gov.hmrc.hec.controllers.MicroserviceHelloWorldController.hello
+POST       /tax-check               uk.gov.hmrc.hec.controllers.TaxCheckController.saveTaxCheck

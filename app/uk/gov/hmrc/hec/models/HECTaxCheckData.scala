@@ -14,17 +14,18 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.hec.controllers
+package uk.gov.hmrc.hec.models
 
-import uk.gov.hmrc.play.bootstrap.backend.controller.BackendController
-import play.api.mvc.{Action, AnyContent, ControllerComponents}
-import javax.inject.{Inject, Singleton}
-import scala.concurrent.Future
+import play.api.libs.json.{Json, OFormat}
+import uk.gov.hmrc.hec.models.licence.LicenceDetails
 
-@Singleton()
-class MicroserviceHelloWorldController @Inject() (cc: ControllerComponents) extends BackendController(cc) {
+final case class HECTaxCheckData(
+  applicantDetails: ApplicantDetails,
+  licenceDetails: LicenceDetails
+)
 
-  def hello(): Action[AnyContent] = Action.async { _ =>
-    Future.successful(Ok("Hello world"))
-  }
+object HECTaxCheckData {
+
+  implicit val format: OFormat[HECTaxCheckData] = Json.format
+
 }
