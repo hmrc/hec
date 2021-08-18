@@ -14,16 +14,26 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.hec.models.ids
+package uk.gov.hmrc.hec.models
 
-import play.api.libs.functional.syntax.toInvariantFunctorOps
-import play.api.libs.json.Format
+import play.api.libs.json.{Json, OFormat}
+import uk.gov.hmrc.hec.models.ids.{CTUTR, NINO, SAUTR}
 
-final case class NINO(value: String) extends AnyVal
+sealed trait TaxDetails extends Product with Serializable
 
-object NINO {
+object TaxDetails {
 
-  implicit val format: Format[NINO] =
-    implicitly[Format[String]].inmap(NINO(_), _.value)
+  final case class IndividualTaxDetails(
+    nino: NINO,
+    sautr: Option[SAUTR]
+  ) extends TaxDetails
+
+  final case class CompanyTaxDetails(
+    ctutr: CTUTR
+  ) extends TaxDetails
+
+  implicit val individualTaxDetailsFormat: OFormat[IndividualTaxDetails] = Json.format
+
+  implicit val companyTaxDetailsFormat: OFormat[CompanyTaxDetails] = Json.format
 
 }

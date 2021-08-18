@@ -25,6 +25,8 @@ import play.api.mvc.Result
 import play.api.test.FakeRequest
 import play.api.test.Helpers._
 import uk.gov.hmrc.hec.models.ApplicantDetails.IndividualApplicantDetails
+import uk.gov.hmrc.hec.models.HECTaxCheckData.IndividualHECTaxCheckData
+import uk.gov.hmrc.hec.models.TaxDetails.IndividualTaxDetails
 import uk.gov.hmrc.hec.models.ids.{GGCredId, NINO, SAUTR}
 import uk.gov.hmrc.hec.models.licence.{LicenceDetails, LicenceExpiryDate, LicenceTimeTrading, LicenceType, LicenceValidityPeriod}
 import uk.gov.hmrc.hec.models.{DateOfBirth, Error, HECTaxCheck, HECTaxCheckCode, HECTaxCheckData, Name}
@@ -61,13 +63,17 @@ class TaxCheckControllerSpec extends ControllerSpec {
         controller.saveTaxCheck(request)
       }
 
-      val taxCheckData = HECTaxCheckData(
-        IndividualApplicantDetails(GGCredId(""), NINO(""), Some(SAUTR("")), Name("", ""), DateOfBirth(LocalDate.now())),
+      val taxCheckData: HECTaxCheckData = IndividualHECTaxCheckData(
+        IndividualApplicantDetails(GGCredId(""), Name("", ""), DateOfBirth(LocalDate.now())),
         LicenceDetails(
           LicenceType.ScrapMetalDealerSite,
           LicenceExpiryDate(LocalDate.now()),
           LicenceTimeTrading.EightYearsOrMore,
           LicenceValidityPeriod.UpToOneYear
+        ),
+        IndividualTaxDetails(
+          NINO(""),
+          Some(SAUTR(""))
         )
       )
 

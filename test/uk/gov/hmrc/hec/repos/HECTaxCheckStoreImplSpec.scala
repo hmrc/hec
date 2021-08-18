@@ -24,9 +24,11 @@ import play.api.Configuration
 import play.api.libs.json.{JsNumber, JsObject}
 import play.api.test.Helpers._
 import uk.gov.hmrc.cache.model.{Cache, Id}
-import uk.gov.hmrc.hec.models.ApplicantDetails.IndividualApplicantDetails
-import uk.gov.hmrc.hec.models.{DateOfBirth, HECTaxCheck, HECTaxCheckCode, HECTaxCheckData, Name}
-import uk.gov.hmrc.hec.models.ids.{GGCredId, NINO, SAUTR}
+import uk.gov.hmrc.hec.models.ApplicantDetails.CompanyApplicantDetails
+import uk.gov.hmrc.hec.models.HECTaxCheckData.CompanyHECTaxCheckData
+import uk.gov.hmrc.hec.models.TaxDetails.CompanyTaxDetails
+import uk.gov.hmrc.hec.models.{HECTaxCheck, HECTaxCheckCode}
+import uk.gov.hmrc.hec.models.ids.{CTUTR, GGCredId}
 import uk.gov.hmrc.hec.models.licence.{LicenceDetails, LicenceExpiryDate, LicenceTimeTrading, LicenceType, LicenceValidityPeriod}
 import uk.gov.hmrc.hec.util.TimeUtils
 import uk.gov.hmrc.http.HeaderCarrier
@@ -52,14 +54,15 @@ class HECTaxCheckStoreImplSpec extends AnyWordSpec with Matchers with Eventually
 
   "HECTaxCheckStoreImpl" must {
 
-    val taxCheckData = HECTaxCheckData(
-      IndividualApplicantDetails(GGCredId(""), NINO(""), Some(SAUTR("")), Name("", ""), DateOfBirth(LocalDate.now())),
+    val taxCheckData = CompanyHECTaxCheckData(
+      CompanyApplicantDetails(GGCredId("")),
       LicenceDetails(
         LicenceType.ScrapMetalDealerSite,
         LicenceExpiryDate(LocalDate.now()),
         LicenceTimeTrading.EightYearsOrMore,
         LicenceValidityPeriod.UpToOneYear
-      )
+      ),
+      CompanyTaxDetails(CTUTR(""))
     )
 
     val taxCheckCode = HECTaxCheckCode("code")

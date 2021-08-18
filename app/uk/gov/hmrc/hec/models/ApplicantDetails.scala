@@ -16,9 +16,8 @@
 
 package uk.gov.hmrc.hec.models
 
-import julienrf.json.derived
-import play.api.libs.json.OFormat
-import uk.gov.hmrc.hec.models.ids.{CTUTR, GGCredId, NINO, SAUTR}
+import play.api.libs.json.{Json, OFormat}
+import uk.gov.hmrc.hec.models.ids.GGCredId
 
 sealed trait ApplicantDetails extends Product with Serializable
 
@@ -26,17 +25,16 @@ object ApplicantDetails {
 
   final case class IndividualApplicantDetails(
     ggCredId: GGCredId,
-    nino: NINO,
-    sautr: Option[SAUTR],
     name: Name,
     dateOfBirth: DateOfBirth
   ) extends ApplicantDetails
 
   final case class CompanyApplicantDetails(
-    ggCredId: GGCredId,
-    ctutr: CTUTR
+    ggCredId: GGCredId
   ) extends ApplicantDetails
 
-  implicit val format: OFormat[ApplicantDetails] = derived.oformat()
+  implicit val individualApplicantDetailsFormat: OFormat[IndividualApplicantDetails] = Json.format
+
+  implicit val companyApplicantDetailsFormat: OFormat[CompanyApplicantDetails] = Json.format
 
 }

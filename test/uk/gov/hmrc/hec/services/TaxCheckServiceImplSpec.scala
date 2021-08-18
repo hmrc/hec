@@ -24,7 +24,9 @@ import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
 import play.api.test.Helpers._
 import uk.gov.hmrc.hec.models.ApplicantDetails.IndividualApplicantDetails
-import uk.gov.hmrc.hec.models.{DateOfBirth, Error, HECTaxCheck, HECTaxCheckCode, HECTaxCheckData, Name}
+import uk.gov.hmrc.hec.models.HECTaxCheckData.IndividualHECTaxCheckData
+import uk.gov.hmrc.hec.models.TaxDetails.IndividualTaxDetails
+import uk.gov.hmrc.hec.models.{DateOfBirth, Error, HECTaxCheck, HECTaxCheckCode, Name}
 import uk.gov.hmrc.hec.models.ids.{GGCredId, NINO, SAUTR}
 import uk.gov.hmrc.hec.models.licence.{LicenceDetails, LicenceExpiryDate, LicenceTimeTrading, LicenceType, LicenceValidityPeriod}
 import uk.gov.hmrc.hec.repos.HECTaxCheckStore
@@ -62,13 +64,17 @@ class TaxCheckServiceImplSpec extends AnyWordSpec with Matchers with MockFactory
 
       implicit val hc: HeaderCarrier = HeaderCarrier()
 
-      val taxCheckData = HECTaxCheckData(
-        IndividualApplicantDetails(GGCredId(""), NINO(""), Some(SAUTR("")), Name("", ""), DateOfBirth(LocalDate.now())),
+      val taxCheckData = IndividualHECTaxCheckData(
+        IndividualApplicantDetails(GGCredId(""), Name("", ""), DateOfBirth(LocalDate.now())),
         LicenceDetails(
           LicenceType.ScrapMetalDealerSite,
           LicenceExpiryDate(LocalDate.now()),
           LicenceTimeTrading.EightYearsOrMore,
           LicenceValidityPeriod.UpToOneYear
+        ),
+        IndividualTaxDetails(
+          NINO(""),
+          Some(SAUTR(""))
         )
       )
 
