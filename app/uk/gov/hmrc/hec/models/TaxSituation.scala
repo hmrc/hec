@@ -14,23 +14,22 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.hec.models.licence
+package uk.gov.hmrc.hec.models
 
 import julienrf.json.derived
 import play.api.libs.json.OFormat
 
-sealed trait LicenceType extends Product with Serializable
+sealed trait TaxSituation extends Product with Serializable
 
-object LicenceType {
+object TaxSituation {
 
-  case object DriverOfTaxisAndPrivateHires extends LicenceType
+  case object PAYE extends TaxSituation
 
-  case object OperatorOfPrivateHireVehicles extends LicenceType
+  case object SA extends TaxSituation
 
-  case object ScrapMetalMobileCollector extends LicenceType
+  case object SAPAYE extends TaxSituation
 
-  case object ScrapMetalDealerSite extends LicenceType
+  case object NotChargeable extends TaxSituation
 
-  implicit val format: OFormat[LicenceType] = derived.oformat()
-
+  implicit val format: OFormat[TaxSituation] = derived.oformat()
 }

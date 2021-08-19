@@ -29,7 +29,7 @@ import uk.gov.hmrc.hec.models.HECTaxCheckData.IndividualHECTaxCheckData
 import uk.gov.hmrc.hec.models.TaxDetails.IndividualTaxDetails
 import uk.gov.hmrc.hec.models.ids.{GGCredId, NINO, SAUTR}
 import uk.gov.hmrc.hec.models.licence.{LicenceDetails, LicenceExpiryDate, LicenceTimeTrading, LicenceType, LicenceValidityPeriod}
-import uk.gov.hmrc.hec.models.{DateOfBirth, Error, HECTaxCheck, HECTaxCheckCode, HECTaxCheckData, Name}
+import uk.gov.hmrc.hec.models.{DateOfBirth, Error, HECTaxCheck, HECTaxCheckCode, HECTaxCheckData, Name, TaxSituation}
 import uk.gov.hmrc.hec.services.TaxCheckService
 import uk.gov.hmrc.http.HeaderCarrier
 
@@ -73,7 +73,8 @@ class TaxCheckControllerSpec extends ControllerSpec {
         ),
         IndividualTaxDetails(
           NINO(""),
-          Some(SAUTR(""))
+          Some(SAUTR("")),
+          TaxSituation.PAYE
         )
       )
 

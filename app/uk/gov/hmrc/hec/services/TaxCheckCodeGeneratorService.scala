@@ -24,7 +24,7 @@ import scala.util.Random
 @ImplementedBy(classOf[TaxCheckCodeGeneratorServiceImpl])
 trait TaxCheckCodeGeneratorService {
 
-  def next(): HECTaxCheckCode
+  def generateTaxCheckCode(): HECTaxCheckCode
 
 }
 
@@ -39,7 +39,7 @@ class TaxCheckCodeGeneratorServiceImpl extends TaxCheckCodeGeneratorService {
     allowedLetters ::: allowedDigits
   }
 
-  def next(): HECTaxCheckCode = {
+  def generateTaxCheckCode(): HECTaxCheckCode = {
     val code = List.fill(9)(randomElement(allowedChars.toList)).mkString("")
     HECTaxCheckCode(code)
   }

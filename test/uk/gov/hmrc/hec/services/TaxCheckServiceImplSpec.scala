@@ -26,7 +26,7 @@ import play.api.test.Helpers._
 import uk.gov.hmrc.hec.models.ApplicantDetails.IndividualApplicantDetails
 import uk.gov.hmrc.hec.models.HECTaxCheckData.IndividualHECTaxCheckData
 import uk.gov.hmrc.hec.models.TaxDetails.IndividualTaxDetails
-import uk.gov.hmrc.hec.models.{DateOfBirth, Error, HECTaxCheck, HECTaxCheckCode, Name}
+import uk.gov.hmrc.hec.models.{DateOfBirth, Error, HECTaxCheck, HECTaxCheckCode, Name, TaxSituation}
 import uk.gov.hmrc.hec.models.ids.{GGCredId, NINO, SAUTR}
 import uk.gov.hmrc.hec.models.licence.{LicenceDetails, LicenceExpiryDate, LicenceTimeTrading, LicenceType, LicenceValidityPeriod}
 import uk.gov.hmrc.hec.repos.HECTaxCheckStore
@@ -50,7 +50,7 @@ class TaxCheckServiceImplSpec extends AnyWordSpec with Matchers with MockFactory
   val service = new TaxCheckServiceImpl(mockTaxCheckCodeGeneratorService, mockTaxCheckStore, config)
 
   def mockGenerateTaxCheckCode(taxCheckCode: HECTaxCheckCode) =
-    (mockTaxCheckCodeGeneratorService.next _).expects().returning(taxCheckCode)
+    (mockTaxCheckCodeGeneratorService.generateTaxCheckCode _).expects().returning(taxCheckCode)
 
   def mockStoreTaxCheck(taxCheck: HECTaxCheck)(result: Either[Error, Unit]) =
     (mockTaxCheckStore
@@ -74,7 +74,8 @@ class TaxCheckServiceImplSpec extends AnyWordSpec with Matchers with MockFactory
         ),
         IndividualTaxDetails(
           NINO(""),
-          Some(SAUTR(""))
+          Some(SAUTR("")),
+          TaxSituation.SAPAYE
         )
       )
 

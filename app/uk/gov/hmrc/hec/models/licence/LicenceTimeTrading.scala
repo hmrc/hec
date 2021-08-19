@@ -16,7 +16,6 @@
 
 package uk.gov.hmrc.hec.models.licence
 
-import cats.Eq
 import julienrf.json.derived
 import play.api.libs.json.OFormat
 
@@ -30,8 +29,6 @@ object LicenceTimeTrading {
   case object FourToEightYears extends LicenceTimeTrading
 
   case object EightYearsOrMore extends LicenceTimeTrading
-
-  implicit val eq: Eq[LicenceTimeTrading] = Eq.fromUniversalEquals
 
   implicit val format: OFormat[LicenceTimeTrading] = derived.oformat()
 }

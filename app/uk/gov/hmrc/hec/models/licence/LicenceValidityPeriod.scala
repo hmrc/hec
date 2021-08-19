@@ -16,7 +16,6 @@
 
 package uk.gov.hmrc.hec.models.licence
 
-import cats.Eq
 import julienrf.json.derived
 import play.api.libs.json.OFormat
 
@@ -29,8 +28,6 @@ object LicenceValidityPeriod {
   case object UpToThreeYears extends LicenceValidityPeriod
   case object UpToFourYears extends LicenceValidityPeriod
   case object UpToFiveYears extends LicenceValidityPeriod
-
-  implicit val eq: Eq[LicenceValidityPeriod] = Eq.fromUniversalEquals
 
   implicit val format: OFormat[LicenceValidityPeriod] = derived.oformat()
 

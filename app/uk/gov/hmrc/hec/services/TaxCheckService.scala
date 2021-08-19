@@ -49,7 +49,7 @@ class TaxCheckServiceImpl @Inject() (
   override def saveTaxCheck(
     taxCheckData: HECTaxCheckData
   )(implicit hc: HeaderCarrier): EitherT[Future, Error, HECTaxCheck] = {
-    val taxCheckCode = taxCheckCodeGeneratorService.next()
+    val taxCheckCode = taxCheckCodeGeneratorService.generateTaxCheckCode()
     val expiryDate   = TimeUtils.today().plusDays(expiresAfter.toDays)
     val taxCheck     = HECTaxCheck(taxCheckData, taxCheckCode, expiryDate)
 

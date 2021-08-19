@@ -27,7 +27,7 @@ class TaxCheckCodeGeneratorServiceImplSpec extends AnyWordSpec with Matchers {
   "TaxCheckCodeGeneratorServiceImplSpec" must {
 
     "generate a code which doesn't contain any disallowed characters" in {
-      val codes = List.fill(10000)(service.next())
+      val codes = List.fill(10000)(service.generateTaxCheckCode())
 
       codes.foreach { case HECTaxCheckCode(code) =>
         withClue(s"For code $code: ") {
