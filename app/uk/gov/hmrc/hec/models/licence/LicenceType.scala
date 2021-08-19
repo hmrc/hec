@@ -14,23 +14,23 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.hec.controllers
+package uk.gov.hmrc.hec.models.licence
 
-import org.scalatest.matchers.should.Matchers
-import org.scalatest.wordspec.AnyWordSpec
-import play.api.http.Status
-import play.api.test.Helpers._
-import play.api.test.{FakeRequest, Helpers}
+import julienrf.json.derived
+import play.api.libs.json.OFormat
 
-class MicroserviceHelloWorldControllerSpec extends AnyWordSpec with Matchers {
+sealed trait LicenceType extends Product with Serializable
 
-  private val fakeRequest = FakeRequest("GET", "/")
-  private val controller  = new MicroserviceHelloWorldController(Helpers.stubControllerComponents())
+object LicenceType {
 
-  "GET /" should {
-    "return 200" in {
-      val result = controller.hello()(fakeRequest)
-      status(result) shouldBe Status.OK
-    }
-  }
+  case object DriverOfTaxisAndPrivateHires extends LicenceType
+
+  case object OperatorOfPrivateHireVehicles extends LicenceType
+
+  case object ScrapMetalMobileCollector extends LicenceType
+
+  case object ScrapMetalDealerSite extends LicenceType
+
+  implicit val format: OFormat[LicenceType] = derived.oformat()
+
 }
