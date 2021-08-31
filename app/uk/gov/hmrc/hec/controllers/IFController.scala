@@ -19,7 +19,6 @@ package uk.gov.hmrc.hec.controllers
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 
-import cats.instances.future._
 import com.google.inject.{Inject, Singleton}
 import play.api.libs.json.Json
 import play.api.mvc.{Action, AnyContent, ControllerComponents}
@@ -29,6 +28,10 @@ import uk.gov.hmrc.hec.services.IFService
 import uk.gov.hmrc.hec.util.Logging
 import uk.gov.hmrc.hec.util.Logging.LoggerOps
 import uk.gov.hmrc.play.bootstrap.backend.controller.BackendController
+
+import cats.data.Validated
+import cats.data.Validated._
+import cats.implicits._
 
 import scala.concurrent.{ExecutionContext, Future}
 
@@ -40,9 +43,6 @@ class IFController @Inject() (
     extends BackendController(cc)
     with Logging {
 
-  private def getError[A](optional: Option[A], error: String) = if (optional.isEmpty) Some(error) else None
-  private def collateErrors(errors: Seq[Option[String]])      = errors.collect({ case Some(v) => v }).mkString("; ")
-
   /**
     * Fetch individual user's self-assessment status
     * @param utr Self-assessment UTR
@@ -50,11 +50,13 @@ class IFController @Inject() (
     * @return Self-assessment status with UTR and tax year
     */
   def getSAStatus(utr: String, taxYear: String): Action[AnyContent] = Action.async { implicit request =>
-    val validSAUTROpt   = SAUTR.fromString(utr)
-    val validTaxYearOpt = TaxYear.fromString(taxYear)
+    val sautrValidation   = SAUTR.fromString(utr).toValid("Invalid SAUTR")
+    val taxYearValidation = TaxYear.fromString(taxYear).toValid("Invalid tax year")
 
-    (validSAUTROpt, validTaxYearOpt) match {
-      case (Some(utr), Some(year)) =>
+    @SuppressWarnings(Array("org.wartremover.warts.Any"))
+    val validation = (sautrValidation, taxYearValidation).mapN((_, _))
+    validation match {
+      case Valid((utr, year)) =>
         IFService
           .getSAStatus(utr, year)
           .fold(
@@ -64,18 +66,7 @@ class IFController @Inject() (
             },
             saStatus => Ok(Json.toJson(saStatus))
           )
-
-      case (utr, year) =>
-        Future.successful(
-          BadRequest(
-            collateErrors(
-              Seq(
-                getError(utr, "Invalid SAUTR"),
-                getError(year, "Invalid tax year")
-              )
-            )
-          )
-        )
+      case Invalid(e)         => Future.successful(BadRequest(e.toList.mkString(";")))
     }
   }
 
@@ -91,18 +82,20 @@ class IFController @Inject() (
     fromDate: String,
     toDate: String
   ): Action[AnyContent] = Action.async { implicit request =>
-    val validCTUTROpt = CTUTR.fromString(utr)
+    def parsedDate(dateStr: String, error: String): Validated[String, LocalDate] =
+      try LocalDate.parse(dateStr, DateTimeFormatter.ISO_DATE).valid
+      catch {
+        case _: Exception => invalid(error)
+      }
 
-    def parsedDate(dateStr: String): Option[LocalDate] = try Some(LocalDate.parse(dateStr, DateTimeFormatter.ISO_DATE))
-    catch {
-      case _: Exception => None
-    }
+    val ctutrValidation: Validated[String, CTUTR]        = CTUTR.fromString(utr).toValid("Invalid CTUTR")
+    val fromDateValidation: Validated[String, LocalDate] = parsedDate(fromDate, "Invalid fromDate format")
+    val toDateValidation: Validated[String, LocalDate]   = parsedDate(toDate, "Invalid toDate format")
 
-    val validFromDateOpt = parsedDate(fromDate)
-    val validToDateOpt   = parsedDate(toDate)
-
-    (validCTUTROpt, validFromDateOpt, validToDateOpt) match {
-      case (Some(utr), Some(from), Some(to)) =>
+    @SuppressWarnings(Array("org.wartremover.warts.Any"))
+    val validation = (ctutrValidation, fromDateValidation, toDateValidation).mapN((_, _, _))
+    validation match {
+      case Valid((utr, from, to)) =>
         IFService
           .getCTStatus(utr, from, to)
           .fold(
@@ -113,18 +106,7 @@ class IFController @Inject() (
             ctStatus => Ok(Json.toJson(ctStatus))
           )
 
-      case (utr, from, to) =>
-        Future.successful(
-          BadRequest(
-            collateErrors(
-              Seq(
-                getError(utr, "Invalid CTUTR"),
-                getError(from, "Invalid fromDate format"),
-                getError(to, "Invalid toDate format")
-              )
-            )
-          )
-        )
+      case Invalid(e) => Future.successful(BadRequest(e.toList.mkString(";")))
     }
   }
 }

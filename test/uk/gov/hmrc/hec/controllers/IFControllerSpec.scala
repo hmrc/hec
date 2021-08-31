@@ -129,8 +129,7 @@ class IFControllerSpec extends ControllerSpec {
       "return a 400 (bad request)" when {
 
         def testBadRequest(utr: String, fromDate: String, toDate: String) = {
-          val call    = routes.IFController.getCTStatus(utr, fromDate, toDate)
-          val request = FakeRequest(call)
+          val request = FakeRequest()
           val result  = controller.getCTStatus(utr, fromDate, toDate)(request)
           status(result) shouldBe BAD_REQUEST
         }
@@ -152,9 +151,7 @@ class IFControllerSpec extends ControllerSpec {
 
         "there is an error fetching the CT status" in {
           mockGetCTStatus(CTUTR(validCtutr), fromDate, toDate)(Left(Error(new Exception("some error"))))
-
-          val call    = routes.IFController.getCTStatus(validCtutr, fromDateStr, toDateStr)
-          val request = FakeRequest(call)
+          val request = FakeRequest()
 
           val result = controller.getCTStatus(validCtutr, fromDateStr, toDateStr)(request)
           status(result) shouldBe INTERNAL_SERVER_ERROR
@@ -175,8 +172,7 @@ class IFControllerSpec extends ControllerSpec {
           )
           mockGetCTStatus(utr, fromDate, toDate)(Right(response))
 
-          val call    = routes.IFController.getCTStatus(validCtutr, fromDateStr, toDateStr)
-          val request = FakeRequest(call)
+          val request = FakeRequest()
           val result  = controller.getCTStatus(validCtutr, fromDateStr, toDateStr)(request)
           status(result) shouldBe OK
         }
