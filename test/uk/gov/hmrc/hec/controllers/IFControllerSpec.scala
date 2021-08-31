@@ -62,23 +62,24 @@ class IFControllerSpec extends ControllerSpec {
 
       "return a 400 (bad request)" when {
 
-        def testBadRequest(utr: String, taxYear: String) = {
+        def testBadRequest(utr: String, taxYear: String, errorStr: String) = {
           val call    = routes.IFController.getSAStatus(utr, taxYear)
           val request = FakeRequest(call)
           val result  = controller.getSAStatus(utr, taxYear)(request)
-          status(result) shouldBe BAD_REQUEST
+          status(result)          shouldBe BAD_REQUEST
+          contentAsString(result) shouldBe errorStr
         }
 
-        "SAUTR in is invalid" in {
-          testBadRequest("invalid-utr", "2020")
+        "SAUTR is invalid" in {
+          testBadRequest("invalid-utr", "2020", "Invalid SAUTR")
         }
 
         "tax year format is invalid" in {
-          testBadRequest(validSautr, "202")
+          testBadRequest(validSautr, "202", "Invalid tax year")
         }
 
         "SAUTR and tax year format are both invalid" in {
-          testBadRequest("invalid-sautr", "202")
+          testBadRequest("invalid-sautr", "202", "Invalid SAUTR; Invalid tax year")
         }
       }
 
@@ -128,22 +129,23 @@ class IFControllerSpec extends ControllerSpec {
 
       "return a 400 (bad request)" when {
 
-        def testBadRequest(utr: String, fromDate: String, toDate: String) = {
+        def testBadRequest(utr: String, fromDate: String, toDate: String, errorStr: String) = {
           val request = FakeRequest()
           val result  = controller.getCTStatus(utr, fromDate, toDate)(request)
-          status(result) shouldBe BAD_REQUEST
+          status(result)          shouldBe BAD_REQUEST
+          contentAsString(result) shouldBe errorStr
         }
 
-        "CTUTR in is invalid" in {
-          testBadRequest("invalid-utr", fromDateStr, toDateStr)
+        "CTUTR is invalid" in {
+          testBadRequest("invalid-utr", fromDateStr, toDateStr, "Invalid CTUTR")
         }
 
         "from date format is invalid" in {
-          testBadRequest(validCtutr, "invalid date", toDateStr)
+          testBadRequest(validCtutr, "invalid date", toDateStr, "Invalid fromDate format")
         }
 
         "to date format is invalid" in {
-          testBadRequest(validCtutr, fromDateStr, "invalid date")
+          testBadRequest(validCtutr, fromDateStr, "invalid date", "Invalid toDate format")
         }
       }
 

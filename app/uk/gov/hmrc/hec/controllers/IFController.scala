@@ -28,8 +28,7 @@ import uk.gov.hmrc.hec.services.IFService
 import uk.gov.hmrc.hec.util.Logging
 import uk.gov.hmrc.hec.util.Logging.LoggerOps
 import uk.gov.hmrc.play.bootstrap.backend.controller.BackendController
-
-import cats.data.Validated
+import cats.data.{NonEmptyList, Validated, ValidatedNel}
 import cats.data.Validated._
 import cats.implicits._
 
@@ -50,8 +49,8 @@ class IFController @Inject() (
     * @return Self-assessment status with UTR and tax year
     */
   def getSAStatus(utr: String, taxYear: String): Action[AnyContent] = Action.async { implicit request =>
-    val sautrValidation   = SAUTR.fromString(utr).toValid("Invalid SAUTR")
-    val taxYearValidation = TaxYear.fromString(taxYear).toValid("Invalid tax year")
+    val sautrValidation   = SAUTR.fromString(utr).toValidNel("Invalid SAUTR")
+    val taxYearValidation = TaxYear.fromString(taxYear).toValidNel("Invalid tax year")
 
     @SuppressWarnings(Array("org.wartremover.warts.Any"))
     val validation = (sautrValidation, taxYearValidation).mapN((_, _))
@@ -66,7 +65,7 @@ class IFController @Inject() (
             },
             saStatus => Ok(Json.toJson(saStatus))
           )
-      case Invalid(e)         => Future.successful(BadRequest(e.toList.mkString(";")))
+      case Invalid(e)         => Future.successful(BadRequest(e.toList.mkString("; ")))
     }
   }
 
@@ -82,15 +81,15 @@ class IFController @Inject() (
     fromDate: String,
     toDate: String
   ): Action[AnyContent] = Action.async { implicit request =>
-    def parsedDate(dateStr: String, error: String): Validated[String, LocalDate] =
+    def parsedDate(dateStr: String, error: String): Validated[NonEmptyList[String], LocalDate] =
       try LocalDate.parse(dateStr, DateTimeFormatter.ISO_DATE).valid
       catch {
-        case _: Exception => invalid(error)
+        case _: Exception => invalidNel(error)
       }
 
-    val ctutrValidation: Validated[String, CTUTR]        = CTUTR.fromString(utr).toValid("Invalid CTUTR")
-    val fromDateValidation: Validated[String, LocalDate] = parsedDate(fromDate, "Invalid fromDate format")
-    val toDateValidation: Validated[String, LocalDate]   = parsedDate(toDate, "Invalid toDate format")
+    val ctutrValidation: ValidatedNel[String, CTUTR]        = CTUTR.fromString(utr).toValidNel("Invalid CTUTR")
+    val fromDateValidation: ValidatedNel[String, LocalDate] = parsedDate(fromDate, "Invalid fromDate format")
+    val toDateValidation: ValidatedNel[String, LocalDate]   = parsedDate(toDate, "Invalid toDate format")
 
     @SuppressWarnings(Array("org.wartremover.warts.Any"))
     val validation = (ctutrValidation, fromDateValidation, toDateValidation).mapN((_, _, _))
