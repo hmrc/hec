@@ -64,8 +64,7 @@ class IFControllerSpec extends ControllerSpec {
       "return a 400 (bad request)" when {
 
         def testBadRequest(utr: String, taxYear: String, errorStr: String) = {
-          val call    = routes.IFController.getSAStatus(utr, taxYear)
-          val request = FakeRequest(call)
+          val request = FakeRequest()
           val result  = controller.getSAStatus(utr, taxYear)(request)
           status(result)          shouldBe BAD_REQUEST
           contentAsString(result) shouldBe errorStr
@@ -90,8 +89,7 @@ class IFControllerSpec extends ControllerSpec {
           val taxYear = "2020"
           mockGetSAStatus(SAUTR(validSautr), TaxYear(2020))(Left(BackendError(Error(new Exception("some error")))))
 
-          val call    = routes.IFController.getSAStatus(validSautr, taxYear)
-          val request = FakeRequest(call)
+          val request = FakeRequest()
 
           val result = controller.getSAStatus(validSautr, taxYear)(request)
           status(result) shouldBe INTERNAL_SERVER_ERROR
@@ -105,8 +103,7 @@ class IFControllerSpec extends ControllerSpec {
           val taxYear = "2020"
           mockGetSAStatus(SAUTR(validSautr), TaxYear(2020))(Left(DataError("some error")))
 
-          val call    = routes.IFController.getSAStatus(validSautr, taxYear)
-          val request = FakeRequest(call)
+          val request = FakeRequest()
 
           val result = controller.getSAStatus(validSautr, taxYear)(request)
           status(result) shouldBe NOT_FOUND
@@ -127,8 +124,7 @@ class IFControllerSpec extends ControllerSpec {
           )
           mockGetSAStatus(utr, taxYear)(Right(response))
 
-          val call    = routes.IFController.getSAStatus(validSautr, taxYearStr)
-          val request = FakeRequest(call)
+          val request = FakeRequest()
           val result  = controller.getSAStatus(validSautr, taxYearStr)(request)
           status(result) shouldBe OK
         }
