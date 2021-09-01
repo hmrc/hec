@@ -22,7 +22,7 @@ import java.util.UUID
 import cats.data.EitherT
 import cats.implicits._
 import com.google.inject.{ImplementedBy, Inject, Singleton}
-import play.api.http.Status.OK
+import play.api.http.Status.{NOT_FOUND, OK}
 import play.api.libs.json.{Json, Reads}
 import uk.gov.hmrc.hec.connectors.IFConnector
 import uk.gov.hmrc.hec.models.ids.{CTUTR, SAUTR}
@@ -67,7 +67,7 @@ class IFServiceImpl @Inject() (
       case Left(_)         => Left(BackendError(Error(s"$responseError; could not parse body")))
       case Right(failures) =>
         val errorMsg = s"$responseError - ${failures.failures}"
-        if (httpResponse.status === 404 && failures.failures.exists(_.code === "NO_DATA_FOUND")) {
+        if (httpResponse.status === NOT_FOUND && failures.failures.exists(_.code === "NO_DATA_FOUND")) {
           Left(DataNotFoundError(errorMsg))
         } else {
           Left(BackendError(Error(errorMsg)))
