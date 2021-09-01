@@ -18,6 +18,7 @@ package uk.gov.hmrc.hec.connectors
 
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
+import java.util.UUID
 
 import cats.data.EitherT
 import com.google.inject.{ImplementedBy, Inject, Singleton}
@@ -32,7 +33,7 @@ import scala.concurrent.{ExecutionContext, Future}
 @ImplementedBy(classOf[IFConnectorImpl])
 trait IFConnector {
 
-  def getSAStatus(utr: SAUTR, taxYear: TaxYear, correlationId: String)(implicit
+  def getSAStatus(utr: SAUTR, taxYear: TaxYear, correlationId: UUID)(implicit
     hc: HeaderCarrier
   ): EitherT[Future, Error, HttpResponse]
 
@@ -40,7 +41,7 @@ trait IFConnector {
     utr: CTUTR,
     startDate: LocalDate,
     endDate: LocalDate,
-    correlationId: String
+    correlationId: UUID
   )(implicit hc: HeaderCarrier): EitherT[Future, Error, HttpResponse]
 
 }
@@ -64,16 +65,16 @@ class IFConnectorImpl @Inject() (http: HttpClient, servicesConfig: ServicesConfi
   private val bearerToken = servicesConfig.getString("microservice.services.integration-framework.bearer-token")
   private val environment = servicesConfig.getString("microservice.services.integration-framework.environment")
 
-  private def headers(correlationId: String): Seq[(String, String)] = Seq(
+  private def headers(correlationId: UUID): Seq[(String, String)] = Seq(
     "Authorization" -> s"Bearer $bearerToken",
     "Environment"   -> environment,
-    "CorrelationId" -> correlationId
+    "CorrelationId" -> correlationId.toString
   )
 
   override def getSAStatus(
     utr: SAUTR,
     taxYear: TaxYear,
-    correlationId: String
+    correlationId: UUID
   )(implicit
     hc: HeaderCarrier
   ): EitherT[Future, Error, HttpResponse] =
@@ -92,7 +93,7 @@ class IFConnectorImpl @Inject() (http: HttpClient, servicesConfig: ServicesConfi
     utr: CTUTR,
     startDate: LocalDate,
     endDate: LocalDate,
-    correlationId: String
+    correlationId: UUID
   )(implicit
     hc: HeaderCarrier
   ): EitherT[Future, Error, HttpResponse] =

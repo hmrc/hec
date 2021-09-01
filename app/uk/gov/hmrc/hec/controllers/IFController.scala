@@ -43,7 +43,7 @@ class IFController @Inject() (
     extends BackendController(cc)
     with Logging {
 
-  private def correlationId = UUID.randomUUID().toString
+  private def correlationId: UUID = UUID.randomUUID()
 
   /**
     * Fetch individual user's self-assessment status

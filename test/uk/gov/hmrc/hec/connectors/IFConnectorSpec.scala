@@ -17,6 +17,7 @@
 package uk.gov.hmrc.hec.connectors
 
 import java.time.LocalDate
+import java.util.UUID
 
 import com.typesafe.config.ConfigFactory
 import org.scalamock.scalatest.MockFactory
@@ -50,11 +51,11 @@ class IFConnectorSpec extends AnyWordSpec with Matchers with MockFactory with Ht
   "IFConnectorImpl" when {
 
     val utr           = "1234567890"
-    val correlationId = "correlationId"
+    val correlationId = UUID.randomUUID()
     val headers       = Seq(
       "Authorization" -> s"Bearer $bearerToken",
       "Environment"   -> environment,
-      "CorrelationId" -> correlationId
+      "CorrelationId" -> correlationId.toString
     )
 
     implicit val hc: HeaderCarrier = HeaderCarrier()

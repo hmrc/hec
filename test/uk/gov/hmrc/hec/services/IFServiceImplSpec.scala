@@ -17,6 +17,7 @@
 package uk.gov.hmrc.hec.services
 
 import java.time.LocalDate
+import java.util.UUID
 
 import cats.data.EitherT
 import cats.instances.future._
@@ -42,13 +43,13 @@ class IFServiceImplSpec extends AnyWordSpec with Matchers with MockFactory {
 
   def mockGetSAStatus(utr: SAUTR, taxYear: TaxYear)(response: Either[Error, HttpResponse]) =
     (mockIFConnector
-      .getSAStatus(_: SAUTR, _: TaxYear, _: String)(_: HeaderCarrier))
+      .getSAStatus(_: SAUTR, _: TaxYear, _: UUID)(_: HeaderCarrier))
       .expects(utr, taxYear, *, *)
       .returning(EitherT.fromEither[Future](response))
 
   def mockGetCTStatus(utr: CTUTR, fromDate: LocalDate, toDate: LocalDate)(response: Either[Error, HttpResponse]) =
     (mockIFConnector
-      .getCTStatus(_: CTUTR, _: LocalDate, _: LocalDate, _: String)(_: HeaderCarrier))
+      .getCTStatus(_: CTUTR, _: LocalDate, _: LocalDate, _: UUID)(_: HeaderCarrier))
       .expects(utr, fromDate, toDate, *, *)
       .returning(EitherT.fromEither[Future](response))
 
@@ -62,7 +63,7 @@ class IFServiceImplSpec extends AnyWordSpec with Matchers with MockFactory {
 
       val utr           = SAUTR("some-sa-utr")
       val taxYear       = TaxYear(2020)
-      val correlationId = "correlationId"
+      val correlationId = UUID.randomUUID()
 
       "return an error" when {
 
@@ -153,7 +154,7 @@ class IFServiceImplSpec extends AnyWordSpec with Matchers with MockFactory {
       val utr           = CTUTR("some-ct-utr")
       val fromDate      = LocalDate.of(2020, 10, 1)
       val toDate        = LocalDate.of(2021, 10, 1)
-      val correlationId = "correlationId"
+      val correlationId = UUID.randomUUID()
 
       "return an error" when {
 

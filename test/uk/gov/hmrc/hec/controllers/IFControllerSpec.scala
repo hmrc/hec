@@ -17,6 +17,7 @@
 package uk.gov.hmrc.hec.controllers
 
 import java.time.LocalDate
+import java.util.UUID
 
 import cats.data.EitherT
 import cats.instances.future._
@@ -45,13 +46,13 @@ class IFControllerSpec extends ControllerSpec {
 
   def mockGetSAStatus(utr: SAUTR, taxYear: TaxYear)(result: Either[IFError, SAStatusResponse]) =
     (mockIFService
-      .getSAStatus(_: SAUTR, _: TaxYear, _: String)(_: HeaderCarrier))
+      .getSAStatus(_: SAUTR, _: TaxYear, _: UUID)(_: HeaderCarrier))
       .expects(utr, taxYear, *, *)
       .returning(EitherT.fromEither(result))
 
   def mockGetCTStatus(utr: CTUTR, startDate: LocalDate, endDate: LocalDate)(result: Either[IFError, CTStatusResponse]) =
     (mockIFService
-      .getCTStatus(_: CTUTR, _: LocalDate, _: LocalDate, _: String)(_: HeaderCarrier))
+      .getCTStatus(_: CTUTR, _: LocalDate, _: LocalDate, _: UUID)(_: HeaderCarrier))
       .expects(utr, startDate, endDate, *, *)
       .returning(EitherT.fromEither(result))
 

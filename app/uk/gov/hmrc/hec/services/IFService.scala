@@ -17,6 +17,7 @@
 package uk.gov.hmrc.hec.services
 
 import java.time.LocalDate
+import java.util.UUID
 
 import cats.data.EitherT
 import cats.implicits._
@@ -35,11 +36,11 @@ import scala.concurrent.{ExecutionContext, Future}
 @ImplementedBy(classOf[IFServiceImpl])
 trait IFService {
 
-  def getSAStatus(utr: SAUTR, taxYear: TaxYear, correlationId: String)(implicit
+  def getSAStatus(utr: SAUTR, taxYear: TaxYear, correlationId: UUID)(implicit
     hc: HeaderCarrier
   ): EitherT[Future, IFError, SAStatusResponse]
 
-  def getCTStatus(utr: CTUTR, startDate: LocalDate, endDate: LocalDate, correlationId: String)(implicit
+  def getCTStatus(utr: CTUTR, startDate: LocalDate, endDate: LocalDate, correlationId: UUID)(implicit
     hc: HeaderCarrier
   ): EitherT[Future, IFError, CTStatusResponse]
 
@@ -68,7 +69,7 @@ class IFServiceImpl @Inject() (
   override def getSAStatus(
     utr: SAUTR,
     taxYear: TaxYear,
-    correlationId: String
+    correlationId: UUID
   )(implicit
     hc: HeaderCarrier
   ): EitherT[Future, IFError, SAStatusResponse] =
@@ -97,7 +98,7 @@ class IFServiceImpl @Inject() (
     utr: CTUTR,
     startDate: LocalDate,
     endDate: LocalDate,
-    correlationId: String
+    correlationId: UUID
   )(implicit
     hc: HeaderCarrier
   ): EitherT[Future, IFError, CTStatusResponse] =
