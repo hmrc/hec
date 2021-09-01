@@ -44,14 +44,15 @@ class IFController @Inject() (
     extends BackendController(cc)
     with Logging {
 
-  private def correlationId: UUID = UUID.randomUUID()
+  private def messageWithCorrelationId(message: String, correlationId: UUID) =
+    s"[correlationId:$correlationId] $message"
 
-  private def handleError(e: IFError) = e match {
+  private def handleError(e: IFError, correlationId: UUID) = e match {
     case DataError(msg)  =>
-      logger.warn(s"[correlationId:$correlationId] $msg")
+      logger.warn(messageWithCorrelationId(msg, correlationId))
       NotFound
     case BackendError(e) =>
-      logger.warn(s"[correlationId:$correlationId] Could not fetch status", e)
+      logger.warn(messageWithCorrelationId("Could not fetch status", correlationId), e)
       InternalServerError
   }
 
@@ -62,6 +63,9 @@ class IFController @Inject() (
     * @return Self-assessment status with UTR and tax year
     */
   def getSAStatus(utr: String, taxYear: String): Action[AnyContent] = Action.async { implicit request =>
+    val correlationId: UUID = UUID.randomUUID()
+    logger.info(messageWithCorrelationId("Getting SA status", correlationId))
+
     val sautrValidation   = SAUTR.fromString(utr).toValidNel("Invalid SAUTR")
     val taxYearValidation = TaxYear.fromString(taxYear).toValidNel("Invalid tax year")
 
@@ -72,7 +76,7 @@ class IFController @Inject() (
         IFService
           .getSAStatus(utr, year, correlationId)
           .fold(
-            handleError,
+            handleError(_, correlationId),
             saStatus => Ok(Json.toJson(saStatus))
           )
 
@@ -92,6 +96,9 @@ class IFController @Inject() (
     startDate: String,
     endDate: String
   ): Action[AnyContent] = Action.async { implicit request =>
+    val correlationId: UUID = UUID.randomUUID()
+    logger.info(messageWithCorrelationId("Getting CT status", correlationId))
+
     def parsedDate(dateStr: String, error: String): Validated[NonEmptyList[String], LocalDate] =
       try LocalDate.parse(dateStr, DateTimeFormatter.ISO_DATE).valid
       catch {
@@ -109,7 +116,7 @@ class IFController @Inject() (
         IFService
           .getCTStatus(utr, from, to, correlationId)
           .fold(
-            handleError,
+            handleError(_, correlationId),
             ctStatus => Ok(Json.toJson(ctStatus))
           )
 
