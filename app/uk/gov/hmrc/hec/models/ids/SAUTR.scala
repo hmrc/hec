@@ -27,9 +27,6 @@ object SAUTR {
   implicit val format: Format[SAUTR] =
     implicitly[Format[String]].inmap(SAUTR(_), _.value)
 
-  def fromString(utr: String): Option[SAUTR] = if (SelfAssessmentReferenceChecker.isValid(utr)) {
-    Some(SAUTR(utr))
-  } else {
-    None
-  }
+  def fromString(utr: String): Option[SAUTR] =
+    if (SelfAssessmentReferenceChecker.isValid(utr)) Some(SAUTR(utr)) else None
 }

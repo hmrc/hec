@@ -19,17 +19,14 @@ package uk.gov.hmrc.hec.services
 import java.time.LocalDate
 
 import cats.data.EitherT
-import cats.instances.future._
-import cats.instances.int._
-import cats.syntax.either._
-import cats.syntax.eq._
+import cats.implicits._
 import com.google.inject.{ImplementedBy, Inject, Singleton}
 import play.api.http.Status.OK
 import play.api.libs.json.{Json, Reads}
 import uk.gov.hmrc.hec.connectors.IFConnector
 import uk.gov.hmrc.hec.models.ids.{CTUTR, SAUTR}
 import uk.gov.hmrc.hec.models.{AccountingPeriod, CTStatus, CTStatusResponse, Error, SAStatus, SAStatusResponse, TaxYear}
-import uk.gov.hmrc.hec.services.IFServiceImpl.{RawCTSuccessResponse, RawFailureResponse, RawSASuccessResponse}
+import uk.gov.hmrc.hec.services.IFServiceImpl.{BackendError, DataError, IFError, RawCTSuccessResponse, RawFailureResponse, RawSASuccessResponse}
 import uk.gov.hmrc.hec.util.HttpResponseOps._
 import uk.gov.hmrc.http.{HeaderCarrier, HttpResponse}
 
@@ -38,11 +35,11 @@ import scala.concurrent.{ExecutionContext, Future}
 @ImplementedBy(classOf[IFServiceImpl])
 trait IFService {
 
-  def getSAStatus(utr: SAUTR, taxYear: TaxYear)(implicit hc: HeaderCarrier): EitherT[Future, Error, SAStatusResponse]
+  def getSAStatus(utr: SAUTR, taxYear: TaxYear)(implicit hc: HeaderCarrier): EitherT[Future, IFError, SAStatusResponse]
 
   def getCTStatus(utr: CTUTR, from: LocalDate, to: LocalDate)(implicit
     hc: HeaderCarrier
-  ): EitherT[Future, Error, CTStatusResponse]
+  ): EitherT[Future, IFError, CTStatusResponse]
 
 }
 
@@ -55,8 +52,14 @@ class IFServiceImpl @Inject() (
   private def handleErrorPath(httpResponse: HttpResponse, utrType: String) = {
     val responseError = s"Response to get $utrType status came back with status ${httpResponse.status}"
     httpResponse.parseJSON[RawFailureResponse] match {
-      case Left(_)         => Left(Error(s"$responseError; could not parse body"))
-      case Right(failures) => Left(Error(s"$responseError - ${failures.failures}"))
+      case Left(_)         => Left(BackendError(Error(s"$responseError; could not parse body")))
+      case Right(failures) =>
+        val errorMsg = s"$responseError - ${failures.failures}"
+        if (httpResponse.status === 404) {
+          Left(DataError(errorMsg))
+        } else {
+          Left(BackendError(Error(errorMsg)))
+        }
     }
   }
 
@@ -65,19 +68,20 @@ class IFServiceImpl @Inject() (
     taxYear: TaxYear
   )(implicit
     hc: HeaderCarrier
-  ): EitherT[Future, Error, SAStatusResponse] =
+  ): EitherT[Future, IFError, SAStatusResponse] =
     IFConnector
       .getSAStatus(utr, taxYear)
+      .leftMap(BackendError)
       .subflatMap { httpResponse =>
         if (httpResponse.status === OK) {
           httpResponse
             .parseJSON[RawSASuccessResponse]
-            .leftMap(Error(_))
+            .leftMap(e => BackendError(Error(e)))
             .flatMap(response =>
               Either
                 .fromOption(
                   SAStatus.fromString(response.returnStatus),
-                  Error(s"Could not parse success return status ${response.returnStatus}")
+                  BackendError(Error(s"Could not parse success return status ${response.returnStatus}"))
                 )
                 .map(SAStatusResponse(utr, taxYear, _))
             )
@@ -92,19 +96,20 @@ class IFServiceImpl @Inject() (
     to: LocalDate
   )(implicit
     hc: HeaderCarrier
-  ): EitherT[Future, Error, CTStatusResponse] =
+  ): EitherT[Future, IFError, CTStatusResponse] =
     IFConnector
       .getCTStatus(utr, from, to)
+      .leftMap(BackendError)
       .subflatMap { httpResponse =>
         if (httpResponse.status === OK) {
           httpResponse
             .parseJSON[RawCTSuccessResponse]
-            .leftMap(Error(_))
+            .leftMap(e => BackendError(Error(e)))
             .flatMap(response =>
               Either
                 .fromOption(
                   CTStatus.fromString(response.returnStatus),
-                  Error(s"Could not parse success return status ${response.returnStatus}")
+                  BackendError(Error(s"Could not parse success return status ${response.returnStatus}"))
                 )
                 .map(CTStatusResponse(utr, from, to, _, response.accountingPeriods))
             )
@@ -126,14 +131,20 @@ object IFServiceImpl {
   )
   implicit val rawCTSuccessReads: Reads[RawCTSuccessResponse] = Json.reads
 
-  final case class RawFailureResponseFailure(
+  final case class RawFailure(
     code: String,
     reason: String
   )
-  implicit val rawFailureResponseFailureReads: Reads[RawFailureResponseFailure] = Json.reads
+  implicit val rawFailureResponseFailureReads: Reads[RawFailure] = Json.reads
 
   final case class RawFailureResponse(
-    failures: List[RawFailureResponseFailure]
+    failures: List[RawFailure]
   )
   implicit val rawFailureResponseReads: Reads[RawFailureResponse] = Json.reads
+
+  sealed trait IFError extends Product with Serializable
+
+  final case class DataError(msg: String) extends IFError
+
+  final case class BackendError(error: Error) extends IFError
 }

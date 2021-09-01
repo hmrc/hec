@@ -27,6 +27,7 @@ import play.api.test.Helpers._
 import uk.gov.hmrc.hec.models.ids.{CTUTR, SAUTR}
 import uk.gov.hmrc.hec.models.{CTStatus, CTStatusResponse, Error, SAStatus, SAStatusResponse, TaxYear}
 import uk.gov.hmrc.hec.services.IFService
+import uk.gov.hmrc.hec.services.IFServiceImpl.{BackendError, DataError, IFError}
 import uk.gov.hmrc.http.HeaderCarrier
 
 import scala.concurrent.ExecutionContext.Implicits.global
@@ -42,13 +43,13 @@ class IFControllerSpec extends ControllerSpec {
 
   val controller = instanceOf[IFController]
 
-  def mockGetSAStatus(utr: SAUTR, taxYear: TaxYear)(result: Either[Error, SAStatusResponse]) =
+  def mockGetSAStatus(utr: SAUTR, taxYear: TaxYear)(result: Either[IFError, SAStatusResponse]) =
     (mockIFService
       .getSAStatus(_: SAUTR, _: TaxYear)(_: HeaderCarrier))
       .expects(utr, taxYear, *)
       .returning(EitherT.fromEither(result))
 
-  def mockGetCTStatus(utr: CTUTR, fromDate: LocalDate, toDate: LocalDate)(result: Either[Error, CTStatusResponse]) =
+  def mockGetCTStatus(utr: CTUTR, fromDate: LocalDate, toDate: LocalDate)(result: Either[IFError, CTStatusResponse]) =
     (mockIFService
       .getCTStatus(_: CTUTR, _: LocalDate, _: LocalDate)(_: HeaderCarrier))
       .expects(utr, fromDate, toDate, *)
@@ -87,13 +88,28 @@ class IFControllerSpec extends ControllerSpec {
 
         "there is an error fetching the SA status" in {
           val taxYear = "2020"
-          mockGetSAStatus(SAUTR(validSautr), TaxYear(2020))(Left(Error(new Exception("some error"))))
+          mockGetSAStatus(SAUTR(validSautr), TaxYear(2020))(Left(BackendError(Error(new Exception("some error")))))
 
           val call    = routes.IFController.getSAStatus(validSautr, taxYear)
           val request = FakeRequest(call)
 
           val result = controller.getSAStatus(validSautr, taxYear)(request)
           status(result) shouldBe INTERNAL_SERVER_ERROR
+        }
+
+      }
+
+      "return an 404 (not found)" when {
+
+        "there is an error fetching the SA status" in {
+          val taxYear = "2020"
+          mockGetSAStatus(SAUTR(validSautr), TaxYear(2020))(Left(DataError("some error")))
+
+          val call    = routes.IFController.getSAStatus(validSautr, taxYear)
+          val request = FakeRequest(call)
+
+          val result = controller.getSAStatus(validSautr, taxYear)(request)
+          status(result) shouldBe NOT_FOUND
         }
 
       }
@@ -152,11 +168,23 @@ class IFControllerSpec extends ControllerSpec {
       "return an 500 (internal server error)" when {
 
         "there is an error fetching the CT status" in {
-          mockGetCTStatus(CTUTR(validCtutr), fromDate, toDate)(Left(Error(new Exception("some error"))))
+          mockGetCTStatus(CTUTR(validCtutr), fromDate, toDate)(Left(BackendError(Error(new Exception("some error")))))
           val request = FakeRequest()
 
           val result = controller.getCTStatus(validCtutr, fromDateStr, toDateStr)(request)
           status(result) shouldBe INTERNAL_SERVER_ERROR
+        }
+
+      }
+
+      "return an 404 (not found)" when {
+
+        "CTUTR was not found" in {
+          mockGetCTStatus(CTUTR(validCtutr), fromDate, toDate)(Left(DataError("some error")))
+          val request = FakeRequest()
+
+          val result = controller.getCTStatus(validCtutr, fromDateStr, toDateStr)(request)
+          status(result) shouldBe NOT_FOUND
         }
 
       }

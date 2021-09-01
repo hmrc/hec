@@ -30,7 +30,6 @@ object Logging {
   implicit class LoggerOps(private val l: Logger) extends AnyVal {
     def warn(msg: => String, e: => Error): Unit =
       e.value.fold(e => l.warn(s"$msg: $e"), e => l.warn(msg, e))
-
   }
 
 }

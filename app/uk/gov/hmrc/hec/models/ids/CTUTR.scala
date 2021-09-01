@@ -27,9 +27,6 @@ object CTUTR {
   implicit val format: Format[CTUTR] =
     implicitly[Format[String]].inmap(CTUTR(_), _.value)
 
-  def fromString(utr: String): Option[CTUTR] = if (CorporationTaxReferenceChecker.isValid(utr)) {
-    Some(CTUTR(utr))
-  } else {
-    None
-  }
+  def fromString(utr: String): Option[CTUTR] =
+    if (CorporationTaxReferenceChecker.isValid(utr)) Some(CTUTR(utr)) else None
 }

@@ -24,7 +24,7 @@ import play.api.libs.json.Json
 import play.api.mvc.{Action, AnyContent, ControllerComponents}
 import uk.gov.hmrc.hec.models.TaxYear
 import uk.gov.hmrc.hec.models.ids.{CTUTR, SAUTR}
-import uk.gov.hmrc.hec.services.IFService
+import uk.gov.hmrc.hec.services.{IFService, IFServiceImpl}
 import uk.gov.hmrc.hec.util.Logging
 import uk.gov.hmrc.hec.util.Logging.LoggerOps
 import uk.gov.hmrc.play.bootstrap.backend.controller.BackendController
@@ -59,13 +59,18 @@ class IFController @Inject() (
         IFService
           .getSAStatus(utr, year)
           .fold(
-            { e =>
-              logger.warn("Could not fetch SA status", e)
-              InternalServerError
+            {
+              case IFServiceImpl.DataError(msg)  =>
+                logger.warn(msg)
+                NotFound
+              case IFServiceImpl.BackendError(e) =>
+                logger.warn("Could not fetch SA status", e)
+                InternalServerError
             },
             saStatus => Ok(Json.toJson(saStatus))
           )
-      case Invalid(e)         => Future.successful(BadRequest(e.toList.mkString("; ")))
+
+      case Invalid(e) => Future.successful(BadRequest(e.toList.mkString("; ")))
     }
   }
 
@@ -98,9 +103,13 @@ class IFController @Inject() (
         IFService
           .getCTStatus(utr, from, to)
           .fold(
-            { e =>
-              logger.warn("Could not fetch CT status", e)
-              InternalServerError
+            {
+              case IFServiceImpl.DataError(msg)  =>
+                logger.warn(msg)
+                NotFound
+              case IFServiceImpl.BackendError(e) =>
+                logger.warn("Could not fetch CT status", e)
+                InternalServerError
             },
             ctStatus => Ok(Json.toJson(ctStatus))
           )

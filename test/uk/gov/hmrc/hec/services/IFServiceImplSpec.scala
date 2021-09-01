@@ -21,6 +21,7 @@ import java.time.LocalDate
 import cats.data.EitherT
 import cats.instances.future._
 import org.scalamock.scalatest.MockFactory
+import org.scalatest.OptionValues._
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
 import play.api.libs.json.Json
@@ -28,10 +29,12 @@ import play.api.test.Helpers._
 import uk.gov.hmrc.hec.connectors.IFConnector
 import uk.gov.hmrc.hec.models.ids.{CTUTR, SAUTR}
 import uk.gov.hmrc.hec.models.{AccountingPeriod, CTStatus, CTStatusResponse, Error, SAStatus, SAStatusResponse, TaxYear}
+import uk.gov.hmrc.hec.services.IFServiceImpl.{BackendError, DataError}
 import uk.gov.hmrc.http.{HeaderCarrier, HttpResponse}
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
+import scala.reflect.ClassTag
 
 class IFServiceImplSpec extends AnyWordSpec with Matchers with MockFactory {
 
@@ -62,26 +65,46 @@ class IFServiceImplSpec extends AnyWordSpec with Matchers with MockFactory {
 
       "return an error" when {
 
-        def testIsError(response: Either[Error, HttpResponse]): Unit = {
+        val errorJson =
+          s"""{
+             | "failures" : [
+             |   {
+             |     "code": "some code",
+             |     "reason": "some reason"
+             |   }
+             |  ]
+             | } """.stripMargin
+
+        def testIsError[A](response: Either[Error, HttpResponse])(implicit c: ClassTag[A]): Unit = {
           mockGetSAStatus(utr, taxYear)(response)
-          await(service.getSAStatus(utr, taxYear).value) shouldBe a[Left[_, _]]
+          val result = await(service.getSAStatus(utr, taxYear).value)
+          result                     shouldBe a[Left[_, _]]
+          result.left.toOption.value shouldBe a[A]
         }
 
         "the call to fetch SA status fails" in {
-          testIsError(Left(Error("")))
+          testIsError[BackendError](Left(Error("")))
         }
 
-        "the call to fetch SA status returns with a non-OK response" in {
-          testIsError(Right(HttpResponse(500, "")))
+        "the call to fetch SA status returns with a 500 response" in {
+          testIsError[BackendError](Right(HttpResponse(500, "")))
+        }
+
+        "the call to fetch SA status returns with a 400 response" in {
+          testIsError[BackendError](Right(HttpResponse(400, "")))
+        }
+
+        "the call to fetch SA status returns with 404 not found response" in {
+          testIsError[DataError](Right(HttpResponse(404, errorJson)))
         }
 
         "there is no JSON in the response body" in {
-          testIsError(Right(HttpResponse(200, "")))
+          testIsError[BackendError](Right(HttpResponse(200, "")))
         }
 
-        "the JSON cannot be parsed in the response body" in {
+        "there is invalid JSON in the response body" in {
           val json = Json.parse("""{ "a" : "b" }""")
-          testIsError(
+          testIsError[BackendError](
             Right(
               HttpResponse(
                 200,
@@ -132,27 +155,47 @@ class IFServiceImplSpec extends AnyWordSpec with Matchers with MockFactory {
 
       "return an error" when {
 
-        def testIsError(response: Either[Error, HttpResponse]): Unit = {
+        val errorJson =
+          s"""{
+             | "failures" : [
+             |   {
+             |     "code": "some code",
+             |     "reason": "some reason"
+             |   }
+             |  ]
+             | } """.stripMargin
+
+        def testIsError[A](response: Either[Error, HttpResponse])(implicit c: ClassTag[A]): Unit = {
           mockGetCTStatus(utr, fromDate, toDate)(response)
-          await(service.getCTStatus(utr, fromDate, toDate).value) shouldBe a[Left[_, _]]
+          val result = await(service.getCTStatus(utr, fromDate, toDate).value)
+          result                     shouldBe a[Left[_, _]]
+          result.left.toOption.value shouldBe a[A]
         }
 
         "the call fails" in {
-          testIsError(Left(Error("")))
+          testIsError[BackendError](Left(Error("")))
         }
 
-        "the call returns with a non-OK response" in {
-          testIsError(Right(HttpResponse(500, "")))
+        "the call returns with a 400 response" in {
+          testIsError[BackendError](Right(HttpResponse(400, errorJson)))
+        }
+
+        "the call returns with a 500 response" in {
+          testIsError[BackendError](Right(HttpResponse(500, errorJson)))
+        }
+
+        "the call to fetch status returns with 404 not found response" in {
+          testIsError[DataError](Right(HttpResponse(404, errorJson)))
         }
 
         "there is no JSON in the response body" in {
-          testIsError(Right(HttpResponse(200, "")))
+          testIsError[BackendError](Right(HttpResponse(200, "")))
         }
 
-        "the JSON cannot be parsed in the response body" in {
+        "there is invalid JSON in the response body" in {
           val responseHeaders = Map.empty[String, Seq[String]]
 
-          testIsError(
+          testIsError[BackendError](
             Right(
               HttpResponse(
                 200,
