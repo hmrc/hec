@@ -36,9 +36,12 @@ trait IFConnector {
     hc: HeaderCarrier
   ): EitherT[Future, Error, HttpResponse]
 
-  def getCTStatus(utr: CTUTR, from: LocalDate, to: LocalDate, correlationId: String)(implicit
-    hc: HeaderCarrier
-  ): EitherT[Future, Error, HttpResponse]
+  def getCTStatus(
+    utr: CTUTR,
+    startDate: LocalDate,
+    endDate: LocalDate,
+    correlationId: String
+  )(implicit hc: HeaderCarrier): EitherT[Future, Error, HttpResponse]
 
 }
 
@@ -55,8 +58,8 @@ class IFConnectorImpl @Inject() (http: HttpClient, servicesConfig: ServicesConfi
   private def saStatusUrl(utr: SAUTR, taxYear: TaxYear): String =
     s"$baseUrl/individuals/self-assessment/account-overview/${utr.value}/${taxYear.year + 1}"
 
-  private def ctStatusUrl(utr: CTUTR, from: LocalDate, to: LocalDate): String =
-    s"$baseUrl/organisations/corporation-tax/${utr.value}/company/accounting-periods?startDate=${isoDateFormat(from)}&endDate=${isoDateFormat(to)}"
+  private def ctStatusUrl(utr: CTUTR, startDate: LocalDate, endDate: LocalDate): String =
+    s"$baseUrl/organisations/corporation-tax/${utr.value}/company/accounting-periods?startDate=${isoDateFormat(startDate)}&endDate=${isoDateFormat(endDate)}"
 
   private val bearerToken = servicesConfig.getString("microservice.services.integration-framework.bearer-token")
   private val environment = servicesConfig.getString("microservice.services.integration-framework.environment")
@@ -87,15 +90,15 @@ class IFConnectorImpl @Inject() (http: HttpClient, servicesConfig: ServicesConfi
 
   override def getCTStatus(
     utr: CTUTR,
-    from: LocalDate,
-    to: LocalDate,
+    startDate: LocalDate,
+    endDate: LocalDate,
     correlationId: String
   )(implicit
     hc: HeaderCarrier
   ): EitherT[Future, Error, HttpResponse] =
     EitherT[Future, Error, HttpResponse](
       http
-        .GET[HttpResponse](ctStatusUrl(utr, from, to), Seq.empty, headers(correlationId))(
+        .GET[HttpResponse](ctStatusUrl(utr, startDate, endDate), Seq.empty, headers(correlationId))(
           HttpReads[HttpResponse],
           hc.copy(authorization = None),
           ec

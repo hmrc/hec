@@ -237,8 +237,8 @@ class IFServiceImplSpec extends AnyWordSpec with Matchers with MockFactory {
 
           val expectedCTStatusResponse = CTStatusResponse(
             ctutr = utr,
-            fromDate = LocalDate.parse("2020-10-01"),
-            toDate = LocalDate.parse("2021-10-01"),
+            startDate = LocalDate.parse("2020-10-01"),
+            endDate = LocalDate.parse("2021-10-01"),
             status = CTStatus.NoReturnFound,
             accountingPeriods = List(AccountingPeriod("01", fromDate, toDate))
           )

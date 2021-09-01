@@ -49,10 +49,10 @@ class IFControllerSpec extends ControllerSpec {
       .expects(utr, taxYear, *, *)
       .returning(EitherT.fromEither(result))
 
-  def mockGetCTStatus(utr: CTUTR, fromDate: LocalDate, toDate: LocalDate)(result: Either[IFError, CTStatusResponse]) =
+  def mockGetCTStatus(utr: CTUTR, startDate: LocalDate, endDate: LocalDate)(result: Either[IFError, CTStatusResponse]) =
     (mockIFService
       .getCTStatus(_: CTUTR, _: LocalDate, _: LocalDate, _: String)(_: HeaderCarrier))
-      .expects(utr, fromDate, toDate, *, *)
+      .expects(utr, startDate, endDate, *, *)
       .returning(EitherT.fromEither(result))
 
   "IFController" when {
@@ -138,40 +138,40 @@ class IFControllerSpec extends ControllerSpec {
 
     "handling requests to fetch CT status" must {
 
-      val validCtutr         = "1000062440"
-      val fromDateStr        = "2020-10-10"
-      val toDateStr          = "2021-10-10"
-      val (fromDate, toDate) = (LocalDate.parse(fromDateStr), LocalDate.parse(toDateStr))
+      val validCtutr           = "1000062440"
+      val startDateStr         = "2020-10-10"
+      val endDateStr           = "2021-10-10"
+      val (startDate, endDate) = (LocalDate.parse(startDateStr), LocalDate.parse(endDateStr))
 
       "return a 400 (bad request)" when {
 
-        def testBadRequest(utr: String, fromDate: String, toDate: String, errorStr: String) = {
+        def testBadRequest(utr: String, startDate: String, endDate: String, errorStr: String) = {
           val request = FakeRequest()
-          val result  = controller.getCTStatus(utr, fromDate, toDate)(request)
+          val result  = controller.getCTStatus(utr, startDate, endDate)(request)
           status(result)          shouldBe BAD_REQUEST
           contentAsString(result) shouldBe errorStr
         }
 
         "CTUTR is invalid" in {
-          testBadRequest("invalid-utr", fromDateStr, toDateStr, "Invalid CTUTR")
+          testBadRequest("invalid-utr", startDateStr, endDateStr, "Invalid CTUTR")
         }
 
         "from date format is invalid" in {
-          testBadRequest(validCtutr, "invalid date", toDateStr, "Invalid fromDate format")
+          testBadRequest(validCtutr, "invalid date", endDateStr, "Invalid startDate format")
         }
 
         "to date format is invalid" in {
-          testBadRequest(validCtutr, fromDateStr, "invalid date", "Invalid toDate format")
+          testBadRequest(validCtutr, startDateStr, "invalid date", "Invalid endDate format")
         }
       }
 
       "return an 500 (internal server error)" when {
 
         "there is an error fetching the CT status" in {
-          mockGetCTStatus(CTUTR(validCtutr), fromDate, toDate)(Left(BackendError(Error(new Exception("some error")))))
+          mockGetCTStatus(CTUTR(validCtutr), startDate, endDate)(Left(BackendError(Error(new Exception("some error")))))
           val request = FakeRequest()
 
-          val result = controller.getCTStatus(validCtutr, fromDateStr, toDateStr)(request)
+          val result = controller.getCTStatus(validCtutr, startDateStr, endDateStr)(request)
           status(result) shouldBe INTERNAL_SERVER_ERROR
         }
 
@@ -180,10 +180,10 @@ class IFControllerSpec extends ControllerSpec {
       "return an 404 (not found)" when {
 
         "CTUTR was not found" in {
-          mockGetCTStatus(CTUTR(validCtutr), fromDate, toDate)(Left(DataError("some error")))
+          mockGetCTStatus(CTUTR(validCtutr), startDate, endDate)(Left(DataError("some error")))
           val request = FakeRequest()
 
-          val result = controller.getCTStatus(validCtutr, fromDateStr, toDateStr)(request)
+          val result = controller.getCTStatus(validCtutr, startDateStr, endDateStr)(request)
           status(result) shouldBe NOT_FOUND
         }
 
@@ -195,15 +195,15 @@ class IFControllerSpec extends ControllerSpec {
           val utr      = CTUTR(validCtutr)
           val response = CTStatusResponse(
             ctutr = utr,
-            fromDate = fromDate,
-            toDate = toDate,
+            startDate = startDate,
+            endDate = endDate,
             status = CTStatus.NoReturnFound,
             accountingPeriods = Nil
           )
-          mockGetCTStatus(utr, fromDate, toDate)(Right(response))
+          mockGetCTStatus(utr, startDate, endDate)(Right(response))
 
           val request = FakeRequest()
-          val result  = controller.getCTStatus(validCtutr, fromDateStr, toDateStr)(request)
+          val result  = controller.getCTStatus(validCtutr, startDateStr, endDateStr)(request)
           status(result) shouldBe OK
         }
       }

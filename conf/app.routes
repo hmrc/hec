@@ -2,4 +2,4 @@
 POST       /tax-check                           uk.gov.hmrc.hec.controllers.TaxCheckController.saveTaxCheck
 
 GET        /sa-status/:utr/:taxYear             uk.gov.hmrc.hec.controllers.IFController.getSAStatus(utr: String, taxYear: String)
-GET        /ct-status/:utr/:fromDate/:toDate    uk.gov.hmrc.hec.controllers.IFController.getCTStatus(utr: String, fromDate: String, toDate: String)
+GET        /ct-status/:utr/:startDate/:endDate  uk.gov.hmrc.hec.controllers.IFController.getCTStatus(utr: String, startDate: String, endDate: String)

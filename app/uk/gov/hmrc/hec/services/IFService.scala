@@ -39,7 +39,7 @@ trait IFService {
     hc: HeaderCarrier
   ): EitherT[Future, IFError, SAStatusResponse]
 
-  def getCTStatus(utr: CTUTR, from: LocalDate, to: LocalDate, correlationId: String)(implicit
+  def getCTStatus(utr: CTUTR, startDate: LocalDate, endDate: LocalDate, correlationId: String)(implicit
     hc: HeaderCarrier
   ): EitherT[Future, IFError, CTStatusResponse]
 
@@ -95,14 +95,14 @@ class IFServiceImpl @Inject() (
 
   override def getCTStatus(
     utr: CTUTR,
-    from: LocalDate,
-    to: LocalDate,
+    startDate: LocalDate,
+    endDate: LocalDate,
     correlationId: String
   )(implicit
     hc: HeaderCarrier
   ): EitherT[Future, IFError, CTStatusResponse] =
     IFConnector
-      .getCTStatus(utr, from, to, correlationId)
+      .getCTStatus(utr, startDate, endDate, correlationId)
       .leftMap(BackendError)
       .subflatMap { httpResponse =>
         if (httpResponse.status === OK) {
@@ -115,7 +115,7 @@ class IFServiceImpl @Inject() (
                   CTStatus.fromString(response.returnStatus),
                   BackendError(Error(s"Could not parse success return status ${response.returnStatus}"))
                 )
-                .map(CTStatusResponse(utr, from, to, _, response.accountingPeriods))
+                .map(CTStatusResponse(utr, startDate, endDate, _, response.accountingPeriods))
             )
         } else {
           handleErrorPath(httpResponse, utrType = "CT")

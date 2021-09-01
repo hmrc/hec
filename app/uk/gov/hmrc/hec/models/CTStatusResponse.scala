@@ -23,8 +23,8 @@ import uk.gov.hmrc.hec.models.ids.CTUTR
 
 final case class CTStatusResponse(
   ctutr: CTUTR,
-  fromDate: LocalDate,
-  toDate: LocalDate,
+  startDate: LocalDate,
+  endDate: LocalDate,
   status: CTStatus,
   accountingPeriods: List[AccountingPeriod]
 )

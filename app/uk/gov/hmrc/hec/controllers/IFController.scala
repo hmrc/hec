@@ -80,14 +80,14 @@ class IFController @Inject() (
   /**
     * Fetch a company's corporation tax status
     * @param utr The corporation tax UTR
-    * @param fromDate The start date of the tax period
-    * @param toDate The end date of the tax period
+    * @param startDate The start date of the tax period
+    * @param endDate The end date of the tax period
     * @return Corporation tax status & accounting periods
     */
   def getCTStatus(
     utr: String,
-    fromDate: String,
-    toDate: String
+    startDate: String,
+    endDate: String
   ): Action[AnyContent] = Action.async { implicit request =>
     def parsedDate(dateStr: String, error: String): Validated[NonEmptyList[String], LocalDate] =
       try LocalDate.parse(dateStr, DateTimeFormatter.ISO_DATE).valid
@@ -96,8 +96,8 @@ class IFController @Inject() (
       }
 
     val ctutrValidation: ValidatedNel[String, CTUTR]        = CTUTR.fromString(utr).toValidNel("Invalid CTUTR")
-    val fromDateValidation: ValidatedNel[String, LocalDate] = parsedDate(fromDate, "Invalid fromDate format")
-    val toDateValidation: ValidatedNel[String, LocalDate]   = parsedDate(toDate, "Invalid toDate format")
+    val fromDateValidation: ValidatedNel[String, LocalDate] = parsedDate(startDate, "Invalid startDate format")
+    val toDateValidation: ValidatedNel[String, LocalDate]   = parsedDate(endDate, "Invalid endDate format")
 
     @SuppressWarnings(Array("org.wartremover.warts.Any"))
     val validation = (ctutrValidation, fromDateValidation, toDateValidation).mapN((_, _, _))
@@ -117,7 +117,7 @@ class IFController @Inject() (
             ctStatus => Ok(Json.toJson(ctStatus))
           )
 
-      case Invalid(e) => Future.successful(BadRequest(e.toList.mkString(";")))
+      case Invalid(e) => Future.successful(BadRequest(e.toList.mkString("; ")))
     }
   }
 }
