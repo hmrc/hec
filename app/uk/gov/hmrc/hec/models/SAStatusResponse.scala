@@ -14,19 +14,17 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.hec.models.ids
+package uk.gov.hmrc.hec.models
 
-import play.api.libs.functional.syntax.toInvariantFunctorOps
-import play.api.libs.json.Format
-import uk.gov.hmrc.referencechecker.SelfAssessmentReferenceChecker
+import play.api.libs.json.{Json, OFormat}
+import uk.gov.hmrc.hec.models.ids.SAUTR
 
-final case class SAUTR(value: String) extends AnyVal
+final case class SAStatusResponse(
+  sautr: SAUTR,
+  taxYear: TaxYear,
+  status: SAStatus
+)
 
-object SAUTR {
-
-  implicit val format: Format[SAUTR] =
-    implicitly[Format[String]].inmap(SAUTR(_), _.value)
-
-  def fromString(utr: String): Option[SAUTR] =
-    if (SelfAssessmentReferenceChecker.isValid(utr)) Some(SAUTR(utr)) else None
+object SAStatusResponse {
+  implicit val format: OFormat[SAStatusResponse] = Json.format
 }
