@@ -42,14 +42,14 @@ class IFServiceImplSpec extends AnyWordSpec with Matchers with MockFactory {
 
   def mockGetSAStatus(utr: SAUTR, taxYear: TaxYear)(response: Either[Error, HttpResponse]) =
     (mockIFConnector
-      .getSAStatus(_: SAUTR, _: TaxYear)(_: HeaderCarrier))
-      .expects(utr, taxYear, *)
+      .getSAStatus(_: SAUTR, _: TaxYear, _: String)(_: HeaderCarrier))
+      .expects(utr, taxYear, *, *)
       .returning(EitherT.fromEither[Future](response))
 
   def mockGetCTStatus(utr: CTUTR, fromDate: LocalDate, toDate: LocalDate)(response: Either[Error, HttpResponse]) =
     (mockIFConnector
-      .getCTStatus(_: CTUTR, _: LocalDate, _: LocalDate)(_: HeaderCarrier))
-      .expects(utr, fromDate, toDate, *)
+      .getCTStatus(_: CTUTR, _: LocalDate, _: LocalDate, _: String)(_: HeaderCarrier))
+      .expects(utr, fromDate, toDate, *, *)
       .returning(EitherT.fromEither[Future](response))
 
   val service = new IFServiceImpl(mockIFConnector)
@@ -60,8 +60,9 @@ class IFServiceImplSpec extends AnyWordSpec with Matchers with MockFactory {
 
       implicit val hc: HeaderCarrier = HeaderCarrier()
 
-      val utr     = SAUTR("some-sa-utr")
-      val taxYear = TaxYear(2020)
+      val utr           = SAUTR("some-sa-utr")
+      val taxYear       = TaxYear(2020)
+      val correlationId = "correlationId"
 
       "return an error" when {
 
@@ -77,7 +78,7 @@ class IFServiceImplSpec extends AnyWordSpec with Matchers with MockFactory {
 
         def testIsError[A](response: Either[Error, HttpResponse])(implicit c: ClassTag[A]): Unit = {
           mockGetSAStatus(utr, taxYear)(response)
-          val result = await(service.getSAStatus(utr, taxYear).value)
+          val result = await(service.getSAStatus(utr, taxYear, correlationId).value)
           result                     shouldBe a[Left[_, _]]
           result.left.toOption.value shouldBe a[A]
         }
@@ -137,7 +138,7 @@ class IFServiceImplSpec extends AnyWordSpec with Matchers with MockFactory {
             status = SAStatus.ReturnFound
           )
 
-          val result = service.getSAStatus(utr, taxYear).value
+          val result = service.getSAStatus(utr, taxYear, correlationId).value
           await(result) shouldBe Right(expectedSAStatusResponse)
         }
 
@@ -149,9 +150,10 @@ class IFServiceImplSpec extends AnyWordSpec with Matchers with MockFactory {
 
       implicit val hc: HeaderCarrier = HeaderCarrier()
 
-      val utr      = CTUTR("some-ct-utr")
-      val fromDate = LocalDate.of(2020, 10, 1)
-      val toDate   = LocalDate.of(2021, 10, 1)
+      val utr           = CTUTR("some-ct-utr")
+      val fromDate      = LocalDate.of(2020, 10, 1)
+      val toDate        = LocalDate.of(2021, 10, 1)
+      val correlationId = "correlationId"
 
       "return an error" when {
 
@@ -167,7 +169,7 @@ class IFServiceImplSpec extends AnyWordSpec with Matchers with MockFactory {
 
         def testIsError[A](response: Either[Error, HttpResponse])(implicit c: ClassTag[A]): Unit = {
           mockGetCTStatus(utr, fromDate, toDate)(response)
-          val result = await(service.getCTStatus(utr, fromDate, toDate).value)
+          val result = await(service.getCTStatus(utr, fromDate, toDate, correlationId).value)
           result                     shouldBe a[Left[_, _]]
           result.left.toOption.value shouldBe a[A]
         }
@@ -241,7 +243,7 @@ class IFServiceImplSpec extends AnyWordSpec with Matchers with MockFactory {
             accountingPeriods = List(AccountingPeriod("01", fromDate, toDate))
           )
 
-          val result = service.getCTStatus(utr, fromDate, toDate).value
+          val result = service.getCTStatus(utr, fromDate, toDate, correlationId).value
           await(result) shouldBe Right(expectedCTStatusResponse)
         }
 

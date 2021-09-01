@@ -35,9 +35,11 @@ import scala.concurrent.{ExecutionContext, Future}
 @ImplementedBy(classOf[IFServiceImpl])
 trait IFService {
 
-  def getSAStatus(utr: SAUTR, taxYear: TaxYear)(implicit hc: HeaderCarrier): EitherT[Future, IFError, SAStatusResponse]
+  def getSAStatus(utr: SAUTR, taxYear: TaxYear, correlationId: String)(implicit
+    hc: HeaderCarrier
+  ): EitherT[Future, IFError, SAStatusResponse]
 
-  def getCTStatus(utr: CTUTR, from: LocalDate, to: LocalDate)(implicit
+  def getCTStatus(utr: CTUTR, from: LocalDate, to: LocalDate, correlationId: String)(implicit
     hc: HeaderCarrier
   ): EitherT[Future, IFError, CTStatusResponse]
 
@@ -65,12 +67,13 @@ class IFServiceImpl @Inject() (
 
   override def getSAStatus(
     utr: SAUTR,
-    taxYear: TaxYear
+    taxYear: TaxYear,
+    correlationId: String
   )(implicit
     hc: HeaderCarrier
   ): EitherT[Future, IFError, SAStatusResponse] =
     IFConnector
-      .getSAStatus(utr, taxYear)
+      .getSAStatus(utr, taxYear, correlationId)
       .leftMap(BackendError)
       .subflatMap { httpResponse =>
         if (httpResponse.status === OK) {
@@ -93,12 +96,13 @@ class IFServiceImpl @Inject() (
   override def getCTStatus(
     utr: CTUTR,
     from: LocalDate,
-    to: LocalDate
+    to: LocalDate,
+    correlationId: String
   )(implicit
     hc: HeaderCarrier
   ): EitherT[Future, IFError, CTStatusResponse] =
     IFConnector
-      .getCTStatus(utr, from, to)
+      .getCTStatus(utr, from, to, correlationId)
       .leftMap(BackendError)
       .subflatMap { httpResponse =>
         if (httpResponse.status === OK) {

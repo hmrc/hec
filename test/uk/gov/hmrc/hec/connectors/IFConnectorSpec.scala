@@ -49,27 +49,28 @@ class IFConnectorSpec extends AnyWordSpec with Matchers with MockFactory with Ht
 
   "IFConnectorImpl" when {
 
-    val headers = Seq(
+    val utr           = "1234567890"
+    val correlationId = "correlationId"
+    val headers       = Seq(
       "Authorization" -> s"Bearer $bearerToken",
-      "Environment"   -> environment
+      "Environment"   -> environment,
+      "CorrelationId" -> correlationId
     )
 
     implicit val hc: HeaderCarrier = HeaderCarrier()
 
     "handling requests to fetch SA status" must {
-      val utr     = "1234567890"
       val taxYear = 2020
 
       val expectedUrl = s"$protocol://$host:$port/individuals/self-assessment/account-overview/$utr/${taxYear + 1}"
 
       behave like connectorBehaviour(
         mockGet[HttpResponse](expectedUrl, headers)(_),
-        () => connector.getSAStatus(SAUTR(utr), TaxYear(taxYear))
+        () => connector.getSAStatus(SAUTR(utr), TaxYear(taxYear), correlationId)
       )
     }
 
     "handling requests to fetch CT status" must {
-      val utr      = "1234567890"
       val fromDate = "2020-10-01"
       val toDate   = "2021-10-01"
 
@@ -78,7 +79,7 @@ class IFConnectorSpec extends AnyWordSpec with Matchers with MockFactory with Ht
 
       behave like connectorBehaviour(
         mockGet[HttpResponse](expectedUrl, headers)(_),
-        () => connector.getCTStatus(CTUTR(utr), LocalDate.of(2020, 10, 1), LocalDate.of(2021, 10, 1))
+        () => connector.getCTStatus(CTUTR(utr), LocalDate.of(2020, 10, 1), LocalDate.of(2021, 10, 1), correlationId)
       )
     }
 

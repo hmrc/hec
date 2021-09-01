@@ -45,14 +45,14 @@ class IFControllerSpec extends ControllerSpec {
 
   def mockGetSAStatus(utr: SAUTR, taxYear: TaxYear)(result: Either[IFError, SAStatusResponse]) =
     (mockIFService
-      .getSAStatus(_: SAUTR, _: TaxYear)(_: HeaderCarrier))
-      .expects(utr, taxYear, *)
+      .getSAStatus(_: SAUTR, _: TaxYear, _: String)(_: HeaderCarrier))
+      .expects(utr, taxYear, *, *)
       .returning(EitherT.fromEither(result))
 
   def mockGetCTStatus(utr: CTUTR, fromDate: LocalDate, toDate: LocalDate)(result: Either[IFError, CTStatusResponse]) =
     (mockIFService
-      .getCTStatus(_: CTUTR, _: LocalDate, _: LocalDate)(_: HeaderCarrier))
-      .expects(utr, fromDate, toDate, *)
+      .getCTStatus(_: CTUTR, _: LocalDate, _: LocalDate, _: String)(_: HeaderCarrier))
+      .expects(utr, fromDate, toDate, *, *)
       .returning(EitherT.fromEither(result))
 
   "IFController" when {

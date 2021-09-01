@@ -18,6 +18,7 @@ package uk.gov.hmrc.hec.controllers
 
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
+import java.util.UUID
 
 import com.google.inject.{Inject, Singleton}
 import play.api.libs.json.Json
@@ -42,6 +43,8 @@ class IFController @Inject() (
     extends BackendController(cc)
     with Logging {
 
+  private def correlationId = UUID.randomUUID().toString
+
   /**
     * Fetch individual user's self-assessment status
     * @param utr Self-assessment UTR
@@ -57,14 +60,14 @@ class IFController @Inject() (
     validation match {
       case Valid((utr, year)) =>
         IFService
-          .getSAStatus(utr, year)
+          .getSAStatus(utr, year, correlationId)
           .fold(
             {
               case IFServiceImpl.DataError(msg)  =>
-                logger.warn(msg)
+                logger.warn(s"[correlationId:$correlationId] $msg")
                 NotFound
               case IFServiceImpl.BackendError(e) =>
-                logger.warn("Could not fetch SA status", e)
+                logger.warn(s"[correlationId:$correlationId] Could not fetch SA status", e)
                 InternalServerError
             },
             saStatus => Ok(Json.toJson(saStatus))
@@ -101,7 +104,7 @@ class IFController @Inject() (
     validation match {
       case Valid((utr, from, to)) =>
         IFService
-          .getCTStatus(utr, from, to)
+          .getCTStatus(utr, from, to, correlationId)
           .fold(
             {
               case IFServiceImpl.DataError(msg)  =>

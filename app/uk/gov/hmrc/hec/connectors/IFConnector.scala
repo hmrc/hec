@@ -32,9 +32,11 @@ import scala.concurrent.{ExecutionContext, Future}
 @ImplementedBy(classOf[IFConnectorImpl])
 trait IFConnector {
 
-  def getSAStatus(utr: SAUTR, taxYear: TaxYear)(implicit hc: HeaderCarrier): EitherT[Future, Error, HttpResponse]
+  def getSAStatus(utr: SAUTR, taxYear: TaxYear, correlationId: String)(implicit
+    hc: HeaderCarrier
+  ): EitherT[Future, Error, HttpResponse]
 
-  def getCTStatus(utr: CTUTR, from: LocalDate, to: LocalDate)(implicit
+  def getCTStatus(utr: CTUTR, from: LocalDate, to: LocalDate, correlationId: String)(implicit
     hc: HeaderCarrier
   ): EitherT[Future, Error, HttpResponse]
 
@@ -59,20 +61,22 @@ class IFConnectorImpl @Inject() (http: HttpClient, servicesConfig: ServicesConfi
   private val bearerToken = servicesConfig.getString("microservice.services.integration-framework.bearer-token")
   private val environment = servicesConfig.getString("microservice.services.integration-framework.environment")
 
-  private val headers: Seq[(String, String)] = Seq(
+  private def headers(correlationId: String): Seq[(String, String)] = Seq(
     "Authorization" -> s"Bearer $bearerToken",
-    "Environment"   -> environment
+    "Environment"   -> environment,
+    "CorrelationId" -> correlationId
   )
 
   override def getSAStatus(
     utr: SAUTR,
-    taxYear: TaxYear
+    taxYear: TaxYear,
+    correlationId: String
   )(implicit
     hc: HeaderCarrier
   ): EitherT[Future, Error, HttpResponse] =
     EitherT[Future, Error, HttpResponse](
       http
-        .GET[HttpResponse](saStatusUrl(utr, taxYear), Seq.empty, headers)(
+        .GET[HttpResponse](saStatusUrl(utr, taxYear), Seq.empty, headers(correlationId))(
           HttpReads[HttpResponse],
           hc.copy(authorization = None),
           ec
@@ -84,13 +88,14 @@ class IFConnectorImpl @Inject() (http: HttpClient, servicesConfig: ServicesConfi
   override def getCTStatus(
     utr: CTUTR,
     from: LocalDate,
-    to: LocalDate
+    to: LocalDate,
+    correlationId: String
   )(implicit
     hc: HeaderCarrier
   ): EitherT[Future, Error, HttpResponse] =
     EitherT[Future, Error, HttpResponse](
       http
-        .GET[HttpResponse](ctStatusUrl(utr, from, to), Seq.empty, headers)(
+        .GET[HttpResponse](ctStatusUrl(utr, from, to), Seq.empty, headers(correlationId))(
           HttpReads[HttpResponse],
           hc.copy(authorization = None),
           ec
