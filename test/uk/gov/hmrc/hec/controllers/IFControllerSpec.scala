@@ -28,7 +28,7 @@ import play.api.test.Helpers._
 import uk.gov.hmrc.hec.models.ids.{CTUTR, SAUTR}
 import uk.gov.hmrc.hec.models.{CTStatus, CTStatusResponse, Error, SAStatus, SAStatusResponse, TaxYear}
 import uk.gov.hmrc.hec.services.IFService
-import uk.gov.hmrc.hec.services.IFService.{BackendError, DataError, IFError}
+import uk.gov.hmrc.hec.services.IFService.{BackendError, DataNotFoundError, IFError}
 import uk.gov.hmrc.http.HeaderCarrier
 
 import scala.concurrent.ExecutionContext.Implicits.global
@@ -102,7 +102,7 @@ class IFControllerSpec extends ControllerSpec {
 
         "there is an error fetching the SA status" in {
           val taxYear = "2020"
-          mockGetSAStatus(SAUTR(validSautr), TaxYear(2020))(Left(DataError("some error")))
+          mockGetSAStatus(SAUTR(validSautr), TaxYear(2020))(Left(DataNotFoundError("some error")))
 
           val request = FakeRequest()
 
@@ -177,7 +177,7 @@ class IFControllerSpec extends ControllerSpec {
       "return an 404 (not found)" when {
 
         "CTUTR was not found" in {
-          mockGetCTStatus(CTUTR(validCtutr), startDate, endDate)(Left(DataError("some error")))
+          mockGetCTStatus(CTUTR(validCtutr), startDate, endDate)(Left(DataNotFoundError("some error")))
           val request = FakeRequest()
 
           val result = controller.getCTStatus(validCtutr, startDateStr, endDateStr)(request)

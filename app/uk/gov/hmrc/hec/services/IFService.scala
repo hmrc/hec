@@ -27,7 +27,7 @@ import play.api.libs.json.{Json, Reads}
 import uk.gov.hmrc.hec.connectors.IFConnector
 import uk.gov.hmrc.hec.models.ids.{CTUTR, SAUTR}
 import uk.gov.hmrc.hec.models.{AccountingPeriod, CTStatus, CTStatusResponse, Error, SAStatus, SAStatusResponse, TaxYear}
-import uk.gov.hmrc.hec.services.IFService.{BackendError, DataError, IFError}
+import uk.gov.hmrc.hec.services.IFService.{BackendError, DataNotFoundError, IFError}
 import uk.gov.hmrc.hec.services.IFServiceImpl.{RawCTSuccessResponse, RawFailureResponse, RawSASuccessResponse}
 import uk.gov.hmrc.hec.util.HttpResponseOps._
 import uk.gov.hmrc.http.{HeaderCarrier, HttpResponse}
@@ -50,7 +50,7 @@ trait IFService {
 object IFService {
   sealed trait IFError extends Product with Serializable
 
-  final case class DataError(msg: String) extends IFError
+  final case class DataNotFoundError(msg: String) extends IFError
 
   final case class BackendError(error: Error) extends IFError
 }
@@ -67,8 +67,8 @@ class IFServiceImpl @Inject() (
       case Left(_)         => Left(BackendError(Error(s"$responseError; could not parse body")))
       case Right(failures) =>
         val errorMsg = s"$responseError - ${failures.failures}"
-        if (httpResponse.status === 404) {
-          Left(DataError(errorMsg))
+        if (httpResponse.status === 404 && failures.failures.exists(_.code === "NO_DATA_FOUND")) {
+          Left(DataNotFoundError(errorMsg))
         } else {
           Left(BackendError(Error(errorMsg)))
         }

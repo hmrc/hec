@@ -30,7 +30,7 @@ import play.api.test.Helpers._
 import uk.gov.hmrc.hec.connectors.IFConnector
 import uk.gov.hmrc.hec.models.ids.{CTUTR, SAUTR}
 import uk.gov.hmrc.hec.models.{AccountingPeriod, CTStatus, CTStatusResponse, Error, SAStatus, SAStatusResponse, TaxYear}
-import uk.gov.hmrc.hec.services.IFService.{BackendError, DataError}
+import uk.gov.hmrc.hec.services.IFService.{BackendError, DataNotFoundError}
 import uk.gov.hmrc.http.{HeaderCarrier, HttpResponse}
 
 import scala.concurrent.ExecutionContext.Implicits.global
@@ -57,6 +57,18 @@ class IFServiceImplSpec extends AnyWordSpec with Matchers with MockFactory {
 
   "IFServiceImpl" when {
 
+    def getErrorJson(code: String = "some code") =
+      s"""{
+         | "failures" : [
+         |   {
+         |     "code": "$code",
+         |     "reason": "some reason"
+         |   }
+         |  ]
+         | } """.stripMargin
+
+    val errorJson = getErrorJson()
+
     "handling requests to fetch SA status" must {
 
       implicit val hc: HeaderCarrier = HeaderCarrier()
@@ -66,16 +78,6 @@ class IFServiceImplSpec extends AnyWordSpec with Matchers with MockFactory {
       val correlationId = UUID.randomUUID()
 
       "return an error" when {
-
-        val errorJson =
-          s"""{
-             | "failures" : [
-             |   {
-             |     "code": "some code",
-             |     "reason": "some reason"
-             |   }
-             |  ]
-             | } """.stripMargin
 
         def testIsError[A](response: Either[Error, HttpResponse])(implicit c: ClassTag[A]): Unit = {
           mockGetSAStatus(utr, taxYear)(response)
@@ -97,7 +99,12 @@ class IFServiceImplSpec extends AnyWordSpec with Matchers with MockFactory {
         }
 
         "the call to fetch SA status returns with 404 not found response" in {
-          testIsError[DataError](Right(HttpResponse(404, errorJson)))
+          testIsError[BackendError](Right(HttpResponse(404, errorJson)))
+        }
+
+        "the call to fetch SA status returns with 404 not found response with NO_DATA_FOUND code" in {
+          val notFoundErrorJson = getErrorJson("NO_DATA_FOUND")
+          testIsError[DataNotFoundError](Right(HttpResponse(404, notFoundErrorJson)))
         }
 
         "there is no JSON in the response body" in {
@@ -188,7 +195,12 @@ class IFServiceImplSpec extends AnyWordSpec with Matchers with MockFactory {
         }
 
         "the call to fetch status returns with 404 not found response" in {
-          testIsError[DataError](Right(HttpResponse(404, errorJson)))
+          testIsError[BackendError](Right(HttpResponse(404, errorJson)))
+        }
+
+        "the call to fetch status returns with 404 not found response with NO_DATA_FOUND code" in {
+          val notFoundErrorJson = getErrorJson("NO_DATA_FOUND")
+          testIsError[DataNotFoundError](Right(HttpResponse(404, notFoundErrorJson)))
         }
 
         "there is no JSON in the response body" in {

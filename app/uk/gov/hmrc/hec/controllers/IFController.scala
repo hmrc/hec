@@ -29,7 +29,7 @@ import play.api.mvc.{Action, AnyContent, ControllerComponents}
 import uk.gov.hmrc.hec.models.TaxYear
 import uk.gov.hmrc.hec.models.ids.{CTUTR, SAUTR}
 import uk.gov.hmrc.hec.services.IFService
-import uk.gov.hmrc.hec.services.IFService.{BackendError, DataError, IFError}
+import uk.gov.hmrc.hec.services.IFService.{BackendError, DataNotFoundError, IFError}
 import uk.gov.hmrc.hec.util.Logging
 import uk.gov.hmrc.hec.util.Logging.LoggerOps
 import uk.gov.hmrc.play.bootstrap.backend.controller.BackendController
@@ -48,10 +48,10 @@ class IFController @Inject() (
     s"[correlationId:$correlationId] $message"
 
   private def handleError(e: IFError, correlationId: UUID) = e match {
-    case DataError(msg)  =>
+    case DataNotFoundError(msg) =>
       logger.warn(messageWithCorrelationId(msg, correlationId))
       NotFound
-    case BackendError(e) =>
+    case BackendError(e)        =>
       logger.warn(messageWithCorrelationId("Could not fetch status", correlationId), e)
       InternalServerError
   }
