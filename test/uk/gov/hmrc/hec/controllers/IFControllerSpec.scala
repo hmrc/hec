@@ -28,7 +28,7 @@ import play.api.test.Helpers._
 import uk.gov.hmrc.hec.models.ids.{CTUTR, SAUTR}
 import uk.gov.hmrc.hec.models.{CTStatus, CTStatusResponse, Error, SAStatus, SAStatusResponse, TaxYear}
 import uk.gov.hmrc.hec.services.IFService
-import uk.gov.hmrc.hec.services.IFServiceImpl.{BackendError, DataError, IFError}
+import uk.gov.hmrc.hec.services.IFService.{BackendError, DataError, IFError}
 import uk.gov.hmrc.http.HeaderCarrier
 
 import scala.concurrent.ExecutionContext.Implicits.global

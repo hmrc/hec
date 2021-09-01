@@ -20,18 +20,19 @@ import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 import java.util.UUID
 
+import cats.data.Validated._
+import cats.data.{NonEmptyList, Validated, ValidatedNel}
+import cats.implicits._
 import com.google.inject.{Inject, Singleton}
 import play.api.libs.json.Json
 import play.api.mvc.{Action, AnyContent, ControllerComponents}
 import uk.gov.hmrc.hec.models.TaxYear
 import uk.gov.hmrc.hec.models.ids.{CTUTR, SAUTR}
-import uk.gov.hmrc.hec.services.{IFService, IFServiceImpl}
+import uk.gov.hmrc.hec.services.IFService
+import uk.gov.hmrc.hec.services.IFService.{BackendError, DataError, IFError}
 import uk.gov.hmrc.hec.util.Logging
 import uk.gov.hmrc.hec.util.Logging.LoggerOps
 import uk.gov.hmrc.play.bootstrap.backend.controller.BackendController
-import cats.data.{NonEmptyList, Validated, ValidatedNel}
-import cats.data.Validated._
-import cats.implicits._
 
 import scala.concurrent.{ExecutionContext, Future}
 
@@ -44,6 +45,15 @@ class IFController @Inject() (
     with Logging {
 
   private def correlationId: UUID = UUID.randomUUID()
+
+  private def handleError(e: IFError) = e match {
+    case DataError(msg)  =>
+      logger.warn(s"[correlationId:$correlationId] $msg")
+      NotFound
+    case BackendError(e) =>
+      logger.warn(s"[correlationId:$correlationId] Could not fetch status", e)
+      InternalServerError
+  }
 
   /**
     * Fetch individual user's self-assessment status
@@ -62,14 +72,7 @@ class IFController @Inject() (
         IFService
           .getSAStatus(utr, year, correlationId)
           .fold(
-            {
-              case IFServiceImpl.DataError(msg)  =>
-                logger.warn(s"[correlationId:$correlationId] $msg")
-                NotFound
-              case IFServiceImpl.BackendError(e) =>
-                logger.warn(s"[correlationId:$correlationId] Could not fetch SA status", e)
-                InternalServerError
-            },
+            handleError,
             saStatus => Ok(Json.toJson(saStatus))
           )
 
@@ -106,14 +109,7 @@ class IFController @Inject() (
         IFService
           .getCTStatus(utr, from, to, correlationId)
           .fold(
-            {
-              case IFServiceImpl.DataError(msg)  =>
-                logger.warn(msg)
-                NotFound
-              case IFServiceImpl.BackendError(e) =>
-                logger.warn("Could not fetch CT status", e)
-                InternalServerError
-            },
+            handleError,
             ctStatus => Ok(Json.toJson(ctStatus))
           )
 
