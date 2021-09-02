@@ -147,17 +147,16 @@ class TaxCheckControllerSpec extends ControllerSpec {
         controller.matchTaxCheck(request)
       }
 
-      val individualMatchRequest: HECTaxCheckMatchRequest = HECTaxCheckMatchRequest(
-        HECTaxCheckCode("code"),
-        LicenceType.ScrapMetalDealerSite,
-        Right(DateOfBirth(LocalDate.now()))
-      )
+      val taxCheckCode = HECTaxCheckCode("code")
+      val licenceType  = LicenceType.ScrapMetalDealerSite
+      val dateOfBirth  = DateOfBirth(LocalDate.now())
+      val crn          = CRN("crn")
 
-      val companyMatchRequest: HECTaxCheckMatchRequest = HECTaxCheckMatchRequest(
-        HECTaxCheckCode("code"),
-        LicenceType.ScrapMetalDealerSite,
-        Left(CRN("crn"))
-      )
+      val individualMatchRequest: HECTaxCheckMatchRequest =
+        HECTaxCheckMatchRequest(taxCheckCode, licenceType, Right(dateOfBirth))
+
+      val companyMatchRequest: HECTaxCheckMatchRequest =
+        HECTaxCheckMatchRequest(taxCheckCode, licenceType, Left(crn))
 
       "return a 415 (unsupported media type)" when {
 
@@ -201,9 +200,9 @@ class TaxCheckControllerSpec extends ControllerSpec {
         "the tax check service returns a match result" in {
 
           List[HECTaxCheckMatchResult](
-            Match(HECTaxCheckCode(""), LicenceType.ScrapMetalMobileCollector, Left(CRN(""))),
-            NoMatch,
-            Expired
+            Match(companyMatchRequest),
+            NoMatch(companyMatchRequest),
+            Expired(companyMatchRequest)
           ).foreach { matchResult =>
             withClue(s"For match result '$matchResult': ") {
               mockMatchTaxCheck(companyMatchRequest)(Right(matchResult))

@@ -18,23 +18,16 @@ package uk.gov.hmrc.hec.models
 
 import julienrf.json.derived
 import play.api.libs.json.OFormat
-import uk.gov.hmrc.hec.models.ids.CRN
-import uk.gov.hmrc.hec.models.licence.LicenceType
-import uk.gov.hmrc.hec.models.EitherUtils.eitherFormat
 
 sealed trait HECTaxCheckMatchResult
 
 object HECTaxCheckMatchResult {
 
-  case object NoMatch extends HECTaxCheckMatchResult
+  final case class NoMatch(matchRequest: HECTaxCheckMatchRequest) extends HECTaxCheckMatchResult
 
-  final case class Match(
-    taxCheckCode: HECTaxCheckCode,
-    licenceType: LicenceType,
-    verifier: Either[CRN, DateOfBirth]
-  ) extends HECTaxCheckMatchResult
+  final case class Match(matchRequest: HECTaxCheckMatchRequest) extends HECTaxCheckMatchResult
 
-  case object Expired extends HECTaxCheckMatchResult
+  final case class Expired(matchRequest: HECTaxCheckMatchRequest) extends HECTaxCheckMatchResult
 
   implicit val format: OFormat[HECTaxCheckMatchResult] = derived.oformat()
 

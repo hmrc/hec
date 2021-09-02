@@ -70,7 +70,7 @@ class TaxCheckServiceImpl @Inject() (
     taxCheckStore
       .get(taxCheckMatchRequest.taxCheckCode)
       .map(
-        _.fold[HECTaxCheckMatchResult](NoMatch)(doMatch(taxCheckMatchRequest, _))
+        _.fold[HECTaxCheckMatchResult](NoMatch(taxCheckMatchRequest))(doMatch(taxCheckMatchRequest, _))
       )
 
   private def doMatch(
@@ -94,10 +94,10 @@ class TaxCheckServiceImpl @Inject() (
       taxCheckMatchRequest.licenceType === storedTaxCheck.taxCheckData.licenceDetails.licenceType
 
     if (licenceTypeMatches && applicantVerifierMatches) {
-      if (hasExpired) Expired
-      else Match(taxCheckMatchRequest.taxCheckCode, taxCheckMatchRequest.licenceType, taxCheckMatchRequest.verifier)
+      if (hasExpired) Expired(taxCheckMatchRequest)
+      else Match(taxCheckMatchRequest)
     } else
-      NoMatch
+      NoMatch(taxCheckMatchRequest)
   }
 
 }

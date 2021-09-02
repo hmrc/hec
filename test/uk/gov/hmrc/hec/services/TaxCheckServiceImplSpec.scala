@@ -196,21 +196,21 @@ class TaxCheckServiceImplSpec extends AnyWordSpec with Matchers with MockFactory
           mockGetTaxCheck(taxCheckCode)(Right(None))
 
           val result = service.matchTaxCheck(matchingIndividualMatchRequest)
-          await(result.value) shouldBe Right(NoMatch)
+          await(result.value) shouldBe Right(NoMatch(matchingIndividualMatchRequest))
         }
 
         "the match request is for an individual but the stored tax check is for a company" in {
           mockGetTaxCheck(taxCheckCode)(Right(Some(storedCompanyTaxCheck)))
 
           val result = service.matchTaxCheck(matchingIndividualMatchRequest)
-          await(result.value) shouldBe Right(NoMatch)
+          await(result.value) shouldBe Right(NoMatch(matchingIndividualMatchRequest))
         }
 
         "the match request is for a company but the stored tax check is for an individual" in {
           mockGetTaxCheck(taxCheckCode)(Right(Some(storedIndividualTaxCheck)))
 
           val result = service.matchTaxCheck(matchingCompanyMatchRequest)
-          await(result.value) shouldBe Right(NoMatch)
+          await(result.value) shouldBe Right(NoMatch(matchingCompanyMatchRequest))
         }
 
         "the date of births in the match request and the stored tax check do not match" in {
@@ -218,7 +218,7 @@ class TaxCheckServiceImplSpec extends AnyWordSpec with Matchers with MockFactory
 
           val matchRequest = matchingIndividualMatchRequest.copy(verifier = Right(incorrectDateOfBirth))
           val result       = service.matchTaxCheck(matchRequest)
-          await(result.value) shouldBe Right(NoMatch)
+          await(result.value) shouldBe Right(NoMatch(matchRequest))
         }
 
         "the CRN's in the match request and the stored tax check do not match" in {
@@ -226,7 +226,7 @@ class TaxCheckServiceImplSpec extends AnyWordSpec with Matchers with MockFactory
 
           val matchRequest = matchingCompanyMatchRequest.copy(verifier = Left(incorrectCRN))
           val result       = service.matchTaxCheck(matchRequest)
-          await(result.value) shouldBe Right(NoMatch)
+          await(result.value) shouldBe Right(NoMatch(matchRequest))
         }
 
         "the date of births match but the licence types do not" in {
@@ -234,7 +234,7 @@ class TaxCheckServiceImplSpec extends AnyWordSpec with Matchers with MockFactory
 
           val matchRequest = matchingIndividualMatchRequest.copy(licenceType = incorrectLicenceType)
           val result       = service.matchTaxCheck(matchRequest)
-          await(result.value) shouldBe Right(NoMatch)
+          await(result.value) shouldBe Right(NoMatch(matchRequest))
         }
 
         "the CRN's match but the licence types do not" in {
@@ -242,7 +242,7 @@ class TaxCheckServiceImplSpec extends AnyWordSpec with Matchers with MockFactory
 
           val matchRequest = matchingCompanyMatchRequest.copy(licenceType = incorrectLicenceType)
           val result       = service.matchTaxCheck(matchRequest)
-          await(result.value) shouldBe Right(NoMatch)
+          await(result.value) shouldBe Right(NoMatch(matchRequest))
         }
 
       }
@@ -257,7 +257,7 @@ class TaxCheckServiceImplSpec extends AnyWordSpec with Matchers with MockFactory
           mockGetTaxCheck(taxCheckCode)(Right(Some(expiredTaxCheck)))
 
           val result = service.matchTaxCheck(matchingIndividualMatchRequest)
-          await(result.value) shouldBe Right(Expired)
+          await(result.value) shouldBe Right(Expired(matchingIndividualMatchRequest))
         }
 
         "all details match for an company but the stored tax check has expired" in {
@@ -268,7 +268,7 @@ class TaxCheckServiceImplSpec extends AnyWordSpec with Matchers with MockFactory
           mockGetTaxCheck(taxCheckCode)(Right(Some(expiredTaxCheck)))
 
           val result = service.matchTaxCheck(matchingCompanyMatchRequest)
-          await(result.value) shouldBe Right(Expired)
+          await(result.value) shouldBe Right(Expired(matchingCompanyMatchRequest))
         }
 
       }
@@ -279,13 +279,7 @@ class TaxCheckServiceImplSpec extends AnyWordSpec with Matchers with MockFactory
           mockGetTaxCheck(taxCheckCode)(Right(Some(storedIndividualTaxCheck)))
 
           val result = service.matchTaxCheck(matchingIndividualMatchRequest)
-          await(result.value) shouldBe Right(
-            Match(
-              taxCheckCode,
-              storedLicenceType,
-              Right(storedDateOfBirth)
-            )
-          )
+          await(result.value) shouldBe Right(Match(matchingIndividualMatchRequest))
         }
 
         "all details match for an company and the stored tax check has not expired" in {
@@ -294,13 +288,7 @@ class TaxCheckServiceImplSpec extends AnyWordSpec with Matchers with MockFactory
           mockGetTaxCheck(taxCheckCode)(Right(Some(taxCheck)))
 
           val result = service.matchTaxCheck(matchingCompanyMatchRequest)
-          await(result.value) shouldBe Right(
-            Match(
-              taxCheckCode,
-              storedLicenceType,
-              Left(storedCRN)
-            )
-          )
+          await(result.value) shouldBe Right(Match(matchingCompanyMatchRequest))
         }
 
       }
