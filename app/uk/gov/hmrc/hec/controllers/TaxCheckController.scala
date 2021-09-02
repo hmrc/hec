@@ -20,7 +20,7 @@ import cats.instances.future._
 import com.google.inject.{Inject, Singleton}
 import play.api.libs.json.{JsError, JsSuccess, JsValue, Json}
 import play.api.mvc.{Action, ControllerComponents}
-import uk.gov.hmrc.hec.models.HECTaxCheckData
+import uk.gov.hmrc.hec.models.{HECTaxCheckData, HECTaxCheckMatchRequest}
 import uk.gov.hmrc.hec.services.TaxCheckService
 import uk.gov.hmrc.hec.util.Logging
 import uk.gov.hmrc.hec.util.Logging.LoggerOps
@@ -55,6 +55,25 @@ class TaxCheckController @Inject() (
 
     }
 
+  }
+
+  val matchTaxCheck: Action[JsValue] = Action(parse.json).async { implicit request =>
+    Json.fromJson[HECTaxCheckMatchRequest](request.body) match {
+      case JsSuccess(matchRequest, _) =>
+        taxCheckService
+          .matchTaxCheck(matchRequest)
+          .fold(
+            { e =>
+              logger.warn("Could not match tax check", e)
+              InternalServerError
+            },
+            result => Ok(Json.toJson(result))
+          )
+
+      case JsError(_) =>
+        logger.warn("Could not parse JSON")
+        Future.successful(BadRequest)
+    }
   }
 
 }

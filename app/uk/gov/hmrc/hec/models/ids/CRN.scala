@@ -14,25 +14,19 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.hec.models
+package uk.gov.hmrc.hec.models.ids
 
 import cats.Eq
 import play.api.libs.functional.syntax.toInvariantFunctorOps
 import play.api.libs.json.Format
 
-import java.time.LocalDate
-import java.time.format.DateTimeFormatter
+final case class CRN(value: String) extends AnyVal
 
-final case class DateOfBirth(value: LocalDate) extends AnyVal
+object CRN {
 
-object DateOfBirth {
+  implicit val format: Format[CRN] =
+    implicitly[Format[String]].inmap(CRN(_), _.value)
 
-  private val dateFormatter = DateTimeFormatter.BASIC_ISO_DATE
-
-  implicit val format: Format[DateOfBirth] =
-    implicitly[Format[String]]
-      .inmap(s => DateOfBirth(LocalDate.parse(s, dateFormatter)), d => dateFormatter.format(d.value))
-
-  implicit val eq: Eq[DateOfBirth] = Eq.fromUniversalEquals
+  implicit val eq: Eq[CRN] = Eq.fromUniversalEquals
 
 }

@@ -28,7 +28,7 @@ import uk.gov.hmrc.hec.models.ApplicantDetails.CompanyApplicantDetails
 import uk.gov.hmrc.hec.models.HECTaxCheckData.CompanyHECTaxCheckData
 import uk.gov.hmrc.hec.models.TaxDetails.CompanyTaxDetails
 import uk.gov.hmrc.hec.models.{HECTaxCheck, HECTaxCheckCode}
-import uk.gov.hmrc.hec.models.ids.{CTUTR, GGCredId}
+import uk.gov.hmrc.hec.models.ids.{CRN, CTUTR, GGCredId}
 import uk.gov.hmrc.hec.models.licence.{LicenceDetails, LicenceExpiryDate, LicenceTimeTrading, LicenceType, LicenceValidityPeriod}
 import uk.gov.hmrc.hec.util.TimeUtils
 import uk.gov.hmrc.http.HeaderCarrier
@@ -55,7 +55,7 @@ class HECTaxCheckStoreImplSpec extends AnyWordSpec with Matchers with Eventually
   "HECTaxCheckStoreImpl" must {
 
     val taxCheckData = CompanyHECTaxCheckData(
-      CompanyApplicantDetails(GGCredId("")),
+      CompanyApplicantDetails(GGCredId(""), CRN("")),
       LicenceDetails(
         LicenceType.ScrapMetalDealerSite,
         LicenceExpiryDate(LocalDate.now()),

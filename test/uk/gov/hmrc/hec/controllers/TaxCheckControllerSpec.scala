@@ -26,10 +26,11 @@ import play.api.test.FakeRequest
 import play.api.test.Helpers._
 import uk.gov.hmrc.hec.models.ApplicantDetails.IndividualApplicantDetails
 import uk.gov.hmrc.hec.models.HECTaxCheckData.IndividualHECTaxCheckData
+import uk.gov.hmrc.hec.models.HECTaxCheckMatchResult.{Expired, Match, NoMatch}
 import uk.gov.hmrc.hec.models.TaxDetails.IndividualTaxDetails
-import uk.gov.hmrc.hec.models.ids.{GGCredId, NINO, SAUTR}
+import uk.gov.hmrc.hec.models.ids.{CRN, GGCredId, NINO, SAUTR}
 import uk.gov.hmrc.hec.models.licence.{LicenceDetails, LicenceExpiryDate, LicenceTimeTrading, LicenceType, LicenceValidityPeriod}
-import uk.gov.hmrc.hec.models.{DateOfBirth, Error, HECTaxCheck, HECTaxCheckCode, HECTaxCheckData, Name, TaxSituation}
+import uk.gov.hmrc.hec.models.{DateOfBirth, Error, HECTaxCheck, HECTaxCheckCode, HECTaxCheckData, HECTaxCheckMatchRequest, HECTaxCheckMatchResult, Name, TaxSituation}
 import uk.gov.hmrc.hec.services.TaxCheckService
 import uk.gov.hmrc.http.HeaderCarrier
 
@@ -52,6 +53,12 @@ class TaxCheckControllerSpec extends ControllerSpec {
     (mockTaxCheckService
       .saveTaxCheck(_: HECTaxCheckData)(_: HeaderCarrier))
       .expects(taxCheckData, *)
+      .returning(EitherT.fromEither(result))
+
+  def mockMatchTaxCheck(matchRequest: HECTaxCheckMatchRequest)(result: Either[Error, HECTaxCheckMatchResult]) =
+    (mockTaxCheckService
+      .matchTaxCheck(_: HECTaxCheckMatchRequest)(_: HeaderCarrier))
+      .expects(matchRequest, *)
       .returning(EitherT.fromEither(result))
 
   "TaxCheckController" when {
@@ -127,6 +134,87 @@ class TaxCheckControllerSpec extends ControllerSpec {
           val result = performActionWithJsonBody(Json.toJson(taxCheckData))
           status(result)                              shouldBe CREATED
           contentAsJson(result).validate[HECTaxCheck] shouldBe JsSuccess(taxCheck)
+        }
+
+      }
+
+    }
+
+    "handling requests to match a tax check" must {
+
+      def performActionWithJsonBody(requestBody: JsValue): Future[Result] = {
+        val request = FakeRequest().withBody(requestBody).withHeaders(CONTENT_TYPE -> JSON)
+        controller.matchTaxCheck(request)
+      }
+
+      val individualMatchRequest: HECTaxCheckMatchRequest = HECTaxCheckMatchRequest(
+        HECTaxCheckCode("code"),
+        LicenceType.ScrapMetalDealerSite,
+        Right(DateOfBirth(LocalDate.now()))
+      )
+
+      val companyMatchRequest: HECTaxCheckMatchRequest = HECTaxCheckMatchRequest(
+        HECTaxCheckCode("code"),
+        LicenceType.ScrapMetalDealerSite,
+        Left(CRN("crn"))
+      )
+
+      "return a 415 (unsupported media type)" when {
+
+        "there is no body in the request" in {
+          val result: Future[Result] = controller.matchTaxCheck(FakeRequest()).run()
+          status(result) shouldBe UNSUPPORTED_MEDIA_TYPE
+
+        }
+
+        "there is no json body in the request" in {
+          val result: Future[Result] =
+            controller.matchTaxCheck(FakeRequest().withBody("hi").withHeaders(CONTENT_TYPE -> TEXT)).run()
+          status(result) shouldBe UNSUPPORTED_MEDIA_TYPE
+
+        }
+
+      }
+
+      "return a 400 (bad request)" when {
+
+        "the JSON in the request cannot be parsed" in {
+          status(performActionWithJsonBody(JsString("hi"))) shouldBe BAD_REQUEST
+
+        }
+
+      }
+
+      "return an 500 (internal server error)" when {
+
+        "there is an error saving the tax check" in {
+          mockMatchTaxCheck(individualMatchRequest)(Left(Error(new Exception("Oh no!"))))
+
+          val result = performActionWithJsonBody(Json.toJson(individualMatchRequest))
+          status(result) shouldBe INTERNAL_SERVER_ERROR
+        }
+
+      }
+
+      "return a 200 (OK)" when {
+
+        "the tax check service returns a match result" in {
+
+          List[HECTaxCheckMatchResult](
+            Match(HECTaxCheckCode(""), LicenceType.ScrapMetalMobileCollector, Left(CRN(""))),
+            NoMatch,
+            Expired
+          ).foreach { matchResult =>
+            withClue(s"For match result '$matchResult': ") {
+              mockMatchTaxCheck(companyMatchRequest)(Right(matchResult))
+
+              val result = performActionWithJsonBody(Json.toJson(companyMatchRequest))
+              status(result)                                                  shouldBe OK
+              contentAsJson(result).validate[HECTaxCheckMatchResult].asEither shouldBe Right(matchResult)
+            }
+
+          }
+
         }
 
       }

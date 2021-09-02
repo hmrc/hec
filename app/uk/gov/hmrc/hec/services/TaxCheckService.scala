@@ -18,10 +18,13 @@ package uk.gov.hmrc.hec.services
 
 import cats.data.EitherT
 import cats.instances.future._
+import cats.syntax.eq._
 import com.google.inject.{ImplementedBy, Inject, Singleton}
 import com.typesafe.config.Config
 import configs.syntax._
-import uk.gov.hmrc.hec.models.{Error, HECTaxCheck, HECTaxCheckData}
+import uk.gov.hmrc.hec.models.HECTaxCheckData.{CompanyHECTaxCheckData, IndividualHECTaxCheckData}
+import uk.gov.hmrc.hec.models.HECTaxCheckMatchResult.{Expired, Match, NoMatch}
+import uk.gov.hmrc.hec.models.{Error, HECTaxCheck, HECTaxCheckData, HECTaxCheckMatchRequest, HECTaxCheckMatchResult}
 import uk.gov.hmrc.hec.repos.HECTaxCheckStore
 import uk.gov.hmrc.hec.util.TimeUtils
 import uk.gov.hmrc.http.HeaderCarrier
@@ -34,6 +37,10 @@ trait TaxCheckService {
 
   def saveTaxCheck(taxCheckData: HECTaxCheckData)(implicit hc: HeaderCarrier): EitherT[Future, Error, HECTaxCheck]
 
+  def matchTaxCheck(taxCheckMatchRequest: HECTaxCheckMatchRequest)(implicit
+    hc: HeaderCarrier
+  ): EitherT[Future, Error, HECTaxCheckMatchResult]
+
 }
 
 @Singleton
@@ -44,16 +51,53 @@ class TaxCheckServiceImpl @Inject() (
 )(implicit ec: ExecutionContext)
     extends TaxCheckService {
 
-  val expiresAfter: FiniteDuration = config.get[FiniteDuration]("hec-tax-check.expires-after").value
+  val taxCheckCodeExpiresAfterDays: Long =
+    config.get[FiniteDuration]("hec-tax-check.expires-after").value.toDays
 
-  override def saveTaxCheck(
+  def saveTaxCheck(
     taxCheckData: HECTaxCheckData
   )(implicit hc: HeaderCarrier): EitherT[Future, Error, HECTaxCheck] = {
     val taxCheckCode = taxCheckCodeGeneratorService.generateTaxCheckCode()
-    val expiryDate   = TimeUtils.today().plusDays(expiresAfter.toDays)
+    val expiryDate   = TimeUtils.today().plusDays(taxCheckCodeExpiresAfterDays)
     val taxCheck     = HECTaxCheck(taxCheckData, taxCheckCode, expiryDate)
 
     taxCheckStore.store(taxCheck).map(_ => taxCheck)
+  }
+
+  def matchTaxCheck(taxCheckMatchRequest: HECTaxCheckMatchRequest)(implicit
+    hc: HeaderCarrier
+  ): EitherT[Future, Error, HECTaxCheckMatchResult] =
+    taxCheckStore
+      .get(taxCheckMatchRequest.taxCheckCode)
+      .map(
+        _.fold[HECTaxCheckMatchResult](NoMatch)(doMatch(taxCheckMatchRequest, _))
+      )
+
+  private def doMatch(
+    taxCheckMatchRequest: HECTaxCheckMatchRequest,
+    storedTaxCheck: HECTaxCheck
+  ): HECTaxCheckMatchResult = {
+    lazy val hasExpired = TimeUtils.today().isAfter(storedTaxCheck.expiresAfter)
+
+    val applicantVerifierMatches = (taxCheckMatchRequest.verifier, storedTaxCheck.taxCheckData) match {
+      case (Right(dateOfBirth), storedIndividualData: IndividualHECTaxCheckData) =>
+        dateOfBirth === storedIndividualData.applicantDetails.dateOfBirth
+
+      case (Left(crn), storedCompanyData: CompanyHECTaxCheckData) =>
+        crn === storedCompanyData.applicantDetails.crn
+
+      case _ =>
+        false
+    }
+
+    val licenceTypeMatches =
+      taxCheckMatchRequest.licenceType === storedTaxCheck.taxCheckData.licenceDetails.licenceType
+
+    if (licenceTypeMatches && applicantVerifierMatches) {
+      if (hasExpired) Expired
+      else Match(taxCheckMatchRequest.taxCheckCode, taxCheckMatchRequest.licenceType, taxCheckMatchRequest.verifier)
+    } else
+      NoMatch
   }
 
 }
