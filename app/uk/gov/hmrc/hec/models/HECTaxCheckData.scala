@@ -22,7 +22,11 @@ import uk.gov.hmrc.hec.models.ApplicantDetails.{CompanyApplicantDetails, Individ
 import uk.gov.hmrc.hec.models.TaxDetails.{CompanyTaxDetails, IndividualTaxDetails}
 import uk.gov.hmrc.hec.models.licence.LicenceDetails
 
-sealed trait HECTaxCheckData extends Product with Serializable
+sealed trait HECTaxCheckData extends Product with Serializable {
+
+  val licenceDetails: LicenceDetails
+
+}
 
 object HECTaxCheckData {
 

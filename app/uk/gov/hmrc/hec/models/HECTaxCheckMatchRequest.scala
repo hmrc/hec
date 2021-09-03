@@ -16,23 +16,19 @@
 
 package uk.gov.hmrc.hec.models
 
-import cats.Eq
-import play.api.libs.functional.syntax.toInvariantFunctorOps
-import play.api.libs.json.Format
+import play.api.libs.json.{Json, OFormat}
+import uk.gov.hmrc.hec.models.ids.CRN
+import uk.gov.hmrc.hec.models.licence.LicenceType
+import uk.gov.hmrc.hec.models.EitherUtils.eitherFormat
 
-import java.time.LocalDate
-import java.time.format.DateTimeFormatter
+final case class HECTaxCheckMatchRequest(
+  taxCheckCode: HECTaxCheckCode,
+  licenceType: LicenceType,
+  verifier: Either[CRN, DateOfBirth]
+)
 
-final case class DateOfBirth(value: LocalDate) extends AnyVal
+object HECTaxCheckMatchRequest {
 
-object DateOfBirth {
-
-  private val dateFormatter = DateTimeFormatter.BASIC_ISO_DATE
-
-  implicit val format: Format[DateOfBirth] =
-    implicitly[Format[String]]
-      .inmap(s => DateOfBirth(LocalDate.parse(s, dateFormatter)), d => dateFormatter.format(d.value))
-
-  implicit val eq: Eq[DateOfBirth] = Eq.fromUniversalEquals
+  implicit val format: OFormat[HECTaxCheckMatchRequest] = Json.format
 
 }

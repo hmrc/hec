@@ -16,23 +16,19 @@
 
 package uk.gov.hmrc.hec.models
 
-import cats.Eq
-import play.api.libs.functional.syntax.toInvariantFunctorOps
-import play.api.libs.json.Format
+import julienrf.json.derived
+import play.api.libs.json.OFormat
 
-import java.time.LocalDate
-import java.time.format.DateTimeFormatter
+sealed trait HECTaxCheckMatchResult
 
-final case class DateOfBirth(value: LocalDate) extends AnyVal
+object HECTaxCheckMatchResult {
 
-object DateOfBirth {
+  final case class NoMatch(matchRequest: HECTaxCheckMatchRequest) extends HECTaxCheckMatchResult
 
-  private val dateFormatter = DateTimeFormatter.BASIC_ISO_DATE
+  final case class Match(matchRequest: HECTaxCheckMatchRequest) extends HECTaxCheckMatchResult
 
-  implicit val format: Format[DateOfBirth] =
-    implicitly[Format[String]]
-      .inmap(s => DateOfBirth(LocalDate.parse(s, dateFormatter)), d => dateFormatter.format(d.value))
+  final case class Expired(matchRequest: HECTaxCheckMatchRequest) extends HECTaxCheckMatchResult
 
-  implicit val eq: Eq[DateOfBirth] = Eq.fromUniversalEquals
+  implicit val format: OFormat[HECTaxCheckMatchResult] = derived.oformat()
 
 }

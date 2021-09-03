@@ -16,6 +16,7 @@
 
 package uk.gov.hmrc.hec.models.licence
 
+import cats.Eq
 import julienrf.json.derived
 import play.api.libs.json.OFormat
 
@@ -32,5 +33,7 @@ object LicenceType {
   case object ScrapMetalDealerSite extends LicenceType
 
   implicit val format: OFormat[LicenceType] = derived.oformat()
+
+  implicit val eq: Eq[LicenceType] = Eq.fromUniversalEquals
 
 }

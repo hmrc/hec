@@ -23,11 +23,12 @@ import org.scalamock.scalatest.MockFactory
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
 import play.api.test.Helpers._
-import uk.gov.hmrc.hec.models.ApplicantDetails.IndividualApplicantDetails
-import uk.gov.hmrc.hec.models.HECTaxCheckData.IndividualHECTaxCheckData
-import uk.gov.hmrc.hec.models.TaxDetails.IndividualTaxDetails
-import uk.gov.hmrc.hec.models.{DateOfBirth, Error, HECTaxCheck, HECTaxCheckCode, Name, TaxSituation}
-import uk.gov.hmrc.hec.models.ids.{GGCredId, NINO, SAUTR}
+import uk.gov.hmrc.hec.models.ApplicantDetails.{CompanyApplicantDetails, IndividualApplicantDetails}
+import uk.gov.hmrc.hec.models.HECTaxCheckData.{CompanyHECTaxCheckData, IndividualHECTaxCheckData}
+import uk.gov.hmrc.hec.models.HECTaxCheckMatchResult.{Expired, Match, NoMatch}
+import uk.gov.hmrc.hec.models.TaxDetails.{CompanyTaxDetails, IndividualTaxDetails}
+import uk.gov.hmrc.hec.models.{DateOfBirth, Error, HECTaxCheck, HECTaxCheckCode, HECTaxCheckMatchRequest, Name, TaxSituation}
+import uk.gov.hmrc.hec.models.ids.{CRN, CTUTR, GGCredId, NINO, SAUTR}
 import uk.gov.hmrc.hec.models.licence.{LicenceDetails, LicenceExpiryDate, LicenceTimeTrading, LicenceType, LicenceValidityPeriod}
 import uk.gov.hmrc.hec.repos.HECTaxCheckStore
 import uk.gov.hmrc.hec.util.TimeUtils
@@ -58,11 +59,17 @@ class TaxCheckServiceImplSpec extends AnyWordSpec with Matchers with MockFactory
       .expects(taxCheck, *)
       .returning(EitherT.fromEither(result))
 
+  def mockGetTaxCheck(taxCheckCode: HECTaxCheckCode)(result: Either[Error, Option[HECTaxCheck]]) =
+    (mockTaxCheckStore
+      .get(_: HECTaxCheckCode)(_: HeaderCarrier))
+      .expects(taxCheckCode, *)
+      .returning(EitherT.fromEither(result))
+
+  implicit val hc: HeaderCarrier = HeaderCarrier()
+
   "TaxCheckServiceImpl" when {
 
     "handling requests to save a tax check" must {
-
-      implicit val hc: HeaderCarrier = HeaderCarrier()
 
       val taxCheckData = IndividualHECTaxCheckData(
         IndividualApplicantDetails(GGCredId(""), Name("", ""), DateOfBirth(LocalDate.now())),
@@ -107,6 +114,181 @@ class TaxCheckServiceImplSpec extends AnyWordSpec with Matchers with MockFactory
 
           val result = service.saveTaxCheck(taxCheckData).value
           await(result) shouldBe Right(taxCheck)
+        }
+
+      }
+
+    }
+
+    "handling requests to match a tax check" must {
+
+      val taxCheckCode = HECTaxCheckCode("code")
+
+      val (storedLicenceType, incorrectLicenceType) =
+        LicenceType.ScrapMetalDealerSite -> LicenceType.DriverOfTaxisAndPrivateHires
+
+      val (storedDateOfBirth, incorrectDateOfBirth) =
+        DateOfBirth(LocalDate.now()) -> DateOfBirth(LocalDate.now().plusDays(1L))
+
+      val (storedCRN, incorrectCRN) =
+        CRN("crn") -> CRN("incorrect-crn")
+
+      val storedLicenceDetails =
+        LicenceDetails(
+          storedLicenceType,
+          LicenceExpiryDate(LocalDate.now()),
+          LicenceTimeTrading.EightYearsOrMore,
+          LicenceValidityPeriod.UpToOneYear
+        )
+
+      val storedIndividualTaxCheck =
+        HECTaxCheck(
+          IndividualHECTaxCheckData(
+            IndividualApplicantDetails(GGCredId(""), Name("", ""), storedDateOfBirth),
+            storedLicenceDetails,
+            IndividualTaxDetails(
+              NINO(""),
+              Some(SAUTR("")),
+              TaxSituation.SAPAYE
+            )
+          ),
+          taxCheckCode,
+          TimeUtils.today().plusMonths(1L)
+        )
+
+      val storedCompanyTaxCheck =
+        HECTaxCheck(
+          CompanyHECTaxCheckData(
+            CompanyApplicantDetails(GGCredId(""), storedCRN),
+            storedLicenceDetails,
+            CompanyTaxDetails(CTUTR(""))
+          ),
+          taxCheckCode,
+          TimeUtils.today().plusMonths(1L)
+        )
+
+      val matchingIndividualMatchRequest = HECTaxCheckMatchRequest(
+        taxCheckCode,
+        storedLicenceType,
+        Right(storedDateOfBirth)
+      )
+
+      val matchingCompanyMatchRequest = HECTaxCheckMatchRequest(
+        taxCheckCode,
+        storedLicenceType,
+        Left(storedCRN)
+      )
+
+      "return an error" when {
+
+        "there is an error getting from the tax check store" in {
+          mockGetTaxCheck(taxCheckCode)(Left(Error("")))
+
+          val result = service.matchTaxCheck(matchingIndividualMatchRequest)
+          await(result.value) shouldBe a[Left[_, _]]
+        }
+
+      }
+
+      "return a 'no match' result" when {
+
+        "no tax check exists with the given tax check code" in {
+          mockGetTaxCheck(taxCheckCode)(Right(None))
+
+          val result = service.matchTaxCheck(matchingIndividualMatchRequest)
+          await(result.value) shouldBe Right(NoMatch(matchingIndividualMatchRequest))
+        }
+
+        "the match request is for an individual but the stored tax check is for a company" in {
+          mockGetTaxCheck(taxCheckCode)(Right(Some(storedCompanyTaxCheck)))
+
+          val result = service.matchTaxCheck(matchingIndividualMatchRequest)
+          await(result.value) shouldBe Right(NoMatch(matchingIndividualMatchRequest))
+        }
+
+        "the match request is for a company but the stored tax check is for an individual" in {
+          mockGetTaxCheck(taxCheckCode)(Right(Some(storedIndividualTaxCheck)))
+
+          val result = service.matchTaxCheck(matchingCompanyMatchRequest)
+          await(result.value) shouldBe Right(NoMatch(matchingCompanyMatchRequest))
+        }
+
+        "the date of births in the match request and the stored tax check do not match" in {
+          mockGetTaxCheck(taxCheckCode)(Right(Some(storedIndividualTaxCheck)))
+
+          val matchRequest = matchingIndividualMatchRequest.copy(verifier = Right(incorrectDateOfBirth))
+          val result       = service.matchTaxCheck(matchRequest)
+          await(result.value) shouldBe Right(NoMatch(matchRequest))
+        }
+
+        "the CRN's in the match request and the stored tax check do not match" in {
+          mockGetTaxCheck(taxCheckCode)(Right(Some(storedCompanyTaxCheck)))
+
+          val matchRequest = matchingCompanyMatchRequest.copy(verifier = Left(incorrectCRN))
+          val result       = service.matchTaxCheck(matchRequest)
+          await(result.value) shouldBe Right(NoMatch(matchRequest))
+        }
+
+        "the date of births match but the licence types do not" in {
+          mockGetTaxCheck(taxCheckCode)(Right(Some(storedIndividualTaxCheck)))
+
+          val matchRequest = matchingIndividualMatchRequest.copy(licenceType = incorrectLicenceType)
+          val result       = service.matchTaxCheck(matchRequest)
+          await(result.value) shouldBe Right(NoMatch(matchRequest))
+        }
+
+        "the CRN's match but the licence types do not" in {
+          mockGetTaxCheck(taxCheckCode)(Right(Some(storedCompanyTaxCheck)))
+
+          val matchRequest = matchingCompanyMatchRequest.copy(licenceType = incorrectLicenceType)
+          val result       = service.matchTaxCheck(matchRequest)
+          await(result.value) shouldBe Right(NoMatch(matchRequest))
+        }
+
+      }
+
+      "return an 'expired' result" when {
+
+        "all details match for an individual but the stored tax check has expired" in {
+          val expiredTaxCheck = storedIndividualTaxCheck.copy(
+            expiresAfter = TimeUtils.today().minusMonths(1L)
+          )
+
+          mockGetTaxCheck(taxCheckCode)(Right(Some(expiredTaxCheck)))
+
+          val result = service.matchTaxCheck(matchingIndividualMatchRequest)
+          await(result.value) shouldBe Right(Expired(matchingIndividualMatchRequest))
+        }
+
+        "all details match for an company but the stored tax check has expired" in {
+          val expiredTaxCheck = storedCompanyTaxCheck.copy(
+            expiresAfter = TimeUtils.today().minusMonths(1L)
+          )
+
+          mockGetTaxCheck(taxCheckCode)(Right(Some(expiredTaxCheck)))
+
+          val result = service.matchTaxCheck(matchingCompanyMatchRequest)
+          await(result.value) shouldBe Right(Expired(matchingCompanyMatchRequest))
+        }
+
+      }
+
+      "return an 'match' result" when {
+
+        "all details match for an individual and the stored tax check has not expired" in {
+          mockGetTaxCheck(taxCheckCode)(Right(Some(storedIndividualTaxCheck)))
+
+          val result = service.matchTaxCheck(matchingIndividualMatchRequest)
+          await(result.value) shouldBe Right(Match(matchingIndividualMatchRequest))
+        }
+
+        "all details match for an company and the stored tax check has not expired" in {
+          val taxCheck = storedCompanyTaxCheck.copy(expiresAfter = TimeUtils.today())
+
+          mockGetTaxCheck(taxCheckCode)(Right(Some(taxCheck)))
+
+          val result = service.matchTaxCheck(matchingCompanyMatchRequest)
+          await(result.value) shouldBe Right(Match(matchingCompanyMatchRequest))
         }
 
       }
