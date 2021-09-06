@@ -21,13 +21,13 @@ import play.api.libs.json.Format
 import cats.instances.int._
 import cats.syntax.eq._
 
-final case class TaxYear(year: Int) extends AnyVal
+final case class TaxYear(startYear: Int) extends AnyVal
 
 object TaxYear {
-  implicit val format: Format[TaxYear] = implicitly[Format[Int]].inmap(TaxYear(_), _.year)
+  implicit val format: Format[TaxYear] = implicitly[Format[Int]].inmap(TaxYear(_), _.startYear)
 
-  def fromString(yearStr: String): Option[TaxYear] =
-    try if (yearStr.length === 4) Some(TaxYear(yearStr.toInt)) else None
+  def fromString(startYearStr: String): Option[TaxYear] =
+    try if (startYearStr.length === 4) Some(TaxYear(startYearStr.toInt)) else None
     catch {
       case _: Exception => None
     }
