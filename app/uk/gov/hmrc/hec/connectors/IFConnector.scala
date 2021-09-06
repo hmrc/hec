@@ -57,7 +57,7 @@ class IFConnectorImpl @Inject() (http: HttpClient, servicesConfig: ServicesConfi
 
   // Integration framework adopts the old convention of using the end date for the SA tax year, therefore adding 1
   private def saStatusUrl(utr: SAUTR, taxYear: TaxYear): String =
-    s"$baseUrl/individuals/self-assessment/account-overview/${utr.value}/${taxYear.year + 1}"
+    s"$baseUrl/individuals/self-assessment/account-overview/${utr.value}/${taxYear.startYear + 1}"
 
   private def ctStatusUrl(utr: CTUTR, startDate: LocalDate, endDate: LocalDate): String =
     s"$baseUrl/organisations/corporation-tax/${utr.value}/company/accounting-periods?startDate=${isoDateFormat(startDate)}&endDate=${isoDateFormat(endDate)}"
