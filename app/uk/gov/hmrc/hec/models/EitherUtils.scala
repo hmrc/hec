@@ -18,23 +18,31 @@ package uk.gov.hmrc.hec.models
 
 import play.api.libs.json.{Format, JsObject, JsResult, JsValue, Json}
 
+import java.util.Locale
+import scala.reflect.ClassTag
+
 object EitherUtils {
 
   implicit def eitherFormat[A, B](implicit
     aFormat: Format[A],
-    bFormat: Format[B]
+    bFormat: Format[B],
+    aTag: ClassTag[A],
+    bTag: ClassTag[B]
   ): Format[Either[A, B]] =
     new Format[Either[A, B]] {
+      val leftFieldName  = aTag.runtimeClass.getSimpleName.toLowerCase(Locale.UK)
+      val rightFieldName = bTag.runtimeClass.getSimpleName.toLowerCase(Locale.UK)
+
       override def reads(json: JsValue): JsResult[Either[A, B]] =
-        (json \ "l")
+        (json \ leftFieldName)
           .validate[A]
           .map[Either[A, B]](Left(_))
-          .orElse((json \ "r").validate[B].map(Right(_)))
+          .orElse((json \ rightFieldName).validate[B].map(Right(_)))
 
       override def writes(o: Either[A, B]): JsValue =
         o.fold(
-          a ⇒ JsObject(Seq("l" → Json.toJson(a))),
-          b ⇒ JsObject(Seq("r" → Json.toJson(b)))
+          a ⇒ JsObject(Seq(leftFieldName → Json.toJson(a))),
+          b ⇒ JsObject(Seq(rightFieldName → Json.toJson(b)))
         )
     }
 
