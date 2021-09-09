@@ -11,3 +11,5 @@
 
 # Add all the application routes to the prod.routes file
 ->         /                          prod.Routes
+
+POST       /hec/test-only/tax-check   uk.gov.hmrc.hec.testonly.controllers.TaxCheckController.saveTaxCheck
