@@ -65,15 +65,58 @@ class HECTaxCheckStoreImplSpec extends AnyWordSpec with Matchers with Eventually
       CompanyTaxDetails(CTUTR(""))
     )
 
-    val taxCheckCode = HECTaxCheckCode("code")
-    val taxCheck     = HECTaxCheck(taxCheckData, taxCheckCode, TimeUtils.today())
+    val taxCheckCode1 = HECTaxCheckCode("code1")
+    val taxCheckCode2 = HECTaxCheckCode("code12")
+    val taxCheck1     = HECTaxCheck(taxCheckData, taxCheckCode1, TimeUtils.today())
+    val taxCheck2     = taxCheck1.copy(taxCheckCode = taxCheckCode2)
 
-    "be able to insert tax checks into mongo and read it back" in {
+    "be able to insert tax checks into mongo, read it back and delete it" in {
 
-      await(taxCheckStore.store(taxCheck).value) shouldBe Right(())
+      // store a tax check
+      await(taxCheckStore.store(taxCheck1).value) shouldBe Right(())
+
+      // check we can get it back
+      eventually {
+        await(taxCheckStore.get(taxCheckCode1).value) should be(Right(Some(taxCheck1)))
+      }
+
+      // check that delete returns ok
+      eventually {
+        await(taxCheckStore.delete(taxCheckCode1).value) should be(Right(()))
+      }
+
+      // check that delete actually happened
+      eventually {
+        await(taxCheckStore.get(taxCheckCode1).value) should be(Right(None))
+      }
+
+    }
+
+    "be able to delete all records" in {
+      await(taxCheckStore.store(taxCheck1).value) shouldBe Right(())
+      await(taxCheckStore.store(taxCheck2).value) shouldBe Right(())
+
+      // check we can get them back
+      eventually {
+        await(taxCheckStore.get(taxCheckCode1).value) should be(Right(Some(taxCheck1)))
+      }
 
       eventually {
-        await(taxCheckStore.get(taxCheckCode).value) should be(Right(Some(taxCheck)))
+        await(taxCheckStore.get(taxCheckCode2).value) should be(Right(Some(taxCheck2)))
+      }
+
+      // check that delete all returns ok
+      eventually {
+        await(taxCheckStore.deleteAll().value) should be(Right(()))
+      }
+
+      // check that delete actually happened
+      eventually {
+        await(taxCheckStore.get(taxCheckCode1).value) should be(Right(None))
+      }
+
+      eventually {
+        await(taxCheckStore.get(taxCheckCode2).value) should be(Right(None))
       }
     }
 

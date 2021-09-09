@@ -44,6 +44,10 @@ trait HECTaxCheckStore {
     taxCheck: HECTaxCheck
   )(implicit hc: HeaderCarrier): EitherT[Future, Error, Unit]
 
+  def delete(taxCheckCode: HECTaxCheckCode)(implicit hc: HeaderCarrier): EitherT[Future, Error, Unit]
+
+  def deleteAll()(implicit hc: HeaderCarrier): EitherT[Future, Error, Unit]
+
 }
 
 @Singleton
@@ -112,6 +116,39 @@ class HECTaxCheckStoreImpl @Inject() (
                   )
                 )
               )
+            else
+              Right(())
+          }
+          .recover { case e ⇒ Left(Error(e)) }
+      }
+    )
+
+  def delete(taxCheckCode: HECTaxCheckCode)(implicit hc: HeaderCarrier): EitherT[Future, Error, Unit] =
+    EitherT(
+      preservingMdc {
+        cacheRepository
+          .removeById(Id(taxCheckCode.value))
+          .map[Either[Error, Unit]] { writeResult ⇒
+            if (!writeResult.ok)
+              Left(
+                Error(
+                  s"Mongo write error: ${writeResult.writeErrors}"
+                )
+              )
+            else
+              Right(())
+          }
+          .recover { case e ⇒ Left(Error(e)) }
+      }
+    )
+
+  def deleteAll()(implicit hc: HeaderCarrier): EitherT[Future, Error, Unit] =
+    EitherT(
+      preservingMdc {
+        cacheRepository.drop
+          .map[Either[Error, Unit]] { success ⇒
+            if (!success)
+              Left(Error("Could not drop mongo collection"))
             else
               Right(())
           }

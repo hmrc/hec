@@ -23,7 +23,7 @@ import uk.gov.hmrc.hec.models.HECTaxCheckData.{CompanyHECTaxCheckData, Individua
 import uk.gov.hmrc.hec.models.TaxDetails.{CompanyTaxDetails, IndividualTaxDetails}
 import uk.gov.hmrc.hec.models.ids.{CTUTR, GGCredId, NINO}
 import uk.gov.hmrc.hec.models.licence.{LicenceDetails, LicenceExpiryDate, LicenceTimeTrading, LicenceValidityPeriod}
-import uk.gov.hmrc.hec.models.{Error, HECTaxCheck, HECTaxCheckData, Name, TaxSituation}
+import uk.gov.hmrc.hec.models.{Error, HECTaxCheck, HECTaxCheckCode, HECTaxCheckData, Name, TaxSituation}
 import uk.gov.hmrc.hec.repos.HECTaxCheckStore
 import uk.gov.hmrc.hec.testonly.models.SaveTaxCheckRequest
 import uk.gov.hmrc.hec.util.TimeUtils
@@ -35,6 +35,14 @@ import scala.concurrent.Future
 trait TaxCheckService {
 
   def saveTaxCheck(saveTaxCheckRequest: SaveTaxCheckRequest)(implicit hc: HeaderCarrier): EitherT[Future, Error, Unit]
+
+  def getTaxCheck(taxCheckCode: HECTaxCheckCode)(implicit
+    hc: HeaderCarrier
+  ): EitherT[Future, Error, Option[HECTaxCheck]]
+
+  def deleteTaxCheck(taxCheckCode: HECTaxCheckCode)(implicit hc: HeaderCarrier): EitherT[Future, Error, Unit]
+
+  def deleteAllTaxCheck()(implicit hc: HeaderCarrier): EitherT[Future, Error, Unit]
 
 }
 
@@ -51,6 +59,17 @@ class TaxCheckServiceImpl @Inject() (
 
     taxCheckStore.store(taxCheck)
   }
+
+  def getTaxCheck(taxCheckCode: HECTaxCheckCode)(implicit
+    hc: HeaderCarrier
+  ): EitherT[Future, Error, Option[HECTaxCheck]] =
+    taxCheckStore.get(taxCheckCode)
+
+  def deleteTaxCheck(taxCheckCode: HECTaxCheckCode)(implicit hc: HeaderCarrier): EitherT[Future, Error, Unit] =
+    taxCheckStore.delete(taxCheckCode)
+
+  def deleteAllTaxCheck()(implicit hc: HeaderCarrier): EitherT[Future, Error, Unit] =
+    taxCheckStore.deleteAll()
 
   private[services] def taxCheckData(
     saveTaxCheckRequest: SaveTaxCheckRequest
