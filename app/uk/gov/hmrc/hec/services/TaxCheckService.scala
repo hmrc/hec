@@ -26,7 +26,7 @@ import uk.gov.hmrc.hec.models.HECTaxCheckData.{CompanyHECTaxCheckData, Individua
 import uk.gov.hmrc.hec.models.HECTaxCheckMatchResult.{Expired, Match, NoMatch}
 import uk.gov.hmrc.hec.models.{Error, HECTaxCheck, HECTaxCheckData, HECTaxCheckMatchRequest, HECTaxCheckMatchResult}
 import uk.gov.hmrc.hec.repos.HECTaxCheckStore
-import uk.gov.hmrc.hec.util.TimeUtils
+import uk.gov.hmrc.hec.util.{TimeProvider, TimeUtils}
 import uk.gov.hmrc.http.HeaderCarrier
 
 import scala.concurrent.duration.FiniteDuration
@@ -46,6 +46,7 @@ trait TaxCheckService {
 @Singleton
 class TaxCheckServiceImpl @Inject() (
   taxCheckCodeGeneratorService: TaxCheckCodeGeneratorService,
+  timeProvider: TimeProvider,
   taxCheckStore: HECTaxCheckStore,
   config: Config
 )(implicit ec: ExecutionContext)
@@ -70,7 +71,9 @@ class TaxCheckServiceImpl @Inject() (
     taxCheckStore
       .get(taxCheckMatchRequest.taxCheckCode)
       .map(
-        _.fold[HECTaxCheckMatchResult](NoMatch(taxCheckMatchRequest))(doMatch(taxCheckMatchRequest, _))
+        _.fold[HECTaxCheckMatchResult](NoMatch(taxCheckMatchRequest, timeProvider.currentDateTime))(
+          doMatch(taxCheckMatchRequest, _)
+        )
       )
 
   private def doMatch(
@@ -94,10 +97,10 @@ class TaxCheckServiceImpl @Inject() (
       taxCheckMatchRequest.licenceType === storedTaxCheck.taxCheckData.licenceDetails.licenceType
 
     if (licenceTypeMatches && applicantVerifierMatches) {
-      if (hasExpired) Expired(taxCheckMatchRequest)
-      else Match(taxCheckMatchRequest)
+      if (hasExpired) Expired(taxCheckMatchRequest, timeProvider.currentDateTime)
+      else Match(taxCheckMatchRequest, timeProvider.currentDateTime)
     } else
-      NoMatch(taxCheckMatchRequest)
+      NoMatch(taxCheckMatchRequest, timeProvider.currentDateTime)
   }
 
 }

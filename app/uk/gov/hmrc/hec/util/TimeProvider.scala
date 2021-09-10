@@ -16,13 +16,18 @@
 
 package uk.gov.hmrc.hec.util
 
-import java.time.{Clock, LocalDate, ZoneId, ZonedDateTime}
+import com.google.inject.{ImplementedBy, Inject}
 
-object TimeUtils {
+import java.time.ZonedDateTime
+import javax.inject.Singleton
 
-  val clock: Clock = Clock.systemUTC()
+@ImplementedBy(classOf[TimeProviderImpl])
+trait TimeProvider {
+  def currentDateTime: ZonedDateTime
+}
 
-  def today(): LocalDate   = LocalDate.now(clock)
-  def now(): ZonedDateTime = ZonedDateTime.now(ZoneId.of("Europe/London"))
-
+@Singleton
+class TimeProviderImpl extends TimeProvider {
+  @Inject()
+  override def currentDateTime: ZonedDateTime = TimeUtils.now()
 }
