@@ -200,7 +200,7 @@ class TaxCheckControllerSpec extends ControllerSpec {
 
         "the tax check service returns a match result" in {
 
-          val dateTime = TimeUtils.todayByZone()
+          val dateTime = TimeUtils.now()
 
           List[HECTaxCheckMatchResult](
             Match(companyMatchRequest, dateTime),

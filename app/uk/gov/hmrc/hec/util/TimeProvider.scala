@@ -29,5 +29,5 @@ trait TimeProvider {
 @Singleton
 class TimeProviderImpl extends TimeProvider {
   @Inject()
-  override def currentDateTime: ZonedDateTime = TimeUtils.todayByZone()
+  override def currentDateTime: ZonedDateTime = TimeUtils.now()
 }

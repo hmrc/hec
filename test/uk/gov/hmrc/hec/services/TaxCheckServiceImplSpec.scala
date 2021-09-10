@@ -197,7 +197,7 @@ class TaxCheckServiceImplSpec extends AnyWordSpec with Matchers with MockFactory
 
         "no tax check exists with the given tax check code" in {
 
-          val dateTime = TimeUtils.todayByZone()
+          val dateTime = TimeUtils.now()
           mockGetTaxCheck(taxCheckCode)(Right(None))
           mockTimeProviderToday(dateTime)
 
@@ -206,7 +206,7 @@ class TaxCheckServiceImplSpec extends AnyWordSpec with Matchers with MockFactory
         }
 
         "the match request is for an individual but the stored tax check is for a company" in {
-          val dateTime = TimeUtils.todayByZone()
+          val dateTime = TimeUtils.now()
           mockGetTaxCheck(taxCheckCode)(Right(Some(storedCompanyTaxCheck)))
           mockTimeProviderToday(dateTime)
 
@@ -215,7 +215,7 @@ class TaxCheckServiceImplSpec extends AnyWordSpec with Matchers with MockFactory
         }
 
         "the match request is for a company but the stored tax check is for an individual" in {
-          val dateTime = TimeUtils.todayByZone()
+          val dateTime = TimeUtils.now()
           mockGetTaxCheck(taxCheckCode)(Right(Some(storedIndividualTaxCheck)))
           mockTimeProviderToday(dateTime)
 
@@ -224,7 +224,7 @@ class TaxCheckServiceImplSpec extends AnyWordSpec with Matchers with MockFactory
         }
 
         "the date of births in the match request and the stored tax check do not match" in {
-          val dateTime = TimeUtils.todayByZone()
+          val dateTime = TimeUtils.now()
           mockGetTaxCheck(taxCheckCode)(Right(Some(storedIndividualTaxCheck)))
           mockTimeProviderToday(dateTime)
 
@@ -234,7 +234,7 @@ class TaxCheckServiceImplSpec extends AnyWordSpec with Matchers with MockFactory
         }
 
         "the CRN's in the match request and the stored tax check do not match" in {
-          val dateTime = TimeUtils.todayByZone()
+          val dateTime = TimeUtils.now()
           mockGetTaxCheck(taxCheckCode)(Right(Some(storedCompanyTaxCheck)))
           mockTimeProviderToday(dateTime)
 
@@ -244,7 +244,7 @@ class TaxCheckServiceImplSpec extends AnyWordSpec with Matchers with MockFactory
         }
 
         "the date of births match but the licence types do not" in {
-          val dateTime = TimeUtils.todayByZone()
+          val dateTime = TimeUtils.now()
           mockGetTaxCheck(taxCheckCode)(Right(Some(storedIndividualTaxCheck)))
           mockTimeProviderToday(dateTime)
 
@@ -254,7 +254,7 @@ class TaxCheckServiceImplSpec extends AnyWordSpec with Matchers with MockFactory
         }
 
         "the CRN's match but the licence types do not" in {
-          val dateTime = TimeUtils.todayByZone()
+          val dateTime = TimeUtils.now()
           mockGetTaxCheck(taxCheckCode)(Right(Some(storedCompanyTaxCheck)))
           mockTimeProviderToday(dateTime)
 
@@ -271,7 +271,7 @@ class TaxCheckServiceImplSpec extends AnyWordSpec with Matchers with MockFactory
           val expiredTaxCheck = storedIndividualTaxCheck.copy(
             expiresAfter = TimeUtils.today().minusMonths(1L)
           )
-          val dateTime        = TimeUtils.todayByZone()
+          val dateTime        = TimeUtils.now()
           mockGetTaxCheck(taxCheckCode)(Right(Some(expiredTaxCheck)))
           mockTimeProviderToday(dateTime)
 
@@ -284,7 +284,7 @@ class TaxCheckServiceImplSpec extends AnyWordSpec with Matchers with MockFactory
             expiresAfter = TimeUtils.today().minusMonths(1L)
           )
 
-          val dateTime = TimeUtils.todayByZone()
+          val dateTime = TimeUtils.now()
           mockGetTaxCheck(taxCheckCode)(Right(Some(expiredTaxCheck)))
           mockTimeProviderToday(dateTime)
 
@@ -297,7 +297,7 @@ class TaxCheckServiceImplSpec extends AnyWordSpec with Matchers with MockFactory
       "return an 'match' result" when {
 
         "all details match for an individual and the stored tax check has not expired" in {
-          val dateTime = TimeUtils.todayByZone()
+          val dateTime = TimeUtils.now()
           mockGetTaxCheck(taxCheckCode)(Right(Some(storedIndividualTaxCheck)))
           mockTimeProviderToday(dateTime)
 
@@ -307,7 +307,7 @@ class TaxCheckServiceImplSpec extends AnyWordSpec with Matchers with MockFactory
 
         "all details match for an company and the stored tax check has not expired" in {
           val taxCheck = storedCompanyTaxCheck.copy(expiresAfter = TimeUtils.today())
-          val dateTime = TimeUtils.todayByZone()
+          val dateTime = TimeUtils.now()
 
           mockTimeProviderToday(dateTime)
           mockGetTaxCheck(taxCheckCode)(Right(Some(taxCheck)))
