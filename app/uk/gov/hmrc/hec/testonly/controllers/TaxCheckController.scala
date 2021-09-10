@@ -24,12 +24,13 @@ import play.api.libs.json.{JsError, JsSuccess, JsValue, Json}
 import play.api.mvc.{Action, AnyContent, ControllerComponents}
 import uk.gov.hmrc.hec.models.HECTaxCheckCode
 import uk.gov.hmrc.hec.testonly.services.TaxCheckService
+import uk.gov.hmrc.hec.controllers.toFuture
 import uk.gov.hmrc.hec.testonly.models.SaveTaxCheckRequest
 import uk.gov.hmrc.hec.util.Logging
 import uk.gov.hmrc.hec.util.Logging._
 import uk.gov.hmrc.play.bootstrap.backend.controller.BackendController
 
-import scala.concurrent.{ExecutionContext, Future}
+import scala.concurrent.ExecutionContext
 
 @Singleton
 class TaxCheckController @Inject() (
@@ -42,18 +43,21 @@ class TaxCheckController @Inject() (
   val saveTaxCheck: Action[JsValue] = Action(parse.json).async { implicit request =>
     Json.fromJson[SaveTaxCheckRequest](request.body) match {
       case JsSuccess(saveTaxCheckRequest, _) =>
-        taxCheckService
-          .saveTaxCheck(saveTaxCheckRequest)
-          .fold(
-            { e =>
-              logger.warn("Could not store tax check", e)
-              InternalServerError
-            },
-            _ => Created
-          )
+        if (!isValidTaxCheckCode(saveTaxCheckRequest.taxCheckCode.value))
+          BadRequest("Invalid tax check code")
+        else
+          taxCheckService
+            .saveTaxCheck(saveTaxCheckRequest)
+            .fold(
+              { e =>
+                logger.warn("Could not store tax check", e)
+                InternalServerError
+              },
+              _ => Created
+            )
 
       case JsError(e) =>
-        Future.successful(BadRequest(s"Could not parse JSON: $e"))
+        BadRequest(s"Could not parse JSON: $e")
 
     }
 
@@ -73,7 +77,7 @@ class TaxCheckController @Inject() (
           )
 
       case None =>
-        Future.successful(BadRequest("Invalid tax check code"))
+        BadRequest("Invalid tax check code")
     }
   }
 
@@ -91,7 +95,7 @@ class TaxCheckController @Inject() (
           )
 
       case None =>
-        Future.successful(BadRequest("Invalid tax check code"))
+        BadRequest("Invalid tax check code")
 
     }
 
@@ -110,9 +114,9 @@ class TaxCheckController @Inject() (
   }
 
   private def toTaxCheckCode(s: String): Option[HECTaxCheckCode] =
-    if (s.length === HECTaxCheckCode.validLength && s.forall(HECTaxCheckCode.validCharacters.contains(_)))
-      Some(HECTaxCheckCode(s))
-    else
-      None
+    if (isValidTaxCheckCode(s)) Some(HECTaxCheckCode(s)) else None
+
+  private def isValidTaxCheckCode(s: String) =
+    s.length === HECTaxCheckCode.validLength && s.forall(HECTaxCheckCode.validCharacters.contains(_))
 
 }

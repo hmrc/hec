@@ -105,7 +105,20 @@ class TaxCheckControllerSpec extends ControllerSpec {
            |""".stripMargin
       }
 
-      val taxCheckCode = HECTaxCheckCode("ABCABCABC")
+      val validTaxCheckCode = HECTaxCheckCode("ABCABCABC")
+
+      behave like invalidTaxCheckCodeBehaviour { invalidTaxCheckCode =>
+        val dateOfBirth = DateOfBirth(TimeUtils.today())
+        val request     = SaveTaxCheckRequest(
+          HECTaxCheckCode(invalidTaxCheckCode),
+          LicenceType.DriverOfTaxisAndPrivateHires,
+          Right(dateOfBirth),
+          TimeUtils.today()
+        )
+        val body        = Json.parse(requestJsonString(request))
+
+        performActionWithJsonBody(body)
+      }
 
       "return a 415 (unsupported media type)" when {
 
@@ -138,7 +151,7 @@ class TaxCheckControllerSpec extends ControllerSpec {
         "there is an error saving the tax check" in {
           val dateOfBirth = DateOfBirth(TimeUtils.today())
           val request     = SaveTaxCheckRequest(
-            taxCheckCode,
+            validTaxCheckCode,
             LicenceType.DriverOfTaxisAndPrivateHires,
             Right(dateOfBirth),
             TimeUtils.today()
@@ -159,7 +172,7 @@ class TaxCheckControllerSpec extends ControllerSpec {
         "a tax check is saved for an individual" in {
           val dateOfBirth = DateOfBirth(TimeUtils.today())
           val request     = SaveTaxCheckRequest(
-            taxCheckCode,
+            validTaxCheckCode,
             LicenceType.DriverOfTaxisAndPrivateHires,
             Right(dateOfBirth),
             TimeUtils.today()
@@ -175,7 +188,7 @@ class TaxCheckControllerSpec extends ControllerSpec {
         "a tax check is saved for a company" in {
           val crn     = CRN("1234567895")
           val request = SaveTaxCheckRequest(
-            taxCheckCode,
+            validTaxCheckCode,
             LicenceType.DriverOfTaxisAndPrivateHires,
             Left(crn),
             TimeUtils.today()
