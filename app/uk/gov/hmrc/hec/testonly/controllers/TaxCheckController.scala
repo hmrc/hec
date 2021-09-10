@@ -17,10 +17,12 @@
 package uk.gov.hmrc.hec.testonly.controllers
 
 import cats.instances.future._
-
+import cats.instances.int._
+import cats.syntax.eq._
 import com.google.inject.{Inject, Singleton}
 import play.api.libs.json.{JsError, JsSuccess, JsValue, Json}
-import play.api.mvc.{Action, ControllerComponents}
+import play.api.mvc.{Action, AnyContent, ControllerComponents}
+import uk.gov.hmrc.hec.models.HECTaxCheckCode
 import uk.gov.hmrc.hec.testonly.services.TaxCheckService
 import uk.gov.hmrc.hec.testonly.models.SaveTaxCheckRequest
 import uk.gov.hmrc.hec.util.Logging
@@ -56,5 +58,61 @@ class TaxCheckController @Inject() (
     }
 
   }
+
+  def getTaxCheck(taxCheckCode: String): Action[AnyContent] = Action.async { implicit request =>
+    toTaxCheckCode(taxCheckCode) match {
+      case Some(code) =>
+        taxCheckService
+          .getTaxCheck(code)
+          .fold(
+            { e =>
+              logger.warn(s"Could not get tax check for tax check code $taxCheckCode", e)
+              InternalServerError
+            },
+            _.fold(NotFound("No tax check found"))(taxCheck => Ok(Json.toJson(taxCheck)))
+          )
+
+      case None =>
+        Future.successful(BadRequest("Invalid tax check code"))
+    }
+  }
+
+  def deleteTaxCheck(taxCheckCode: String): Action[AnyContent] = Action.async { implicit request =>
+    toTaxCheckCode(taxCheckCode) match {
+      case Some(code) =>
+        taxCheckService
+          .deleteTaxCheck(code)
+          .fold(
+            { e =>
+              logger.warn(s"Could not delete tax check for tax check code $taxCheckCode", e)
+              InternalServerError
+            },
+            _ => Ok
+          )
+
+      case None =>
+        Future.successful(BadRequest("Invalid tax check code"))
+
+    }
+
+  }
+
+  val deleteAllTaxChecks: Action[AnyContent] = Action.async { implicit request =>
+    taxCheckService
+      .deleteAllTaxCheck()
+      .fold(
+        { e =>
+          logger.warn(s"Could not delete all tax checks", e)
+          InternalServerError
+        },
+        _ => Ok
+      )
+  }
+
+  private def toTaxCheckCode(s: String): Option[HECTaxCheckCode] =
+    if (s.length === HECTaxCheckCode.validLength && s.forall(HECTaxCheckCode.validCharacters.contains(_)))
+      Some(HECTaxCheckCode(s))
+    else
+      None
 
 }

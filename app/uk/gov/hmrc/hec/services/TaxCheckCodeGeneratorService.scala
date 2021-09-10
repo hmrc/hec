@@ -33,14 +33,8 @@ class TaxCheckCodeGeneratorServiceImpl extends TaxCheckCodeGeneratorService {
 
   private def randomElement[A](l: List[A]): A = l(Random.nextInt(l.length))
 
-  private val allowedChars: List[Char] = {
-    val allowedLetters = ('A' to 'Z').toList.diff(List('I', 'O', 'S', 'U', 'V', 'W'))
-    val allowedDigits  = ('0' to '9').toList.diff(List('0', '1', '5'))
-    allowedLetters ::: allowedDigits
-  }
-
   def generateTaxCheckCode(): HECTaxCheckCode = {
-    val code = List.fill(9)(randomElement(allowedChars.toList)).mkString("")
+    val code = List.fill(HECTaxCheckCode.validLength)(randomElement(HECTaxCheckCode.validCharacters)).mkString("")
     HECTaxCheckCode(code)
   }
 

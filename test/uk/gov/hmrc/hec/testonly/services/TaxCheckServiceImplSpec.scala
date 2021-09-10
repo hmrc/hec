@@ -16,21 +16,24 @@
 
 package uk.gov.hmrc.hec.testonly.services
 
-import uk.gov.hmrc.hec.models.licence.LicenceType
+import uk.gov.hmrc.hec.models.licence.{LicenceDetails, LicenceExpiryDate, LicenceTimeTrading, LicenceType, LicenceValidityPeriod}
 import uk.gov.hmrc.hec.testonly.models.SaveTaxCheckRequest
-
 import cats.data.EitherT
 import cats.instances.future._
 import org.scalamock.scalatest.MockFactory
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
 import play.api.test.Helpers._
-import uk.gov.hmrc.hec.models.{DateOfBirth, Error, HECTaxCheck, HECTaxCheckCode}
-import uk.gov.hmrc.hec.models.ids.CRN
+import uk.gov.hmrc.hec.models.ApplicantDetails.IndividualApplicantDetails
+import uk.gov.hmrc.hec.models.HECTaxCheckData.IndividualHECTaxCheckData
+import uk.gov.hmrc.hec.models.TaxDetails.IndividualTaxDetails
+import uk.gov.hmrc.hec.models.{DateOfBirth, Error, HECTaxCheck, HECTaxCheckCode, Name, TaxSituation}
+import uk.gov.hmrc.hec.models.ids.{CRN, GGCredId, NINO, SAUTR}
 import uk.gov.hmrc.hec.repos.HECTaxCheckStore
 import uk.gov.hmrc.hec.util.TimeUtils
 import uk.gov.hmrc.http.HeaderCarrier
 
+import java.time.LocalDate
 import scala.concurrent.ExecutionContext.Implicits.global
 
 class TaxCheckServiceImplSpec extends AnyWordSpec with Matchers with MockFactory {
@@ -43,6 +46,24 @@ class TaxCheckServiceImplSpec extends AnyWordSpec with Matchers with MockFactory
     (mockTaxCheckStore
       .store(_: HECTaxCheck)(_: HeaderCarrier))
       .expects(taxCheck, *)
+      .returning(EitherT.fromEither(result))
+
+  def mockGetTaxCheck(taxCheckCode: HECTaxCheckCode)(result: Either[Error, Option[HECTaxCheck]]) =
+    (mockTaxCheckStore
+      .get(_: HECTaxCheckCode)(_: HeaderCarrier))
+      .expects(taxCheckCode, *)
+      .returning(EitherT.fromEither(result))
+
+  def mockDeleteTaxCheck(taxCheckCode: HECTaxCheckCode)(result: Either[Error, Unit]) =
+    (mockTaxCheckStore
+      .delete(_: HECTaxCheckCode)(_: HeaderCarrier))
+      .expects(taxCheckCode, *)
+      .returning(EitherT.fromEither(result))
+
+  def mockDeleteAllTaxChecks(result: Either[Error, Unit]) =
+    (mockTaxCheckStore
+      .deleteAll()(_: HeaderCarrier))
+      .expects(*)
       .returning(EitherT.fromEither(result))
 
   implicit val hc: HeaderCarrier = HeaderCarrier()
@@ -116,5 +137,91 @@ class TaxCheckServiceImplSpec extends AnyWordSpec with Matchers with MockFactory
       }
 
     }
+
+    "handling requests to get a tax check" must {
+
+      val taxCheckCode = HECTaxCheckCode("code")
+
+      "return an error when there is an error getting the tax check" in {
+        mockGetTaxCheck(taxCheckCode)(Left(Error("")))
+
+        val result = service.getTaxCheck(taxCheckCode)
+        await(result.value) shouldBe a[Left[_, _]]
+      }
+
+      "return successfully" when {
+
+        "a tax check is found" in {
+          val taxCheckData = IndividualHECTaxCheckData(
+            IndividualApplicantDetails(GGCredId(""), Name("", ""), DateOfBirth(LocalDate.now())),
+            LicenceDetails(
+              LicenceType.ScrapMetalDealerSite,
+              LicenceExpiryDate(LocalDate.now()),
+              LicenceTimeTrading.EightYearsOrMore,
+              LicenceValidityPeriod.UpToOneYear
+            ),
+            IndividualTaxDetails(
+              NINO(""),
+              Some(SAUTR("")),
+              TaxSituation.SAPAYE
+            )
+          )
+          val taxCheck     = HECTaxCheck(taxCheckData, taxCheckCode, TimeUtils.today())
+
+          mockGetTaxCheck(taxCheckCode)(Right(Some(taxCheck)))
+
+          val result = service.getTaxCheck(taxCheckCode)
+          await(result.value) shouldBe Right(Some(taxCheck))
+        }
+
+        "a tax check is not found" in {
+          mockGetTaxCheck(taxCheckCode)(Right(None))
+
+          val result = service.getTaxCheck(taxCheckCode)
+          await(result.value) shouldBe Right(None)
+        }
+
+      }
+    }
+
+    "handling requests to delete a tax check" must {
+
+      val taxCheckCode = HECTaxCheckCode("code")
+
+      "return an error when there is an error deleting" in {
+        mockDeleteTaxCheck(taxCheckCode)(Left(Error("")))
+
+        val result = service.deleteTaxCheck(taxCheckCode)
+        await(result.value) shouldBe a[Left[_, _]]
+      }
+
+      "return successfully if the deletion was successful" in {
+        mockDeleteTaxCheck(taxCheckCode)(Right(()))
+
+        val result = service.deleteTaxCheck(taxCheckCode)
+        await(result.value) shouldBe Right(())
+      }
+
+    }
+
+    "handling requests to delete all tax checks" must {
+
+      "return an error when there is an error deleting" in {
+        mockDeleteAllTaxChecks(Left(Error("")))
+
+        val result = service.deleteAllTaxCheck()
+        await(result.value) shouldBe a[Left[_, _]]
+      }
+
+      "return successfully if the deletion was successful" in {
+        mockDeleteAllTaxChecks(Right(()))
+
+        val result = service.deleteAllTaxCheck()
+        await(result.value) shouldBe Right(())
+      }
+
+    }
+
   }
+
 }

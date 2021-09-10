@@ -25,9 +25,12 @@ import play.api.mvc.Result
 import play.api.test.FakeRequest
 import play.api.test.Helpers._
 import uk.gov.hmrc.hec.controllers.ControllerSpec
-import uk.gov.hmrc.hec.models.{DateOfBirth, Error, HECTaxCheckCode}
-import uk.gov.hmrc.hec.models.ids.CRN
-import uk.gov.hmrc.hec.models.licence.LicenceType
+import uk.gov.hmrc.hec.models.ApplicantDetails.IndividualApplicantDetails
+import uk.gov.hmrc.hec.models.HECTaxCheckData.IndividualHECTaxCheckData
+import uk.gov.hmrc.hec.models.TaxDetails.IndividualTaxDetails
+import uk.gov.hmrc.hec.models.{DateOfBirth, Error, HECTaxCheck, HECTaxCheckCode, Name, TaxSituation}
+import uk.gov.hmrc.hec.models.ids.{CRN, GGCredId, NINO, SAUTR}
+import uk.gov.hmrc.hec.models.licence.{LicenceDetails, LicenceExpiryDate, LicenceTimeTrading, LicenceType, LicenceValidityPeriod}
 import uk.gov.hmrc.hec.testonly.services.TaxCheckService
 import uk.gov.hmrc.hec.testonly.models.SaveTaxCheckRequest
 import uk.gov.hmrc.hec.util.TimeUtils
@@ -51,6 +54,24 @@ class TaxCheckControllerSpec extends ControllerSpec {
     (mockTaxCheckService
       .saveTaxCheck(_: SaveTaxCheckRequest)(_: HeaderCarrier))
       .expects(request, *)
+      .returning(EitherT.fromEither(result))
+
+  def mockGetTaxCheck(taxCheckCode: HECTaxCheckCode)(result: Either[Error, Option[HECTaxCheck]]) =
+    (mockTaxCheckService
+      .getTaxCheck(_: HECTaxCheckCode)(_: HeaderCarrier))
+      .expects(taxCheckCode, *)
+      .returning(EitherT.fromEither(result))
+
+  def mockDeleteTaxCheck(taxCheckCode: HECTaxCheckCode)(result: Either[Error, Unit]) =
+    (mockTaxCheckService
+      .deleteTaxCheck(_: HECTaxCheckCode)(_: HeaderCarrier))
+      .expects(taxCheckCode, *)
+      .returning(EitherT.fromEither(result))
+
+  def mockDeleteAllTaxChecks(result: Either[Error, Unit]) =
+    (mockTaxCheckService
+      .deleteAllTaxCheck()(_: HeaderCarrier))
+      .expects(*)
       .returning(EitherT.fromEither(result))
 
   val controller = instanceOf[TaxCheckController]
@@ -171,6 +192,160 @@ class TaxCheckControllerSpec extends ControllerSpec {
 
     }
 
+    "handling requests to get a tax check" must {
+
+      def performAction(taxCheckCode: String): Future[Result] =
+        controller.getTaxCheck(taxCheckCode)(FakeRequest())
+
+      val validTaxCheckCode = HECTaxCheckCode("ABCABCABC")
+
+      behave like invalidTaxCheckCodeBehaviour(performAction)
+
+      "return a 500 (internal server error)" when {
+
+        "there is an error getting the tax check" in {
+          mockGetTaxCheck(validTaxCheckCode)(Left(Error("")))
+
+          val result = performAction(validTaxCheckCode.value)
+          status(result) shouldBe INTERNAL_SERVER_ERROR
+        }
+
+      }
+
+      "return a 404 (not found)" when {
+
+        "there is no tax check found" in {
+          mockGetTaxCheck(validTaxCheckCode)(Right(None))
+
+          val result = performAction(validTaxCheckCode.value)
+          status(result)          shouldBe NOT_FOUND
+          contentAsString(result) shouldBe "No tax check found"
+        }
+
+      }
+
+      "return an 200 (ok)" when {
+
+        "a tax check was found" in {
+          val taxCheckData = IndividualHECTaxCheckData(
+            IndividualApplicantDetails(GGCredId(""), Name("", ""), DateOfBirth(LocalDate.now())),
+            LicenceDetails(
+              LicenceType.ScrapMetalDealerSite,
+              LicenceExpiryDate(LocalDate.now()),
+              LicenceTimeTrading.EightYearsOrMore,
+              LicenceValidityPeriod.UpToOneYear
+            ),
+            IndividualTaxDetails(
+              NINO(""),
+              Some(SAUTR("")),
+              TaxSituation.SAPAYE
+            )
+          )
+          val taxCheck     = HECTaxCheck(taxCheckData, validTaxCheckCode, TimeUtils.today())
+
+          mockGetTaxCheck(validTaxCheckCode)(Right(Some(taxCheck)))
+
+          val result = performAction(validTaxCheckCode.value)
+          status(result)        shouldBe OK
+          contentAsJson(result) shouldBe Json.toJson(taxCheck)
+        }
+
+      }
+
+    }
+
+    "handling requests to delete a tax check" must {
+
+      def performAction(taxCheckCode: String): Future[Result] =
+        controller.deleteTaxCheck(taxCheckCode)(FakeRequest())
+
+      val validTaxCheckCode = HECTaxCheckCode("ABCABCABC")
+
+      behave like invalidTaxCheckCodeBehaviour(performAction)
+
+      "return a 500 (internal server error)" when {
+
+        "there is an error deleting the tax check" in {
+          mockDeleteTaxCheck(validTaxCheckCode)(Left(Error("")))
+
+          val result = performAction(validTaxCheckCode.value)
+          status(result) shouldBe INTERNAL_SERVER_ERROR
+        }
+
+      }
+
+      "return a 200 (ok)" when {
+
+        "deleting the tax check was successful" in {
+          mockDeleteTaxCheck(validTaxCheckCode)(Right(()))
+
+          val result = performAction(validTaxCheckCode.value)
+          status(result) shouldBe OK
+        }
+
+      }
+
+    }
+
+    "handling requests to delete all tax checks" must {
+
+      def performAction(): Future[Result] =
+        controller.deleteAllTaxChecks()(FakeRequest())
+
+      "return a 500 (internal server error)" when {
+
+        "there is an error deleting the tax check" in {
+          mockDeleteAllTaxChecks(Left(Error("")))
+
+          val result = performAction()
+          status(result) shouldBe INTERNAL_SERVER_ERROR
+        }
+
+      }
+
+      "return a 200 (ok)" when {
+
+        "deleting all the tax check was successful" in {
+          mockDeleteAllTaxChecks(Right(()))
+
+          val result = performAction()
+          status(result) shouldBe OK
+        }
+
+      }
+
+    }
+
   }
+
+  def invalidTaxCheckCodeBehaviour(performAction: String => Future[Result]): Unit =
+    "return a 400 (bad request)" when {
+
+      def test(s: String): Unit = {
+        val result = performAction(s)
+        status(result) shouldBe BAD_REQUEST
+      }
+
+      "the code has less than 9 characters in it" in {
+        test("ABC")
+      }
+
+      "the code has more than 9 characters in it" in {
+        test("ABCABCABCA")
+      }
+
+      "the code includes spaces in it" in {
+        test("ABC ABC ABC")
+      }
+
+      "the code contains an invalid character in it" in {
+        test("ABCABCAB1")
+      }
+
+      "the code is all lower case" in {
+        test("abcabcabc")
+      }
+
+    }
 
 }
