@@ -32,6 +32,7 @@ import uk.gov.hmrc.hec.models.ids.{CRN, GGCredId, NINO, SAUTR}
 import uk.gov.hmrc.hec.models.licence.{LicenceDetails, LicenceExpiryDate, LicenceTimeTrading, LicenceType, LicenceValidityPeriod}
 import uk.gov.hmrc.hec.models.{DateOfBirth, Error, HECTaxCheck, HECTaxCheckCode, HECTaxCheckData, HECTaxCheckMatchRequest, HECTaxCheckMatchResult, Name, TaxSituation}
 import uk.gov.hmrc.hec.services.TaxCheckService
+import uk.gov.hmrc.hec.util.TimeUtils
 import uk.gov.hmrc.http.HeaderCarrier
 
 import java.time.LocalDate
@@ -199,10 +200,12 @@ class TaxCheckControllerSpec extends ControllerSpec {
 
         "the tax check service returns a match result" in {
 
+          val dateTime = TimeUtils.todayByZone()
+
           List[HECTaxCheckMatchResult](
-            Match(companyMatchRequest),
-            NoMatch(companyMatchRequest),
-            Expired(companyMatchRequest)
+            Match(companyMatchRequest, dateTime),
+            NoMatch(companyMatchRequest, dateTime),
+            Expired(companyMatchRequest, dateTime)
           ).foreach { matchResult =>
             withClue(s"For match result '$matchResult': ") {
               mockMatchTaxCheck(companyMatchRequest)(Right(matchResult))

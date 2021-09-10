@@ -70,7 +70,8 @@ class TaxCheckController @Inject() (
             result => Ok(Json.toJson(result))
           )
 
-      case JsError(_) =>
+      case JsError(e) =>
+        logger.warn(s"error is $e")
         logger.warn("Could not parse JSON")
         Future.successful(BadRequest)
     }

@@ -19,15 +19,20 @@ package uk.gov.hmrc.hec.models
 import julienrf.json.derived
 import play.api.libs.json.OFormat
 
+import java.time.ZonedDateTime
+
 sealed trait HECTaxCheckMatchResult
 
 object HECTaxCheckMatchResult {
 
-  final case class NoMatch(matchRequest: HECTaxCheckMatchRequest) extends HECTaxCheckMatchResult
+  final case class NoMatch(matchRequest: HECTaxCheckMatchRequest, dateTimeChecked: ZonedDateTime)
+      extends HECTaxCheckMatchResult
 
-  final case class Match(matchRequest: HECTaxCheckMatchRequest) extends HECTaxCheckMatchResult
+  final case class Match(matchRequest: HECTaxCheckMatchRequest, dateTimeChecked: ZonedDateTime)
+      extends HECTaxCheckMatchResult
 
-  final case class Expired(matchRequest: HECTaxCheckMatchRequest) extends HECTaxCheckMatchResult
+  final case class Expired(matchRequest: HECTaxCheckMatchRequest, dateTimeChecked: ZonedDateTime)
+      extends HECTaxCheckMatchResult
 
   implicit val format: OFormat[HECTaxCheckMatchResult] = derived.oformat()
 
