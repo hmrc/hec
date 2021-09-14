@@ -29,7 +29,7 @@ import uk.gov.hmrc.hec.models.HECTaxCheckMatchResult.{Expired, Match, NoMatch}
 import uk.gov.hmrc.hec.models.TaxDetails.{CompanyTaxDetails, IndividualTaxDetails}
 import uk.gov.hmrc.hec.models.{DateOfBirth, Error, HECTaxCheck, HECTaxCheckCode, HECTaxCheckMatchRequest, Name, TaxSituation}
 import uk.gov.hmrc.hec.models.ids.{CRN, CTUTR, GGCredId, NINO, SAUTR}
-import uk.gov.hmrc.hec.models.licence.{LicenceDetails, LicenceExpiryDate, LicenceTimeTrading, LicenceType, LicenceValidityPeriod}
+import uk.gov.hmrc.hec.models.licence.{LicenceDetails, LicenceTimeTrading, LicenceType, LicenceValidityPeriod}
 import uk.gov.hmrc.hec.repos.HECTaxCheckStore
 import uk.gov.hmrc.hec.util.{TimeProvider, TimeUtils}
 import uk.gov.hmrc.http.HeaderCarrier
@@ -78,7 +78,6 @@ class TaxCheckServiceImplSpec extends AnyWordSpec with Matchers with MockFactory
         IndividualApplicantDetails(GGCredId(""), Name("", ""), DateOfBirth(LocalDate.now())),
         LicenceDetails(
           LicenceType.ScrapMetalDealerSite,
-          LicenceExpiryDate(LocalDate.now()),
           LicenceTimeTrading.EightYearsOrMore,
           LicenceValidityPeriod.UpToOneYear
         ),
@@ -139,7 +138,6 @@ class TaxCheckServiceImplSpec extends AnyWordSpec with Matchers with MockFactory
       val storedLicenceDetails =
         LicenceDetails(
           storedLicenceType,
-          LicenceExpiryDate(LocalDate.now()),
           LicenceTimeTrading.EightYearsOrMore,
           LicenceValidityPeriod.UpToOneYear
         )

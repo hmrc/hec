@@ -30,7 +30,7 @@ import uk.gov.hmrc.hec.models.HECTaxCheckData.IndividualHECTaxCheckData
 import uk.gov.hmrc.hec.models.TaxDetails.IndividualTaxDetails
 import uk.gov.hmrc.hec.models.{DateOfBirth, Error, HECTaxCheck, HECTaxCheckCode, Name, TaxSituation}
 import uk.gov.hmrc.hec.models.ids.{CRN, GGCredId, NINO, SAUTR}
-import uk.gov.hmrc.hec.models.licence.{LicenceDetails, LicenceExpiryDate, LicenceTimeTrading, LicenceType, LicenceValidityPeriod}
+import uk.gov.hmrc.hec.models.licence.{LicenceDetails, LicenceTimeTrading, LicenceType, LicenceValidityPeriod}
 import uk.gov.hmrc.hec.testonly.services.TaxCheckService
 import uk.gov.hmrc.hec.testonly.models.SaveTaxCheckRequest
 import uk.gov.hmrc.hec.util.TimeUtils
@@ -244,7 +244,6 @@ class TaxCheckControllerSpec extends ControllerSpec {
             IndividualApplicantDetails(GGCredId(""), Name("", ""), DateOfBirth(LocalDate.now())),
             LicenceDetails(
               LicenceType.ScrapMetalDealerSite,
-              LicenceExpiryDate(LocalDate.now()),
               LicenceTimeTrading.EightYearsOrMore,
               LicenceValidityPeriod.UpToOneYear
             ),

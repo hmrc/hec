@@ -29,12 +29,11 @@ import uk.gov.hmrc.hec.models.HECTaxCheckData.CompanyHECTaxCheckData
 import uk.gov.hmrc.hec.models.TaxDetails.CompanyTaxDetails
 import uk.gov.hmrc.hec.models.{HECTaxCheck, HECTaxCheckCode}
 import uk.gov.hmrc.hec.models.ids.{CRN, CTUTR, GGCredId}
-import uk.gov.hmrc.hec.models.licence.{LicenceDetails, LicenceExpiryDate, LicenceTimeTrading, LicenceType, LicenceValidityPeriod}
+import uk.gov.hmrc.hec.models.licence.{LicenceDetails, LicenceTimeTrading, LicenceType, LicenceValidityPeriod}
 import uk.gov.hmrc.hec.util.TimeUtils
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.mongo.DatabaseUpdate
 
-import java.time.LocalDate
 import scala.concurrent.Future
 import scala.concurrent.ExecutionContext.Implicits.global
 
@@ -58,7 +57,6 @@ class HECTaxCheckStoreImplSpec extends AnyWordSpec with Matchers with Eventually
       CompanyApplicantDetails(GGCredId(""), CRN("")),
       LicenceDetails(
         LicenceType.ScrapMetalDealerSite,
-        LicenceExpiryDate(LocalDate.now()),
         LicenceTimeTrading.EightYearsOrMore,
         LicenceValidityPeriod.UpToOneYear
       ),
