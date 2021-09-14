@@ -16,7 +16,7 @@
 
 package uk.gov.hmrc.hec.testonly.services
 
-import uk.gov.hmrc.hec.models.licence.{LicenceDetails, LicenceExpiryDate, LicenceTimeTrading, LicenceType, LicenceValidityPeriod}
+import uk.gov.hmrc.hec.models.licence.{LicenceDetails, LicenceTimeTrading, LicenceType, LicenceValidityPeriod}
 import uk.gov.hmrc.hec.testonly.models.SaveTaxCheckRequest
 import cats.data.EitherT
 import cats.instances.future._
@@ -156,7 +156,6 @@ class TaxCheckServiceImplSpec extends AnyWordSpec with Matchers with MockFactory
             IndividualApplicantDetails(GGCredId(""), Name("", ""), DateOfBirth(LocalDate.now())),
             LicenceDetails(
               LicenceType.ScrapMetalDealerSite,
-              LicenceExpiryDate(LocalDate.now()),
               LicenceTimeTrading.EightYearsOrMore,
               LicenceValidityPeriod.UpToOneYear
             ),

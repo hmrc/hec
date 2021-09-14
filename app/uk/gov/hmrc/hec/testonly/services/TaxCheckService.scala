@@ -22,11 +22,10 @@ import uk.gov.hmrc.hec.models.ApplicantDetails.{CompanyApplicantDetails, Individ
 import uk.gov.hmrc.hec.models.HECTaxCheckData.{CompanyHECTaxCheckData, IndividualHECTaxCheckData}
 import uk.gov.hmrc.hec.models.TaxDetails.{CompanyTaxDetails, IndividualTaxDetails}
 import uk.gov.hmrc.hec.models.ids.{CTUTR, GGCredId, NINO}
-import uk.gov.hmrc.hec.models.licence.{LicenceDetails, LicenceExpiryDate, LicenceTimeTrading, LicenceValidityPeriod}
+import uk.gov.hmrc.hec.models.licence.{LicenceDetails, LicenceTimeTrading, LicenceValidityPeriod}
 import uk.gov.hmrc.hec.models.{Error, HECTaxCheck, HECTaxCheckCode, HECTaxCheckData, Name, TaxSituation}
 import uk.gov.hmrc.hec.repos.HECTaxCheckStore
 import uk.gov.hmrc.hec.testonly.models.SaveTaxCheckRequest
-import uk.gov.hmrc.hec.util.TimeUtils
 import uk.gov.hmrc.http.HeaderCarrier
 
 import scala.concurrent.Future
@@ -76,7 +75,6 @@ class TaxCheckServiceImpl @Inject() (
   ): HECTaxCheckData = {
     val licenceDetails = LicenceDetails(
       saveTaxCheckRequest.licenceType,
-      LicenceExpiryDate(TimeUtils.today()),
       LicenceTimeTrading.ZeroToTwoYears,
       LicenceValidityPeriod.UpToOneYear
     )
