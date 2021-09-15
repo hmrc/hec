@@ -28,16 +28,16 @@ import uk.gov.hmrc.hec.controllers.ControllerSpec
 import uk.gov.hmrc.hec.models.ApplicantDetails.IndividualApplicantDetails
 import uk.gov.hmrc.hec.models.HECTaxCheckData.IndividualHECTaxCheckData
 import uk.gov.hmrc.hec.models.TaxDetails.IndividualTaxDetails
-import uk.gov.hmrc.hec.models.{DateOfBirth, Error, HECTaxCheck, HECTaxCheckCode, Name, TaxSituation}
+import uk.gov.hmrc.hec.models.{DateOfBirth, Error, HECTaxCheck, HECTaxCheckCode, IncomeDeclared, Name, TaxSituation}
 import uk.gov.hmrc.hec.models.ids.{CRN, GGCredId, NINO, SAUTR}
 import uk.gov.hmrc.hec.models.licence.{LicenceDetails, LicenceTimeTrading, LicenceType, LicenceValidityPeriod}
 import uk.gov.hmrc.hec.testonly.services.TaxCheckService
 import uk.gov.hmrc.hec.testonly.models.SaveTaxCheckRequest
 import uk.gov.hmrc.hec.util.TimeUtils
 import uk.gov.hmrc.http.HeaderCarrier
-
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
+
 import scala.concurrent.Future
 import scala.concurrent.ExecutionContext.Implicits.global
 
@@ -250,7 +250,8 @@ class TaxCheckControllerSpec extends ControllerSpec {
             IndividualTaxDetails(
               NINO(""),
               Some(SAUTR("")),
-              TaxSituation.SAPAYE
+              TaxSituation.SAPAYE,
+              Some(IncomeDeclared.Yes)
             )
           )
           val taxCheck     = HECTaxCheck(taxCheckData, validTaxCheckCode, TimeUtils.today())

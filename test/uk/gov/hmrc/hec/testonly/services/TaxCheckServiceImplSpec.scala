@@ -27,13 +27,13 @@ import play.api.test.Helpers._
 import uk.gov.hmrc.hec.models.ApplicantDetails.IndividualApplicantDetails
 import uk.gov.hmrc.hec.models.HECTaxCheckData.IndividualHECTaxCheckData
 import uk.gov.hmrc.hec.models.TaxDetails.IndividualTaxDetails
-import uk.gov.hmrc.hec.models.{DateOfBirth, Error, HECTaxCheck, HECTaxCheckCode, Name, TaxSituation}
+import uk.gov.hmrc.hec.models.{DateOfBirth, Error, HECTaxCheck, HECTaxCheckCode, IncomeDeclared, Name, TaxSituation}
 import uk.gov.hmrc.hec.models.ids.{CRN, GGCredId, NINO, SAUTR}
 import uk.gov.hmrc.hec.repos.HECTaxCheckStore
 import uk.gov.hmrc.hec.util.TimeUtils
 import uk.gov.hmrc.http.HeaderCarrier
-
 import java.time.LocalDate
+
 import scala.concurrent.ExecutionContext.Implicits.global
 
 class TaxCheckServiceImplSpec extends AnyWordSpec with Matchers with MockFactory {
@@ -162,7 +162,8 @@ class TaxCheckServiceImplSpec extends AnyWordSpec with Matchers with MockFactory
             IndividualTaxDetails(
               NINO(""),
               Some(SAUTR("")),
-              TaxSituation.SAPAYE
+              TaxSituation.SAPAYE,
+              Some(IncomeDeclared.Yes)
             )
           )
           val taxCheck     = HECTaxCheck(taxCheckData, taxCheckCode, TimeUtils.today())
