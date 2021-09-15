@@ -19,15 +19,16 @@ package uk.gov.hmrc.hec.models
 import julienrf.json.derived
 import play.api.libs.json.OFormat
 
-sealed trait SAStatus {
+sealed trait SAStatus extends Product with Serializable {
   val IFString: String
 }
+
 object SAStatus {
   case object ReturnFound extends SAStatus {
     override val IFString: String = "Return Found"
   }
   case object NoticeToFileIssued extends SAStatus {
-    override val IFString: String = "Notice To File Issued"
+    override val IFString: String = "Notice to File Issued"
   }
   case object NoReturnFound extends SAStatus {
     override val IFString: String = "No Return Found"
