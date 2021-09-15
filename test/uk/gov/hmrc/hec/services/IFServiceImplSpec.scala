@@ -128,26 +128,35 @@ class IFServiceImplSpec extends AnyWordSpec with Matchers with MockFactory {
       "return successfully" when {
 
         "the response is OK and the json body can be parsed" in {
+          val testCases = List(
+            "Return Found"          -> SAStatus.ReturnFound,
+            "Notice to File Issued" -> SAStatus.NoticeToFileIssued,
+            "No Return Found"       -> SAStatus.NoReturnFound
+          )
 
-          val connectorResponse = """{ "returnStatus": "Return Found" }"""
-          mockGetSAStatus(utr, taxYear)(
-            Right(
-              HttpResponse(
-                200,
-                Json.parse(connectorResponse),
-                Map.empty[String, Seq[String]]
+          testCases.foreach { case (responseString, expectedSaStatus) =>
+            withClue(s"For response string $responseString and expected SA status $expectedSaStatus: ") {}
+            val connectorResponse = s"""{ "returnStatus": "$responseString" }"""
+            mockGetSAStatus(utr, taxYear)(
+              Right(
+                HttpResponse(
+                  200,
+                  Json.parse(connectorResponse),
+                  Map.empty[String, Seq[String]]
+                )
               )
             )
-          )
 
-          val expectedSAStatusResponse = SAStatusResponse(
-            sautr = utr,
-            taxYear = taxYear,
-            status = SAStatus.ReturnFound
-          )
+            val expectedSAStatusResponse = SAStatusResponse(
+              sautr = utr,
+              taxYear = taxYear,
+              status = expectedSaStatus
+            )
 
-          val result = service.getSAStatus(utr, taxYear, correlationId).value
-          await(result) shouldBe Right(expectedSAStatusResponse)
+            val result = service.getSAStatus(utr, taxYear, correlationId).value
+            await(result) shouldBe Right(expectedSAStatusResponse)
+          }
+
         }
 
       }
@@ -226,38 +235,48 @@ class IFServiceImplSpec extends AnyWordSpec with Matchers with MockFactory {
 
         "the response is OK and the json body can be parsed" in {
 
-          val connectorResponse =
-            """{
-              | "returnStatus": "No Return Found",
-              | "accountingPeriods": [
-              |   {
-              |     "accountingPeriod": "01",
-              |     "accountingPeriodStartDate": "2020-10-01",
-              |     "accountingPeriodEndDate": "2021-10-01"
-              |   }
-              | ]
-              | }""".stripMargin
+          val testCases = List(
+            "Return Found"               -> CTStatus.ReturnFound,
+            "Notice to File Issued"      -> CTStatus.NoticeToFileIssued,
+            "No Accounting Period Found" -> CTStatus.NoAccountingPeriodFound,
+            "No Return Found"            -> CTStatus.NoReturnFound
+          )
 
-          mockGetCTStatus(utr, fromDate, toDate)(
-            Right(
-              HttpResponse(
-                200,
-                Json.parse(connectorResponse),
-                Map.empty[String, Seq[String]]
+          testCases.foreach { case (responseString, expectedCtStatus) =>
+            withClue(s"For response string $responseString and expected CT status $expectedCtStatus: ") {}
+            val connectorResponse =
+              s"""{
+                | "returnStatus": "$responseString",
+                | "accountingPeriods": [
+                |   {
+                |     "accountingPeriod": "01",
+                |     "accountingPeriodStartDate": "2020-10-01",
+                |     "accountingPeriodEndDate": "2021-10-01"
+                |   }
+                | ]
+                | }""".stripMargin
+
+            mockGetCTStatus(utr, fromDate, toDate)(
+              Right(
+                HttpResponse(
+                  200,
+                  Json.parse(connectorResponse),
+                  Map.empty[String, Seq[String]]
+                )
               )
             )
-          )
 
-          val expectedCTStatusResponse = CTStatusResponse(
-            ctutr = utr,
-            startDate = LocalDate.parse("2020-10-01"),
-            endDate = LocalDate.parse("2021-10-01"),
-            status = CTStatus.NoReturnFound,
-            accountingPeriods = List(AccountingPeriod("01", fromDate, toDate))
-          )
+            val expectedCTStatusResponse = CTStatusResponse(
+              ctutr = utr,
+              startDate = LocalDate.parse("2020-10-01"),
+              endDate = LocalDate.parse("2021-10-01"),
+              status = expectedCtStatus,
+              accountingPeriods = List(AccountingPeriod("01", fromDate, toDate))
+            )
 
-          val result = service.getCTStatus(utr, fromDate, toDate, correlationId).value
-          await(result) shouldBe Right(expectedCTStatusResponse)
+            val result = service.getCTStatus(utr, fromDate, toDate, correlationId).value
+            await(result) shouldBe Right(expectedCTStatusResponse)
+          }
         }
 
       }
