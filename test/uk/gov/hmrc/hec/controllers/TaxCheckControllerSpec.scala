@@ -81,7 +81,8 @@ class TaxCheckControllerSpec extends ControllerSpec {
         IndividualTaxDetails(
           NINO(""),
           Some(SAUTR("")),
-          TaxSituation.PAYE
+          TaxSituation.PAYE,
+          None
         )
       )
 

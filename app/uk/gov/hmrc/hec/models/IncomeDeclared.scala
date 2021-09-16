@@ -16,26 +16,17 @@
 
 package uk.gov.hmrc.hec.models
 
-import play.api.libs.json.{Json, OFormat}
-import uk.gov.hmrc.hec.models.ids.{CTUTR, NINO, SAUTR}
+import julienrf.json.derived
+import play.api.libs.json.OFormat
 
-sealed trait TaxDetails extends Product with Serializable
+sealed trait IncomeDeclared extends Product with Serializable
 
-object TaxDetails {
+object IncomeDeclared {
 
-  final case class IndividualTaxDetails(
-    nino: NINO,
-    sautr: Option[SAUTR],
-    taxSituation: TaxSituation,
-    saIncomeDeclared: Option[IncomeDeclared]
-  ) extends TaxDetails
+  case object Yes extends IncomeDeclared
 
-  final case class CompanyTaxDetails(
-    ctutr: CTUTR
-  ) extends TaxDetails
+  case object No extends IncomeDeclared
 
-  implicit val individualTaxDetailsFormat: OFormat[IndividualTaxDetails] = Json.format
-
-  implicit val companyTaxDetailsFormat: OFormat[CompanyTaxDetails] = Json.format
+  implicit val format: OFormat[IncomeDeclared] = derived.oformat()
 
 }

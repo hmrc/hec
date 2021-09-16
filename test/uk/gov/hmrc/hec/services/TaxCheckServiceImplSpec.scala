@@ -27,14 +27,14 @@ import uk.gov.hmrc.hec.models.ApplicantDetails.{CompanyApplicantDetails, Individ
 import uk.gov.hmrc.hec.models.HECTaxCheckData.{CompanyHECTaxCheckData, IndividualHECTaxCheckData}
 import uk.gov.hmrc.hec.models.HECTaxCheckMatchResult.{Expired, Match, NoMatch}
 import uk.gov.hmrc.hec.models.TaxDetails.{CompanyTaxDetails, IndividualTaxDetails}
-import uk.gov.hmrc.hec.models.{DateOfBirth, Error, HECTaxCheck, HECTaxCheckCode, HECTaxCheckMatchRequest, Name, TaxSituation}
+import uk.gov.hmrc.hec.models.{DateOfBirth, Error, HECTaxCheck, HECTaxCheckCode, HECTaxCheckMatchRequest, IncomeDeclared, Name, TaxSituation}
 import uk.gov.hmrc.hec.models.ids.{CRN, CTUTR, GGCredId, NINO, SAUTR}
 import uk.gov.hmrc.hec.models.licence.{LicenceDetails, LicenceTimeTrading, LicenceType, LicenceValidityPeriod}
 import uk.gov.hmrc.hec.repos.HECTaxCheckStore
 import uk.gov.hmrc.hec.util.{TimeProvider, TimeUtils}
 import uk.gov.hmrc.http.HeaderCarrier
-
 import java.time.{LocalDate, ZonedDateTime}
+
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.duration._
 
@@ -84,7 +84,8 @@ class TaxCheckServiceImplSpec extends AnyWordSpec with Matchers with MockFactory
         IndividualTaxDetails(
           NINO(""),
           Some(SAUTR("")),
-          TaxSituation.SAPAYE
+          TaxSituation.SAPAYE,
+          Some(IncomeDeclared.Yes)
         )
       )
 
@@ -150,7 +151,8 @@ class TaxCheckServiceImplSpec extends AnyWordSpec with Matchers with MockFactory
             IndividualTaxDetails(
               NINO(""),
               Some(SAUTR("")),
-              TaxSituation.SAPAYE
+              TaxSituation.SAPAYE,
+              Some(IncomeDeclared.No)
             )
           ),
           taxCheckCode,
