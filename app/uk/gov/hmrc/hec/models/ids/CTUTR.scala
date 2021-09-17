@@ -16,16 +16,14 @@
 
 package uk.gov.hmrc.hec.models.ids
 
-import play.api.libs.functional.syntax.toInvariantFunctorOps
-import play.api.libs.json.Format
+import play.api.libs.json.{Format, Json}
 import uk.gov.hmrc.referencechecker.CorporationTaxReferenceChecker
 
 final case class CTUTR(value: String) extends AnyVal
 
 object CTUTR {
 
-  implicit val format: Format[CTUTR] =
-    implicitly[Format[String]].inmap(CTUTR(_), _.value)
+  implicit val format: Format[CTUTR] = Json.valueFormat
 
   def fromString(utr: String): Option[CTUTR] =
     if (CorporationTaxReferenceChecker.isValid(utr)) Some(CTUTR(utr)) else None
