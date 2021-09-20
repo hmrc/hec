@@ -26,7 +26,7 @@ import play.api.inject.guice.GuiceableModule
 import play.api.test.FakeRequest
 import play.api.test.Helpers._
 import uk.gov.hmrc.hec.models.ids.{CTUTR, SAUTR}
-import uk.gov.hmrc.hec.models.{CTStatus, CTStatusResponse, Error, SAStatus, SAStatusResponse, TaxYear}
+import uk.gov.hmrc.hec.models._
 import uk.gov.hmrc.hec.services.IFService
 import uk.gov.hmrc.hec.services.IFService.{BackendError, DataNotFoundError, IFError}
 import uk.gov.hmrc.http.HeaderCarrier
