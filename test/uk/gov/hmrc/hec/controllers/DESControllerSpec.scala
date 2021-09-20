@@ -69,7 +69,7 @@ class DESControllerSpec extends ControllerSpec {
           val request = FakeRequest()
 
           val result = controller.getCtutr(validCrn)(request)
-          status(result) shouldBe BAD_REQUEST
+          status(result)          shouldBe BAD_REQUEST
           contentAsString(result) shouldBe "Invalid CRN from DES"
         }
       }
