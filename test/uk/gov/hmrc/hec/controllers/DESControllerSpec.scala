@@ -70,6 +70,7 @@ class DESControllerSpec extends ControllerSpec {
 
           val result = controller.getCtutr(validCrn)(request)
           status(result) shouldBe BAD_REQUEST
+          contentAsString(result) shouldBe "Invalid CRN from DES"
         }
       }
 

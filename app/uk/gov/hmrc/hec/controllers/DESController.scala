@@ -44,7 +44,7 @@ class DESController @Inject() (
       NotFound
     case InvalidCRNError(msg)   =>
       logger.warn(s"Invalid CRN - $msg")
-      BadRequest("Invalid CRN")
+      BadRequest("Invalid CRN from DES")
     case BackendError(e)        =>
       logger.warn("Could not fetch CTUTR", e)
       InternalServerError
