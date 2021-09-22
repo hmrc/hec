@@ -26,16 +26,15 @@ import play.api.test.FakeRequest
 import play.api.test.Helpers._
 import uk.gov.hmrc.hec.models.ApplicantDetails.IndividualApplicantDetails
 import uk.gov.hmrc.hec.models.HECTaxCheckData.IndividualHECTaxCheckData
-import uk.gov.hmrc.hec.models.HECTaxCheckMatchResult.{Expired, Match, NoMatch}
 import uk.gov.hmrc.hec.models.TaxDetails.IndividualTaxDetails
 import uk.gov.hmrc.hec.models.ids.{CRN, GGCredId, NINO, SAUTR}
 import uk.gov.hmrc.hec.models.licence.{LicenceDetails, LicenceTimeTrading, LicenceType, LicenceValidityPeriod}
-import uk.gov.hmrc.hec.models.{DateOfBirth, Error, HECTaxCheck, HECTaxCheckCode, HECTaxCheckData, HECTaxCheckMatchRequest, HECTaxCheckMatchResult, Name, TaxSituation}
+import uk.gov.hmrc.hec.models.{DateOfBirth, Error, HECTaxCheck, HECTaxCheckCode, HECTaxCheckData, HECTaxCheckMatchRequest, HECTaxCheckMatchResult, HECTaxCheckStatus, Name, TaxSituation}
 import uk.gov.hmrc.hec.services.TaxCheckService
 import uk.gov.hmrc.hec.util.TimeUtils
 import uk.gov.hmrc.http.HeaderCarrier
-
 import java.time.LocalDate
+
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
@@ -203,9 +202,9 @@ class TaxCheckControllerSpec extends ControllerSpec {
           val dateTime = TimeUtils.now()
 
           List[HECTaxCheckMatchResult](
-            Match(companyMatchRequest, dateTime),
-            NoMatch(companyMatchRequest, dateTime),
-            Expired(companyMatchRequest, dateTime)
+            HECTaxCheckMatchResult(companyMatchRequest, dateTime, HECTaxCheckStatus.Match),
+            HECTaxCheckMatchResult(companyMatchRequest, dateTime, HECTaxCheckStatus.NoMatch),
+            HECTaxCheckMatchResult(companyMatchRequest, dateTime, HECTaxCheckStatus.Expired)
           ).foreach { matchResult =>
             withClue(s"For match result '$matchResult': ") {
               mockMatchTaxCheck(companyMatchRequest)(Right(matchResult))

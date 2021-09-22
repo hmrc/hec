@@ -16,8 +16,10 @@
 
 package uk.gov.hmrc.hec.models
 
-import julienrf.json.derived
-import play.api.libs.json.OFormat
+import ai.x.play.json.Jsonx
+import ai.x.play.json.SingletonEncoder.simpleName
+import ai.x.play.json.implicits.formatSingleton
+import play.api.libs.json.Format
 
 sealed trait CTStatus extends Product with Serializable {
   val IFString: String
@@ -37,7 +39,8 @@ object CTStatus {
     override val IFString: String = "No Return Found"
   }
 
-  implicit val format: OFormat[CTStatus] = derived.oformat()
+  @SuppressWarnings(Array("org.wartremover.warts.All"))
+  implicit val format: Format[CTStatus] = Jsonx.formatSealed[CTStatus]
 
   def fromString(s: String): Option[CTStatus] = s match {
     case ReturnFound.IFString             => Some(ReturnFound)
