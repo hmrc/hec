@@ -16,14 +16,12 @@
 
 package uk.gov.hmrc.hec.models.ids
 
-import play.api.libs.functional.syntax.toInvariantFunctorOps
-import play.api.libs.json.Format
+import play.api.libs.json.{Format, Json}
 
 final case class NINO(value: String) extends AnyVal
 
 object NINO {
 
-  implicit val format: Format[NINO] =
-    implicitly[Format[String]].inmap(NINO(_), _.value)
+  implicit val format: Format[NINO] = Json.valueFormat
 
 }

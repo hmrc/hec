@@ -16,15 +16,14 @@
 
 package uk.gov.hmrc.hec.models
 
-import play.api.libs.functional.syntax.toInvariantFunctorOps
-import play.api.libs.json.Format
 import cats.instances.int._
 import cats.syntax.eq._
+import play.api.libs.json.{Format, Json}
 
 final case class TaxYear(startYear: Int) extends AnyVal
 
 object TaxYear {
-  implicit val format: Format[TaxYear] = implicitly[Format[Int]].inmap(TaxYear(_), _.startYear)
+  implicit val format: Format[TaxYear] = Json.valueFormat
 
   def fromString(startYearStr: String): Option[TaxYear] =
     try if (startYearStr.length === 4) Some(TaxYear(startYearStr.toInt)) else None
