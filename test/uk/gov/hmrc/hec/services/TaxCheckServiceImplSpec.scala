@@ -26,7 +26,7 @@ import play.api.test.Helpers._
 import uk.gov.hmrc.hec.models.ApplicantDetails.{CompanyApplicantDetails, IndividualApplicantDetails}
 import uk.gov.hmrc.hec.models.HECTaxCheckData.{CompanyHECTaxCheckData, IndividualHECTaxCheckData}
 import uk.gov.hmrc.hec.models.TaxDetails.{CompanyTaxDetails, IndividualTaxDetails}
-import uk.gov.hmrc.hec.models.{DateOfBirth, Error, HECTaxCheck, HECTaxCheckCode, HECTaxCheckMatchRequest, HECTaxCheckMatchResult, HECTaxCheckStatus, IncomeDeclared, Name, TaxSituation}
+import uk.gov.hmrc.hec.models.{DateOfBirth, Error, HECTaxCheck, HECTaxCheckCode, HECTaxCheckMatchRequest, HECTaxCheckMatchResult, HECTaxCheckMatchStatus, IncomeDeclared, Name, TaxSituation}
 import uk.gov.hmrc.hec.models.ids.{CRN, CTUTR, GGCredId, NINO, SAUTR}
 import uk.gov.hmrc.hec.models.licence.{LicenceDetails, LicenceTimeTrading, LicenceType, LicenceValidityPeriod}
 import uk.gov.hmrc.hec.repos.HECTaxCheckStore
@@ -202,7 +202,7 @@ class TaxCheckServiceImplSpec extends AnyWordSpec with Matchers with MockFactory
 
           val result = service.matchTaxCheck(matchingIndividualMatchRequest)
           await(result.value) shouldBe Right(
-            HECTaxCheckMatchResult(matchingIndividualMatchRequest, dateTime, HECTaxCheckStatus.NoMatch)
+            HECTaxCheckMatchResult(matchingIndividualMatchRequest, dateTime, HECTaxCheckMatchStatus.NoMatch)
           )
         }
 
@@ -213,7 +213,7 @@ class TaxCheckServiceImplSpec extends AnyWordSpec with Matchers with MockFactory
 
           val result = service.matchTaxCheck(matchingIndividualMatchRequest)
           await(result.value) shouldBe Right(
-            HECTaxCheckMatchResult(matchingIndividualMatchRequest, dateTime, HECTaxCheckStatus.NoMatch)
+            HECTaxCheckMatchResult(matchingIndividualMatchRequest, dateTime, HECTaxCheckMatchStatus.NoMatch)
           )
         }
 
@@ -224,7 +224,7 @@ class TaxCheckServiceImplSpec extends AnyWordSpec with Matchers with MockFactory
 
           val result = service.matchTaxCheck(matchingCompanyMatchRequest)
           await(result.value) shouldBe Right(
-            HECTaxCheckMatchResult(matchingCompanyMatchRequest, dateTime, HECTaxCheckStatus.NoMatch)
+            HECTaxCheckMatchResult(matchingCompanyMatchRequest, dateTime, HECTaxCheckMatchStatus.NoMatch)
           )
         }
 
@@ -235,7 +235,9 @@ class TaxCheckServiceImplSpec extends AnyWordSpec with Matchers with MockFactory
 
           val matchRequest = matchingIndividualMatchRequest.copy(verifier = Right(incorrectDateOfBirth))
           val result       = service.matchTaxCheck(matchRequest)
-          await(result.value) shouldBe Right(HECTaxCheckMatchResult(matchRequest, dateTime, HECTaxCheckStatus.NoMatch))
+          await(result.value) shouldBe Right(
+            HECTaxCheckMatchResult(matchRequest, dateTime, HECTaxCheckMatchStatus.NoMatch)
+          )
         }
 
         "the CRN's in the match request and the stored tax check do not match" in {
@@ -245,7 +247,9 @@ class TaxCheckServiceImplSpec extends AnyWordSpec with Matchers with MockFactory
 
           val matchRequest = matchingCompanyMatchRequest.copy(verifier = Left(incorrectCRN))
           val result       = service.matchTaxCheck(matchRequest)
-          await(result.value) shouldBe Right(HECTaxCheckMatchResult(matchRequest, dateTime, HECTaxCheckStatus.NoMatch))
+          await(result.value) shouldBe Right(
+            HECTaxCheckMatchResult(matchRequest, dateTime, HECTaxCheckMatchStatus.NoMatch)
+          )
         }
 
         "the date of births match but the licence types do not" in {
@@ -255,7 +259,9 @@ class TaxCheckServiceImplSpec extends AnyWordSpec with Matchers with MockFactory
 
           val matchRequest = matchingIndividualMatchRequest.copy(licenceType = incorrectLicenceType)
           val result       = service.matchTaxCheck(matchRequest)
-          await(result.value) shouldBe Right(HECTaxCheckMatchResult(matchRequest, dateTime, HECTaxCheckStatus.NoMatch))
+          await(result.value) shouldBe Right(
+            HECTaxCheckMatchResult(matchRequest, dateTime, HECTaxCheckMatchStatus.NoMatch)
+          )
         }
 
         "the CRN's match but the licence types do not" in {
@@ -265,7 +271,9 @@ class TaxCheckServiceImplSpec extends AnyWordSpec with Matchers with MockFactory
 
           val matchRequest = matchingCompanyMatchRequest.copy(licenceType = incorrectLicenceType)
           val result       = service.matchTaxCheck(matchRequest)
-          await(result.value) shouldBe Right(HECTaxCheckMatchResult(matchRequest, dateTime, HECTaxCheckStatus.NoMatch))
+          await(result.value) shouldBe Right(
+            HECTaxCheckMatchResult(matchRequest, dateTime, HECTaxCheckMatchStatus.NoMatch)
+          )
         }
 
       }
@@ -282,7 +290,7 @@ class TaxCheckServiceImplSpec extends AnyWordSpec with Matchers with MockFactory
 
           val result = service.matchTaxCheck(matchingIndividualMatchRequest)
           await(result.value) shouldBe Right(
-            HECTaxCheckMatchResult(matchingIndividualMatchRequest, dateTime, HECTaxCheckStatus.Expired)
+            HECTaxCheckMatchResult(matchingIndividualMatchRequest, dateTime, HECTaxCheckMatchStatus.Expired)
           )
         }
 
@@ -297,7 +305,7 @@ class TaxCheckServiceImplSpec extends AnyWordSpec with Matchers with MockFactory
 
           val result = service.matchTaxCheck(matchingCompanyMatchRequest)
           await(result.value) shouldBe Right(
-            HECTaxCheckMatchResult(matchingCompanyMatchRequest, dateTime, HECTaxCheckStatus.Expired)
+            HECTaxCheckMatchResult(matchingCompanyMatchRequest, dateTime, HECTaxCheckMatchStatus.Expired)
           )
         }
 
@@ -312,7 +320,7 @@ class TaxCheckServiceImplSpec extends AnyWordSpec with Matchers with MockFactory
 
           val result = service.matchTaxCheck(matchingIndividualMatchRequest)
           await(result.value) shouldBe Right(
-            HECTaxCheckMatchResult(matchingIndividualMatchRequest, dateTime, HECTaxCheckStatus.Match)
+            HECTaxCheckMatchResult(matchingIndividualMatchRequest, dateTime, HECTaxCheckMatchStatus.Match)
           )
         }
 
@@ -325,7 +333,7 @@ class TaxCheckServiceImplSpec extends AnyWordSpec with Matchers with MockFactory
 
           val result = service.matchTaxCheck(matchingCompanyMatchRequest)
           await(result.value) shouldBe Right(
-            HECTaxCheckMatchResult(matchingCompanyMatchRequest, dateTime, HECTaxCheckStatus.Match)
+            HECTaxCheckMatchResult(matchingCompanyMatchRequest, dateTime, HECTaxCheckMatchStatus.Match)
           )
         }
 

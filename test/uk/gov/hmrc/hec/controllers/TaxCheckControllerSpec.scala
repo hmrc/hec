@@ -29,7 +29,7 @@ import uk.gov.hmrc.hec.models.HECTaxCheckData.IndividualHECTaxCheckData
 import uk.gov.hmrc.hec.models.TaxDetails.IndividualTaxDetails
 import uk.gov.hmrc.hec.models.ids.{CRN, GGCredId, NINO, SAUTR}
 import uk.gov.hmrc.hec.models.licence.{LicenceDetails, LicenceTimeTrading, LicenceType, LicenceValidityPeriod}
-import uk.gov.hmrc.hec.models.{DateOfBirth, Error, HECTaxCheck, HECTaxCheckCode, HECTaxCheckData, HECTaxCheckMatchRequest, HECTaxCheckMatchResult, HECTaxCheckStatus, Name, TaxSituation}
+import uk.gov.hmrc.hec.models.{DateOfBirth, Error, HECTaxCheck, HECTaxCheckCode, HECTaxCheckData, HECTaxCheckMatchRequest, HECTaxCheckMatchResult, HECTaxCheckMatchStatus, Name, TaxSituation}
 import uk.gov.hmrc.hec.services.TaxCheckService
 import uk.gov.hmrc.hec.util.TimeUtils
 import uk.gov.hmrc.http.HeaderCarrier
@@ -202,9 +202,9 @@ class TaxCheckControllerSpec extends ControllerSpec {
           val dateTime = TimeUtils.now()
 
           List[HECTaxCheckMatchResult](
-            HECTaxCheckMatchResult(companyMatchRequest, dateTime, HECTaxCheckStatus.Match),
-            HECTaxCheckMatchResult(companyMatchRequest, dateTime, HECTaxCheckStatus.NoMatch),
-            HECTaxCheckMatchResult(companyMatchRequest, dateTime, HECTaxCheckStatus.Expired)
+            HECTaxCheckMatchResult(companyMatchRequest, dateTime, HECTaxCheckMatchStatus.Match),
+            HECTaxCheckMatchResult(companyMatchRequest, dateTime, HECTaxCheckMatchStatus.NoMatch),
+            HECTaxCheckMatchResult(companyMatchRequest, dateTime, HECTaxCheckMatchStatus.Expired)
           ).foreach { matchResult =>
             withClue(s"For match result '$matchResult': ") {
               mockMatchTaxCheck(companyMatchRequest)(Right(matchResult))
