@@ -16,23 +16,10 @@
 
 package uk.gov.hmrc.hec.models
 
-import ai.x.play.json.Jsonx
-import ai.x.play.json.SingletonEncoder.simpleName
-import ai.x.play.json.implicits.formatSingleton
-import play.api.libs.json.{Format, JsObject, JsResult, JsValue, Json, OFormat}
+import play.api.libs.json._
 import uk.gov.hmrc.hec.models.ApplicantDetails.{CompanyApplicantDetails, IndividualApplicantDetails}
 import uk.gov.hmrc.hec.models.TaxDetails.{CompanyTaxDetails, IndividualTaxDetails}
 import uk.gov.hmrc.hec.models.licence.LicenceDetails
-
-sealed trait EntityType extends Product with Serializable
-
-object EntityType {
-  case object Individual extends EntityType
-  case object Company extends EntityType
-
-  @SuppressWarnings(Array("org.wartremover.warts.Throw", "org.wartremover.warts.Equals"))
-  implicit val format: Format[EntityType] = Jsonx.formatSealed[EntityType]
-}
 
 sealed trait HECTaxCheckData extends Product with Serializable {
   val licenceDetails: LicenceDetails
