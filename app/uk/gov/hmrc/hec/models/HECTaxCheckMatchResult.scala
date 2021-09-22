@@ -16,24 +16,30 @@
 
 package uk.gov.hmrc.hec.models
 
-import julienrf.json.derived
-import play.api.libs.json.OFormat
-
 import java.time.ZonedDateTime
 
-sealed trait HECTaxCheckMatchResult
+import ai.x.play.json.Jsonx
+import ai.x.play.json.SingletonEncoder.simpleName
+import ai.x.play.json.implicits.formatSingleton
+import play.api.libs.json.{Format, Json, OFormat}
+
+sealed trait HECTaxCheckStatus extends Product with Serializable
+
+object HECTaxCheckStatus {
+  case object NoMatch extends HECTaxCheckStatus
+  case object Match extends HECTaxCheckStatus
+  case object Expired extends HECTaxCheckStatus
+
+  @SuppressWarnings(Array("org.wartremover.warts.Throw", "org.wartremover.warts.Equals"))
+  implicit val format: Format[HECTaxCheckStatus] = Jsonx.formatSealed[HECTaxCheckStatus]
+}
+
+final case class HECTaxCheckMatchResult(
+  matchRequest: HECTaxCheckMatchRequest,
+  dateTimeChecked: ZonedDateTime,
+  status: HECTaxCheckStatus
+)
 
 object HECTaxCheckMatchResult {
-
-  final case class NoMatch(matchRequest: HECTaxCheckMatchRequest, dateTimeChecked: ZonedDateTime)
-      extends HECTaxCheckMatchResult
-
-  final case class Match(matchRequest: HECTaxCheckMatchRequest, dateTimeChecked: ZonedDateTime)
-      extends HECTaxCheckMatchResult
-
-  final case class Expired(matchRequest: HECTaxCheckMatchRequest, dateTimeChecked: ZonedDateTime)
-      extends HECTaxCheckMatchResult
-
-  implicit val format: OFormat[HECTaxCheckMatchResult] = derived.oformat()
-
+  implicit val format: OFormat[HECTaxCheckMatchResult] = Json.format
 }
