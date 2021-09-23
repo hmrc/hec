@@ -16,8 +16,10 @@
 
 package uk.gov.hmrc.hec.models.licence
 
-import julienrf.json.derived
-import play.api.libs.json.OFormat
+import ai.x.play.json.Jsonx
+import ai.x.play.json.SingletonEncoder.simpleName
+import ai.x.play.json.implicits.formatSingleton
+import play.api.libs.json.Format
 
 sealed trait LicenceValidityPeriod extends Product with Serializable
 
@@ -29,6 +31,7 @@ object LicenceValidityPeriod {
   case object UpToFourYears extends LicenceValidityPeriod
   case object UpToFiveYears extends LicenceValidityPeriod
 
-  implicit val format: OFormat[LicenceValidityPeriod] = derived.oformat()
+  @SuppressWarnings(Array("org.wartremover.warts.Throw", "org.wartremover.warts.Equals"))
+  implicit val format: Format[LicenceValidityPeriod] = Jsonx.formatSealed[LicenceValidityPeriod]
 
 }

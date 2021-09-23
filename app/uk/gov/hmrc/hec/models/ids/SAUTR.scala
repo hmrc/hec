@@ -16,16 +16,14 @@
 
 package uk.gov.hmrc.hec.models.ids
 
-import play.api.libs.functional.syntax.toInvariantFunctorOps
-import play.api.libs.json.Format
+import play.api.libs.json.{Format, Json}
 import uk.gov.hmrc.referencechecker.SelfAssessmentReferenceChecker
 
 final case class SAUTR(value: String) extends AnyVal
 
 object SAUTR {
 
-  implicit val format: Format[SAUTR] =
-    implicitly[Format[String]].inmap(SAUTR(_), _.value)
+  implicit val format: Format[SAUTR] = Json.valueFormat
 
   def fromString(utr: String): Option[SAUTR] =
     if (SelfAssessmentReferenceChecker.isValid(utr)) Some(SAUTR(utr)) else None

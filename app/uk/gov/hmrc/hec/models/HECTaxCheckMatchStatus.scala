@@ -16,18 +16,18 @@
 
 package uk.gov.hmrc.hec.models
 
-import cats.instances.int._
-import cats.syntax.eq._
-import play.api.libs.json.{Format, Json}
+import ai.x.play.json.Jsonx
+import ai.x.play.json.SingletonEncoder.simpleName
+import ai.x.play.json.implicits.formatSingleton
+import play.api.libs.json.Format
 
-final case class TaxYear(startYear: Int) extends AnyVal
+sealed trait HECTaxCheckMatchStatus extends Product with Serializable
 
-object TaxYear {
-  implicit val format: Format[TaxYear] = Json.valueFormat
+object HECTaxCheckMatchStatus {
+  case object NoMatch extends HECTaxCheckMatchStatus
+  case object Match extends HECTaxCheckMatchStatus
+  case object Expired extends HECTaxCheckMatchStatus
 
-  def fromString(startYearStr: String): Option[TaxYear] =
-    try if (startYearStr.length === 4) Some(TaxYear(startYearStr.toInt)) else None
-    catch {
-      case _: Exception => None
-    }
+  @SuppressWarnings(Array("org.wartremover.warts.Throw", "org.wartremover.warts.Equals"))
+  implicit val format: Format[HECTaxCheckMatchStatus] = Jsonx.formatSealed[HECTaxCheckMatchStatus]
 }

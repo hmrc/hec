@@ -98,7 +98,7 @@ class TaxCheckControllerSpec extends ControllerSpec {
         s"""
            |{
            |  "taxCheckCode" : "${r.taxCheckCode.value}",
-           |  "licenceType" : { "${r.licenceType.toString}" : { } },
+           |  "licenceType" : "${r.licenceType.toString}",
            |  "verifier" : $verifierJson,
            |  "expiresAfter" : "${toJsonString(r.expiresAfter)}"
            |}

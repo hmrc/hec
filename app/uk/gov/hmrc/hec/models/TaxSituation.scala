@@ -16,8 +16,10 @@
 
 package uk.gov.hmrc.hec.models
 
-import julienrf.json.derived
-import play.api.libs.json.OFormat
+import ai.x.play.json.Jsonx
+import ai.x.play.json.SingletonEncoder.simpleName
+import ai.x.play.json.implicits.formatSingleton
+import play.api.libs.json.Format
 
 sealed trait TaxSituation extends Product with Serializable
 
@@ -31,5 +33,6 @@ object TaxSituation {
 
   case object NotChargeable extends TaxSituation
 
-  implicit val format: OFormat[TaxSituation] = derived.oformat()
+  @SuppressWarnings(Array("org.wartremover.warts.Throw", "org.wartremover.warts.Equals"))
+  implicit val format: Format[TaxSituation] = Jsonx.formatSealed[TaxSituation]
 }
