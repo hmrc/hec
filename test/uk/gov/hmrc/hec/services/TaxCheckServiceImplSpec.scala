@@ -346,6 +346,7 @@ class TaxCheckServiceImplSpec extends AnyWordSpec with Matchers with MockFactory
 
           mockTimeProviderNow(now)
           mockTimeProviderToday(today)
+
           mockGetTaxCheck(taxCheckCode)(Right(Some(taxCheck)))
 
           val result = service.matchTaxCheck(matchingCompanyMatchRequest)
