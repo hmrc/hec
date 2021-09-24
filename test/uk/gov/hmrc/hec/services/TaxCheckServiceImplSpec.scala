@@ -75,6 +75,8 @@ class TaxCheckServiceImplSpec extends AnyWordSpec with Matchers with MockFactory
 
   implicit val hc: HeaderCarrier = HeaderCarrier()
 
+  private val now = TimeUtils.now()
+
   "TaxCheckServiceImpl" when {
 
     "handling requests to save a tax check" must {
@@ -96,7 +98,7 @@ class TaxCheckServiceImplSpec extends AnyWordSpec with Matchers with MockFactory
 
       val expectedExpiryDate = TimeUtils.today().plusDays(expiresAfter.toDays)
       val taxCheckCode       = HECTaxCheckCode("code")
-      val taxCheck           = HECTaxCheck(taxCheckData, taxCheckCode, expectedExpiryDate)
+      val taxCheck           = HECTaxCheck(taxCheckData, taxCheckCode, expectedExpiryDate, now)
 
       "return an error" when {
 
@@ -161,7 +163,8 @@ class TaxCheckServiceImplSpec extends AnyWordSpec with Matchers with MockFactory
             )
           ),
           taxCheckCode,
-          TimeUtils.today().plusMonths(1L)
+          TimeUtils.today().plusMonths(1L),
+          now
         )
 
       val storedCompanyTaxCheck =
@@ -172,7 +175,8 @@ class TaxCheckServiceImplSpec extends AnyWordSpec with Matchers with MockFactory
             CompanyTaxDetails(CTUTR(""))
           ),
           taxCheckCode,
-          TimeUtils.today().plusMonths(1L)
+          TimeUtils.today().plusMonths(1L),
+          now
         )
 
       val matchingIndividualMatchRequest = HECTaxCheckMatchRequest(
@@ -379,9 +383,9 @@ class TaxCheckServiceImplSpec extends AnyWordSpec with Matchers with MockFactory
         val code2 = HECTaxCheckCode("code2")
         val code3 = HECTaxCheckCode("code3")
 
-        val taxCheckToday     = HECTaxCheck(taxCheckData, code1, today)
-        val taxCheckYesterday = HECTaxCheck(taxCheckData, code2, yesterday)
-        val taxCheckTomorrow  = HECTaxCheck(taxCheckData, code3, tomorrow)
+        val taxCheckToday     = HECTaxCheck(taxCheckData, code1, today, now)
+        val taxCheckYesterday = HECTaxCheck(taxCheckData, code2, yesterday, now)
+        val taxCheckTomorrow  = HECTaxCheck(taxCheckData, code3, tomorrow, now)
 
         val todayItem    = TaxCheckListItem(
           taxCheckToday.taxCheckData.licenceDetails.licenceType,

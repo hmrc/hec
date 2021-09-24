@@ -26,7 +26,7 @@ import uk.gov.hmrc.hec.models.HECTaxCheckData.{CompanyHECTaxCheckData, Individua
 import uk.gov.hmrc.hec.models.ids.GGCredId
 import uk.gov.hmrc.hec.models.{Error, HECTaxCheck, HECTaxCheckData, HECTaxCheckMatchRequest, HECTaxCheckMatchResult, HECTaxCheckMatchStatus, TaxCheckListItem}
 import uk.gov.hmrc.hec.repos.HECTaxCheckStore
-import uk.gov.hmrc.hec.util.{TimeProvider, TimeUtils}
+import uk.gov.hmrc.hec.util.TimeProvider
 import uk.gov.hmrc.http.HeaderCarrier
 
 import java.time.LocalDate
@@ -64,8 +64,9 @@ class TaxCheckServiceImpl @Inject() (
     taxCheckData: HECTaxCheckData
   )(implicit hc: HeaderCarrier): EitherT[Future, Error, HECTaxCheck] = {
     val taxCheckCode = taxCheckCodeGeneratorService.generateTaxCheckCode()
-    val expiryDate   = TimeUtils.today().plusDays(taxCheckCodeExpiresAfterDays)
-    val taxCheck     = HECTaxCheck(taxCheckData, taxCheckCode, expiryDate)
+    val expiryDate   = timeProvider.currentDate.plusDays(taxCheckCodeExpiresAfterDays)
+    val createDate   = timeProvider.currentDateTime
+    val taxCheck     = HECTaxCheck(taxCheckData, taxCheckCode, expiryDate, createDate)
 
     taxCheckStore.store(taxCheck).map(_ => taxCheck)
   }
@@ -87,7 +88,7 @@ class TaxCheckServiceImpl @Inject() (
     taxCheckMatchRequest: HECTaxCheckMatchRequest,
     storedTaxCheck: HECTaxCheck
   ): HECTaxCheckMatchResult = {
-    lazy val hasExpired = TimeUtils.today().isAfter(storedTaxCheck.expiresAfter)
+    lazy val hasExpired = timeProvider.currentDate.isAfter(storedTaxCheck.expiresAfter)
 
     val applicantVerifierMatches = (taxCheckMatchRequest.verifier, storedTaxCheck.taxCheckData) match {
       case (Right(dateOfBirth), storedIndividualData: IndividualHECTaxCheckData) =>

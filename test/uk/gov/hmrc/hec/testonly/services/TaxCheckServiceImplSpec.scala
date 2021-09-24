@@ -68,6 +68,8 @@ class TaxCheckServiceImplSpec extends AnyWordSpec with Matchers with MockFactory
 
   implicit val hc: HeaderCarrier = HeaderCarrier()
 
+  private val now = TimeUtils.now()
+
   "TaxCheckServiceImpl" when {
 
     "handling requests to save a tax check" must {
@@ -87,7 +89,8 @@ class TaxCheckServiceImplSpec extends AnyWordSpec with Matchers with MockFactory
           val taxCheck = HECTaxCheck(
             service.taxCheckData(request),
             request.taxCheckCode,
-            request.expiresAfter
+            request.expiresAfter,
+            now
           )
 
           inSequence {
@@ -107,7 +110,8 @@ class TaxCheckServiceImplSpec extends AnyWordSpec with Matchers with MockFactory
           val taxCheck = HECTaxCheck(
             service.taxCheckData(request),
             request.taxCheckCode,
-            request.expiresAfter
+            request.expiresAfter,
+            now
           )
 
           inSequence {
@@ -123,7 +127,8 @@ class TaxCheckServiceImplSpec extends AnyWordSpec with Matchers with MockFactory
           val taxCheck = HECTaxCheck(
             service.taxCheckData(request),
             request.taxCheckCode,
-            request.expiresAfter
+            request.expiresAfter,
+            now
           )
 
           inSequence {
@@ -166,7 +171,7 @@ class TaxCheckServiceImplSpec extends AnyWordSpec with Matchers with MockFactory
               Some(IncomeDeclared.Yes)
             )
           )
-          val taxCheck     = HECTaxCheck(taxCheckData, taxCheckCode, TimeUtils.today())
+          val taxCheck     = HECTaxCheck(taxCheckData, taxCheckCode, TimeUtils.today(), now)
 
           mockGetTaxCheck(taxCheckCode)(Right(Some(taxCheck)))
 

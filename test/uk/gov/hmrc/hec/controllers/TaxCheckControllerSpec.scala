@@ -141,7 +141,7 @@ class TaxCheckControllerSpec extends ControllerSpec with AuthSupport {
         "the tax check has been saved" in {
           val taxCheckCode     = HECTaxCheckCode("code")
           val expiresAfterDate = LocalDate.MIN
-          val taxCheck         = HECTaxCheck(taxCheckData, taxCheckCode, expiresAfterDate)
+          val taxCheck         = HECTaxCheck(taxCheckData, taxCheckCode, expiresAfterDate, TimeUtils.now())
 
           mockSaveTaxCheck(taxCheckData)(Right(taxCheck))
 
