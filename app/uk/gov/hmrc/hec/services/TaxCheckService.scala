@@ -23,11 +23,13 @@ import com.google.inject.{ImplementedBy, Inject, Singleton}
 import com.typesafe.config.Config
 import configs.syntax._
 import uk.gov.hmrc.hec.models.HECTaxCheckData.{CompanyHECTaxCheckData, IndividualHECTaxCheckData}
-import uk.gov.hmrc.hec.models.{Error, HECTaxCheck, HECTaxCheckData, HECTaxCheckMatchRequest, HECTaxCheckMatchResult, HECTaxCheckMatchStatus}
+import uk.gov.hmrc.hec.models.ids.GGCredId
+import uk.gov.hmrc.hec.models.{Error, HECTaxCheck, HECTaxCheckData, HECTaxCheckMatchRequest, HECTaxCheckMatchResult, HECTaxCheckMatchStatus, TaxCheckCodeListItem}
 import uk.gov.hmrc.hec.repos.HECTaxCheckStore
 import uk.gov.hmrc.hec.util.{TimeProvider, TimeUtils}
 import uk.gov.hmrc.http.HeaderCarrier
 
+import java.time.LocalDate
 import scala.concurrent.duration.FiniteDuration
 import scala.concurrent.{ExecutionContext, Future}
 
@@ -39,6 +41,10 @@ trait TaxCheckService {
   def matchTaxCheck(taxCheckMatchRequest: HECTaxCheckMatchRequest)(implicit
     hc: HeaderCarrier
   ): EitherT[Future, Error, HECTaxCheckMatchResult]
+
+  def getUnexpiredTaxCheckCodes(ggCredId: GGCredId, today: LocalDate)(implicit
+    hc: HeaderCarrier
+  ): EitherT[Future, Error, List[TaxCheckCodeListItem]]
 
 }
 
@@ -104,5 +110,18 @@ class TaxCheckServiceImpl @Inject() (
     } else
       HECTaxCheckMatchResult(taxCheckMatchRequest, timeProvider.currentDateTime, HECTaxCheckMatchStatus.NoMatch)
   }
+
+  def getUnexpiredTaxCheckCodes(
+    ggCredId: GGCredId,
+    today: LocalDate
+  )(implicit
+    hc: HeaderCarrier
+  ): EitherT[Future, Error, List[TaxCheckCodeListItem]] =
+    taxCheckStore
+      .getTaxCheckCodes(ggCredId)
+      .map(
+        _.filter(item => item.expiresAfter.isEqual(today) || item.expiresAfter.isAfter(today))
+          .map(TaxCheckCodeListItem.fromHecTaxCheck)
+      )
 
 }

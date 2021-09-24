@@ -19,11 +19,13 @@ package uk.gov.hmrc.hec.controllers
 import cats.instances.future._
 import com.google.inject.{Inject, Singleton}
 import play.api.libs.json.{JsError, JsSuccess, JsValue, Json}
-import play.api.mvc.{Action, ControllerComponents}
+import play.api.mvc.{Action, AnyContent, ControllerComponents}
+import uk.gov.hmrc.hec.controllers.actions.AuthenticateActions
+import uk.gov.hmrc.hec.models.ids.GGCredId
 import uk.gov.hmrc.hec.models.{HECTaxCheckData, HECTaxCheckMatchRequest}
 import uk.gov.hmrc.hec.services.TaxCheckService
-import uk.gov.hmrc.hec.util.Logging
 import uk.gov.hmrc.hec.util.Logging.LoggerOps
+import uk.gov.hmrc.hec.util.{Logging, TimeProvider}
 import uk.gov.hmrc.play.bootstrap.backend.controller.BackendController
 
 import scala.concurrent.{ExecutionContext, Future}
@@ -31,6 +33,8 @@ import scala.concurrent.{ExecutionContext, Future}
 @Singleton
 class TaxCheckController @Inject() (
   taxCheckService: TaxCheckService,
+  authenticate: AuthenticateActions,
+  timeProvider: TimeProvider,
   cc: ControllerComponents
 )(implicit ec: ExecutionContext)
     extends BackendController(cc)
@@ -74,6 +78,18 @@ class TaxCheckController @Inject() (
         logger.warn("Could not parse JSON")
         Future.successful(BadRequest)
     }
+  }
+
+  val getUnexpiredTaxCheckCodes: Action[AnyContent] = authenticate.async { implicit request =>
+    taxCheckService
+      .getUnexpiredTaxCheckCodes(GGCredId(request.ggCredId), timeProvider.currentDate)
+      .fold(
+        { e =>
+          logger.warn("Error while fetching tax check codes", e)
+          InternalServerError
+        },
+        result => Ok(Json.toJson(result))
+      )
   }
 
 }

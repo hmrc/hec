@@ -23,6 +23,7 @@ import play.api.inject.guice.GuiceableModule
 import play.api.libs.json.Json
 import play.api.test.FakeRequest
 import play.api.test.Helpers._
+import uk.gov.hmrc.auth.core.AuthConnector
 import uk.gov.hmrc.hec.models._
 import uk.gov.hmrc.hec.models.ids.{CRN, CTUTR}
 import uk.gov.hmrc.hec.services.DESService
@@ -31,12 +32,13 @@ import uk.gov.hmrc.http.HeaderCarrier
 
 import scala.concurrent.ExecutionContext.Implicits.global
 
-class DESControllerSpec extends ControllerSpec {
+class DESControllerSpec extends ControllerSpec with AuthSupport {
 
   private val mockDESService = mock[DESService]
 
   override val overrideBindings =
     List[GuiceableModule](
+      bind[AuthConnector].toInstance(mockAuthConnector),
       bind[DESService].toInstance(mockDESService)
     )
 

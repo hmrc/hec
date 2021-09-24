@@ -18,16 +18,18 @@ package uk.gov.hmrc.hec.util
 
 import com.google.inject.{ImplementedBy, Inject}
 
-import java.time.ZonedDateTime
+import java.time.{LocalDate, ZonedDateTime}
 import javax.inject.Singleton
 
 @ImplementedBy(classOf[TimeProviderImpl])
 trait TimeProvider {
   def currentDateTime: ZonedDateTime
+  def currentDate: LocalDate
 }
 
 @Singleton
 class TimeProviderImpl extends TimeProvider {
   @Inject()
   override def currentDateTime: ZonedDateTime = TimeUtils.now()
+  override def currentDate: LocalDate         = TimeUtils.today()
 }

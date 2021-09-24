@@ -18,13 +18,13 @@ package uk.gov.hmrc.hec.controllers
 
 import java.time.LocalDate
 import java.util.UUID
-
 import cats.data.EitherT
 import cats.instances.future._
 import play.api.inject.bind
 import play.api.inject.guice.GuiceableModule
 import play.api.test.FakeRequest
 import play.api.test.Helpers._
+import uk.gov.hmrc.auth.core.AuthConnector
 import uk.gov.hmrc.hec.models.ids.{CTUTR, SAUTR}
 import uk.gov.hmrc.hec.models._
 import uk.gov.hmrc.hec.services.IFService
@@ -33,12 +33,13 @@ import uk.gov.hmrc.http.HeaderCarrier
 
 import scala.concurrent.ExecutionContext.Implicits.global
 
-class IFControllerSpec extends ControllerSpec {
+class IFControllerSpec extends ControllerSpec with AuthSupport {
 
   val mockIFService = mock[IFService]
 
   override val overrideBindings =
     List[GuiceableModule](
+      bind[AuthConnector].toInstance(mockAuthConnector),
       bind[IFService].toInstance(mockIFService)
     )
 

@@ -24,7 +24,8 @@ import play.api.libs.json.{JsString, JsValue, Json}
 import play.api.mvc.Result
 import play.api.test.FakeRequest
 import play.api.test.Helpers._
-import uk.gov.hmrc.hec.controllers.ControllerSpec
+import uk.gov.hmrc.auth.core.AuthConnector
+import uk.gov.hmrc.hec.controllers.{AuthSupport, ControllerSpec}
 import uk.gov.hmrc.hec.models.ApplicantDetails.IndividualApplicantDetails
 import uk.gov.hmrc.hec.models.HECTaxCheckData.IndividualHECTaxCheckData
 import uk.gov.hmrc.hec.models.TaxDetails.IndividualTaxDetails
@@ -35,18 +36,19 @@ import uk.gov.hmrc.hec.testonly.services.TaxCheckService
 import uk.gov.hmrc.hec.testonly.models.SaveTaxCheckRequest
 import uk.gov.hmrc.hec.util.TimeUtils
 import uk.gov.hmrc.http.HeaderCarrier
+
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
-
 import scala.concurrent.Future
 import scala.concurrent.ExecutionContext.Implicits.global
 
-class TaxCheckControllerSpec extends ControllerSpec {
+class TaxCheckControllerSpec extends ControllerSpec with AuthSupport {
 
   val mockTaxCheckService = mock[TaxCheckService]
 
   override val overrideBindings =
     List[GuiceableModule](
+      bind[AuthConnector].toInstance(mockAuthConnector),
       bind[TaxCheckService].toInstance(mockTaxCheckService)
     )
 
