@@ -16,18 +16,16 @@
 
 package uk.gov.hmrc.hec.models
 
+import play.api.libs.json.{Json, OFormat}
+
 import java.time.LocalDate
 
-import play.api.libs.json.{Json, OFormat}
-import uk.gov.hmrc.hec.models.ids.CTUTR
-
-final case class CTStatusResponse(
-  ctutr: CTUTR,
+final case class AccountingPeriod(
   startDate: LocalDate,
   endDate: LocalDate,
-  latestAccountingPeriod: Option[AccountingPeriod]
+  ctStatus: CTStatus
 )
 
-object CTStatusResponse {
-  implicit val format: OFormat[CTStatusResponse] = Json.format
+object AccountingPeriod {
+  implicit val format: OFormat[AccountingPeriod] = Json.format
 }

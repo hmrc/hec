@@ -21,32 +21,19 @@ import ai.x.play.json.SingletonEncoder.simpleName
 import ai.x.play.json.implicits.formatSingleton
 import play.api.libs.json.Format
 
-sealed trait CTStatus extends Product with Serializable {
-  val IFString: String
-}
+sealed trait CTStatus extends Product with Serializable
 
 object CTStatus {
-  case object ReturnFound extends CTStatus {
-    override val IFString: String = "Return Found"
-  }
-  case object NoticeToFileIssued extends CTStatus {
-    override val IFString: String = "Notice to File Issued"
-  }
-  case object NoAccountingPeriodFound extends CTStatus {
-    override val IFString: String = "No Accounting Period Found"
-  }
-  case object NoReturnFound extends CTStatus {
-    override val IFString: String = "No Return Found"
-  }
+
+  case object ReturnFound extends CTStatus
+
+  case object NoticeToFileIssued extends CTStatus
+
+  case object NoAccountingPeriodFound extends CTStatus
+
+  case object NoReturnFound extends CTStatus
 
   @SuppressWarnings(Array("org.wartremover.warts.All"))
   implicit val format: Format[CTStatus] = Jsonx.formatSealed[CTStatus]
 
-  def fromString(s: String): Option[CTStatus] = s match {
-    case ReturnFound.IFString             => Some(ReturnFound)
-    case NoticeToFileIssued.IFString      => Some(NoticeToFileIssued)
-    case NoAccountingPeriodFound.IFString => Some(NoAccountingPeriodFound)
-    case NoReturnFound.IFString           => Some(NoReturnFound)
-    case _                                => None
-  }
 }
