@@ -14,22 +14,25 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.hec.util
+package uk.gov.hmrc.hec.models
 
-import com.google.inject.{ImplementedBy, Inject}
+import play.api.libs.json.{Json, OFormat}
+import uk.gov.hmrc.hec.models.licence.LicenceType
 
-import java.time.{LocalDate, ZonedDateTime}
-import javax.inject.Singleton
+import java.time.LocalDate
 
-@ImplementedBy(classOf[TimeProviderImpl])
-trait TimeProvider {
-  def currentDateTime: ZonedDateTime
-  def currentDate: LocalDate
-}
+final case class TaxCheckListItem(
+  licenceType: LicenceType,
+  taxCheckCode: HECTaxCheckCode,
+  expiresAfter: LocalDate
+)
 
-@Singleton
-class TimeProviderImpl extends TimeProvider {
-  @Inject()
-  override def currentDateTime: ZonedDateTime = TimeUtils.now()
-  override def currentDate: LocalDate         = TimeUtils.today()
+object TaxCheckListItem {
+  implicit val format: OFormat[TaxCheckListItem] = Json.format
+
+  def fromHecTaxCheck(taxCheck: HECTaxCheck): TaxCheckListItem = TaxCheckListItem(
+    licenceType = taxCheck.taxCheckData.licenceDetails.licenceType,
+    taxCheckCode = taxCheck.taxCheckCode,
+    expiresAfter = taxCheck.expiresAfter
+  )
 }

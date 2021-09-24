@@ -21,21 +21,21 @@ import org.scalatest.concurrent.Eventually
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
 import play.api.Configuration
-import play.api.libs.json.{JsNumber, JsObject}
+import play.api.libs.json.{JsNumber, JsObject, Json}
 import play.api.test.Helpers._
 import uk.gov.hmrc.cache.model.{Cache, Id}
 import uk.gov.hmrc.hec.models.ApplicantDetails.CompanyApplicantDetails
 import uk.gov.hmrc.hec.models.HECTaxCheckData.CompanyHECTaxCheckData
 import uk.gov.hmrc.hec.models.TaxDetails.CompanyTaxDetails
-import uk.gov.hmrc.hec.models.{HECTaxCheck, HECTaxCheckCode}
 import uk.gov.hmrc.hec.models.ids.{CRN, CTUTR, GGCredId}
 import uk.gov.hmrc.hec.models.licence.{LicenceDetails, LicenceTimeTrading, LicenceType, LicenceValidityPeriod}
+import uk.gov.hmrc.hec.models.{HECTaxCheck, HECTaxCheckCode}
 import uk.gov.hmrc.hec.util.TimeUtils
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.mongo.DatabaseUpdate
 
-import scala.concurrent.Future
 import scala.concurrent.ExecutionContext.Implicits.global
+import scala.concurrent.Future
 
 class HECTaxCheckStoreImplSpec extends AnyWordSpec with Matchers with Eventually with MongoSupport {
 
@@ -118,7 +118,7 @@ class HECTaxCheckStoreImplSpec extends AnyWordSpec with Matchers with Eventually
       }
     }
 
-    "return no SessionData if there is no data in mongo" in {
+    "return nothing if there is no data in mongo" in {
       await(taxCheckStore.get(HECTaxCheckCode("abc")).value) shouldBe Right(None)
     }
 
@@ -137,6 +137,45 @@ class HECTaxCheckStoreImplSpec extends AnyWordSpec with Matchers with Eventually
         await(taxCheckStore.get(taxCheckCode).value).isLeft shouldBe true
       }
 
+    }
+
+    "be able to fetch all tax check codes using the GGCredId" in {
+      val ggCredId = taxCheckData.applicantDetails.ggCredId
+
+      // store some tax check codes in mongo
+      await(taxCheckStore.store(taxCheck1).value) shouldBe Right(())
+      await(taxCheckStore.store(taxCheck2).value) shouldBe Right(())
+
+      eventually {
+        await(taxCheckStore.getTaxCheckCodes(ggCredId).value).map(_.toSet) should be(Right(Set(taxCheck1, taxCheck2)))
+      }
+    }
+
+    "return an error when data can't be parsed when fetching tax check codes based on GGCredId" in {
+      val taxCheckCode = "code1"
+      val ggCredId     = "ggCredId"
+
+      val invalidData = Json.parse(s"""{
+                                   | "taxCheckData" : {
+                                   | 	"applicantDetails" : {
+                                   | 		"ggCredId" : "ggCredId",
+                                   | 		"crn" : ""
+                                   | 	}
+                                   | },
+                                   | "taxCheckCode" : "$taxCheckCode",
+                                   | "expiresAfter" : "2021-09-24"
+                                   |}""".stripMargin)
+
+      // insert invalid data
+      val create: Future[DatabaseUpdate[Cache]] =
+        taxCheckStore.cacheRepository.createOrUpdate(
+          Id(taxCheckCode),
+          "hec-tax-check",
+          invalidData
+        )
+      await(create).writeResult.inError shouldBe false
+
+      await(taxCheckStore.getTaxCheckCodes(GGCredId(ggCredId)).value).isLeft shouldBe true
     }
   }
 

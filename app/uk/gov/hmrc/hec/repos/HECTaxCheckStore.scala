@@ -19,14 +19,17 @@ package uk.gov.hmrc.hec.repos
 import cats.data.{EitherT, OptionT}
 import cats.instances.either._
 import cats.syntax.either._
-import configs.syntax._
 import com.google.inject.{ImplementedBy, Inject, Singleton}
+import configs.syntax._
 import play.api.Configuration
-import play.api.libs.json.Json
+import play.api.libs.json.{JsError, JsSuccess, Json, JsonValidationError}
 import play.modules.reactivemongo.ReactiveMongoComponent
+import reactivemongo.api.indexes.{Index, IndexType}
 import uk.gov.hmrc.cache.model.Id
 import uk.gov.hmrc.cache.repository.CacheMongoRepository
+import uk.gov.hmrc.hec.models.ids.GGCredId
 import uk.gov.hmrc.hec.models.{Error, HECTaxCheck, HECTaxCheckCode}
+import uk.gov.hmrc.hec.util.Logging
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.play.http.logging.Mdc.preservingMdc
 
@@ -39,6 +42,10 @@ trait HECTaxCheckStore {
   def get(taxCheckCode: HECTaxCheckCode)(implicit
     hc: HeaderCarrier
   ): EitherT[Future, Error, Option[HECTaxCheck]]
+
+  def getTaxCheckCodes(GGCredId: GGCredId)(implicit
+    hc: HeaderCarrier
+  ): EitherT[Future, Error, List[HECTaxCheck]]
 
   def store(
     taxCheck: HECTaxCheck
@@ -56,7 +63,15 @@ class HECTaxCheckStoreImpl @Inject() (
   configuration: Configuration
 )(implicit
   ec: ExecutionContext
-) extends HECTaxCheckStore {
+) extends HECTaxCheckStore
+    with Logging {
+
+  val key: String                   = "hec-tax-check"
+  private val ggCredIdField: String = s"data.$key.taxCheckData.applicantDetails.ggCredId"
+
+  private val hecIndexes = Seq(
+    Index(Seq(ggCredIdField -> IndexType.Ascending))
+  )
 
   val cacheRepository: CacheMongoRepository = {
     val expireAfter: FiniteDuration = configuration.underlying
@@ -66,10 +81,10 @@ class HECTaxCheckStoreImpl @Inject() (
     new CacheMongoRepository("hecTaxChecks", expireAfter.toSeconds)(
       mongo.mongoConnector.db,
       ec
-    )
+    ) {
+      override def indexes: Seq[Index] = hecIndexes
+    }
   }
-
-  val key: String = "hec-tax-check"
 
   def get(taxCheckCode: HECTaxCheckCode)(implicit
     hc: HeaderCarrier
@@ -97,6 +112,43 @@ class HECTaxCheckStoreImpl @Inject() (
             response.value
           }
           .recover { case e ⇒ Left(Error(e)) }
+      }
+    )
+
+  /**
+    * Fetch existing tax check codes for the specified GGCredId
+    * @param ggCredId The government gateway ID
+    * @param hc header information
+    * @return A list of tax check code details
+    */
+  def getTaxCheckCodes(ggCredId: GGCredId)(implicit
+    hc: HeaderCarrier
+  ): EitherT[Future, Error, List[HECTaxCheck]] =
+    EitherT(
+      preservingMdc {
+        cacheRepository
+          .find(ggCredIdField -> ggCredId.value)
+          .map { caches =>
+            val jsons = caches
+              .flatMap(_.data.toList)
+              .map(json => (json \ key).validate[HECTaxCheck])
+
+            val (valid, invalid) =
+              jsons.foldLeft((List.empty[HECTaxCheck], Seq.empty[JsonValidationError])) { (acc, json) =>
+                val (taxChecks, errors) = acc
+                json match {
+                  case JsSuccess(value, _)       => (value +: taxChecks, errors)
+                  case JsError(validationErrors) => (taxChecks, errors ++ validationErrors.flatMap(_._2))
+                }
+              }
+
+            val errorStr = invalid.map(_.message).mkString("; ")
+            if (invalid.nonEmpty) {
+              logger.warn(s"${invalid.size} results failed json parsing - $errorStr")
+            }
+
+            Either.cond(invalid.isEmpty, valid, Error(Left(errorStr)))
+          }
       }
     )
 

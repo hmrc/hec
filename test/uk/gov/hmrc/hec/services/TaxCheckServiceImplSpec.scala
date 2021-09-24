@@ -26,14 +26,14 @@ import play.api.test.Helpers._
 import uk.gov.hmrc.hec.models.ApplicantDetails.{CompanyApplicantDetails, IndividualApplicantDetails}
 import uk.gov.hmrc.hec.models.HECTaxCheckData.{CompanyHECTaxCheckData, IndividualHECTaxCheckData}
 import uk.gov.hmrc.hec.models.TaxDetails.{CompanyTaxDetails, IndividualTaxDetails}
-import uk.gov.hmrc.hec.models.{DateOfBirth, Error, HECTaxCheck, HECTaxCheckCode, HECTaxCheckMatchRequest, HECTaxCheckMatchResult, HECTaxCheckMatchStatus, IncomeDeclared, Name, TaxSituation}
+import uk.gov.hmrc.hec.models.{DateOfBirth, Error, HECTaxCheck, HECTaxCheckCode, HECTaxCheckMatchRequest, HECTaxCheckMatchResult, HECTaxCheckMatchStatus, IncomeDeclared, Name, TaxCheckListItem, TaxSituation}
 import uk.gov.hmrc.hec.models.ids.{CRN, CTUTR, GGCredId, NINO, SAUTR}
 import uk.gov.hmrc.hec.models.licence.{LicenceDetails, LicenceTimeTrading, LicenceType, LicenceValidityPeriod}
 import uk.gov.hmrc.hec.repos.HECTaxCheckStore
 import uk.gov.hmrc.hec.util.{TimeProvider, TimeUtils}
 import uk.gov.hmrc.http.HeaderCarrier
-import java.time.{LocalDate, ZonedDateTime}
 
+import java.time.{LocalDate, ZonedDateTime}
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.duration._
 
@@ -63,6 +63,12 @@ class TaxCheckServiceImplSpec extends AnyWordSpec with Matchers with MockFactory
     (mockTaxCheckStore
       .get(_: HECTaxCheckCode)(_: HeaderCarrier))
       .expects(taxCheckCode, *)
+      .returning(EitherT.fromEither(result))
+
+  def mockGetTaxCheckCodes(ggCredId: GGCredId)(result: Either[Error, List[HECTaxCheck]]) =
+    (mockTaxCheckStore
+      .getTaxCheckCodes(_: GGCredId)(_: HeaderCarrier))
+      .expects(ggCredId, *)
       .returning(EitherT.fromEither(result))
 
   def mockTimeProviderToday(d: ZonedDateTime) = (mockTimeProvider.currentDateTime _).expects().returning(d)
@@ -339,6 +345,60 @@ class TaxCheckServiceImplSpec extends AnyWordSpec with Matchers with MockFactory
 
       }
 
+    }
+
+    "handling requests to fetch unexpired tax check codes" must {
+      val ggCredId = GGCredId("ggCredId")
+      val today    = LocalDate.of(2020, 1, 10)
+
+      val taxCheckData = CompanyHECTaxCheckData(
+        CompanyApplicantDetails(ggCredId, CRN("")),
+        LicenceDetails(
+          LicenceType.ScrapMetalDealerSite,
+          LicenceTimeTrading.EightYearsOrMore,
+          LicenceValidityPeriod.UpToOneYear
+        ),
+        CompanyTaxDetails(CTUTR(""))
+      )
+
+      "return an error" when {
+        "there is an error fetching the code from the db" in {
+          val error = Left(Error("some error"))
+          mockGetTaxCheckCodes(ggCredId)(error)
+
+          val result = service.getUnexpiredTaxCheckCodes(ggCredId, today)
+          await(result.value) shouldBe error
+        }
+      }
+
+      "only return unexpired tax check codes" in {
+        val yesterday = today.minusDays(1)
+        val tomorrow  = today.plusDays(1)
+
+        val code1 = HECTaxCheckCode("code1")
+        val code2 = HECTaxCheckCode("code2")
+        val code3 = HECTaxCheckCode("code3")
+
+        val taxCheckToday     = HECTaxCheck(taxCheckData, code1, today)
+        val taxCheckYesterday = HECTaxCheck(taxCheckData, code2, yesterday)
+        val taxCheckTomorrow  = HECTaxCheck(taxCheckData, code3, tomorrow)
+
+        val todayItem    = TaxCheckListItem(
+          taxCheckToday.taxCheckData.licenceDetails.licenceType,
+          taxCheckToday.taxCheckCode,
+          taxCheckToday.expiresAfter
+        )
+        val tomorrowItem = TaxCheckListItem(
+          taxCheckTomorrow.taxCheckData.licenceDetails.licenceType,
+          taxCheckTomorrow.taxCheckCode,
+          taxCheckTomorrow.expiresAfter
+        )
+
+        mockGetTaxCheckCodes(ggCredId)(Right(List(taxCheckToday, taxCheckYesterday, taxCheckTomorrow)))
+
+        val result = service.getUnexpiredTaxCheckCodes(ggCredId, today)
+        await(result.value) shouldBe Right(List(todayItem, tomorrowItem))
+      }
     }
 
   }
