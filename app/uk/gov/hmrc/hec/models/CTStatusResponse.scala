@@ -25,7 +25,7 @@ final case class CTStatusResponse(
   ctutr: CTUTR,
   startDate: LocalDate,
   endDate: LocalDate,
-  latestAccountingPeriod: Option[AccountingPeriod]
+  latestAccountingPeriod: Option[CTAccountingPeriod]
 )
 
 object CTStatusResponse {

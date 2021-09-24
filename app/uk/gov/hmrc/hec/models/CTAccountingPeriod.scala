@@ -20,12 +20,12 @@ import play.api.libs.json.{Json, OFormat}
 
 import java.time.LocalDate
 
-final case class AccountingPeriod(
+final case class CTAccountingPeriod(
   startDate: LocalDate,
   endDate: LocalDate,
   ctStatus: CTStatus
 )
 
-object AccountingPeriod {
-  implicit val format: OFormat[AccountingPeriod] = Json.format
+object CTAccountingPeriod {
+  implicit val format: OFormat[CTAccountingPeriod] = Json.format
 }

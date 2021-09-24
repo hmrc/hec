@@ -29,7 +29,7 @@ import play.api.libs.json.Json
 import play.api.test.Helpers._
 import uk.gov.hmrc.hec.connectors.IFConnector
 import uk.gov.hmrc.hec.models.ids.{CTUTR, SAUTR}
-import uk.gov.hmrc.hec.models.{AccountingPeriod, CTStatus, CTStatusResponse, Error, SAStatus, SAStatusResponse, TaxYear}
+import uk.gov.hmrc.hec.models.{CTAccountingPeriod, CTStatus, CTStatusResponse, Error, SAStatus, SAStatusResponse, TaxYear}
 import uk.gov.hmrc.hec.services.IFService.{BackendError, DataNotFoundError}
 import uk.gov.hmrc.http.{HeaderCarrier, HttpResponse}
 
@@ -364,7 +364,7 @@ class IFServiceImplSpec extends AnyWordSpec with Matchers with MockFactory {
               fromDate,
               toDate,
               Some(
-                AccountingPeriod(
+                CTAccountingPeriod(
                   LocalDate.of(2020, 10, 15),
                   LocalDate.of(2021, 10, 20),
                   expectedCtStatus

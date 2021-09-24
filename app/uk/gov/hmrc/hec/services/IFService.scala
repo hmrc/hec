@@ -25,7 +25,7 @@ import play.api.http.Status.{NOT_FOUND, OK}
 import play.api.libs.json.{Json, Reads}
 import uk.gov.hmrc.hec.connectors.IFConnector
 import uk.gov.hmrc.hec.models.ids.{CTUTR, SAUTR}
-import uk.gov.hmrc.hec.models.{AccountingPeriod, CTLookupStatus, CTStatus, CTStatusResponse, Error, SAStatus, SAStatusResponse, TaxYear}
+import uk.gov.hmrc.hec.models.{CTAccountingPeriod, CTLookupStatus, CTStatus, CTStatusResponse, Error, SAStatus, SAStatusResponse, TaxYear}
 import uk.gov.hmrc.hec.services.IFService.{BackendError, DataNotFoundError, IFError}
 import uk.gov.hmrc.hec.services.IFServiceImpl.{RawAccountingPeriod, RawCTSuccessResponse, RawFailureResponse, RawSASuccessResponse}
 import uk.gov.hmrc.hec.util.HttpResponseOps._
@@ -126,12 +126,12 @@ class IFServiceImpl @Inject() (
         }
       }
 
-  private def latestAccountingPeriod(accountingPeriods: List[AccountingPeriod]): Option[AccountingPeriod] =
+  private def latestAccountingPeriod(accountingPeriods: List[CTAccountingPeriod]): Option[CTAccountingPeriod] =
     accountingPeriods.sortWith { case (a1, a2) => a1.endDate.isAfter(a2.endDate) }.headOption
 
   private def ctAccountingPeriodsValidation(
     response: RawCTSuccessResponse
-  ): Either[BackendError, List[AccountingPeriod]]                                                         =
+  ): Either[BackendError, List[CTAccountingPeriod]]                                                           =
     toCtLookupStatus(response).flatMap {
       case CTLookupStatus.NoLiveRecords =>
         Right(List.empty)
@@ -139,9 +139,9 @@ class IFServiceImpl @Inject() (
       case CTLookupStatus.Successful =>
         response.accountingPeriods
           .getOrElse(List.empty[RawAccountingPeriod])
-          .traverse[Either[BackendError, *], AccountingPeriod](a =>
+          .traverse[Either[BackendError, *], CTAccountingPeriod](a =>
             toCtStatus(a)
-              .map(status => AccountingPeriod(a.accountingPeriodStartDate, a.accountingPeriodEndDate, status))
+              .map(status => CTAccountingPeriod(a.accountingPeriodStartDate, a.accountingPeriodEndDate, status))
           )
           .filterOrElse(
             _.nonEmpty,
