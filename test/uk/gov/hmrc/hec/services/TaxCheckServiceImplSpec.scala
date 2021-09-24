@@ -392,15 +392,18 @@ class TaxCheckServiceImplSpec extends AnyWordSpec with Matchers with MockFactory
         val todayItem    = TaxCheckListItem(
           taxCheckToday.taxCheckData.licenceDetails.licenceType,
           taxCheckToday.taxCheckCode,
-          taxCheckToday.expiresAfter
+          taxCheckToday.expiresAfter,
+          taxCheckToday.createDate
         )
         val tomorrowItem = TaxCheckListItem(
           taxCheckTomorrow.taxCheckData.licenceDetails.licenceType,
           taxCheckTomorrow.taxCheckCode,
-          taxCheckTomorrow.expiresAfter
+          taxCheckTomorrow.expiresAfter,
+          taxCheckTomorrow.createDate
         )
 
         mockTimeProviderToday(today)
+        mockTimeProviderNow(now)
         mockGetTaxCheckCodes(ggCredId)(Right(List(taxCheckToday, taxCheckYesterday, taxCheckTomorrow)))
 
         val result = service.getUnexpiredTaxCheckCodes(ggCredId)

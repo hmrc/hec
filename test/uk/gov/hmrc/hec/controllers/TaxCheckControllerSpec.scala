@@ -35,7 +35,7 @@ import uk.gov.hmrc.hec.services.TaxCheckService
 import uk.gov.hmrc.hec.util.TimeUtils
 import uk.gov.hmrc.http.HeaderCarrier
 
-import java.time.LocalDate
+import java.time.{LocalDate, ZonedDateTime}
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
@@ -262,7 +262,8 @@ class TaxCheckControllerSpec extends ControllerSpec with AuthSupport {
             TaxCheckListItem(
               LicenceType.ScrapMetalDealerSite,
               HECTaxCheckCode("some-code"),
-              LocalDate.now()
+              LocalDate.now(),
+              ZonedDateTime.now()
             )
           )
           mockGetValidTaxCheckCodes(ggCredId)(Right(items))
