@@ -123,6 +123,19 @@ class IFServiceImplSpec extends AnyWordSpec with Matchers with MockFactory {
             )
           )
         }
+
+        "there is a value for 'returnStatus' which cannot be parsed" in {
+          val json = Json.parse(s"""{ "returnStatus": "abc" }""")
+          testIsError[BackendError](
+            Right(
+              HttpResponse(
+                200,
+                json,
+                Map.empty[String, Seq[String]]
+              )
+            )
+          )
+        }
       }
 
       "return successfully" when {
@@ -229,32 +242,112 @@ class IFServiceImplSpec extends AnyWordSpec with Matchers with MockFactory {
             )
           )
         }
+
+        "the value for the 'returnStatus' field is not understood" in {
+          val connectorResponse =
+            s"""{ "returnStatus": "1" }""".stripMargin
+
+          testIsError[BackendError](
+            Right(
+              HttpResponse(
+                200,
+                Json.parse(connectorResponse),
+                Map.empty[String, Seq[String]]
+              )
+            )
+          )
+        }
+
+        "there is a value for the 'accountingPeriodStatus' field which is not understood" in {
+          val connectorResponse =
+            s"""{
+               | "returnStatus": "0",
+               | "accountingPeriods": [
+               |   {
+               |     "accountingPeriodStartDate": "2020-10-15",
+               |     "accountingPeriodEndDate": "2021-10-20",
+               |     "accountingPeriodStatus": "0"
+               |   }
+               | ]
+               | }""".stripMargin
+
+          testIsError[BackendError](
+            Right(
+              HttpResponse(
+                200,
+                Json.parse(connectorResponse),
+                Map.empty[String, Seq[String]]
+              )
+            )
+          )
+        }
+
+        "the 'returnStatus' field indicates that live records were found but no accounting periods can be found" in {
+          val connectorResponse =
+            s"""{
+               | "returnStatus": "0"
+               | }""".stripMargin
+
+          testIsError[BackendError](
+            Right(
+              HttpResponse(
+                200,
+                Json.parse(connectorResponse),
+                Map.empty[String, Seq[String]]
+              )
+            )
+          )
+        }
+
       }
 
       "return successfully" when {
 
-        "the response is OK and the json body can be parsed" in {
+        "the 'returnStatus' field indicates no live records were found" in {
+          val connectorResponse =
+            s"""{ "returnStatus": "2" }""".stripMargin
 
+          mockGetCTStatus(utr, fromDate, toDate)(
+            Right(
+              HttpResponse(
+                200,
+                Json.parse(connectorResponse),
+                Map.empty[String, Seq[String]]
+              )
+            )
+          )
+
+          val expectedCTStatusResponse = CTStatusResponse(utr, fromDate, toDate, None)
+          val result                   = service.getCTStatus(utr, fromDate, toDate, correlationId).value
+
+          await(result) shouldBe Right(expectedCTStatusResponse)
+        }
+
+        "the 'returnStatus' field indicates live records were found successfully" in {
           val testCases = List(
-            "Return Found"               -> CTStatus.ReturnFound,
-            "Notice to File Issued"      -> CTStatus.NoticeToFileIssued,
-            "No Accounting Period Found" -> CTStatus.NoAccountingPeriodFound,
-            "No Return Found"            -> CTStatus.NoReturnFound
+            "1" -> CTStatus.ReturnFound,
+            "2" -> CTStatus.NoticeToFileIssued,
+            "3" -> CTStatus.NoReturnFound
           )
 
           testCases.foreach { case (responseString, expectedCtStatus) =>
             withClue(s"For response string $responseString and expected CT status $expectedCtStatus: ") {}
             val connectorResponse =
               s"""{
-                | "returnStatus": "$responseString",
-                | "accountingPeriods": [
-                |   {
-                |     "accountingPeriod": "01",
-                |     "accountingPeriodStartDate": "2020-10-01",
-                |     "accountingPeriodEndDate": "2021-10-01"
-                |   }
-                | ]
-                | }""".stripMargin
+                   | "returnStatus": "0",
+                   | "accountingPeriods": [
+                   |   {
+                   |     "accountingPeriodStartDate": "2020-10-15",
+                   |     "accountingPeriodEndDate": "2021-10-20",
+                   |     "accountingPeriodStatus": "$responseString"
+                   |   },
+                   |   {
+                   |     "accountingPeriodStartDate": "2020-10-16",
+                   |     "accountingPeriodEndDate": "2021-10-19",
+                   |     "accountingPeriodStatus": "$responseString"
+                   |   }
+                   | ]
+                   | }""".stripMargin
 
             mockGetCTStatus(utr, fromDate, toDate)(
               Right(
@@ -268,10 +361,15 @@ class IFServiceImplSpec extends AnyWordSpec with Matchers with MockFactory {
 
             val expectedCTStatusResponse = CTStatusResponse(
               ctutr = utr,
-              startDate = LocalDate.parse("2020-10-01"),
-              endDate = LocalDate.parse("2021-10-01"),
-              status = expectedCtStatus,
-              accountingPeriods = List(AccountingPeriod("01", fromDate, toDate))
+              fromDate,
+              toDate,
+              Some(
+                AccountingPeriod(
+                  LocalDate.of(2020, 10, 15),
+                  LocalDate.of(2021, 10, 20),
+                  expectedCtStatus
+                )
+              )
             )
 
             val result = service.getCTStatus(utr, fromDate, toDate, correlationId).value

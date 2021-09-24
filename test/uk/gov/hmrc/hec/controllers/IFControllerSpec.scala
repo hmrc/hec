@@ -75,8 +75,16 @@ class IFControllerSpec extends ControllerSpec {
           testBadRequest("invalid-utr", "2020", "Invalid SAUTR")
         }
 
-        "tax year format is invalid" in {
+        "the tax year contains less than 4 digits invalid" in {
           testBadRequest(validSautr, "202", "Invalid tax year")
+        }
+
+        "the tax year contains more than 4 digits invalid" in {
+          testBadRequest(validSautr, "20200", "Invalid tax year")
+        }
+
+        "the tax year contains invalid characters" in {
+          testBadRequest(validSautr, "abc1", "Invalid tax year")
         }
 
         "SAUTR and tax year format are both invalid" in {
@@ -194,8 +202,7 @@ class IFControllerSpec extends ControllerSpec {
             ctutr = utr,
             startDate = startDate,
             endDate = endDate,
-            status = CTStatus.NoReturnFound,
-            accountingPeriods = Nil
+            latestAccountingPeriod = None
           )
           mockGetCTStatus(utr, startDate, endDate)(Right(response))
 
