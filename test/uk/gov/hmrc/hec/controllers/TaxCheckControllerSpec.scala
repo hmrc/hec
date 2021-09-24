@@ -30,7 +30,7 @@ import uk.gov.hmrc.hec.models.HECTaxCheckData.IndividualHECTaxCheckData
 import uk.gov.hmrc.hec.models.TaxDetails.IndividualTaxDetails
 import uk.gov.hmrc.hec.models.ids.{CRN, GGCredId, NINO, SAUTR}
 import uk.gov.hmrc.hec.models.licence.{LicenceDetails, LicenceTimeTrading, LicenceType, LicenceValidityPeriod}
-import uk.gov.hmrc.hec.models.{DateOfBirth, Error, HECTaxCheck, HECTaxCheckCode, HECTaxCheckData, HECTaxCheckMatchRequest, HECTaxCheckMatchResult, HECTaxCheckMatchStatus, Name, TaxCheckCodeListItem, TaxSituation}
+import uk.gov.hmrc.hec.models.{DateOfBirth, Error, HECTaxCheck, HECTaxCheckCode, HECTaxCheckData, HECTaxCheckMatchRequest, HECTaxCheckMatchResult, HECTaxCheckMatchStatus, Name, TaxCheckListItem, TaxSituation}
 import uk.gov.hmrc.hec.services.TaxCheckService
 import uk.gov.hmrc.hec.util.{TimeProvider, TimeUtils}
 import uk.gov.hmrc.http.HeaderCarrier
@@ -69,7 +69,7 @@ class TaxCheckControllerSpec extends ControllerSpec with AuthSupport {
       .expects(matchRequest, *)
       .returning(EitherT.fromEither(result))
 
-  def mockGetValidTaxCheckCodes(ggCredId: GGCredId)(result: Either[Error, List[TaxCheckCodeListItem]]) =
+  def mockGetValidTaxCheckCodes(ggCredId: GGCredId)(result: Either[Error, List[TaxCheckListItem]]) =
     (mockTaxCheckService
       .getUnexpiredTaxCheckCodes(_: GGCredId, _: LocalDate)(_: HeaderCarrier))
       .expects(ggCredId, today, *)
@@ -268,7 +268,7 @@ class TaxCheckControllerSpec extends ControllerSpec with AuthSupport {
           mockAuthWithGGRetrieval(ggCredId.value)
           mockTimeProviderToday(today)
           val items = List(
-            TaxCheckCodeListItem(
+            TaxCheckListItem(
               LicenceType.ScrapMetalDealerSite,
               HECTaxCheckCode("some-code"),
               LocalDate.now()
@@ -278,7 +278,7 @@ class TaxCheckControllerSpec extends ControllerSpec with AuthSupport {
 
           val result = controller.getUnexpiredTaxCheckCodes(FakeRequest())
           status(result)        shouldBe OK
-          contentAsJson(result) shouldBe JsArray(items.map(Json.toJson[TaxCheckCodeListItem]))
+          contentAsJson(result) shouldBe JsArray(items.map(Json.toJson[TaxCheckListItem]))
         }
 
       }

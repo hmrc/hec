@@ -26,7 +26,7 @@ import play.api.test.Helpers._
 import uk.gov.hmrc.hec.models.ApplicantDetails.{CompanyApplicantDetails, IndividualApplicantDetails}
 import uk.gov.hmrc.hec.models.HECTaxCheckData.{CompanyHECTaxCheckData, IndividualHECTaxCheckData}
 import uk.gov.hmrc.hec.models.TaxDetails.{CompanyTaxDetails, IndividualTaxDetails}
-import uk.gov.hmrc.hec.models.{DateOfBirth, Error, HECTaxCheck, HECTaxCheckCode, HECTaxCheckMatchRequest, HECTaxCheckMatchResult, HECTaxCheckMatchStatus, IncomeDeclared, Name, TaxCheckCodeListItem, TaxSituation}
+import uk.gov.hmrc.hec.models.{DateOfBirth, Error, HECTaxCheck, HECTaxCheckCode, HECTaxCheckMatchRequest, HECTaxCheckMatchResult, HECTaxCheckMatchStatus, IncomeDeclared, Name, TaxCheckListItem, TaxSituation}
 import uk.gov.hmrc.hec.models.ids.{CRN, CTUTR, GGCredId, NINO, SAUTR}
 import uk.gov.hmrc.hec.models.licence.{LicenceDetails, LicenceTimeTrading, LicenceType, LicenceValidityPeriod}
 import uk.gov.hmrc.hec.repos.HECTaxCheckStore
@@ -383,12 +383,12 @@ class TaxCheckServiceImplSpec extends AnyWordSpec with Matchers with MockFactory
         val taxCheckYesterday = HECTaxCheck(taxCheckData, code2, yesterday)
         val taxCheckTomorrow  = HECTaxCheck(taxCheckData, code3, tomorrow)
 
-        val todayItem    = TaxCheckCodeListItem(
+        val todayItem    = TaxCheckListItem(
           taxCheckToday.taxCheckData.licenceDetails.licenceType,
           taxCheckToday.taxCheckCode,
           taxCheckToday.expiresAfter
         )
-        val tomorrowItem = TaxCheckCodeListItem(
+        val tomorrowItem = TaxCheckListItem(
           taxCheckTomorrow.taxCheckData.licenceDetails.licenceType,
           taxCheckTomorrow.taxCheckCode,
           taxCheckTomorrow.expiresAfter

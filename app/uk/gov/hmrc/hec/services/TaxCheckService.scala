@@ -24,7 +24,7 @@ import com.typesafe.config.Config
 import configs.syntax._
 import uk.gov.hmrc.hec.models.HECTaxCheckData.{CompanyHECTaxCheckData, IndividualHECTaxCheckData}
 import uk.gov.hmrc.hec.models.ids.GGCredId
-import uk.gov.hmrc.hec.models.{Error, HECTaxCheck, HECTaxCheckData, HECTaxCheckMatchRequest, HECTaxCheckMatchResult, HECTaxCheckMatchStatus, TaxCheckCodeListItem}
+import uk.gov.hmrc.hec.models.{Error, HECTaxCheck, HECTaxCheckData, HECTaxCheckMatchRequest, HECTaxCheckMatchResult, HECTaxCheckMatchStatus, TaxCheckListItem}
 import uk.gov.hmrc.hec.repos.HECTaxCheckStore
 import uk.gov.hmrc.hec.util.{TimeProvider, TimeUtils}
 import uk.gov.hmrc.http.HeaderCarrier
@@ -44,7 +44,7 @@ trait TaxCheckService {
 
   def getUnexpiredTaxCheckCodes(ggCredId: GGCredId, today: LocalDate)(implicit
     hc: HeaderCarrier
-  ): EitherT[Future, Error, List[TaxCheckCodeListItem]]
+  ): EitherT[Future, Error, List[TaxCheckListItem]]
 
 }
 
@@ -116,12 +116,12 @@ class TaxCheckServiceImpl @Inject() (
     today: LocalDate
   )(implicit
     hc: HeaderCarrier
-  ): EitherT[Future, Error, List[TaxCheckCodeListItem]] =
+  ): EitherT[Future, Error, List[TaxCheckListItem]] =
     taxCheckStore
       .getTaxCheckCodes(ggCredId)
       .map(
-        _.filter(item => item.expiresAfter.isEqual(today) || item.expiresAfter.isAfter(today))
-          .map(TaxCheckCodeListItem.fromHecTaxCheck)
+        _.filterNot(item => item.expiresAfter.isBefore(today))
+          .map(TaxCheckListItem.fromHecTaxCheck)
       )
 
 }

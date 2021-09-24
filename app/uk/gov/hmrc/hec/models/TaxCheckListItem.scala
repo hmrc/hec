@@ -21,16 +21,16 @@ import uk.gov.hmrc.hec.models.licence.LicenceType
 
 import java.time.LocalDate
 
-final case class TaxCheckCodeListItem(
+final case class TaxCheckListItem(
   licenceType: LicenceType,
   taxCheckCode: HECTaxCheckCode,
   expiresAfter: LocalDate
 )
 
-object TaxCheckCodeListItem {
-  implicit val format: OFormat[TaxCheckCodeListItem] = Json.format
+object TaxCheckListItem {
+  implicit val format: OFormat[TaxCheckListItem] = Json.format
 
-  def fromHecTaxCheck(taxCheck: HECTaxCheck): TaxCheckCodeListItem = TaxCheckCodeListItem(
+  def fromHecTaxCheck(taxCheck: HECTaxCheck): TaxCheckListItem = TaxCheckListItem(
     licenceType = taxCheck.taxCheckData.licenceDetails.licenceType,
     taxCheckCode = taxCheck.taxCheckCode,
     expiresAfter = taxCheck.expiresAfter
