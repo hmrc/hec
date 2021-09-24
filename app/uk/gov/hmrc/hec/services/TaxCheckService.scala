@@ -29,7 +29,6 @@ import uk.gov.hmrc.hec.repos.HECTaxCheckStore
 import uk.gov.hmrc.hec.util.TimeProvider
 import uk.gov.hmrc.http.HeaderCarrier
 
-import java.time.LocalDate
 import scala.concurrent.duration.FiniteDuration
 import scala.concurrent.{ExecutionContext, Future}
 
@@ -42,7 +41,7 @@ trait TaxCheckService {
     hc: HeaderCarrier
   ): EitherT[Future, Error, HECTaxCheckMatchResult]
 
-  def getUnexpiredTaxCheckCodes(ggCredId: GGCredId, today: LocalDate)(implicit
+  def getUnexpiredTaxCheckCodes(ggCredId: GGCredId)(implicit
     hc: HeaderCarrier
   ): EitherT[Future, Error, List[TaxCheckListItem]]
 
@@ -113,16 +112,15 @@ class TaxCheckServiceImpl @Inject() (
   }
 
   def getUnexpiredTaxCheckCodes(
-    ggCredId: GGCredId,
-    today: LocalDate
-  )(implicit
-    hc: HeaderCarrier
-  ): EitherT[Future, Error, List[TaxCheckListItem]] =
+    ggCredId: GGCredId
+  )(implicit hc: HeaderCarrier): EitherT[Future, Error, List[TaxCheckListItem]] = {
+    val today = timeProvider.currentDate
     taxCheckStore
       .getTaxCheckCodes(ggCredId)
       .map(
         _.filterNot(item => item.expiresAfter.isBefore(today))
           .map(TaxCheckListItem.fromHecTaxCheck)
       )
+  }
 
 }

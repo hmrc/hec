@@ -20,7 +20,7 @@ import cats.data.EitherT
 import cats.instances.future._
 import play.api.inject.bind
 import play.api.inject.guice.GuiceableModule
-import play.api.libs.json.{JsArray, JsString, JsSuccess, JsValue, Json}
+import play.api.libs.json._
 import play.api.mvc.Result
 import play.api.test.FakeRequest
 import play.api.test.Helpers._
@@ -32,7 +32,7 @@ import uk.gov.hmrc.hec.models.ids.{CRN, GGCredId, NINO, SAUTR}
 import uk.gov.hmrc.hec.models.licence.{LicenceDetails, LicenceTimeTrading, LicenceType, LicenceValidityPeriod}
 import uk.gov.hmrc.hec.models.{DateOfBirth, Error, HECTaxCheck, HECTaxCheckCode, HECTaxCheckData, HECTaxCheckMatchRequest, HECTaxCheckMatchResult, HECTaxCheckMatchStatus, Name, TaxCheckListItem, TaxSituation}
 import uk.gov.hmrc.hec.services.TaxCheckService
-import uk.gov.hmrc.hec.util.{TimeProvider, TimeUtils}
+import uk.gov.hmrc.hec.util.TimeUtils
 import uk.gov.hmrc.http.HeaderCarrier
 
 import java.time.LocalDate
@@ -43,19 +43,13 @@ class TaxCheckControllerSpec extends ControllerSpec with AuthSupport {
 
   val mockTaxCheckService = mock[TaxCheckService]
 
-  private val today    = LocalDate.of(2021, 1, 10)
-  val mockTimeProvider = mock[TimeProvider]
-
   override val overrideBindings =
     List[GuiceableModule](
       bind[AuthConnector].toInstance(mockAuthConnector),
-      bind[TaxCheckService].toInstance(mockTaxCheckService),
-      bind[TimeProvider].toInstance(mockTimeProvider)
+      bind[TaxCheckService].toInstance(mockTaxCheckService)
     )
 
   val controller = instanceOf[TaxCheckController]
-
-  def mockTimeProviderToday(d: LocalDate) = (mockTimeProvider.currentDate _).expects().returning(d)
 
   def mockSaveTaxCheck(taxCheckData: HECTaxCheckData)(result: Either[Error, HECTaxCheck]) =
     (mockTaxCheckService
@@ -71,8 +65,8 @@ class TaxCheckControllerSpec extends ControllerSpec with AuthSupport {
 
   def mockGetValidTaxCheckCodes(ggCredId: GGCredId)(result: Either[Error, List[TaxCheckListItem]]) =
     (mockTaxCheckService
-      .getUnexpiredTaxCheckCodes(_: GGCredId, _: LocalDate)(_: HeaderCarrier))
-      .expects(ggCredId, today, *)
+      .getUnexpiredTaxCheckCodes(_: GGCredId)(_: HeaderCarrier))
+      .expects(ggCredId, *)
       .returning(EitherT.fromEither(result))
 
   "TaxCheckController" when {
@@ -243,7 +237,6 @@ class TaxCheckControllerSpec extends ControllerSpec with AuthSupport {
 
         "there is an error saving the tax check" in {
           mockAuthWithGGRetrieval(ggCredId.value)
-          mockTimeProviderToday(today)
           mockGetValidTaxCheckCodes(ggCredId)(Left(Error(new Exception("Oh no!"))))
 
           val result = controller.getUnexpiredTaxCheckCodes(FakeRequest())
@@ -256,7 +249,6 @@ class TaxCheckControllerSpec extends ControllerSpec with AuthSupport {
 
         "the tax check service returns an empty list of codes" in {
           mockAuthWithGGRetrieval(ggCredId.value)
-          mockTimeProviderToday(today)
           mockGetValidTaxCheckCodes(ggCredId)(Right(List.empty))
 
           val result = controller.getUnexpiredTaxCheckCodes(FakeRequest())
@@ -266,7 +258,6 @@ class TaxCheckControllerSpec extends ControllerSpec with AuthSupport {
 
         "the tax check service returns a list of codes" in {
           mockAuthWithGGRetrieval(ggCredId.value)
-          mockTimeProviderToday(today)
           val items = List(
             TaxCheckListItem(
               LicenceType.ScrapMetalDealerSite,
