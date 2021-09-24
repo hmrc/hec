@@ -25,7 +25,7 @@ import play.api.http.Status.{NOT_FOUND, OK}
 import play.api.libs.json.{Json, Reads}
 import uk.gov.hmrc.hec.connectors.IFConnector
 import uk.gov.hmrc.hec.models.ids.{CTUTR, SAUTR}
-import uk.gov.hmrc.hec.models.{AccountingPeriod, CTStatus, CTStatusResponse, Error, SAStatus, SAStatusResponse, TaxYear}
+import uk.gov.hmrc.hec.models.{AccountingPeriod, CTLookupStatus, CTStatus, CTStatusResponse, Error, SAStatus, SAStatusResponse, TaxYear}
 import uk.gov.hmrc.hec.services.IFService.{BackendError, DataNotFoundError, IFError}
 import uk.gov.hmrc.hec.services.IFServiceImpl.{RawAccountingPeriod, RawCTSuccessResponse, RawFailureResponse, RawSASuccessResponse}
 import uk.gov.hmrc.hec.util.HttpResponseOps._
@@ -132,21 +132,29 @@ class IFServiceImpl @Inject() (
   private def ctAccountingPeriodsValidation(
     response: RawCTSuccessResponse
   ): Either[BackendError, List[AccountingPeriod]]                                                         =
-    if (response.returnStatus === "0") // 0 = successful
-      response.accountingPeriods
-        .getOrElse(List.empty[RawAccountingPeriod])
-        .traverse[Either[BackendError, *], AccountingPeriod](a =>
-          toCtStatus(a)
-            .map(status => AccountingPeriod(a.accountingPeriodStartDate, a.accountingPeriodEndDate, status))
-        )
-        .filterOrElse(
-          _.nonEmpty,
-          BackendError(Error("Could not find accounting periods for outer return status '0 = successful'"))
-        )
-    else if (response.returnStatus === "2") // 2 = No live records exist for the input parameters provided
-      Right(List.empty)
-    else
-      Left(BackendError(Error(s"Could not parse outer return status ${response.returnStatus}")))
+    toCtLookupStatus(response).flatMap {
+      case CTLookupStatus.NoLiveRecords =>
+        Right(List.empty)
+
+      case CTLookupStatus.Successful =>
+        response.accountingPeriods
+          .getOrElse(List.empty[RawAccountingPeriod])
+          .traverse[Either[BackendError, *], AccountingPeriod](a =>
+            toCtStatus(a)
+              .map(status => AccountingPeriod(a.accountingPeriodStartDate, a.accountingPeriodEndDate, status))
+          )
+          .filterOrElse(
+            _.nonEmpty,
+            BackendError(Error("Could not find accounting periods for outer return status '0 = successful'"))
+          )
+    }
+
+  private def toCtLookupStatus(response: RawCTSuccessResponse): Either[BackendError, CTLookupStatus] =
+    response.returnStatus match {
+      case "0"   => Right(CTLookupStatus.Successful)
+      case "2"   => Right(CTLookupStatus.NoLiveRecords)
+      case other => Left(BackendError(Error(s"Could not parse returnStatus $other")))
+    }
 
   private def toCtStatus(rawAccountingPeriod: RawAccountingPeriod): Either[BackendError, CTStatus] =
     rawAccountingPeriod.accountingPeriodStatus match {
