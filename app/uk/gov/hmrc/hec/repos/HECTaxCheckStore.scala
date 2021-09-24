@@ -24,6 +24,7 @@ import configs.syntax._
 import play.api.Configuration
 import play.api.libs.json.{JsError, JsSuccess, Json, JsonValidationError}
 import play.modules.reactivemongo.ReactiveMongoComponent
+import reactivemongo.api.indexes.{Index, IndexType}
 import uk.gov.hmrc.cache.model.Id
 import uk.gov.hmrc.cache.repository.CacheMongoRepository
 import uk.gov.hmrc.hec.models.ids.GGCredId
@@ -65,6 +66,13 @@ class HECTaxCheckStoreImpl @Inject() (
 ) extends HECTaxCheckStore
     with Logging {
 
+  val key: String                   = "hec-tax-check"
+  private val ggCredIdField: String = s"data.$key.taxCheckData.applicantDetails.ggCredId"
+
+  private val hecIndexes = Seq(
+    Index(Seq(ggCredIdField -> IndexType.Ascending))
+  )
+
   val cacheRepository: CacheMongoRepository = {
     val expireAfter: FiniteDuration = configuration.underlying
       .get[FiniteDuration]("hec-tax-check.ttl")
@@ -73,10 +81,10 @@ class HECTaxCheckStoreImpl @Inject() (
     new CacheMongoRepository("hecTaxChecks", expireAfter.toSeconds)(
       mongo.mongoConnector.db,
       ec
-    )
+    ) {
+      override def indexes: Seq[Index] = hecIndexes
+    }
   }
-
-  val key: String = "hec-tax-check"
 
   def get(taxCheckCode: HECTaxCheckCode)(implicit
     hc: HeaderCarrier
@@ -119,9 +127,7 @@ class HECTaxCheckStoreImpl @Inject() (
     EitherT(
       preservingMdc {
         cacheRepository
-          .find(
-            s"data.$key.taxCheckData.applicantDetails.ggCredId" -> ggCredId.value
-          )
+          .find(ggCredIdField -> ggCredId.value)
           .map { caches =>
             val jsons = caches
               .flatMap(_.data.toList)
