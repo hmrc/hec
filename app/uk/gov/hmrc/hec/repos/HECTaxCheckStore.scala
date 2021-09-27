@@ -55,6 +55,10 @@ trait HECTaxCheckStore {
 
   def deleteAll()(implicit hc: HeaderCarrier): EitherT[Future, Error, Unit]
 
+  def getAllTaxCheckCodesByStatus(status: Boolean)(implicit
+    hc: HeaderCarrier
+  ): EitherT[Future, Error, List[HECTaxCheck]]
+
 }
 
 @Singleton
@@ -66,11 +70,13 @@ class HECTaxCheckStoreImpl @Inject() (
 ) extends HECTaxCheckStore
     with Logging {
 
-  val key: String                   = "hec-tax-check"
-  private val ggCredIdField: String = s"data.$key.taxCheckData.applicantDetails.ggCredId"
+  val key: String                      = "hec-tax-check"
+  private val ggCredIdField: String    = s"data.$key.taxCheckData.applicantDetails.ggCredId"
+  private val isExtractedField: String = s"data.$key.taxCheckData.isExtracted"
 
   private val hecIndexes = Seq(
-    Index(Seq(ggCredIdField -> IndexType.Ascending))
+    Index(Seq(ggCredIdField -> IndexType.Ascending)),
+    Index(Seq(isExtractedField -> IndexType.Ascending))
   )
 
   val cacheRepository: CacheMongoRepository = {
@@ -208,4 +214,33 @@ class HECTaxCheckStoreImpl @Inject() (
       }
     )
 
+  override def getAllTaxCheckCodesByStatus(
+    status: Boolean
+  )(implicit hc: HeaderCarrier): EitherT[Future, Error, List[HECTaxCheck]] = EitherT(
+    preservingMdc {
+      cacheRepository
+        .find(isExtractedField -> status)
+        .map { caches =>
+          val jsons = caches
+            .flatMap(_.data.toList)
+            .map(json => (json \ key).validate[HECTaxCheck])
+
+          val (valid, invalid) =
+            jsons.foldLeft((List.empty[HECTaxCheck], Seq.empty[JsonValidationError])) { (acc, json) =>
+              val (taxChecks, errors) = acc
+              json match {
+                case JsSuccess(value, _)       => (value +: taxChecks, errors)
+                case JsError(validationErrors) => (taxChecks, errors ++ validationErrors.flatMap(_._2))
+              }
+            }
+
+          val errorStr = invalid.map(_.message).mkString("; ")
+          if (invalid.nonEmpty) {
+            logger.warn(s"${invalid.size} results failed json parsing - $errorStr")
+          }
+
+          Either.cond(invalid.isEmpty, valid, Error(Left(errorStr)))
+        }
+    }
+  )
 }

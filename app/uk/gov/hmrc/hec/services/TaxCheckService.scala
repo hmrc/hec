@@ -37,6 +37,8 @@ trait TaxCheckService {
 
   def saveTaxCheck(taxCheckData: HECTaxCheckData)(implicit hc: HeaderCarrier): EitherT[Future, Error, HECTaxCheck]
 
+  def updateTaxCheck(taxCheck: HECTaxCheck)(implicit hc: HeaderCarrier): EitherT[Future, Error, HECTaxCheck]
+
   def matchTaxCheck(taxCheckMatchRequest: HECTaxCheckMatchRequest)(implicit
     hc: HeaderCarrier
   ): EitherT[Future, Error, HECTaxCheckMatchResult]
@@ -44,6 +46,10 @@ trait TaxCheckService {
   def getUnexpiredTaxCheckCodes(ggCredId: GGCredId)(implicit
     hc: HeaderCarrier
   ): EitherT[Future, Error, List[TaxCheckListItem]]
+
+  def getAllTaxCheckCodesByStatus(isExtracted: Boolean)(implicit
+    hc: HeaderCarrier
+  ): EitherT[Future, Error, List[HECTaxCheck]]
 
 }
 
@@ -69,6 +75,11 @@ class TaxCheckServiceImpl @Inject() (
 
     taxCheckStore.store(taxCheck).map(_ => taxCheck)
   }
+
+  def updateTaxCheck(
+    taxCheck: HECTaxCheck
+  )(implicit hc: HeaderCarrier): EitherT[Future, Error, HECTaxCheck] =
+    taxCheckStore.store(taxCheck.copy(isExtracted = true)).map(_ => taxCheck)
 
   def matchTaxCheck(taxCheckMatchRequest: HECTaxCheckMatchRequest)(implicit
     hc: HeaderCarrier
@@ -123,4 +134,8 @@ class TaxCheckServiceImpl @Inject() (
       )
   }
 
+  override def getAllTaxCheckCodesByStatus(isExtracted: Boolean)(implicit
+    hc: HeaderCarrier
+  ): EitherT[Future, Error, List[HECTaxCheck]] =
+    taxCheckStore.getAllTaxCheckCodesByStatus(isExtracted)
 }

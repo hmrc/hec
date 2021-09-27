@@ -71,6 +71,12 @@ class TaxCheckServiceImplSpec extends AnyWordSpec with Matchers with MockFactory
       .expects(ggCredId, *)
       .returning(EitherT.fromEither(result))
 
+  def mockGetAllTaxCheckCodesByStatus(isExtracted: Boolean)(result: Either[Error, List[HECTaxCheck]]) =
+    (mockTaxCheckStore
+      .getAllTaxCheckCodesByStatus(_: Boolean)(_: HeaderCarrier))
+      .expects(isExtracted, *)
+      .returning(EitherT.fromEither(result))
+
   def mockTimeProviderNow(d: ZonedDateTime) = (mockTimeProvider.currentDateTime _).expects().returning(d)
 
   def mockTimeProviderToday(d: LocalDate) = (mockTimeProvider.currentDate _).expects().returning(d)

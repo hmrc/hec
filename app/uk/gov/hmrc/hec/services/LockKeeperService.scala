@@ -14,22 +14,21 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.hec.models
+package uk.gov.hmrc.hec.services
 
-import play.api.libs.json.{Json, OFormat}
+import org.joda.time.Duration
+import uk.gov.hmrc.lock.{LockKeeper, LockRepository}
 
-import java.time.{LocalDate, ZonedDateTime}
+import javax.inject.{Inject, Singleton}
 
-final case class HECTaxCheck(
-  taxCheckData: HECTaxCheckData,
-  taxCheckCode: HECTaxCheckCode,
-  expiresAfter: LocalDate,
-  createDate: ZonedDateTime,
-  isExtracted: Boolean = false
-)
+@Singleton
+class LockKeeperService @Inject() (lockRepository: LockRepository) {
 
-object HECTaxCheck {
-
-  implicit val format: OFormat[HECTaxCheck] = Json.format
+  def generateLockFor(resource: String): LockKeeper =
+    new LockKeeper {
+      override def repo: LockRepository            = lockRepository
+      override def lockId: String                  = resource
+      override val forceLockReleaseAfter: Duration = Duration.standardMinutes(5)
+    }
 
 }
