@@ -192,6 +192,33 @@ class HECTaxCheckStoreImplSpec extends AnyWordSpec with Matchers with Eventually
         )
       }
     }
+
+    "return an error when data can't be parsed when fetching tax check codes based on isExtracted field" in {
+      val taxCheckCode = "code1"
+
+      val invalidData = Json.parse(s"""{
+                                      | "taxCheckData" : {
+                                      | 	"applicantDetails" : {
+                                      | 		"ggCredId" : "ggCredId",
+                                      | 		"crn" : ""
+                                      | 	}
+                                      | },
+                                      | "taxCheckCode" : "$taxCheckCode",
+                                      | "expiresAfter" : "2021-09-24",
+                                      | "isExtracted" : false
+                                      |}""".stripMargin)
+
+      // insert invalid data
+      val create: Future[DatabaseUpdate[Cache]] =
+        taxCheckStore.cacheRepository.createOrUpdate(
+          Id(taxCheckCode),
+          "hec-tax-check",
+          invalidData
+        )
+      await(create).writeResult.inError shouldBe false
+
+      await(taxCheckStore.getAllTaxCheckCodesByStatus(false).value).isLeft shouldBe true
+    }
   }
 
 }
