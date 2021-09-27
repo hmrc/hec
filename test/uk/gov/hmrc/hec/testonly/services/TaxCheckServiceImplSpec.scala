@@ -16,8 +16,6 @@
 
 package uk.gov.hmrc.hec.testonly.services
 
-import uk.gov.hmrc.hec.models.licence.{LicenceDetails, LicenceTimeTrading, LicenceType, LicenceValidityPeriod}
-import uk.gov.hmrc.hec.testonly.models.SaveTaxCheckRequest
 import cats.data.EitherT
 import cats.instances.future._
 import org.scalamock.scalatest.MockFactory
@@ -27,13 +25,15 @@ import play.api.test.Helpers._
 import uk.gov.hmrc.hec.models.ApplicantDetails.IndividualApplicantDetails
 import uk.gov.hmrc.hec.models.HECTaxCheckData.IndividualHECTaxCheckData
 import uk.gov.hmrc.hec.models.TaxDetails.IndividualTaxDetails
-import uk.gov.hmrc.hec.models.{DateOfBirth, Error, HECTaxCheck, HECTaxCheckCode, IncomeDeclared, Name, TaxSituation}
 import uk.gov.hmrc.hec.models.ids.{CRN, GGCredId, NINO, SAUTR}
+import uk.gov.hmrc.hec.models.licence.{LicenceDetails, LicenceTimeTrading, LicenceType, LicenceValidityPeriod}
+import uk.gov.hmrc.hec.models.{DateOfBirth, Error, HECTaxCheck, HECTaxCheckCode, IncomeDeclared, Name, TaxSituation}
 import uk.gov.hmrc.hec.repos.HECTaxCheckStore
-import uk.gov.hmrc.hec.util.TimeUtils
+import uk.gov.hmrc.hec.testonly.models.SaveTaxCheckRequest
+import uk.gov.hmrc.hec.util.{TimeProvider, TimeUtils}
 import uk.gov.hmrc.http.HeaderCarrier
-import java.time.LocalDate
 
+import java.time.LocalDate
 import scala.concurrent.ExecutionContext.Implicits.global
 
 class TaxCheckServiceImplSpec extends AnyWordSpec with Matchers with MockFactory {
@@ -66,9 +66,14 @@ class TaxCheckServiceImplSpec extends AnyWordSpec with Matchers with MockFactory
       .expects(*)
       .returning(EitherT.fromEither(result))
 
+  val mockTimeProvider = mock[TimeProvider]
+
+  def mockTimeProviderToday(d: LocalDate) = (mockTimeProvider.currentDate _).expects().returning(d)
+
   implicit val hc: HeaderCarrier = HeaderCarrier()
 
-  private val now = TimeUtils.now()
+  private val now   = TimeUtils.now()
+  private val today = TimeUtils.today()
 
   "TaxCheckServiceImpl" when {
 
@@ -79,7 +84,8 @@ class TaxCheckServiceImplSpec extends AnyWordSpec with Matchers with MockFactory
           HECTaxCheckCode("ABCDEF234"),
           LicenceType.ScrapMetalDealerSite,
           verifier,
-          TimeUtils.today()
+          today,
+          now
         )
 
       "return an error" when {

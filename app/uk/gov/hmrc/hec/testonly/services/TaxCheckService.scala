@@ -26,7 +26,6 @@ import uk.gov.hmrc.hec.models.licence.{LicenceDetails, LicenceTimeTrading, Licen
 import uk.gov.hmrc.hec.models.{Error, HECTaxCheck, HECTaxCheckCode, HECTaxCheckData, Name, TaxSituation}
 import uk.gov.hmrc.hec.repos.HECTaxCheckStore
 import uk.gov.hmrc.hec.testonly.models.SaveTaxCheckRequest
-import uk.gov.hmrc.hec.util.TimeUtils
 import uk.gov.hmrc.http.HeaderCarrier
 
 import scala.concurrent.Future
@@ -59,7 +58,7 @@ class TaxCheckServiceImpl @Inject() (
         taxCheckData(saveTaxCheckRequest),
         saveTaxCheckRequest.taxCheckCode,
         saveTaxCheckRequest.expiresAfter,
-        TimeUtils.now()
+        saveTaxCheckRequest.createDate
       )
 
     taxCheckStore.store(taxCheck)
