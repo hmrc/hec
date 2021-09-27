@@ -57,7 +57,7 @@ class HECTaxCheckExtractionService @Inject() (
   private val interval: FiniteDuration     = jobConfig.get[FiniteDuration]("interval").value
 
   val lockAndRunScheduleJob: Unit = {
-    val lockedJob: Future[Unit] = lockKeeperService.generateLockFor("HecTaxCheck") tryLock {
+    val lockedJob: Future[Unit] = lockKeeperService.generateLockFor("hecTaxCheck") tryLock {
       scheduleExtractionJob
     } map {
       case Some(_) =>
@@ -82,6 +82,7 @@ class HECTaxCheckExtractionService @Inject() (
   def scheduleExtractionJob()(implicit hc: HeaderCarrier): Future[Either[models.Error, List[HECTaxCheck]]] = {
     val result: EitherT[Future, models.Error, List[HECTaxCheck]] = for {
       hecTaxCheck    <- taxCheckService.getAllTaxCheckCodesByStatus(false)
+      //TODO process  generate fields from extracted data will be called here
       _               = hecTaxCheck.foreach(h =>
                           logger.info(s" Job submitted to extract hec Tax check code :: ${h.taxCheckCode.value}")
                         )

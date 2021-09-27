@@ -65,8 +65,10 @@ class HECTaxCheckStoreImplSpec extends AnyWordSpec with Matchers with Eventually
 
     val taxCheckCode1 = HECTaxCheckCode("code1")
     val taxCheckCode2 = HECTaxCheckCode("code12")
+    val taxCheckCode3 = HECTaxCheckCode("code13")
     val taxCheck1     = HECTaxCheck(taxCheckData, taxCheckCode1, TimeUtils.today(), TimeUtils.now())
     val taxCheck2     = taxCheck1.copy(taxCheckCode = taxCheckCode2)
+    val taxCheck3     = taxCheck1.copy(taxCheckCode = taxCheckCode3, isExtracted = true)
 
     "be able to insert tax checks into mongo, read it back and delete it" in {
 
@@ -176,6 +178,19 @@ class HECTaxCheckStoreImplSpec extends AnyWordSpec with Matchers with Eventually
       await(create).writeResult.inError shouldBe false
 
       await(taxCheckStore.getTaxCheckCodes(GGCredId(ggCredId)).value).isLeft shouldBe true
+    }
+
+    "be able to fetch all tax check codes with isExtracted false" in {
+
+      // store some tax check codes in mongo
+      await(taxCheckStore.store(taxCheck1).value) shouldBe Right(())
+      await(taxCheckStore.store(taxCheck2).value) shouldBe Right(())
+      await(taxCheckStore.store(taxCheck3).value) shouldBe Right(())
+      eventually {
+        await(taxCheckStore.getAllTaxCheckCodesByStatus(false).value).map(_.toSet) should be(
+          Right(Set(taxCheck1, taxCheck2))
+        )
+      }
     }
   }
 

@@ -72,7 +72,7 @@ class HECTaxCheckStoreImpl @Inject() (
 
   val key: String                      = "hec-tax-check"
   private val ggCredIdField: String    = s"data.$key.taxCheckData.applicantDetails.ggCredId"
-  private val isExtractedField: String = s"data.$key.taxCheckData.isExtracted"
+  private val isExtractedField: String = s"data.$key.isExtracted"
 
   private val hecIndexes = Seq(
     Index(Seq(ggCredIdField -> IndexType.Ascending)),
@@ -221,6 +221,7 @@ class HECTaxCheckStoreImpl @Inject() (
       cacheRepository
         .find(isExtractedField -> status)
         .map { caches =>
+          println(" inside chaches")
           val jsons = caches
             .flatMap(_.data.toList)
             .map(json => (json \ key).validate[HECTaxCheck])
