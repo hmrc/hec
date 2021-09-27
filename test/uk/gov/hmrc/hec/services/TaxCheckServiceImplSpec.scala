@@ -71,9 +71,14 @@ class TaxCheckServiceImplSpec extends AnyWordSpec with Matchers with MockFactory
       .expects(ggCredId, *)
       .returning(EitherT.fromEither(result))
 
-  def mockTimeProviderToday(d: ZonedDateTime) = (mockTimeProvider.currentDateTime _).expects().returning(d)
+  def mockTimeProviderNow(d: ZonedDateTime) = (mockTimeProvider.currentDateTime _).expects().returning(d)
+
+  def mockTimeProviderToday(d: LocalDate) = (mockTimeProvider.currentDate _).expects().returning(d)
 
   implicit val hc: HeaderCarrier = HeaderCarrier()
+
+  private val now   = TimeUtils.now()
+  private val today = TimeUtils.today()
 
   "TaxCheckServiceImpl" when {
 
@@ -96,13 +101,15 @@ class TaxCheckServiceImplSpec extends AnyWordSpec with Matchers with MockFactory
 
       val expectedExpiryDate = TimeUtils.today().plusDays(expiresAfter.toDays)
       val taxCheckCode       = HECTaxCheckCode("code")
-      val taxCheck           = HECTaxCheck(taxCheckData, taxCheckCode, expectedExpiryDate)
+      val taxCheck           = HECTaxCheck(taxCheckData, taxCheckCode, expectedExpiryDate, now)
 
       "return an error" when {
 
         "there is an error saving the tax check" in {
           inSequence {
             mockGenerateTaxCheckCode(taxCheckCode)
+            mockTimeProviderToday(today)
+            mockTimeProviderNow(now)
             mockStoreTaxCheck(taxCheck)(Left(Error("")))
           }
 
@@ -117,6 +124,8 @@ class TaxCheckServiceImplSpec extends AnyWordSpec with Matchers with MockFactory
         "the tax check has been saved" in {
           inSequence {
             mockGenerateTaxCheckCode(taxCheckCode)
+            mockTimeProviderToday(today)
+            mockTimeProviderNow(now)
             mockStoreTaxCheck(taxCheck)(Right(()))
           }
 
@@ -161,7 +170,8 @@ class TaxCheckServiceImplSpec extends AnyWordSpec with Matchers with MockFactory
             )
           ),
           taxCheckCode,
-          TimeUtils.today().plusMonths(1L)
+          TimeUtils.today().plusMonths(1L),
+          now
         )
 
       val storedCompanyTaxCheck =
@@ -172,7 +182,8 @@ class TaxCheckServiceImplSpec extends AnyWordSpec with Matchers with MockFactory
             CompanyTaxDetails(CTUTR(""))
           ),
           taxCheckCode,
-          TimeUtils.today().plusMonths(1L)
+          TimeUtils.today().plusMonths(1L),
+          now
         )
 
       val matchingIndividualMatchRequest = HECTaxCheckMatchRequest(
@@ -204,7 +215,7 @@ class TaxCheckServiceImplSpec extends AnyWordSpec with Matchers with MockFactory
 
           val dateTime = TimeUtils.now()
           mockGetTaxCheck(taxCheckCode)(Right(None))
-          mockTimeProviderToday(dateTime)
+          mockTimeProviderNow(dateTime)
 
           val result = service.matchTaxCheck(matchingIndividualMatchRequest)
           await(result.value) shouldBe Right(
@@ -215,7 +226,7 @@ class TaxCheckServiceImplSpec extends AnyWordSpec with Matchers with MockFactory
         "the match request is for an individual but the stored tax check is for a company" in {
           val dateTime = TimeUtils.now()
           mockGetTaxCheck(taxCheckCode)(Right(Some(storedCompanyTaxCheck)))
-          mockTimeProviderToday(dateTime)
+          mockTimeProviderNow(dateTime)
 
           val result = service.matchTaxCheck(matchingIndividualMatchRequest)
           await(result.value) shouldBe Right(
@@ -226,7 +237,7 @@ class TaxCheckServiceImplSpec extends AnyWordSpec with Matchers with MockFactory
         "the match request is for a company but the stored tax check is for an individual" in {
           val dateTime = TimeUtils.now()
           mockGetTaxCheck(taxCheckCode)(Right(Some(storedIndividualTaxCheck)))
-          mockTimeProviderToday(dateTime)
+          mockTimeProviderNow(dateTime)
 
           val result = service.matchTaxCheck(matchingCompanyMatchRequest)
           await(result.value) shouldBe Right(
@@ -237,7 +248,7 @@ class TaxCheckServiceImplSpec extends AnyWordSpec with Matchers with MockFactory
         "the date of births in the match request and the stored tax check do not match" in {
           val dateTime = TimeUtils.now()
           mockGetTaxCheck(taxCheckCode)(Right(Some(storedIndividualTaxCheck)))
-          mockTimeProviderToday(dateTime)
+          mockTimeProviderNow(dateTime)
 
           val matchRequest = matchingIndividualMatchRequest.copy(verifier = Right(incorrectDateOfBirth))
           val result       = service.matchTaxCheck(matchRequest)
@@ -249,7 +260,7 @@ class TaxCheckServiceImplSpec extends AnyWordSpec with Matchers with MockFactory
         "the CRN's in the match request and the stored tax check do not match" in {
           val dateTime = TimeUtils.now()
           mockGetTaxCheck(taxCheckCode)(Right(Some(storedCompanyTaxCheck)))
-          mockTimeProviderToday(dateTime)
+          mockTimeProviderNow(dateTime)
 
           val matchRequest = matchingCompanyMatchRequest.copy(verifier = Left(incorrectCRN))
           val result       = service.matchTaxCheck(matchRequest)
@@ -261,7 +272,7 @@ class TaxCheckServiceImplSpec extends AnyWordSpec with Matchers with MockFactory
         "the date of births match but the licence types do not" in {
           val dateTime = TimeUtils.now()
           mockGetTaxCheck(taxCheckCode)(Right(Some(storedIndividualTaxCheck)))
-          mockTimeProviderToday(dateTime)
+          mockTimeProviderNow(dateTime)
 
           val matchRequest = matchingIndividualMatchRequest.copy(licenceType = incorrectLicenceType)
           val result       = service.matchTaxCheck(matchRequest)
@@ -273,7 +284,7 @@ class TaxCheckServiceImplSpec extends AnyWordSpec with Matchers with MockFactory
         "the CRN's match but the licence types do not" in {
           val dateTime = TimeUtils.now()
           mockGetTaxCheck(taxCheckCode)(Right(Some(storedCompanyTaxCheck)))
-          mockTimeProviderToday(dateTime)
+          mockTimeProviderNow(dateTime)
 
           val matchRequest = matchingCompanyMatchRequest.copy(licenceType = incorrectLicenceType)
           val result       = service.matchTaxCheck(matchRequest)
@@ -290,13 +301,13 @@ class TaxCheckServiceImplSpec extends AnyWordSpec with Matchers with MockFactory
           val expiredTaxCheck = storedIndividualTaxCheck.copy(
             expiresAfter = TimeUtils.today().minusMonths(1L)
           )
-          val dateTime        = TimeUtils.now()
           mockGetTaxCheck(taxCheckCode)(Right(Some(expiredTaxCheck)))
-          mockTimeProviderToday(dateTime)
+          mockTimeProviderNow(now)
+          mockTimeProviderToday(today)
 
           val result = service.matchTaxCheck(matchingIndividualMatchRequest)
           await(result.value) shouldBe Right(
-            HECTaxCheckMatchResult(matchingIndividualMatchRequest, dateTime, HECTaxCheckMatchStatus.Expired)
+            HECTaxCheckMatchResult(matchingIndividualMatchRequest, now, HECTaxCheckMatchStatus.Expired)
           )
         }
 
@@ -305,41 +316,41 @@ class TaxCheckServiceImplSpec extends AnyWordSpec with Matchers with MockFactory
             expiresAfter = TimeUtils.today().minusMonths(1L)
           )
 
-          val dateTime = TimeUtils.now()
           mockGetTaxCheck(taxCheckCode)(Right(Some(expiredTaxCheck)))
-          mockTimeProviderToday(dateTime)
+          mockTimeProviderNow(now)
+          mockTimeProviderToday(today)
 
           val result = service.matchTaxCheck(matchingCompanyMatchRequest)
           await(result.value) shouldBe Right(
-            HECTaxCheckMatchResult(matchingCompanyMatchRequest, dateTime, HECTaxCheckMatchStatus.Expired)
+            HECTaxCheckMatchResult(matchingCompanyMatchRequest, now, HECTaxCheckMatchStatus.Expired)
           )
         }
 
       }
 
-      "return an 'match' result" when {
+      "return a 'match' result" when {
 
         "all details match for an individual and the stored tax check has not expired" in {
-          val dateTime = TimeUtils.now()
           mockGetTaxCheck(taxCheckCode)(Right(Some(storedIndividualTaxCheck)))
-          mockTimeProviderToday(dateTime)
+          mockTimeProviderNow(now)
+          mockTimeProviderToday(today)
 
           val result = service.matchTaxCheck(matchingIndividualMatchRequest)
           await(result.value) shouldBe Right(
-            HECTaxCheckMatchResult(matchingIndividualMatchRequest, dateTime, HECTaxCheckMatchStatus.Match)
+            HECTaxCheckMatchResult(matchingIndividualMatchRequest, now, HECTaxCheckMatchStatus.Match)
           )
         }
 
         "all details match for an company and the stored tax check has not expired" in {
           val taxCheck = storedCompanyTaxCheck.copy(expiresAfter = TimeUtils.today())
-          val dateTime = TimeUtils.now()
 
-          mockTimeProviderToday(dateTime)
+          mockTimeProviderNow(now)
+          mockTimeProviderToday(today)
           mockGetTaxCheck(taxCheckCode)(Right(Some(taxCheck)))
 
           val result = service.matchTaxCheck(matchingCompanyMatchRequest)
           await(result.value) shouldBe Right(
-            HECTaxCheckMatchResult(matchingCompanyMatchRequest, dateTime, HECTaxCheckMatchStatus.Match)
+            HECTaxCheckMatchResult(matchingCompanyMatchRequest, now, HECTaxCheckMatchStatus.Match)
           )
         }
 
@@ -365,8 +376,9 @@ class TaxCheckServiceImplSpec extends AnyWordSpec with Matchers with MockFactory
         "there is an error fetching the code from the db" in {
           val error = Left(Error("some error"))
           mockGetTaxCheckCodes(ggCredId)(error)
+          mockTimeProviderToday(today)
 
-          val result = service.getUnexpiredTaxCheckCodes(ggCredId, today)
+          val result = service.getUnexpiredTaxCheckCodes(ggCredId)
           await(result.value) shouldBe error
         }
       }
@@ -379,24 +391,27 @@ class TaxCheckServiceImplSpec extends AnyWordSpec with Matchers with MockFactory
         val code2 = HECTaxCheckCode("code2")
         val code3 = HECTaxCheckCode("code3")
 
-        val taxCheckToday     = HECTaxCheck(taxCheckData, code1, today)
-        val taxCheckYesterday = HECTaxCheck(taxCheckData, code2, yesterday)
-        val taxCheckTomorrow  = HECTaxCheck(taxCheckData, code3, tomorrow)
+        val taxCheckToday     = HECTaxCheck(taxCheckData, code1, today, now)
+        val taxCheckYesterday = HECTaxCheck(taxCheckData, code2, yesterday, now)
+        val taxCheckTomorrow  = HECTaxCheck(taxCheckData, code3, tomorrow, now)
 
         val todayItem    = TaxCheckListItem(
           taxCheckToday.taxCheckData.licenceDetails.licenceType,
           taxCheckToday.taxCheckCode,
-          taxCheckToday.expiresAfter
+          taxCheckToday.expiresAfter,
+          taxCheckToday.createDate
         )
         val tomorrowItem = TaxCheckListItem(
           taxCheckTomorrow.taxCheckData.licenceDetails.licenceType,
           taxCheckTomorrow.taxCheckCode,
-          taxCheckTomorrow.expiresAfter
+          taxCheckTomorrow.expiresAfter,
+          taxCheckTomorrow.createDate
         )
 
+        mockTimeProviderToday(today)
         mockGetTaxCheckCodes(ggCredId)(Right(List(taxCheckToday, taxCheckYesterday, taxCheckTomorrow)))
 
-        val result = service.getUnexpiredTaxCheckCodes(ggCredId, today)
+        val result = service.getUnexpiredTaxCheckCodes(ggCredId)
         await(result.value) shouldBe Right(List(todayItem, tomorrowItem))
       }
     }

@@ -54,7 +54,12 @@ class TaxCheckServiceImpl @Inject() (
     saveTaxCheckRequest: SaveTaxCheckRequest
   )(implicit hc: HeaderCarrier): EitherT[Future, Error, Unit] = {
     val taxCheck =
-      HECTaxCheck(taxCheckData(saveTaxCheckRequest), saveTaxCheckRequest.taxCheckCode, saveTaxCheckRequest.expiresAfter)
+      HECTaxCheck(
+        taxCheckData(saveTaxCheckRequest),
+        saveTaxCheckRequest.taxCheckCode,
+        saveTaxCheckRequest.expiresAfter,
+        saveTaxCheckRequest.createDate
+      )
 
     taxCheckStore.store(taxCheck)
   }

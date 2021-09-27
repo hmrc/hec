@@ -65,7 +65,7 @@ class HECTaxCheckStoreImplSpec extends AnyWordSpec with Matchers with Eventually
 
     val taxCheckCode1 = HECTaxCheckCode("code1")
     val taxCheckCode2 = HECTaxCheckCode("code12")
-    val taxCheck1     = HECTaxCheck(taxCheckData, taxCheckCode1, TimeUtils.today())
+    val taxCheck1     = HECTaxCheck(taxCheckData, taxCheckCode1, TimeUtils.today(), TimeUtils.now())
     val taxCheck2     = taxCheck1.copy(taxCheckCode = taxCheckCode2)
 
     "be able to insert tax checks into mongo, read it back and delete it" in {

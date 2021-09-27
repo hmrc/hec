@@ -18,12 +18,13 @@ package uk.gov.hmrc.hec.models
 
 import play.api.libs.json.{Json, OFormat}
 
-import java.time.LocalDate
+import java.time.{LocalDate, ZonedDateTime}
 
 final case class HECTaxCheck(
   taxCheckData: HECTaxCheckData,
   taxCheckCode: HECTaxCheckCode,
-  expiresAfter: LocalDate
+  expiresAfter: LocalDate,
+  createDate: ZonedDateTime
 )
 
 object HECTaxCheck {

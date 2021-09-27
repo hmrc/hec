@@ -19,12 +19,13 @@ package uk.gov.hmrc.hec.models
 import play.api.libs.json.{Json, OFormat}
 import uk.gov.hmrc.hec.models.licence.LicenceType
 
-import java.time.LocalDate
+import java.time.{LocalDate, ZonedDateTime}
 
 final case class TaxCheckListItem(
   licenceType: LicenceType,
   taxCheckCode: HECTaxCheckCode,
-  expiresAfter: LocalDate
+  expiresAfter: LocalDate,
+  createDate: ZonedDateTime
 )
 
 object TaxCheckListItem {
@@ -33,6 +34,7 @@ object TaxCheckListItem {
   def fromHecTaxCheck(taxCheck: HECTaxCheck): TaxCheckListItem = TaxCheckListItem(
     licenceType = taxCheck.taxCheckData.licenceDetails.licenceType,
     taxCheckCode = taxCheck.taxCheckCode,
-    expiresAfter = taxCheck.expiresAfter
+    expiresAfter = taxCheck.expiresAfter,
+    createDate = taxCheck.createDate
   )
 }

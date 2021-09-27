@@ -100,7 +100,8 @@ class TaxCheckControllerSpec extends ControllerSpec {
            |  "taxCheckCode" : "${r.taxCheckCode.value}",
            |  "licenceType" : "${r.licenceType.toString}",
            |  "verifier" : $verifierJson,
-           |  "expiresAfter" : "${toJsonString(r.expiresAfter)}"
+           |  "expiresAfter" : "${toJsonString(r.expiresAfter)}",
+           |  "createDate" : "${r.createDate}"
            |}
            |""".stripMargin
       }
@@ -113,7 +114,8 @@ class TaxCheckControllerSpec extends ControllerSpec {
           HECTaxCheckCode(invalidTaxCheckCode),
           LicenceType.DriverOfTaxisAndPrivateHires,
           Right(dateOfBirth),
-          TimeUtils.today()
+          TimeUtils.today(),
+          TimeUtils.now()
         )
         val body        = Json.parse(requestJsonString(request))
 
@@ -154,7 +156,8 @@ class TaxCheckControllerSpec extends ControllerSpec {
             validTaxCheckCode,
             LicenceType.DriverOfTaxisAndPrivateHires,
             Right(dateOfBirth),
-            TimeUtils.today()
+            TimeUtils.today(),
+            TimeUtils.now()
           )
           val body        = Json.parse(requestJsonString(request))
 
@@ -175,7 +178,8 @@ class TaxCheckControllerSpec extends ControllerSpec {
             validTaxCheckCode,
             LicenceType.DriverOfTaxisAndPrivateHires,
             Right(dateOfBirth),
-            TimeUtils.today()
+            TimeUtils.today(),
+            TimeUtils.now()
           )
           val body        = Json.parse(requestJsonString(request))
 
@@ -191,7 +195,8 @@ class TaxCheckControllerSpec extends ControllerSpec {
             validTaxCheckCode,
             LicenceType.DriverOfTaxisAndPrivateHires,
             Left(crn),
-            TimeUtils.today()
+            TimeUtils.today(),
+            TimeUtils.now()
           )
           val body    = Json.parse(requestJsonString(request))
 
@@ -254,7 +259,7 @@ class TaxCheckControllerSpec extends ControllerSpec {
               Some(IncomeDeclared.Yes)
             )
           )
-          val taxCheck     = HECTaxCheck(taxCheckData, validTaxCheckCode, TimeUtils.today())
+          val taxCheck     = HECTaxCheck(taxCheckData, validTaxCheckCode, TimeUtils.today(), TimeUtils.now())
 
           mockGetTaxCheck(validTaxCheckCode)(Right(Some(taxCheck)))
 
