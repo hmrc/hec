@@ -22,7 +22,6 @@ import play.api.Configuration
 import uk.gov.hmrc.hec.actors.TimeCalculator
 import uk.gov.hmrc.hec.models
 import uk.gov.hmrc.hec.util.Logging
-import uk.gov.hmrc.http.HeaderCarrier
 
 import java.time.{LocalTime, ZoneId}
 import scala.concurrent.duration.FiniteDuration
@@ -38,7 +37,6 @@ class HECTaxCheckExtractionService @Inject() (
   hECTaxCheckExtractionContext: HECTaxCheckExtractionContext
 ) extends Logging {
 
-  implicit val hc: HeaderCarrier = HeaderCarrier()
   val extractionTimeZone: ZoneId = ZoneId.of(config.get[String]("hec-file-extraction-details.extraction-timezone"))
   val jobStartTime: LocalTime    = LocalTime.parse(config.get[String]("hec-file-extraction-details.extraction-time"))
 
