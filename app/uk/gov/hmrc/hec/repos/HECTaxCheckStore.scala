@@ -221,7 +221,6 @@ class HECTaxCheckStoreImpl @Inject() (
       cacheRepository
         .find(isExtractedField -> status)
         .map { caches =>
-          println(" inside chaches")
           val jsons = caches
             .flatMap(_.data.toList)
             .map(json => (json \ key).validate[HECTaxCheck])

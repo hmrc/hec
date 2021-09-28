@@ -17,11 +17,11 @@
 package uk.gov.hmrc.hec.services
 
 import cats.data.EitherT
-import cats.instances.future._
-import cats.syntax.eq._
+import cats.implicits._
 import com.google.inject.{ImplementedBy, Inject, Singleton}
 import com.typesafe.config.Config
 import configs.syntax._
+import uk.gov.hmrc.hec.models
 import uk.gov.hmrc.hec.models.HECTaxCheckData.{CompanyHECTaxCheckData, IndividualHECTaxCheckData}
 import uk.gov.hmrc.hec.models.ids.GGCredId
 import uk.gov.hmrc.hec.models.{Error, HECTaxCheck, HECTaxCheckData, HECTaxCheckMatchRequest, HECTaxCheckMatchResult, HECTaxCheckMatchStatus, TaxCheckListItem}
@@ -38,6 +38,10 @@ trait TaxCheckService {
   def saveTaxCheck(taxCheckData: HECTaxCheckData)(implicit hc: HeaderCarrier): EitherT[Future, Error, HECTaxCheck]
 
   def updateTaxCheck(taxCheck: HECTaxCheck)(implicit hc: HeaderCarrier): EitherT[Future, Error, HECTaxCheck]
+
+  def updateAllHecTaxCheckStatus(list: List[HECTaxCheck])(implicit
+    hc: HeaderCarrier
+  ): EitherT[Future, models.Error, List[HECTaxCheck]]
 
   def matchTaxCheck(taxCheckMatchRequest: HECTaxCheckMatchRequest)(implicit
     hc: HeaderCarrier
@@ -80,6 +84,11 @@ class TaxCheckServiceImpl @Inject() (
     taxCheck: HECTaxCheck
   )(implicit hc: HeaderCarrier): EitherT[Future, Error, HECTaxCheck] =
     taxCheckStore.store(taxCheck.copy(isExtracted = true)).map(_ => taxCheck)
+
+  def updateAllHecTaxCheckStatus(list: List[HECTaxCheck])(implicit
+    hc: HeaderCarrier
+  ): EitherT[Future, models.Error, List[HECTaxCheck]] =
+    list.traverse[EitherT[Future, models.Error, *], HECTaxCheck](updateTaxCheck)
 
   def matchTaxCheck(taxCheckMatchRequest: HECTaxCheckMatchRequest)(implicit
     hc: HeaderCarrier

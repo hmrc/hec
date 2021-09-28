@@ -17,36 +17,30 @@
 package uk.gov.hmrc.hec.services
 
 import akka.actor.{ActorSystem, Cancellable}
-import cats.data.EitherT
-import cats.implicits._
-import com.google.inject.{ImplementedBy, Inject, Singleton}
+import com.google.inject.{Inject, Singleton}
 import com.typesafe.config.Config
 import configs.syntax._
 import uk.gov.hmrc.hec.actors.TimeCalculatorImpl
 import uk.gov.hmrc.hec.models
-import uk.gov.hmrc.hec.models.HECTaxCheck
-import uk.gov.hmrc.hec.services.HECTaxCheckExtractionService.OnCompleteHandler
 import uk.gov.hmrc.hec.util.Logging
 import uk.gov.hmrc.http.HeaderCarrier
 
 import java.time.{Clock, LocalTime, ZoneId}
-import scala.concurrent.Future
 import scala.concurrent.duration.FiniteDuration
+import scala.util.{Failure, Success}
 
 @Singleton
 class HECTaxCheckExtractionService @Inject() (
   actorSystem: ActorSystem,
-  taxCheckService: TaxCheckService,
-  lockKeeperService: LockKeeperService,
-  onCompleteHandler: OnCompleteHandler,
+  hecTaxCheckScheduleService: HecTaxCheckScheduleService,
   config: Config,
   hECTaxCheckExtractionContext: HECTaxCheckExtractionContext
 )(implicit
-  executionContext: HECTaxCheckExtractionContext,
-  hc: HeaderCarrier
+  executionContext: HECTaxCheckExtractionContext
 ) extends Logging {
 
-  val jobConfig: Config = config.get[Config]("hec-file-extraction-details").value
+  implicit val hc: HeaderCarrier = HeaderCarrier()
+  val jobConfig: Config          = config.get[Config]("hec-file-extraction-details").value
   private val timeCalculator = {
     val clock = Clock.system(ZoneId.of(jobConfig.getString("extraction-timezone")))
     new TimeCalculatorImpl(clock)
@@ -54,55 +48,44 @@ class HECTaxCheckExtractionService @Inject() (
 
   val jobStartTime: LocalTime              = LocalTime.parse(jobConfig.get[String]("extraction-time").value)
   private val initialDelay: FiniteDuration = timeCalculator.timeUntil(jobStartTime)
-  private val interval: FiniteDuration     = jobConfig.get[FiniteDuration]("interval").value
 
-  val lockAndRunScheduleJob: Unit = {
-    val lockedJob: Future[Unit] = lockKeeperService.generateLockFor("hecTaxCheck") tryLock {
-      scheduleExtractionJob
-    } map {
-      case Some(_) =>
-        logger.info(s"Job ran successfully")
-      case _       =>
-        logger.info(s"Job did not run because repository was locked by another instance of the scheduler.")
-    }
-    lockedJob.onComplete(_ => onCompleteHandler.onComplete())
-
-  }
+  private val interval: FiniteDuration = jobConfig.get[FiniteDuration]("interval").value
 
   val _: Cancellable =
-    actorSystem.scheduler.scheduleWithFixedDelay(initialDelay, interval)(() => lockAndRunScheduleJob)(
+    actorSystem.scheduler.scheduleWithFixedDelay(initialDelay, interval)(() => lockAndRunScheduledJob)(
       hECTaxCheckExtractionContext
     )
 
-  private def updateHecTaxCheckStatus(list: List[HECTaxCheck])(implicit
-    hc: HeaderCarrier
-  ): EitherT[Future, models.Error, List[HECTaxCheck]] =
-    list.traverse[EitherT[Future, models.Error, *], HECTaxCheck](taxCheckService.updateTaxCheck)
+  def lockAndRunScheduledJob(): Unit =
+    hecTaxCheckScheduleService.scheduleJob().onComplete {
+      case Success(mayBeValue) =>
+        mayBeValue match {
+          case Some(value) =>
+            value match {
+              case Left(error: models.Error) => logger.info(s"Job did not run because of the error :: $error.")
+              case Right(list)               => logger.info(s"Job ran successfully for ${list.size} tax checks")
 
-  def scheduleExtractionJob()(implicit hc: HeaderCarrier): Future[Either[models.Error, List[HECTaxCheck]]] = {
-    val result: EitherT[Future, models.Error, List[HECTaxCheck]] = for {
-      hecTaxCheck    <- taxCheckService.getAllTaxCheckCodesByStatus(false)
-      //TODO process  generate fields from extracted data will be called here
-      _               = hecTaxCheck.foreach(h =>
-                          logger.info(s" Job submitted to extract hec Tax check code :: ${h.taxCheckCode.value}")
-                        )
-      newHecTaxCheck <- updateHecTaxCheckStatus(hecTaxCheck)
-    } yield newHecTaxCheck
-    result.value
-  }
+            }
+          case None        => logger.info(s"Job failed as lock can't be obtained.")
+        }
+      case Failure(ex)         =>
+        new ResourceLockedException
+        logger.info(s"Job failed with exception ${ex.getMessage}.")
 
-}
-
-object HECTaxCheckExtractionService {
-
-  @ImplementedBy(classOf[DefaultOnCompleteHandler])
-  trait OnCompleteHandler {
-    def onComplete(): Unit
-  }
-
-  @Singleton
-  class DefaultOnCompleteHandler extends OnCompleteHandler {
-    override def onComplete(): Unit = ()
-  }
+    }
 
 }
+
+//object HECTaxCheckExtractionService {
+//
+//  @ImplementedBy(classOf[DefaultOnCompleteHandler])
+//  trait OnCompleteHandler {
+//    def onComplete(): Unit
+//  }
+//
+//  @Singleton
+//  class DefaultOnCompleteHandler extends OnCompleteHandler {
+//    override def onComplete(): Unit = ()
+//  }
+//
+//}

@@ -17,18 +17,22 @@
 package uk.gov.hmrc.hec.services
 
 import org.joda.time.Duration
-import uk.gov.hmrc.lock.{LockKeeper, LockRepository}
+import play.modules.reactivemongo.ReactiveMongoComponent
+import uk.gov.hmrc.lock.{LockKeeper, LockMongoRepository, LockRepository}
 
 import javax.inject.{Inject, Singleton}
 
 @Singleton
-class LockKeeperService @Inject() (lockRepository: LockRepository) {
+class LockKeeperService @Inject() (mongo: ReactiveMongoComponent) {
 
   def generateLockFor(resource: String): LockKeeper =
     new LockKeeper {
-      override def repo: LockRepository            = lockRepository
+
+      override def repo: LockRepository            = LockMongoRepository(mongo.mongoConnector.db)
       override def lockId: String                  = resource
-      override val forceLockReleaseAfter: Duration = Duration.standardMinutes(5)
+      override val forceLockReleaseAfter: Duration = Duration.standardSeconds(1)
     }
 
 }
+
+class ResourceLockedException extends Exception("The resource is already locked by another request")
