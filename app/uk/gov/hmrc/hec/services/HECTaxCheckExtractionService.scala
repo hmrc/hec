@@ -16,7 +16,7 @@
 
 package uk.gov.hmrc.hec.services
 
-import akka.actor.{Cancellable, Scheduler}
+import akka.actor.Scheduler
 import com.google.inject.{Inject, Singleton}
 import play.api.Configuration
 import uk.gov.hmrc.hec.actors.TimeCalculator
@@ -24,7 +24,7 @@ import uk.gov.hmrc.hec.models
 import uk.gov.hmrc.hec.util.Logging
 import uk.gov.hmrc.http.HeaderCarrier
 
-import java.time.{Clock, LocalTime, ZoneId}
+import java.time.{LocalTime, ZoneId}
 import scala.concurrent.duration.FiniteDuration
 import scala.util.{Failure, Success}
 
@@ -44,9 +44,9 @@ class HECTaxCheckExtractionService @Inject() (
 
   private def timeUntilNextJob(): FiniteDuration = timeCalculator.timeUntil(jobStartTime, extractionTimeZone)
 
-  private def scheduleNextJob(): Unit = scheduler.scheduleOnce(timeUntilNextJob())(() => lockAndRunScheduledJob)(
-    hECTaxCheckExtractionContext
-  )
+  def scheduleNextJob(): Unit = {
+    val _ = scheduler.scheduleOnce(timeUntilNextJob())(lockAndRunScheduledJob)(hECTaxCheckExtractionContext)
+  }
 
   scheduleNextJob()
 
@@ -73,17 +73,3 @@ class HECTaxCheckExtractionService @Inject() (
     }
 
 }
-
-//object HECTaxCheckExtractionService {
-//
-//  @ImplementedBy(classOf[DefaultOnCompleteHandler])
-//  trait OnCompleteHandler {
-//    def onComplete(): Unit
-//  }
-//
-//  @Singleton
-//  class DefaultOnCompleteHandler extends OnCompleteHandler {
-//    override def onComplete(): Unit = ()
-//  }
-//
-//}

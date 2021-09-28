@@ -16,38 +16,43 @@
 
 package uk.gov.hmrc.hec.actors
 
-import scala.concurrent.duration._
+import org.scalamock.scalatest.MockFactory
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
+import uk.gov.hmrc.hec.util.TimeProvider
 
-import java.time.{Clock, LocalDate, LocalTime, ZoneId, ZoneOffset}
+import java.time.{LocalTime, ZoneId}
+import scala.concurrent.duration._
 
-class TimeCalculatorSpec extends AnyWordSpec with Matchers {
+class TimeCalculatorSpec extends AnyWordSpec with Matchers with MockFactory {
+
+  val mockTimeProvider = mock[TimeProvider]
+
+  def mockCurrentTime(zone: ZoneId)(response: LocalTime): Unit =
+    (mockTimeProvider
+      .currentTime(_: ZoneId))
+      .expects(zone)
+      .returning(response)
+
+  val timeCalculator = new TimeCalculatorImpl(mockTimeProvider)
 
   "TimeCalculatorImpl" must {
-    // create a clock fixed at midnight
-    val clock: Clock =
-      Clock.fixed(
-        LocalTime
-          .parse("13:24")
-          .atDate(LocalDate.ofEpochDay(0L))
-          .toInstant(ZoneOffset.UTC),
-        ZoneId.of("Z")
-      )
 
-    val calculator = new TimeCalculatorImpl(clock)
+    val zoneId = ZoneId.of("London/Europe")
 
     "calculate time between two times correctly" in {
-      val t1                          = LocalTime.MIDNIGHT
-      val timeUntilT1: FiniteDuration = 10.hours + 35.minutes + 60.seconds
-      calculator.timeUntil(t1) shouldBe timeUntilT1
-
-      val t2          = LocalTime.of(13, 21, 22)
-      val timeUntilT2 = 23.hours + 57.minutes + 22.seconds
-      calculator.timeUntil(t2) shouldBe timeUntilT2
+      inSequence {
+        mockCurrentTime(zoneId)(LocalTime.MIDNIGHT)
+      }
+      val expectedTime: FiniteDuration = 10.hours + 35.minutes + 60.seconds
+      timeCalculator.timeUntil(LocalTime.of(13, 24), zoneId) shouldBe expectedTime
 
     }
 
   }
 
 }
+
+//val t2          = LocalTime.of(13, 21, 22)
+//val timeUntilT2 = 23.hours + 57.minutes + 22.seconds
+//calculator.timeUntil(t2, zoneId) shouldBe timeUntilT2

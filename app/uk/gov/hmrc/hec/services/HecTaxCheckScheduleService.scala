@@ -18,7 +18,6 @@ package uk.gov.hmrc.hec.services
 
 import cats.data.EitherT
 import cats.implicits._
-import cats.instances.future._
 import com.google.inject.{ImplementedBy, Inject}
 import uk.gov.hmrc.hec.models
 import uk.gov.hmrc.hec.models.HECTaxCheck
@@ -49,7 +48,7 @@ class HecTaxCheckScheduleServiceImpl @Inject() (lockKeeperService: LockKeeperSer
     val result: EitherT[Future, models.Error, List[HECTaxCheck]] = for {
       hecTaxCheck    <- taxCheckService.getAllTaxCheckCodesByStatus(false)
       //TODO process to generate fields from extracted data will be called here
-      newHecTaxCheck <- hecTaxCheck.traverse { taxCheck =>
+      newHecTaxCheck <- hecTaxCheck.traverse[EitherT[Future, models.Error, *], HECTaxCheck] { taxCheck =>
                           logger.info(s" Job submitted to extract hec Tax check code :: ${taxCheck.taxCheckCode.value}")
                           taxCheckService.updateTaxCheck(taxCheck)
                         }
