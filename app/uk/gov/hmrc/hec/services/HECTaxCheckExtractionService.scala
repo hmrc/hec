@@ -18,8 +18,7 @@ package uk.gov.hmrc.hec.services
 
 import akka.actor.{ActorSystem, Cancellable}
 import com.google.inject.{Inject, Singleton}
-import com.typesafe.config.Config
-import configs.syntax._
+import play.api.Configuration
 import uk.gov.hmrc.hec.actors.TimeCalculatorImpl
 import uk.gov.hmrc.hec.models
 import uk.gov.hmrc.hec.util.Logging
@@ -33,23 +32,22 @@ import scala.util.{Failure, Success}
 class HECTaxCheckExtractionService @Inject() (
   actorSystem: ActorSystem,
   hecTaxCheckScheduleService: HecTaxCheckScheduleService,
-  config: Config,
-  hECTaxCheckExtractionContext: HECTaxCheckExtractionContext
+  config: Configuration
 )(implicit
-  executionContext: HECTaxCheckExtractionContext
+  hECTaxCheckExtractionContext: HECTaxCheckExtractionContext
 ) extends Logging {
 
-  implicit val hc: HeaderCarrier = HeaderCarrier()
-  val jobConfig: Config          = config.get[Config]("hec-file-extraction-details").value
+  implicit val hc: HeaderCarrier       = HeaderCarrier()
+  val extractionTime: String           = config.get[String]("hec-file-extraction-details.extraction-timezone")
+  val jobStartTime: LocalTime          = LocalTime.parse(config.get[String]("hec-file-extraction-details.extraction-time"))
+  private val interval: FiniteDuration = config.get[FiniteDuration]("hec-file-extraction-details.interval")
+
   private val timeCalculator = {
-    val clock = Clock.system(ZoneId.of(jobConfig.getString("extraction-timezone")))
+    val clock = Clock.system(ZoneId.of(extractionTime))
     new TimeCalculatorImpl(clock)
   }
 
-  val jobStartTime: LocalTime              = LocalTime.parse(jobConfig.get[String]("extraction-time").value)
   private val initialDelay: FiniteDuration = timeCalculator.timeUntil(jobStartTime)
-
-  private val interval: FiniteDuration = jobConfig.get[FiniteDuration]("interval").value
 
   val _: Cancellable =
     actorSystem.scheduler.scheduleWithFixedDelay(initialDelay, interval)(() => lockAndRunScheduledJob)(

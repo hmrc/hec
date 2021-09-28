@@ -18,6 +18,7 @@ package uk.gov.hmrc.hec.services
 
 import cats.data.EitherT
 import cats.implicits._
+import cats.instances.future._
 import com.google.inject.{ImplementedBy, Inject}
 import uk.gov.hmrc.hec.models
 import uk.gov.hmrc.hec.models.HECTaxCheck
@@ -34,7 +35,7 @@ trait HecTaxCheckScheduleService {
 
 @Singleton
 class HecTaxCheckScheduleServiceImpl @Inject() (lockKeeperService: LockKeeperService, taxCheckService: TaxCheckService)(
-  implicit executionContext: HECTaxCheckExtractionContext
+  implicit hecTaxCheckExtractionContext: HECTaxCheckExtractionContext
 ) extends HecTaxCheckScheduleService
     with Logging {
 
@@ -48,12 +49,10 @@ class HecTaxCheckScheduleServiceImpl @Inject() (lockKeeperService: LockKeeperSer
     val result: EitherT[Future, models.Error, List[HECTaxCheck]] = for {
       hecTaxCheck    <- taxCheckService.getAllTaxCheckCodesByStatus(false)
       //TODO process to generate fields from extracted data will be called here
-      _               = hecTaxCheck.foreach(h =>
-                          logger.info(s" Job submitted to extract hec Tax check code :: ${h.taxCheckCode.value}")
-                        )
-
-      //updating isExtracted to true for the the processed hec tax check codes
-      newHecTaxCheck <- taxCheckService.updateAllHecTaxCheckStatus(hecTaxCheck)
+      newHecTaxCheck <- hecTaxCheck.traverse { taxCheck =>
+                          logger.info(s" Job submitted to extract hec Tax check code :: ${taxCheck.taxCheckCode.value}")
+                          taxCheckService.updateTaxCheck(taxCheck)
+                        }
     } yield newHecTaxCheck
     result.value
   }
