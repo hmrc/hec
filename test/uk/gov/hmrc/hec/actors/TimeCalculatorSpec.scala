@@ -38,13 +38,13 @@ class TimeCalculatorSpec extends AnyWordSpec with Matchers with MockFactory {
 
   "TimeCalculatorImpl" must {
 
-    val zoneId = ZoneId.of("London/Europe")
+    val zoneId = ZoneId.of("Europe/London")
 
-    "calculate time between two times correctly" in {
+    "calculate time between two times correctly if now is midnight" in {
       inSequence {
         mockCurrentTime(zoneId)(LocalTime.MIDNIGHT)
       }
-      val expectedTime: FiniteDuration = 10.hours + 35.minutes + 60.seconds
+      val expectedTime: FiniteDuration = 13.hours + 24.minutes
       timeCalculator.timeUntil(LocalTime.of(13, 24), zoneId) shouldBe expectedTime
 
     }
