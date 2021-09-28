@@ -16,10 +16,10 @@
 
 package uk.gov.hmrc.hec.services
 
-import akka.actor.{ActorSystem, Cancellable}
+import akka.actor.{Cancellable, Scheduler}
 import com.google.inject.{Inject, Singleton}
 import play.api.Configuration
-import uk.gov.hmrc.hec.actors.TimeCalculatorImpl
+import uk.gov.hmrc.hec.actors.TimeCalculator
 import uk.gov.hmrc.hec.models
 import uk.gov.hmrc.hec.util.Logging
 import uk.gov.hmrc.http.HeaderCarrier
@@ -30,46 +30,46 @@ import scala.util.{Failure, Success}
 
 @Singleton
 class HECTaxCheckExtractionService @Inject() (
-  actorSystem: ActorSystem,
+  scheduler: Scheduler,
+  timeCalculator: TimeCalculator,
   hecTaxCheckScheduleService: HecTaxCheckScheduleService,
   config: Configuration
 )(implicit
   hECTaxCheckExtractionContext: HECTaxCheckExtractionContext
 ) extends Logging {
 
-  implicit val hc: HeaderCarrier       = HeaderCarrier()
-  val extractionTime: String           = config.get[String]("hec-file-extraction-details.extraction-timezone")
-  val jobStartTime: LocalTime          = LocalTime.parse(config.get[String]("hec-file-extraction-details.extraction-time"))
-  private val interval: FiniteDuration = config.get[FiniteDuration]("hec-file-extraction-details.interval")
+  implicit val hc: HeaderCarrier = HeaderCarrier()
+  val extractionTimeZone: ZoneId = ZoneId.of(config.get[String]("hec-file-extraction-details.extraction-timezone"))
+  val jobStartTime: LocalTime    = LocalTime.parse(config.get[String]("hec-file-extraction-details.extraction-time"))
 
-  private val timeCalculator = {
-    val clock = Clock.system(ZoneId.of(extractionTime))
-    new TimeCalculatorImpl(clock)
-  }
+  private def timeUntilNextJob(): FiniteDuration = timeCalculator.timeUntil(jobStartTime, extractionTimeZone)
 
-  private val initialDelay: FiniteDuration = timeCalculator.timeUntil(jobStartTime)
+  private def scheduleNextJob(): Unit = scheduler.scheduleOnce(timeUntilNextJob())(() => lockAndRunScheduledJob)(
+    hECTaxCheckExtractionContext
+  )
 
-  val _: Cancellable =
-    actorSystem.scheduler.scheduleWithFixedDelay(initialDelay, interval)(() => lockAndRunScheduledJob)(
-      hECTaxCheckExtractionContext
-    )
+  scheduleNextJob()
 
   def lockAndRunScheduledJob(): Unit =
-    hecTaxCheckScheduleService.scheduleJob().onComplete {
-      case Success(mayBeValue) =>
-        mayBeValue match {
-          case Some(value) =>
-            value match {
-              case Left(error: models.Error) => logger.info(s"Job did not run because of the error :: $error.")
-              case Right(list)               => logger.info(s"Job ran successfully for ${list.size} tax checks")
+    hecTaxCheckScheduleService.scheduleJob().onComplete { result =>
+      result match {
+        case Success(mayBeValue) =>
+          mayBeValue match {
+            case Some(value) =>
+              value match {
+                case Left(error: models.Error) => logger.info(s"Job did not run because of the error :: $error.")
+                case Right(list)               => logger.info(s"Job ran successfully for ${list.size} tax checks")
 
-            }
-          case None        => logger.info(s"Job failed as lock can't be obtained.")
-        }
-      case Failure(ex)         =>
-        new ResourceLockedException
-        logger.info(s"Job failed with exception ${ex.getMessage}.")
+              }
+            case None        => logger.info(s"Job failed as lock can't be obtained.")
+          }
 
+        case Failure(ex) =>
+          new ResourceLockedException
+          logger.info(s"Job failed with exception ${ex.getMessage}.")
+      }
+
+      scheduleNextJob()
     }
 
 }

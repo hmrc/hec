@@ -16,22 +16,25 @@
 
 package uk.gov.hmrc.hec.actors
 
-import java.time.{Clock, LocalTime}
+import com.google.inject.{ImplementedBy, Singleton}
 
+import java.time.{LocalTime, ZoneId, ZonedDateTime}
 import scala.concurrent.duration._
 
+@ImplementedBy(classOf[TimeCalculatorImpl])
 trait TimeCalculator {
 
-  def timeUntil(t: LocalTime): FiniteDuration
+  def timeUntil(t: LocalTime, zone: ZoneId): FiniteDuration
 
 }
 
-class TimeCalculatorImpl(clock: Clock) extends TimeCalculator {
+@Singleton
+class TimeCalculatorImpl extends TimeCalculator {
 
   private val twentyFourHoursInSeconds: Long = 24.hours.toSeconds
 
-  def timeUntil(t: LocalTime): FiniteDuration = {
-    val now = LocalTime.now(clock)
+  def timeUntil(t: LocalTime, zone: ZoneId): FiniteDuration = {
+    val now = LocalTime.now(zone)
 
     val seconds = {
       val delta = now.until(t, java.time.temporal.ChronoUnit.SECONDS)

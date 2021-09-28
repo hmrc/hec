@@ -24,6 +24,7 @@ object AppDependencies {
     "org.scalamock"          %% "scalamock"              % "5.1.0"             % Test,
     "com.vladsch.flexmark"    % "flexmark-all"           % "0.36.8"            % "test, it",
     "org.scalatestplus.play" %% "scalatestplus-play"     % "5.1.0"             % "test, it",
-    "com.typesafe.akka"      %% "akka-testkit"           % akkaVersion         % Test
+    "com.typesafe.akka"      %% "akka-testkit"           % akkaVersion         % Test,
+    "com.miguno.akka"        %% "akka-mock-scheduler"    % "0.5.5"             % Test
   )
 }
