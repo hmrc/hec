@@ -21,28 +21,17 @@ import ai.x.play.json.SingletonEncoder.simpleName
 import ai.x.play.json.implicits.formatSingleton
 import play.api.libs.json.Format
 
-sealed trait SAStatus extends Product with Serializable {
-  val IFString: String
-}
+sealed trait SAStatus extends Product with Serializable
 
 object SAStatus {
-  case object ReturnFound extends SAStatus {
-    override val IFString: String = "Return Found"
-  }
-  case object NoticeToFileIssued extends SAStatus {
-    override val IFString: String = "Notice to File Issued"
-  }
-  case object NoReturnFound extends SAStatus {
-    override val IFString: String = "No Return Found"
-  }
+
+  case object ReturnFound extends SAStatus
+
+  case object NoticeToFileIssued extends SAStatus
+
+  case object NoReturnFound extends SAStatus
 
   @SuppressWarnings(Array("org.wartremover.warts.All"))
   implicit val format: Format[SAStatus] = Jsonx.formatSealed[SAStatus]
 
-  def fromString(s: String): Option[SAStatus] = s match {
-    case ReturnFound.IFString        => Some(ReturnFound)
-    case NoticeToFileIssued.IFString => Some(NoticeToFileIssued)
-    case NoReturnFound.IFString      => Some(NoReturnFound)
-    case _                           => None
-  }
 }

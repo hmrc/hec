@@ -89,13 +89,8 @@ class IFServiceImpl @Inject() (
           httpResponse
             .parseJSON[RawSASuccessResponse]
             .leftMap(e => BackendError(Error(e)))
-            .flatMap(response =>
-              Either
-                .fromOption(
-                  SAStatus.fromString(response.returnStatus),
-                  BackendError(Error(s"Could not parse success return status ${response.returnStatus}"))
-                )
-                .map(SAStatusResponse(utr, taxYear, _))
+            .flatMap(
+              toSaStatus(_).map(SAStatusResponse(utr, taxYear, _))
             )
         } else {
           handleErrorPath(httpResponse, utrType = "SA")
@@ -162,6 +157,14 @@ class IFServiceImpl @Inject() (
       case "2"   => Right(CTStatus.NoticeToFileIssued)
       case "3"   => Right(CTStatus.NoReturnFound)
       case other => Left(BackendError(Error(s"Could not parse accounting period status $other")))
+    }
+
+  private def toSaStatus(rawSASuccessResponse: RawSASuccessResponse): Either[BackendError, SAStatus] =
+    rawSASuccessResponse.returnStatus match {
+      case "1"   => Right(SAStatus.ReturnFound)
+      case "2"   => Right(SAStatus.NoticeToFileIssued)
+      case "3"   => Right(SAStatus.NoReturnFound)
+      case other => Left(BackendError(Error(s"Could not parse SA return status $other")))
     }
 }
 

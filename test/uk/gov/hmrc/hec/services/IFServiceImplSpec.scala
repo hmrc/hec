@@ -142,9 +142,9 @@ class IFServiceImplSpec extends AnyWordSpec with Matchers with MockFactory {
 
         "the response is OK and the json body can be parsed" in {
           val testCases = List(
-            "Return Found"          -> SAStatus.ReturnFound,
-            "Notice to File Issued" -> SAStatus.NoticeToFileIssued,
-            "No Return Found"       -> SAStatus.NoReturnFound
+            "1" -> SAStatus.ReturnFound,
+            "2" -> SAStatus.NoticeToFileIssued,
+            "3" -> SAStatus.NoReturnFound
           )
 
           testCases.foreach { case (responseString, expectedSaStatus) =>
