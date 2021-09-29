@@ -14,12 +14,16 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.hec.module
+package uk.gov.hmrc.hec.models
 
-import com.google.inject.AbstractModule
-import uk.gov.hmrc.hec.services.scheduleService.HECTaxCheckExtractionService
+import akka.actor.{ActorSystem, Scheduler}
+import com.google.inject.{ImplementedBy, Inject}
 
-class HecTaxCheckExtractionModule extends AbstractModule {
-  override def configure(): Unit =
-    bind(classOf[HECTaxCheckExtractionService]).asEagerSingleton()
+@ImplementedBy(classOf[SchedulerProviderImpl])
+trait SchedulerProvider {
+  val scheduler: Scheduler
+}
+
+class SchedulerProviderImpl @Inject() (val system: ActorSystem) extends SchedulerProvider {
+  val scheduler = system.scheduler
 }

@@ -14,13 +14,14 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.hec.services
+package uk.gov.hmrc.hec.services.scheduleService
 
 import cats.data.EitherT
 import cats.implicits._
 import com.google.inject.{ImplementedBy, Inject}
 import uk.gov.hmrc.hec.models
 import uk.gov.hmrc.hec.models.HECTaxCheck
+import uk.gov.hmrc.hec.services.{LockKeeperService, TaxCheckService}
 import uk.gov.hmrc.hec.util.Logging
 import uk.gov.hmrc.http.HeaderCarrier
 
@@ -29,7 +30,7 @@ import scala.concurrent.Future
 
 @ImplementedBy(classOf[HecTaxCheckScheduleServiceImpl])
 trait HecTaxCheckScheduleService {
-  def runJob(): Future[Option[Either[models.Error, List[HECTaxCheck]]]]
+  def lockAndExtractJob(): Future[Option[Either[models.Error, List[HECTaxCheck]]]]
 }
 
 @Singleton
@@ -38,21 +39,25 @@ class HecTaxCheckScheduleServiceImpl @Inject() (lockKeeperService: LockKeeperSer
 ) extends HecTaxCheckScheduleService
     with Logging {
 
-  implicit val hc: HeaderCarrier                                                 = HeaderCarrier()
-  override def runJob(): Future[Option[Either[models.Error, List[HECTaxCheck]]]] =
+  implicit val hc: HeaderCarrier                                                            = HeaderCarrier()
+  override def lockAndExtractJob(): Future[Option[Either[models.Error, List[HECTaxCheck]]]] =
     lockKeeperService.generateLockFor("hec-tax-check") tryLock {
-      scheduleExtractionJob
+      fetchHecData
     }
 
-  private def scheduleExtractionJob()(implicit hc: HeaderCarrier): Future[Either[models.Error, List[HECTaxCheck]]] = {
-    val result: EitherT[Future, models.Error, List[HECTaxCheck]] = for {
-      hecTaxCheck    <- taxCheckService.getAllTaxCheckCodesByStatus(false)
-      //TODO process to generate fields from extracted data will be called here
-      newHecTaxCheck <- hecTaxCheck.traverse[EitherT[Future, models.Error, *], HECTaxCheck] { taxCheck =>
-                          logger.info(s" Job submitted to extract hec Tax check code :: ${taxCheck.taxCheckCode.value}")
-                          taxCheckService.updateTaxCheck(taxCheck)
-                        }
-    } yield newHecTaxCheck
+  private def fetchHecData()(implicit hc: HeaderCarrier): Future[Either[models.Error, List[HECTaxCheck]]] = {
+    val result: EitherT[Future, models.Error, List[HECTaxCheck]] = {
+      for {
+        hecTaxCheck    <- taxCheckService.getAllTaxCheckCodesByStatus(false)
+        //TODO process to generate fields from extracted data will be called here
+        _               = hecTaxCheck.foreach(h =>
+                            logger.info(s" Job submitted to extract hec Tax check code :: ${h.taxCheckCode.value}")
+                          )
+
+        //updating isExtracted to true for the the processed hec tax check codes
+        newHecTaxCheck <- taxCheckService.updateAllHecTaxCheckStatus(hecTaxCheck)
+      } yield newHecTaxCheck
+    }
     result.value
   }
 }

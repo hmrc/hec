@@ -33,6 +33,7 @@ import uk.gov.hmrc.hec.services.HecTaxCheckExtractionServiceImplSpec.{TestHecTax
 import uk.gov.hmrc.hec.services.HecTaxCheckExtractionServiceImplSpec.TestHecTaxCheckScheduleService.{RunJobRequest, RunJobResponse}
 import uk.gov.hmrc.hec.services.HecTaxCheckExtractionServiceImplSpec.TestTimeCalculator.{TimeUntilRequest, TimeUntilResponse}
 import uk.gov.hmrc.hec.services.HecTaxCheckExtractionServiceImplSpec.TestScheduler.JobScheduledOnce
+import uk.gov.hmrc.hec.services.scheduleService.{HECTaxCheckExtractionContext, HECTaxCheckExtractionService, HecTaxCheckScheduleService}
 import uk.gov.hmrc.http.HeaderCarrier
 
 import java.time.format.DateTimeFormatter
@@ -173,7 +174,7 @@ object HecTaxCheckExtractionServiceImplSpec {
 
   class TestHecTaxCheckScheduleService(reportTo: ActorRef) extends HecTaxCheckScheduleService {
 
-    def runJob(): Future[Option[Either[models.Error, List[HECTaxCheck]]]] =
+    def lockAndExtractJob(): Future[Option[Either[models.Error, List[HECTaxCheck]]]] =
       (reportTo ? RunJobRequest).mapTo[RunJobResponse].map(_.result)(globalExecutionContext)
   }
 

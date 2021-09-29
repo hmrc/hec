@@ -34,6 +34,12 @@ class TimeCalculatorImpl @Inject() (timeProvider: TimeProvider) extends TimeCalc
 
   private val twentyFourHoursInSeconds: Long = 24.hours.toSeconds
 
+  /**
+    * Calculating the time until the time passed in parameters from now.
+    * @param t
+    * @param zone
+    * @return FiniteDuration
+    */
   def timeUntil(t: LocalTime, zone: ZoneId): FiniteDuration = {
     val now = timeProvider.currentTime(zone)
 

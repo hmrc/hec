@@ -14,13 +14,14 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.hec.services
+package uk.gov.hmrc.hec.services.scheduleService
 
-import akka.actor.Scheduler
 import com.google.inject.{Inject, Singleton}
 import play.api.Configuration
 import uk.gov.hmrc.hec.actors.TimeCalculator
 import uk.gov.hmrc.hec.models
+import uk.gov.hmrc.hec.models.SchedulerProvider
+import uk.gov.hmrc.hec.services.ResourceLockedException
 import uk.gov.hmrc.hec.util.Logging
 
 import java.time.{LocalTime, ZoneId}
@@ -29,7 +30,7 @@ import scala.util.{Failure, Success}
 
 @Singleton
 class HECTaxCheckExtractionService @Inject() (
-  scheduler: Scheduler,
+  schedulerProvider: SchedulerProvider,
   timeCalculator: TimeCalculator,
   hecTaxCheckScheduleService: HecTaxCheckScheduleService,
   config: Configuration
@@ -43,13 +44,17 @@ class HECTaxCheckExtractionService @Inject() (
   private def timeUntilNextJob(): FiniteDuration = timeCalculator.timeUntil(jobStartTime, extractionTimeZone)
 
   def scheduleNextJob(): Unit = {
-    val _ = scheduler.scheduleOnce(timeUntilNextJob())(lockAndRunScheduledJob)(hECTaxCheckExtractionContext)
+    val _ = schedulerProvider.scheduler.scheduleOnce(timeUntilNextJob())(runScheduledJob)(hECTaxCheckExtractionContext)
   }
 
   def start(): Unit = scheduleNextJob()
+  start()
 
-  def lockAndRunScheduledJob(): Unit =
-    hecTaxCheckScheduleService.runJob().onComplete { result =>
+  //Run the job to put a mongo lock and perform fetch and update
+  //Once that is done, call the scheduleNextJob() again to schedule the next job
+  // as per the extraction time in conf
+  def runScheduledJob(): Unit =
+    hecTaxCheckScheduleService.lockAndExtractJob().onComplete { result =>
       result match {
         case Success(mayBeValue) =>
           mayBeValue match {

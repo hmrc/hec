@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.hec.services
+package uk.gov.hmrc.hec.services.scheduleService
 
 import akka.actor.ActorSystem
 import com.google.inject.Inject
