@@ -48,7 +48,7 @@ class HECTaxCheckExtractionService @Inject() (
   }
 
   def start(): Unit = scheduleNextJob()
-  start()
+  //start()
 
   //Run the job to put a mongo lock and perform fetch and update
   //Once that is done, call the scheduleNextJob() again to schedule the next job

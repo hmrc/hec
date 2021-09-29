@@ -16,7 +16,7 @@
 
 package uk.gov.hmrc.hec.services
 
-import akka.actor.{ActorRef, ActorSystem, Cancellable}
+import akka.actor.{ActorRef, ActorSystem, Cancellable, Scheduler}
 import akka.pattern.ask
 import akka.testkit.{TestKit, TestProbe}
 import akka.util.Timeout
@@ -28,8 +28,8 @@ import org.scalatest.wordspec.AnyWordSpecLike
 import play.api.Configuration
 import uk.gov.hmrc.hec.actors.TimeCalculator
 import uk.gov.hmrc.hec.models
-import uk.gov.hmrc.hec.models.{Error, HECTaxCheck}
-import uk.gov.hmrc.hec.services.HecTaxCheckExtractionServiceImplSpec.{TestHecTaxCheckScheduleService, TestScheduler, TestTimeCalculator}
+import uk.gov.hmrc.hec.models.{Error, HECTaxCheck, SchedulerProvider}
+import uk.gov.hmrc.hec.services.HecTaxCheckExtractionServiceImplSpec.{TestHecTaxCheckScheduleService, TestScheduler, TestSchedulerProvider, TestTimeCalculator}
 import uk.gov.hmrc.hec.services.HecTaxCheckExtractionServiceImplSpec.TestHecTaxCheckScheduleService.{RunJobRequest, RunJobResponse}
 import uk.gov.hmrc.hec.services.HecTaxCheckExtractionServiceImplSpec.TestTimeCalculator.{TimeUntilRequest, TimeUntilResponse}
 import uk.gov.hmrc.hec.services.HecTaxCheckExtractionServiceImplSpec.TestScheduler.JobScheduledOnce
@@ -73,6 +73,8 @@ class HecTaxCheckExtractionServiceImplSpec
     override val scheduler = new TestScheduler(testProbe.ref, this)
   }
 
+  val testScheduleProvider = new TestSchedulerProvider(virtualTime)
+
   val testHecTaxCheckScheduleService = new TestHecTaxCheckScheduleService(testProbe.ref)
   val testTimeCalculator             = new TestTimeCalculator(testProbe.ref)
 
@@ -99,7 +101,7 @@ class HecTaxCheckExtractionServiceImplSpec
     "schedule a job that runs repeatedly at the set interval with the correct initial delay" in {
       val service =
         new HECTaxCheckExtractionService(
-          virtualTime.scheduler,
+          testScheduleProvider,
           testTimeCalculator,
           testHecTaxCheckScheduleService,
           configuration
@@ -170,6 +172,10 @@ object HecTaxCheckExtractionServiceImplSpec {
 
     final case class TimeUntilResponse(timeUntil: FiniteDuration)
 
+  }
+
+  class TestSchedulerProvider(virtualTime: VirtualTime) extends SchedulerProvider {
+    override val scheduler: Scheduler = virtualTime.scheduler
   }
 
   class TestHecTaxCheckScheduleService(reportTo: ActorRef) extends HecTaxCheckScheduleService {
