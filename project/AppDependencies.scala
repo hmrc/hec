@@ -13,7 +13,8 @@ object AppDependencies {
     "uk.gov.hmrc"       %% "domain"                    % "6.2.0-play-28",
     "ai.x"              %% "play-json-extensions"      % "0.42.0",
     "org.typelevel"     %% "cats-core"                 % "2.1.0",
-    "com.github.kxbmap" %% "configs"                   % "0.4.4"
+    "com.github.kxbmap" %% "configs"                   % "0.4.4",
+    "com.miguno.akka"   %% "akka-mock-scheduler"       % "0.5.1" exclude ("com.typesafe.akka", "akka-actor")
   )
 
   val test = Seq(

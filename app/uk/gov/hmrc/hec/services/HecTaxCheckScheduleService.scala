@@ -29,7 +29,7 @@ import scala.concurrent.Future
 
 @ImplementedBy(classOf[HecTaxCheckScheduleServiceImpl])
 trait HecTaxCheckScheduleService {
-  def scheduleJob(): Future[Option[Either[models.Error, List[HECTaxCheck]]]]
+  def runJob(): Future[Option[Either[models.Error, List[HECTaxCheck]]]]
 }
 
 @Singleton
@@ -38,8 +38,8 @@ class HecTaxCheckScheduleServiceImpl @Inject() (lockKeeperService: LockKeeperSer
 ) extends HecTaxCheckScheduleService
     with Logging {
 
-  implicit val hc: HeaderCarrier                                                      = HeaderCarrier()
-  override def scheduleJob(): Future[Option[Either[models.Error, List[HECTaxCheck]]]] =
+  implicit val hc: HeaderCarrier                                                 = HeaderCarrier()
+  override def runJob(): Future[Option[Either[models.Error, List[HECTaxCheck]]]] =
     lockKeeperService.generateLockFor("hec-tax-check") tryLock {
       scheduleExtractionJob
     }

@@ -46,10 +46,10 @@ class HECTaxCheckExtractionService @Inject() (
     val _ = scheduler.scheduleOnce(timeUntilNextJob())(lockAndRunScheduledJob)(hECTaxCheckExtractionContext)
   }
 
-  scheduleNextJob()
+  def start(): Unit = scheduleNextJob()
 
   def lockAndRunScheduledJob(): Unit =
-    hecTaxCheckScheduleService.scheduleJob().onComplete { result =>
+    hecTaxCheckScheduleService.runJob().onComplete { result =>
       result match {
         case Success(mayBeValue) =>
           mayBeValue match {
