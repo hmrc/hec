@@ -47,8 +47,7 @@ class HECTaxCheckExtractionService @Inject() (
     val _ = schedulerProvider.scheduler.scheduleOnce(timeUntilNextJob())(runScheduledJob)(hECTaxCheckExtractionContext)
   }
 
-  def start(): Unit = scheduleNextJob()
-  //start()
+  scheduleNextJob()
 
   //Run the job to put a mongo lock and perform fetch and update
   //Once that is done, call the scheduleNextJob() again to schedule the next job
