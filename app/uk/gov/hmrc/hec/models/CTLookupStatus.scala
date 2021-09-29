@@ -16,22 +16,12 @@
 
 package uk.gov.hmrc.hec.models
 
-import ai.x.play.json.Jsonx
-import ai.x.play.json.SingletonEncoder.simpleName
-import ai.x.play.json.implicits.formatSingleton
-import play.api.libs.json.Format
+sealed trait CTLookupStatus extends Product with Serializable
 
-sealed trait SAStatus extends Product with Serializable
+object CTLookupStatus {
 
-object SAStatus {
+  case object Successful extends CTLookupStatus
 
-  case object ReturnFound extends SAStatus
-
-  case object NoticeToFileIssued extends SAStatus
-
-  case object NoReturnFound extends SAStatus
-
-  @SuppressWarnings(Array("org.wartremover.warts.All"))
-  implicit val format: Format[SAStatus] = Jsonx.formatSealed[SAStatus]
+  case object NoLiveRecords extends CTLookupStatus
 
 }

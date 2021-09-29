@@ -25,19 +25,8 @@ final case class CTStatusResponse(
   ctutr: CTUTR,
   startDate: LocalDate,
   endDate: LocalDate,
-  status: CTStatus,
-  accountingPeriods: List[AccountingPeriod]
+  latestAccountingPeriod: Option[CTAccountingPeriod]
 )
-
-final case class AccountingPeriod(
-  accountingPeriod: String,
-  accountingPeriodStartDate: LocalDate,
-  accountingPeriodEndDate: LocalDate
-)
-
-object AccountingPeriod {
-  implicit val format: OFormat[AccountingPeriod] = Json.format
-}
 
 object CTStatusResponse {
   implicit val format: OFormat[CTStatusResponse] = Json.format

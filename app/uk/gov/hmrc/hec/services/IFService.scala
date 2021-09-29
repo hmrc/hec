@@ -18,7 +18,6 @@ package uk.gov.hmrc.hec.services
 
 import java.time.LocalDate
 import java.util.UUID
-
 import cats.data.EitherT
 import cats.implicits._
 import com.google.inject.{ImplementedBy, Inject, Singleton}
@@ -26,9 +25,9 @@ import play.api.http.Status.{NOT_FOUND, OK}
 import play.api.libs.json.{Json, Reads}
 import uk.gov.hmrc.hec.connectors.IFConnector
 import uk.gov.hmrc.hec.models.ids.{CTUTR, SAUTR}
-import uk.gov.hmrc.hec.models.{AccountingPeriod, CTStatus, CTStatusResponse, Error, SAStatus, SAStatusResponse, TaxYear}
+import uk.gov.hmrc.hec.models.{CTAccountingPeriod, CTLookupStatus, CTStatus, CTStatusResponse, Error, SAStatus, SAStatusResponse, TaxYear}
 import uk.gov.hmrc.hec.services.IFService.{BackendError, DataNotFoundError, IFError}
-import uk.gov.hmrc.hec.services.IFServiceImpl.{RawCTSuccessResponse, RawFailureResponse, RawSASuccessResponse}
+import uk.gov.hmrc.hec.services.IFServiceImpl.{RawAccountingPeriod, RawCTSuccessResponse, RawFailureResponse, RawSASuccessResponse}
 import uk.gov.hmrc.hec.util.HttpResponseOps._
 import uk.gov.hmrc.http.{HeaderCarrier, HttpResponse}
 
@@ -90,13 +89,8 @@ class IFServiceImpl @Inject() (
           httpResponse
             .parseJSON[RawSASuccessResponse]
             .leftMap(e => BackendError(Error(e)))
-            .flatMap(response =>
-              Either
-                .fromOption(
-                  SAStatus.fromString(response.returnStatus),
-                  BackendError(Error(s"Could not parse success return status ${response.returnStatus}"))
-                )
-                .map(SAStatusResponse(utr, taxYear, _))
+            .flatMap(
+              toSaStatus(_).map(SAStatusResponse(utr, taxYear, _))
             )
         } else {
           handleErrorPath(httpResponse, utrType = "SA")
@@ -119,40 +113,94 @@ class IFServiceImpl @Inject() (
           httpResponse
             .parseJSON[RawCTSuccessResponse]
             .leftMap(e => BackendError(Error(e)))
-            .flatMap(response =>
-              Either
-                .fromOption(
-                  CTStatus.fromString(response.returnStatus),
-                  BackendError(Error(s"Could not parse success return status ${response.returnStatus}"))
-                )
-                .map(CTStatusResponse(utr, startDate, endDate, _, response.accountingPeriods))
-            )
+            .flatMap(ctAccountingPeriodsValidation(_).map { accountingPeriods =>
+              CTStatusResponse(utr, startDate, endDate, latestAccountingPeriod(accountingPeriods))
+            })
         } else {
           handleErrorPath(httpResponse, utrType = "CT")
         }
       }
+
+  private def latestAccountingPeriod(accountingPeriods: List[CTAccountingPeriod]): Option[CTAccountingPeriod] =
+    accountingPeriods.sortWith { case (a1, a2) => a1.endDate.isAfter(a2.endDate) }.headOption
+
+  private def ctAccountingPeriodsValidation(
+    response: RawCTSuccessResponse
+  ): Either[BackendError, List[CTAccountingPeriod]]                                                           =
+    toCtLookupStatus(response).flatMap {
+      case CTLookupStatus.NoLiveRecords =>
+        Right(List.empty)
+
+      case CTLookupStatus.Successful =>
+        response.accountingPeriods
+          .getOrElse(List.empty[RawAccountingPeriod])
+          .traverse[Either[BackendError, *], CTAccountingPeriod](a =>
+            toCtStatus(a)
+              .map(status => CTAccountingPeriod(a.accountingPeriodStartDate, a.accountingPeriodEndDate, status))
+          )
+          .filterOrElse(
+            _.nonEmpty,
+            BackendError(Error("Could not find accounting periods for outer return status '0 = successful'"))
+          )
+    }
+
+  private def toCtLookupStatus(response: RawCTSuccessResponse): Either[BackendError, CTLookupStatus] =
+    response.returnStatus match {
+      case "0"   => Right(CTLookupStatus.Successful)
+      case "2"   => Right(CTLookupStatus.NoLiveRecords)
+      case other => Left(BackendError(Error(s"Could not parse returnStatus $other")))
+    }
+
+  private def toCtStatus(rawAccountingPeriod: RawAccountingPeriod): Either[BackendError, CTStatus] =
+    rawAccountingPeriod.accountingPeriodStatus match {
+      case "1"   => Right(CTStatus.ReturnFound)
+      case "2"   => Right(CTStatus.NoticeToFileIssued)
+      case "3"   => Right(CTStatus.NoReturnFound)
+      case other => Left(BackendError(Error(s"Could not parse accounting period status $other")))
+    }
+
+  private def toSaStatus(rawSASuccessResponse: RawSASuccessResponse): Either[BackendError, SAStatus] =
+    rawSASuccessResponse.returnStatus match {
+      case "1"   => Right(SAStatus.ReturnFound)
+      case "2"   => Right(SAStatus.NoticeToFileIssued)
+      case "3"   => Right(SAStatus.NoReturnFound)
+      case other => Left(BackendError(Error(s"Could not parse SA return status $other")))
+    }
 }
 
 object IFServiceImpl {
+
   final case class RawSASuccessResponse(
     returnStatus: String
   )
+
   implicit val rawSASuccessReads: Reads[RawSASuccessResponse] = Json.reads
+
+  final case class RawAccountingPeriod(
+    accountingPeriodStartDate: LocalDate,
+    accountingPeriodEndDate: LocalDate,
+    accountingPeriodStatus: String
+  )
+
+  implicit val rawAccountingPeriodReads: Reads[RawAccountingPeriod] = Json.reads
 
   final case class RawCTSuccessResponse(
     returnStatus: String,
-    accountingPeriods: List[AccountingPeriod]
+    accountingPeriods: Option[List[RawAccountingPeriod]]
   )
+
   implicit val rawCTSuccessReads: Reads[RawCTSuccessResponse] = Json.reads
 
   final case class RawFailure(
     code: String,
     reason: String
   )
+
   implicit val rawFailureResponseFailureReads: Reads[RawFailure] = Json.reads
 
   final case class RawFailureResponse(
     failures: List[RawFailure]
   )
+
   implicit val rawFailureResponseReads: Reads[RawFailureResponse] = Json.reads
 }

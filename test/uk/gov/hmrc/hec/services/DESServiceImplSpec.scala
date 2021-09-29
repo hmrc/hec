@@ -121,6 +121,20 @@ class DESServiceImplSpec extends AnyWordSpec with Matchers with MockFactory {
             )
           )
         }
+
+        "a successful response is received but the CT UTR in the response is not valid" in {
+          val json = Json.parse("""{ "CTUTR": "1234567890" }""")
+          testIsError[BackendError](
+            Right(
+              HttpResponse(
+                200,
+                json,
+                Map.empty[String, Seq[String]]
+              )
+            )
+          )
+        }
+
       }
 
       "return successfully" when {
