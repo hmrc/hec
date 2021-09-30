@@ -79,7 +79,7 @@ class HECTaxCheckStoreImpl @Inject() (
   private val hecIndexes = Seq(
     Index(
       Seq(ggCredIdField -> IndexType.Ascending),
-      partialFilter = Some(BSONDocument(isExtractedField -> BSONDocument(f"$$exists" -> false)))
+      partialFilter = Some(BSONDocument(isExtractedField -> false))
     )
   )
 
