@@ -37,10 +37,6 @@ trait TaxCheckService {
 
   def saveTaxCheck(taxCheckData: HECTaxCheckData)(implicit hc: HeaderCarrier): EitherT[Future, Error, HECTaxCheck]
 
-  def updateHecTaxCheck(
-    updatedHecTaxCheck: HECTaxCheck
-  )(implicit hc: HeaderCarrier): EitherT[Future, Error, HECTaxCheck]
-
   def updateAllHecTaxCheck(list: List[HECTaxCheck])(implicit
     hc: HeaderCarrier
   ): EitherT[Future, models.Error, List[HECTaxCheck]]
@@ -82,7 +78,7 @@ class TaxCheckServiceImpl @Inject() (
     taxCheckStore.store(taxCheck).map(_ => taxCheck)
   }
 
-  def updateHecTaxCheck(
+  private def updateHecTaxCheck(
     updatedHecTaxCheck: HECTaxCheck
   )(implicit hc: HeaderCarrier): EitherT[Future, Error, HECTaxCheck] =
     taxCheckStore.store(updatedHecTaxCheck).map(_ => updatedHecTaxCheck)
