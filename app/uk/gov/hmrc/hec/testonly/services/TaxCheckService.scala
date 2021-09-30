@@ -59,7 +59,7 @@ class TaxCheckServiceImpl @Inject() (
         saveTaxCheckRequest.taxCheckCode,
         saveTaxCheckRequest.expiresAfter,
         saveTaxCheckRequest.createDate,
-        saveTaxCheckRequest.isExtracted
+        false
       )
 
     taxCheckStore.store(taxCheck)
