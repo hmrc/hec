@@ -85,7 +85,8 @@ class TaxCheckServiceImplSpec extends AnyWordSpec with Matchers with MockFactory
           LicenceType.ScrapMetalDealerSite,
           verifier,
           today,
-          now
+          now,
+          false
         )
 
       "return an error" when {
@@ -96,7 +97,8 @@ class TaxCheckServiceImplSpec extends AnyWordSpec with Matchers with MockFactory
             service.taxCheckData(request),
             request.taxCheckCode,
             request.expiresAfter,
-            now
+            now,
+            false
           )
 
           inSequence {
@@ -117,7 +119,8 @@ class TaxCheckServiceImplSpec extends AnyWordSpec with Matchers with MockFactory
             service.taxCheckData(request),
             request.taxCheckCode,
             request.expiresAfter,
-            now
+            now,
+            false
           )
 
           inSequence {
@@ -134,7 +137,8 @@ class TaxCheckServiceImplSpec extends AnyWordSpec with Matchers with MockFactory
             service.taxCheckData(request),
             request.taxCheckCode,
             request.expiresAfter,
-            now
+            now,
+            false
           )
 
           inSequence {
@@ -177,7 +181,7 @@ class TaxCheckServiceImplSpec extends AnyWordSpec with Matchers with MockFactory
               Some(IncomeDeclared.Yes)
             )
           )
-          val taxCheck     = HECTaxCheck(taxCheckData, taxCheckCode, TimeUtils.today(), now)
+          val taxCheck     = HECTaxCheck(taxCheckData, taxCheckCode, TimeUtils.today(), now, false)
 
           mockGetTaxCheck(taxCheckCode)(Right(Some(taxCheck)))
 

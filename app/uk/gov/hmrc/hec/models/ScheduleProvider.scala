@@ -14,24 +14,16 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.hec.util
+package uk.gov.hmrc.hec.models
 
+import akka.actor.{ActorSystem, Scheduler}
 import com.google.inject.{ImplementedBy, Inject}
 
-import java.time.{LocalDate, LocalTime, ZoneId, ZonedDateTime}
-import javax.inject.Singleton
-
-@ImplementedBy(classOf[TimeProviderImpl])
-trait TimeProvider {
-  def currentDateTime: ZonedDateTime
-  def currentDate: LocalDate
-  def currentTime(zone: ZoneId): LocalTime
+@ImplementedBy(classOf[SchedulerProviderImpl])
+trait SchedulerProvider {
+  val scheduler: Scheduler
 }
 
-@Singleton
-class TimeProviderImpl extends TimeProvider {
-  @Inject()
-  override def currentDateTime: ZonedDateTime       = TimeUtils.now()
-  override def currentDate: LocalDate               = TimeUtils.today()
-  override def currentTime(zone: ZoneId): LocalTime = TimeUtils.nowTime(zone)
+class SchedulerProviderImpl @Inject() (val system: ActorSystem) extends SchedulerProvider {
+  val scheduler = system.scheduler
 }

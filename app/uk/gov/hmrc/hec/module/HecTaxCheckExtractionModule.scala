@@ -14,22 +14,12 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.hec.models
+package uk.gov.hmrc.hec.module
 
-import play.api.libs.json.{Json, OFormat}
+import com.google.inject.AbstractModule
+import uk.gov.hmrc.hec.services.scheduleService.HECTaxCheckScheduleService
 
-import java.time.{LocalDate, ZonedDateTime}
-
-final case class HECTaxCheck(
-  taxCheckData: HECTaxCheckData,
-  taxCheckCode: HECTaxCheckCode,
-  expiresAfter: LocalDate,
-  createDate: ZonedDateTime,
-  isExtracted: Boolean
-)
-
-object HECTaxCheck {
-
-  implicit val format: OFormat[HECTaxCheck] = Json.format
-
+class HecTaxCheckExtractionModule extends AbstractModule {
+  override def configure(): Unit =
+    bind(classOf[HECTaxCheckScheduleService]).asEagerSingleton()
 }

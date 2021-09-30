@@ -14,22 +14,11 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.hec.models
+package uk.gov.hmrc.hec.services.scheduleService
 
-import play.api.libs.json.{Json, OFormat}
+import akka.actor.ActorSystem
+import com.google.inject.Inject
+import play.api.libs.concurrent.CustomExecutionContext
 
-import java.time.{LocalDate, ZonedDateTime}
-
-final case class HECTaxCheck(
-  taxCheckData: HECTaxCheckData,
-  taxCheckCode: HECTaxCheckCode,
-  expiresAfter: LocalDate,
-  createDate: ZonedDateTime,
-  isExtracted: Boolean
-)
-
-object HECTaxCheck {
-
-  implicit val format: OFormat[HECTaxCheck] = Json.format
-
-}
+class HECTaxCheckExtractionContext @Inject() (actorSystem: ActorSystem)
+    extends CustomExecutionContext(actorSystem, "hec-tax-check-dispatcher")

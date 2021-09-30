@@ -17,11 +17,11 @@
 package uk.gov.hmrc.hec.services
 
 import cats.data.EitherT
-import cats.instances.future._
-import cats.syntax.eq._
+import cats.implicits._
 import com.google.inject.{ImplementedBy, Inject, Singleton}
 import com.typesafe.config.Config
 import configs.syntax._
+import uk.gov.hmrc.hec.models
 import uk.gov.hmrc.hec.models.HECTaxCheckData.{CompanyHECTaxCheckData, IndividualHECTaxCheckData}
 import uk.gov.hmrc.hec.models.ids.GGCredId
 import uk.gov.hmrc.hec.models.{Error, HECTaxCheck, HECTaxCheckData, HECTaxCheckMatchRequest, HECTaxCheckMatchResult, HECTaxCheckMatchStatus, TaxCheckListItem}
@@ -37,6 +37,10 @@ trait TaxCheckService {
 
   def saveTaxCheck(taxCheckData: HECTaxCheckData)(implicit hc: HeaderCarrier): EitherT[Future, Error, HECTaxCheck]
 
+  def updateAllHecTaxCheck(list: List[HECTaxCheck])(implicit
+    hc: HeaderCarrier
+  ): EitherT[Future, models.Error, List[HECTaxCheck]]
+
   def matchTaxCheck(taxCheckMatchRequest: HECTaxCheckMatchRequest)(implicit
     hc: HeaderCarrier
   ): EitherT[Future, Error, HECTaxCheckMatchResult]
@@ -44,6 +48,10 @@ trait TaxCheckService {
   def getUnexpiredTaxCheckCodes(ggCredId: GGCredId)(implicit
     hc: HeaderCarrier
   ): EitherT[Future, Error, List[TaxCheckListItem]]
+
+  def getAllTaxCheckCodesByExtractedStatus(isExtracted: Boolean)(implicit
+    hc: HeaderCarrier
+  ): EitherT[Future, Error, List[HECTaxCheck]]
 
 }
 
@@ -65,10 +73,20 @@ class TaxCheckServiceImpl @Inject() (
     val taxCheckCode = taxCheckCodeGeneratorService.generateTaxCheckCode()
     val expiryDate   = timeProvider.currentDate.plusDays(taxCheckCodeExpiresAfterDays)
     val createDate   = timeProvider.currentDateTime
-    val taxCheck     = HECTaxCheck(taxCheckData, taxCheckCode, expiryDate, createDate)
+    val taxCheck     = HECTaxCheck(taxCheckData, taxCheckCode, expiryDate, createDate, false)
 
     taxCheckStore.store(taxCheck).map(_ => taxCheck)
   }
+
+  private def updateHecTaxCheck(
+    updatedHecTaxCheck: HECTaxCheck
+  )(implicit hc: HeaderCarrier): EitherT[Future, Error, HECTaxCheck] =
+    taxCheckStore.store(updatedHecTaxCheck).map(_ => updatedHecTaxCheck)
+
+  def updateAllHecTaxCheck(list: List[HECTaxCheck])(implicit
+    hc: HeaderCarrier
+  ): EitherT[Future, models.Error, List[HECTaxCheck]] =
+    list.traverse[EitherT[Future, models.Error, *], HECTaxCheck](updateHecTaxCheck)
 
   def matchTaxCheck(taxCheckMatchRequest: HECTaxCheckMatchRequest)(implicit
     hc: HeaderCarrier
@@ -123,4 +141,8 @@ class TaxCheckServiceImpl @Inject() (
       )
   }
 
+  override def getAllTaxCheckCodesByExtractedStatus(isExtracted: Boolean)(implicit
+    hc: HeaderCarrier
+  ): EitherT[Future, Error, List[HECTaxCheck]] =
+    taxCheckStore.getAllTaxCheckCodesByExtractedStatus(isExtracted)
 }

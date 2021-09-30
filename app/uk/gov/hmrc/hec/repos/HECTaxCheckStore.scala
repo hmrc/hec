@@ -22,9 +22,12 @@ import cats.syntax.either._
 import com.google.inject.{ImplementedBy, Inject, Singleton}
 import configs.syntax._
 import play.api.Configuration
+import play.api.libs.json.Json.JsValueWrapper
 import play.api.libs.json.{JsError, JsSuccess, Json, JsonValidationError}
 import play.modules.reactivemongo.ReactiveMongoComponent
 import reactivemongo.api.indexes.{Index, IndexType}
+import reactivemongo.bson.BSONDocument
+import reactivemongo.core.errors.GenericDatabaseException
 import uk.gov.hmrc.cache.model.Id
 import uk.gov.hmrc.cache.repository.CacheMongoRepository
 import uk.gov.hmrc.hec.models.ids.GGCredId
@@ -55,6 +58,10 @@ trait HECTaxCheckStore {
 
   def deleteAll()(implicit hc: HeaderCarrier): EitherT[Future, Error, Unit]
 
+  def getAllTaxCheckCodesByExtractedStatus(status: Boolean)(implicit
+    hc: HeaderCarrier
+  ): EitherT[Future, Error, List[HECTaxCheck]]
+
 }
 
 @Singleton
@@ -66,11 +73,16 @@ class HECTaxCheckStoreImpl @Inject() (
 ) extends HECTaxCheckStore
     with Logging {
 
-  val key: String                   = "hec-tax-check"
-  private val ggCredIdField: String = s"data.$key.taxCheckData.applicantDetails.ggCredId"
+  val key: String                      = "hec-tax-check"
+  private val ggCredIdField: String    = s"data.$key.taxCheckData.applicantDetails.ggCredId"
+  private val isExtractedField: String = s"data.$key.isExtracted"
 
   private val hecIndexes = Seq(
-    Index(Seq(ggCredIdField -> IndexType.Ascending))
+    Index(Seq("ggCredId" -> IndexType.Ascending)),
+    Index(
+      Seq("isExtracted" -> IndexType.Ascending),
+      partialFilter = Some(BSONDocument("isExtracted" -> false))
+    )
   )
 
   val cacheRepository: CacheMongoRepository = {
@@ -82,7 +94,35 @@ class HECTaxCheckStoreImpl @Inject() (
       mongo.mongoConnector.db,
       ec
     ) {
-      override def indexes: Seq[Index] = hecIndexes
+
+      //TODO temporary till the issue is resolved by the team owning cacheRepository code
+      //issue- indexes were not getting created
+      @SuppressWarnings(Array("org.wartremover.warts.Throw"))
+      private def ensureIndex(index: Index)(implicit ec: ExecutionContext): Future[Boolean] =
+        collection.indexesManager
+          .create(index)
+          .map { wr =>
+            if (!wr.ok) {
+              val msg      = wr.writeErrors.mkString(", ")
+              val maybeMsg = if (msg.contains("E11000")) {
+                // this is for backwards compatibility to mongodb 2.6.x
+
+                throw GenericDatabaseException(msg, wr.code)
+              } else Some(msg)
+              logger.error(s"$message (${index.eventualName}) : '${maybeMsg.map(_.toString)}'")
+            }
+            wr.ok
+          }
+          .recover { case t =>
+            logger.error(s"$message (${index.eventualName})", t)
+            false
+          }
+
+      override def ensureIndexes(implicit ec: ExecutionContext): Future[Seq[Boolean]] = {
+        super.ensureIndexes
+        Future.sequence(indexes.map(ensureIndex))
+      }
+      override def indexes: Seq[Index]                                                      = hecIndexes
     }
   }
 
@@ -123,34 +163,11 @@ class HECTaxCheckStoreImpl @Inject() (
     */
   def getTaxCheckCodes(ggCredId: GGCredId)(implicit
     hc: HeaderCarrier
-  ): EitherT[Future, Error, List[HECTaxCheck]] =
-    EitherT(
-      preservingMdc {
-        cacheRepository
-          .find(ggCredIdField -> ggCredId.value)
-          .map { caches =>
-            val jsons = caches
-              .flatMap(_.data.toList)
-              .map(json => (json \ key).validate[HECTaxCheck])
+  ): EitherT[Future, Error, List[HECTaxCheck]] = find(ggCredIdField -> ggCredId.value)
 
-            val (valid, invalid) =
-              jsons.foldLeft((List.empty[HECTaxCheck], Seq.empty[JsonValidationError])) { (acc, json) =>
-                val (taxChecks, errors) = acc
-                json match {
-                  case JsSuccess(value, _)       => (value +: taxChecks, errors)
-                  case JsError(validationErrors) => (taxChecks, errors ++ validationErrors.flatMap(_._2))
-                }
-              }
-
-            val errorStr = invalid.map(_.message).mkString("; ")
-            if (invalid.nonEmpty) {
-              logger.warn(s"${invalid.size} results failed json parsing - $errorStr")
-            }
-
-            Either.cond(invalid.isEmpty, valid, Error(Left(errorStr)))
-          }
-      }
-    )
+  def getAllTaxCheckCodesByExtractedStatus(isExtracted: Boolean)(implicit
+    hc: HeaderCarrier
+  ): EitherT[Future, Error, List[HECTaxCheck]] = find(isExtractedField -> isExtracted)
 
   def store(
     taxCheck: HECTaxCheck
@@ -208,4 +225,34 @@ class HECTaxCheckStoreImpl @Inject() (
       }
     )
 
+  private def find(
+    query: (String, JsValueWrapper)
+  ): EitherT[Future, Error, List[HECTaxCheck]] =
+    EitherT(
+      preservingMdc {
+        cacheRepository
+          .find(query)
+          .map { caches =>
+            val jsons = caches
+              .flatMap(_.data.toList)
+              .map(json => (json \ key).validate[HECTaxCheck])
+
+            val (valid, invalid) =
+              jsons.foldLeft((List.empty[HECTaxCheck], Seq.empty[JsonValidationError])) { (acc, json) =>
+                val (taxChecks, errors) = acc
+                json match {
+                  case JsSuccess(value, _)       => (value +: taxChecks, errors)
+                  case JsError(validationErrors) => (taxChecks, errors ++ validationErrors.flatMap(_._2))
+                }
+              }
+
+            val errorStr = invalid.map(_.message).mkString("; ")
+            if (invalid.nonEmpty) {
+              logger.warn(s"${invalid.size} results failed json parsing - $errorStr")
+            }
+
+            Either.cond(invalid.isEmpty, valid, Error(Left(errorStr)))
+          }
+      }
+    )
 }

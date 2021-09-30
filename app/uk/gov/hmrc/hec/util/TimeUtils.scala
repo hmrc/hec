@@ -16,13 +16,14 @@
 
 package uk.gov.hmrc.hec.util
 
-import java.time.{Clock, LocalDate, ZoneId, ZonedDateTime}
+import java.time.{Clock, LocalDate, LocalTime, ZoneId, ZonedDateTime}
 
 object TimeUtils {
 
   val clock: Clock = Clock.systemUTC()
 
-  def today(): LocalDate   = LocalDate.now(clock)
-  def now(): ZonedDateTime = ZonedDateTime.now(ZoneId.of("Europe/London"))
+  def today(): LocalDate               = LocalDate.now(clock)
+  def now(): ZonedDateTime             = ZonedDateTime.now(ZoneId.of("Europe/London"))
+  def nowTime(zone: ZoneId): LocalTime = LocalTime.now(zone)
 
 }

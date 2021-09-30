@@ -65,8 +65,10 @@ class HECTaxCheckStoreImplSpec extends AnyWordSpec with Matchers with Eventually
 
     val taxCheckCode1 = HECTaxCheckCode("code1")
     val taxCheckCode2 = HECTaxCheckCode("code12")
-    val taxCheck1     = HECTaxCheck(taxCheckData, taxCheckCode1, TimeUtils.today(), TimeUtils.now())
+    val taxCheckCode3 = HECTaxCheckCode("code13")
+    val taxCheck1     = HECTaxCheck(taxCheckData, taxCheckCode1, TimeUtils.today(), TimeUtils.now(), false)
     val taxCheck2     = taxCheck1.copy(taxCheckCode = taxCheckCode2)
+    val taxCheck3     = taxCheck1.copy(taxCheckCode = taxCheckCode3, isExtracted = true)
 
     "be able to insert tax checks into mongo, read it back and delete it" in {
 
@@ -176,6 +178,46 @@ class HECTaxCheckStoreImplSpec extends AnyWordSpec with Matchers with Eventually
       await(create).writeResult.inError shouldBe false
 
       await(taxCheckStore.getTaxCheckCodes(GGCredId(ggCredId)).value).isLeft shouldBe true
+    }
+
+    "be able to fetch all tax check codes with isExtracted false" in {
+
+      // store some tax check codes in mongo
+      await(taxCheckStore.store(taxCheck1).value) shouldBe Right(())
+      await(taxCheckStore.store(taxCheck2).value) shouldBe Right(())
+      await(taxCheckStore.store(taxCheck3).value) shouldBe Right(())
+      eventually {
+        await(taxCheckStore.getAllTaxCheckCodesByExtractedStatus(false).value).map(_.toSet) should be(
+          Right(Set(taxCheck1, taxCheck2))
+        )
+      }
+    }
+
+    "return an error when data can't be parsed when fetching tax check codes based on isExtracted field" in {
+      val taxCheckCode = "code1"
+
+      val invalidData = Json.parse(s"""{
+                                      | "taxCheckData" : {
+                                      | 	"applicantDetails" : {
+                                      | 		"ggCredId" : "ggCredId",
+                                      | 		"crn" : ""
+                                      | 	}
+                                      | },
+                                      | "taxCheckCode" : "$taxCheckCode",
+                                      | "expiresAfter" : "2021-09-24",
+                                      | "isExtracted" : false
+                                      |}""".stripMargin)
+
+      // insert invalid data
+      val create: Future[DatabaseUpdate[Cache]] =
+        taxCheckStore.cacheRepository.createOrUpdate(
+          Id(taxCheckCode),
+          "hec-tax-check",
+          invalidData
+        )
+      await(create).writeResult.inError shouldBe false
+
+      await(taxCheckStore.getAllTaxCheckCodesByExtractedStatus(false).value).isLeft shouldBe true
     }
   }
 
