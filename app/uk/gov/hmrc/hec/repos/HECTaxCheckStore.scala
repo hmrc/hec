@@ -27,6 +27,7 @@ import play.api.libs.json.{JsError, JsSuccess, Json, JsonValidationError}
 import play.modules.reactivemongo.ReactiveMongoComponent
 import reactivemongo.api.indexes.{Index, IndexType}
 import reactivemongo.bson.BSONDocument
+import reactivemongo.core.errors.GenericDatabaseException
 import uk.gov.hmrc.cache.model.Id
 import uk.gov.hmrc.cache.repository.CacheMongoRepository
 import uk.gov.hmrc.hec.models.ids.GGCredId
@@ -77,9 +78,9 @@ class HECTaxCheckStoreImpl @Inject() (
   private val isExtractedField: String = s"data.$key.isExtracted"
 
   private val hecIndexes = Seq(
-    Index(Seq(ggCredIdField -> IndexType.Ascending)),
+    Index(Seq("ggCredId" -> IndexType.Ascending)),
     Index(
-      Seq(isExtractedField -> IndexType.Ascending),
+      Seq("isExtracted" -> IndexType.Ascending),
       partialFilter = Some(BSONDocument("isExtractedField" -> false))
     )
   )
@@ -93,7 +94,33 @@ class HECTaxCheckStoreImpl @Inject() (
       mongo.mongoConnector.db,
       ec
     ) {
-      override def indexes: Seq[Index] = hecIndexes
+
+      //TODO temporary till the issue is resolved by the team owning cacheRepository code
+      //issue- indexes were not getting created
+      @SuppressWarnings(Array("org.wartremover.warts.Throw"))
+      private def ensureIndex(index: Index)(implicit ec: ExecutionContext): Future[Boolean] =
+        collection.indexesManager
+          .create(index)
+          .map { wr =>
+            if (!wr.ok) {
+              val msg      = wr.writeErrors.mkString(", ")
+              val maybeMsg = if (msg.contains("E11000")) {
+                // this is for backwards compatibility to mongodb 2.6.x
+
+                throw GenericDatabaseException(msg, wr.code)
+              } else Some(msg)
+              logger.error(s"$message (${index.eventualName}) : '${maybeMsg.map(_.toString)}'")
+            }
+            wr.ok
+          }
+          .recover { case t =>
+            logger.error(s"$message (${index.eventualName})", t)
+            false
+          }
+
+      override def ensureIndexes(implicit ec: ExecutionContext): Future[Seq[Boolean]] =
+        Future.sequence(indexes.map(ensureIndex))
+      override def indexes: Seq[Index]                                                = hecIndexes
     }
   }
 
