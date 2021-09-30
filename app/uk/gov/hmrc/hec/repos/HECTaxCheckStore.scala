@@ -81,7 +81,7 @@ class HECTaxCheckStoreImpl @Inject() (
     Index(Seq("ggCredId" -> IndexType.Ascending)),
     Index(
       Seq("isExtracted" -> IndexType.Ascending),
-      partialFilter = Some(BSONDocument("isExtractedField" -> false))
+      partialFilter = Some(BSONDocument("isExtracted" -> false))
     )
   )
 
@@ -118,9 +118,11 @@ class HECTaxCheckStoreImpl @Inject() (
             false
           }
 
-      override def ensureIndexes(implicit ec: ExecutionContext): Future[Seq[Boolean]] =
+      override def ensureIndexes(implicit ec: ExecutionContext): Future[Seq[Boolean]] = {
+        super.ensureIndexes
         Future.sequence(indexes.map(ensureIndex))
-      override def indexes: Seq[Index]                                                = hecIndexes
+      }
+      override def indexes: Seq[Index]                                                      = hecIndexes
     }
   }
 
