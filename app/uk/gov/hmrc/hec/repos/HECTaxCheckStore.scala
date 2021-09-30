@@ -22,9 +22,11 @@ import cats.syntax.either._
 import com.google.inject.{ImplementedBy, Inject, Singleton}
 import configs.syntax._
 import play.api.Configuration
+import play.api.libs.json.Json.JsValueWrapper
 import play.api.libs.json.{JsError, JsSuccess, Json, JsonValidationError}
 import play.modules.reactivemongo.ReactiveMongoComponent
 import reactivemongo.api.indexes.{Index, IndexType}
+import reactivemongo.bson.BSONDocument
 import uk.gov.hmrc.cache.model.Id
 import uk.gov.hmrc.cache.repository.CacheMongoRepository
 import uk.gov.hmrc.hec.models.ids.GGCredId
@@ -55,7 +57,7 @@ trait HECTaxCheckStore {
 
   def deleteAll()(implicit hc: HeaderCarrier): EitherT[Future, Error, Unit]
 
-  def getAllTaxCheckCodesByStatus(status: Boolean)(implicit
+  def getAllTaxCheckCodesByExtractedStatus(status: Boolean)(implicit
     hc: HeaderCarrier
   ): EitherT[Future, Error, List[HECTaxCheck]]
 
@@ -75,8 +77,10 @@ class HECTaxCheckStoreImpl @Inject() (
   private val isExtractedField: String = s"data.$key.isExtracted"
 
   private val hecIndexes = Seq(
-    Index(Seq(ggCredIdField -> IndexType.Ascending)),
-    Index(Seq(isExtractedField -> IndexType.Ascending))
+    Index(
+      Seq(ggCredIdField -> IndexType.Ascending),
+      partialFilter = Some(BSONDocument(isExtractedField -> BSONDocument(f"$$exists" -> false)))
+    )
   )
 
   val cacheRepository: CacheMongoRepository = {
@@ -129,34 +133,11 @@ class HECTaxCheckStoreImpl @Inject() (
     */
   def getTaxCheckCodes(ggCredId: GGCredId)(implicit
     hc: HeaderCarrier
-  ): EitherT[Future, Error, List[HECTaxCheck]] =
-    EitherT(
-      preservingMdc {
-        cacheRepository
-          .find(ggCredIdField -> ggCredId.value)
-          .map { caches =>
-            val jsons = caches
-              .flatMap(_.data.toList)
-              .map(json => (json \ key).validate[HECTaxCheck])
+  ): EitherT[Future, Error, List[HECTaxCheck]] = find(ggCredIdField -> ggCredId.value)
 
-            val (valid, invalid) =
-              jsons.foldLeft((List.empty[HECTaxCheck], Seq.empty[JsonValidationError])) { (acc, json) =>
-                val (taxChecks, errors) = acc
-                json match {
-                  case JsSuccess(value, _)       => (value +: taxChecks, errors)
-                  case JsError(validationErrors) => (taxChecks, errors ++ validationErrors.flatMap(_._2))
-                }
-              }
-
-            val errorStr = invalid.map(_.message).mkString("; ")
-            if (invalid.nonEmpty) {
-              logger.warn(s"${invalid.size} results failed json parsing - $errorStr")
-            }
-
-            Either.cond(invalid.isEmpty, valid, Error(Left(errorStr)))
-          }
-      }
-    )
+  def getAllTaxCheckCodesByExtractedStatus(isExtracted: Boolean)(implicit
+    hc: HeaderCarrier
+  ): EitherT[Future, Error, List[HECTaxCheck]] = find(isExtractedField -> isExtracted)
 
   def store(
     taxCheck: HECTaxCheck
@@ -214,33 +195,34 @@ class HECTaxCheckStoreImpl @Inject() (
       }
     )
 
-  override def getAllTaxCheckCodesByStatus(
-    status: Boolean
-  )(implicit hc: HeaderCarrier): EitherT[Future, Error, List[HECTaxCheck]] = EitherT(
-    preservingMdc {
-      cacheRepository
-        .find(isExtractedField -> status)
-        .map { caches =>
-          val jsons = caches
-            .flatMap(_.data.toList)
-            .map(json => (json \ key).validate[HECTaxCheck])
+  private def find(
+    query: (String, JsValueWrapper)
+  ): EitherT[Future, Error, List[HECTaxCheck]] =
+    EitherT(
+      preservingMdc {
+        cacheRepository
+          .find(query)
+          .map { caches =>
+            val jsons = caches
+              .flatMap(_.data.toList)
+              .map(json => (json \ key).validate[HECTaxCheck])
 
-          val (valid, invalid) =
-            jsons.foldLeft((List.empty[HECTaxCheck], Seq.empty[JsonValidationError])) { (acc, json) =>
-              val (taxChecks, errors) = acc
-              json match {
-                case JsSuccess(value, _)       => (value +: taxChecks, errors)
-                case JsError(validationErrors) => (taxChecks, errors ++ validationErrors.flatMap(_._2))
+            val (valid, invalid) =
+              jsons.foldLeft((List.empty[HECTaxCheck], Seq.empty[JsonValidationError])) { (acc, json) =>
+                val (taxChecks, errors) = acc
+                json match {
+                  case JsSuccess(value, _)       => (value +: taxChecks, errors)
+                  case JsError(validationErrors) => (taxChecks, errors ++ validationErrors.flatMap(_._2))
+                }
               }
+
+            val errorStr = invalid.map(_.message).mkString("; ")
+            if (invalid.nonEmpty) {
+              logger.warn(s"${invalid.size} results failed json parsing - $errorStr")
             }
 
-          val errorStr = invalid.map(_.message).mkString("; ")
-          if (invalid.nonEmpty) {
-            logger.warn(s"${invalid.size} results failed json parsing - $errorStr")
+            Either.cond(invalid.isEmpty, valid, Error(Left(errorStr)))
           }
-
-          Either.cond(invalid.isEmpty, valid, Error(Left(errorStr)))
-        }
-    }
-  )
+      }
+    )
 }

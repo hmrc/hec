@@ -33,7 +33,7 @@ import uk.gov.hmrc.hec.services.HecTaxCheckExtractionServiceImplSpec.{TestHecTax
 import uk.gov.hmrc.hec.services.HecTaxCheckExtractionServiceImplSpec.TestHecTaxCheckScheduleService.{RunJobRequest, RunJobResponse}
 import uk.gov.hmrc.hec.services.HecTaxCheckExtractionServiceImplSpec.TestTimeCalculator.{TimeUntilRequest, TimeUntilResponse}
 import uk.gov.hmrc.hec.services.HecTaxCheckExtractionServiceImplSpec.TestScheduler.JobScheduledOnce
-import uk.gov.hmrc.hec.services.scheduleService.{HECTaxCheckExtractionContext, HECTaxCheckExtractionService, HecTaxCheckScheduleService}
+import uk.gov.hmrc.hec.services.scheduleService.{HECTaxCheckExtractionContext, HECTaxCheckScheduleService, HecTaxCheckExtractionService}
 import uk.gov.hmrc.http.HeaderCarrier
 
 import java.time.format.DateTimeFormatter
@@ -103,7 +103,7 @@ class HecTaxCheckExtractionServiceImplSpec
       // stick in a future to let the scheduler run on a different thread - if it runs on the same thread
       // a timeout will occur because the scheduler is expecting a `TimeUntilResponse` before continuing
       val _ = Future {
-        new HECTaxCheckExtractionService(
+        new HECTaxCheckScheduleService(
           testScheduleProvider,
           testTimeCalculator,
           testHecTaxCheckScheduleService,
@@ -119,14 +119,11 @@ class HecTaxCheckExtractionServiceImplSpec
 
       // advance time to just before the job is scheduled to run and make sure the job hasn't run yet
       virtualTime.advance(1.minute.minus(1.milli))
-      println("1")
-      //testProbe.expectNoMessage()
-      println("2")
+      testProbe.expectNoMessage()
       // advance time to when the job should be run
       virtualTime.advance(1.milli)
       testProbe.expectMsg(RunJobRequest)
       testProbe.reply(RunJobResponse(Some(Left(Error("")))))
-      println("1")
 
       // the next job should be scheduled after the current job has run. Repeat the above
       testProbe.expectMsg(TimeUntilRequest(jobRunTime, ZoneId.of("Europe/London")))
@@ -180,7 +177,7 @@ object HecTaxCheckExtractionServiceImplSpec {
     override val scheduler: Scheduler = virtualTime.scheduler
   }
 
-  class TestHecTaxCheckScheduleService(reportTo: ActorRef) extends HecTaxCheckScheduleService {
+  class TestHecTaxCheckScheduleService(reportTo: ActorRef) extends HecTaxCheckExtractionService {
 
     def lockAndExtractJob(): Future[Option[Either[models.Error, List[HECTaxCheck]]]] =
       (reportTo ? RunJobRequest).mapTo[RunJobResponse].map(_.result)(globalExecutionContext)

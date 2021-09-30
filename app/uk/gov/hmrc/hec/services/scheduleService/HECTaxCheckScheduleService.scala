@@ -21,7 +21,6 @@ import play.api.Configuration
 import uk.gov.hmrc.hec.actors.TimeCalculator
 import uk.gov.hmrc.hec.models
 import uk.gov.hmrc.hec.models.SchedulerProvider
-import uk.gov.hmrc.hec.services.ResourceLockedException
 import uk.gov.hmrc.hec.util.Logging
 
 import java.time.{LocalTime, ZoneId}
@@ -29,10 +28,10 @@ import scala.concurrent.duration.FiniteDuration
 import scala.util.{Failure, Success}
 
 @Singleton
-class HECTaxCheckExtractionService @Inject() (
+class HECTaxCheckScheduleService @Inject() (
   schedulerProvider: SchedulerProvider,
   timeCalculator: TimeCalculator,
-  hecTaxCheckScheduleService: HecTaxCheckScheduleService,
+  hecTaxCheckExtractionService: HecTaxCheckExtractionService,
   config: Configuration
 )(implicit
   hECTaxCheckExtractionContext: HECTaxCheckExtractionContext
@@ -44,7 +43,7 @@ class HECTaxCheckExtractionService @Inject() (
   private def timeUntilNextJob(): FiniteDuration = timeCalculator.timeUntil(jobStartTime, extractionTimeZone)
 
   def scheduleNextJob(): Unit = {
-    val _ = schedulerProvider.scheduler.scheduleOnce(timeUntilNextJob())(runScheduledJob)(hECTaxCheckExtractionContext)
+    val _ = schedulerProvider.scheduler.scheduleOnce(timeUntilNextJob())(runScheduledJob)
   }
 
   scheduleNextJob()
@@ -53,7 +52,7 @@ class HECTaxCheckExtractionService @Inject() (
   //Once that is done, call the scheduleNextJob() again to schedule the next job
   // as per the extraction time in conf
   def runScheduledJob(): Unit =
-    hecTaxCheckScheduleService.lockAndExtractJob().onComplete { result =>
+    hecTaxCheckExtractionService.lockAndExtractJob().onComplete { result =>
       result match {
         case Success(mayBeValue) =>
           mayBeValue match {
@@ -75,3 +74,5 @@ class HECTaxCheckExtractionService @Inject() (
     }
 
 }
+
+class ResourceLockedException extends Exception("The resource is already locked by another request")

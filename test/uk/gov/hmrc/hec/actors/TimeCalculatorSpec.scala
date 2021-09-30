@@ -52,7 +52,3 @@ class TimeCalculatorSpec extends AnyWordSpec with Matchers with MockFactory {
   }
 
 }
-
-//val t2          = LocalTime.of(13, 21, 22)
-//val timeUntilT2 = 23.hours + 57.minutes + 22.seconds
-//calculator.timeUntil(t2, zoneId) shouldBe timeUntilT2

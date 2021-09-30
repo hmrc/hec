@@ -101,7 +101,8 @@ class TaxCheckControllerSpec extends ControllerSpec {
            |  "licenceType" : "${r.licenceType.toString}",
            |  "verifier" : $verifierJson,
            |  "expiresAfter" : "${toJsonString(r.expiresAfter)}",
-           |  "createDate" : "${r.createDate}"
+           |  "createDate" : "${r.createDate}",
+           |  "isExtracted": false
            |}
            |""".stripMargin
       }
@@ -115,7 +116,8 @@ class TaxCheckControllerSpec extends ControllerSpec {
           LicenceType.DriverOfTaxisAndPrivateHires,
           Right(dateOfBirth),
           TimeUtils.today(),
-          TimeUtils.now()
+          TimeUtils.now(),
+          false
         )
         val body        = Json.parse(requestJsonString(request))
 
@@ -153,11 +155,12 @@ class TaxCheckControllerSpec extends ControllerSpec {
         "there is an error saving the tax check" in {
           val dateOfBirth = DateOfBirth(TimeUtils.today())
           val request     = SaveTaxCheckRequest(
-            validTaxCheckCode,
-            LicenceType.DriverOfTaxisAndPrivateHires,
-            Right(dateOfBirth),
-            TimeUtils.today(),
-            TimeUtils.now()
+            taxCheckCode = validTaxCheckCode,
+            licenceType = LicenceType.DriverOfTaxisAndPrivateHires,
+            verifier = Right(dateOfBirth),
+            expiresAfter = TimeUtils.today(),
+            createDate = TimeUtils.now(),
+            isExtracted = false
           )
           val body        = Json.parse(requestJsonString(request))
 
@@ -179,7 +182,8 @@ class TaxCheckControllerSpec extends ControllerSpec {
             LicenceType.DriverOfTaxisAndPrivateHires,
             Right(dateOfBirth),
             TimeUtils.today(),
-            TimeUtils.now()
+            TimeUtils.now(),
+            false
           )
           val body        = Json.parse(requestJsonString(request))
 
@@ -196,7 +200,8 @@ class TaxCheckControllerSpec extends ControllerSpec {
             LicenceType.DriverOfTaxisAndPrivateHires,
             Left(crn),
             TimeUtils.today(),
-            TimeUtils.now()
+            TimeUtils.now(),
+            false
           )
           val body    = Json.parse(requestJsonString(request))
 
@@ -259,7 +264,7 @@ class TaxCheckControllerSpec extends ControllerSpec {
               Some(IncomeDeclared.Yes)
             )
           )
-          val taxCheck     = HECTaxCheck(taxCheckData, validTaxCheckCode, TimeUtils.today(), TimeUtils.now())
+          val taxCheck     = HECTaxCheck(taxCheckData, validTaxCheckCode, TimeUtils.today(), TimeUtils.now(), false)
 
           mockGetTaxCheck(validTaxCheckCode)(Right(Some(taxCheck)))
 

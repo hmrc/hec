@@ -25,7 +25,7 @@ final case class HECTaxCheck(
   taxCheckCode: HECTaxCheckCode,
   expiresAfter: LocalDate,
   createDate: ZonedDateTime,
-  isExtracted: Boolean = false
+  isExtracted: Boolean
 )
 
 object HECTaxCheck {

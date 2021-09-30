@@ -66,7 +66,7 @@ class HECTaxCheckStoreImplSpec extends AnyWordSpec with Matchers with Eventually
     val taxCheckCode1 = HECTaxCheckCode("code1")
     val taxCheckCode2 = HECTaxCheckCode("code12")
     val taxCheckCode3 = HECTaxCheckCode("code13")
-    val taxCheck1     = HECTaxCheck(taxCheckData, taxCheckCode1, TimeUtils.today(), TimeUtils.now())
+    val taxCheck1     = HECTaxCheck(taxCheckData, taxCheckCode1, TimeUtils.today(), TimeUtils.now(), false)
     val taxCheck2     = taxCheck1.copy(taxCheckCode = taxCheckCode2)
     val taxCheck3     = taxCheck1.copy(taxCheckCode = taxCheckCode3, isExtracted = true)
 
@@ -187,7 +187,7 @@ class HECTaxCheckStoreImplSpec extends AnyWordSpec with Matchers with Eventually
       await(taxCheckStore.store(taxCheck2).value) shouldBe Right(())
       await(taxCheckStore.store(taxCheck3).value) shouldBe Right(())
       eventually {
-        await(taxCheckStore.getAllTaxCheckCodesByStatus(false).value).map(_.toSet) should be(
+        await(taxCheckStore.getAllTaxCheckCodesByExtractedStatus(false).value).map(_.toSet) should be(
           Right(Set(taxCheck1, taxCheck2))
         )
       }
@@ -217,7 +217,7 @@ class HECTaxCheckStoreImplSpec extends AnyWordSpec with Matchers with Eventually
         )
       await(create).writeResult.inError shouldBe false
 
-      await(taxCheckStore.getAllTaxCheckCodesByStatus(false).value).isLeft shouldBe true
+      await(taxCheckStore.getAllTaxCheckCodesByExtractedStatus(false).value).isLeft shouldBe true
     }
   }
 

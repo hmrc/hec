@@ -37,9 +37,11 @@ trait TaxCheckService {
 
   def saveTaxCheck(taxCheckData: HECTaxCheckData)(implicit hc: HeaderCarrier): EitherT[Future, Error, HECTaxCheck]
 
-  def updateTaxCheck(taxCheck: HECTaxCheck)(implicit hc: HeaderCarrier): EitherT[Future, Error, HECTaxCheck]
+  def updateHecTaxCheck(
+    updatedHecTaxCheck: HECTaxCheck
+  )(implicit hc: HeaderCarrier): EitherT[Future, Error, HECTaxCheck]
 
-  def updateAllHecTaxCheckStatus(list: List[HECTaxCheck])(implicit
+  def updateAllHecTaxCheck(list: List[HECTaxCheck])(implicit
     hc: HeaderCarrier
   ): EitherT[Future, models.Error, List[HECTaxCheck]]
 
@@ -51,7 +53,7 @@ trait TaxCheckService {
     hc: HeaderCarrier
   ): EitherT[Future, Error, List[TaxCheckListItem]]
 
-  def getAllTaxCheckCodesByStatus(isExtracted: Boolean)(implicit
+  def getAllTaxCheckCodesByExtractedStatus(isExtracted: Boolean)(implicit
     hc: HeaderCarrier
   ): EitherT[Future, Error, List[HECTaxCheck]]
 
@@ -75,20 +77,20 @@ class TaxCheckServiceImpl @Inject() (
     val taxCheckCode = taxCheckCodeGeneratorService.generateTaxCheckCode()
     val expiryDate   = timeProvider.currentDate.plusDays(taxCheckCodeExpiresAfterDays)
     val createDate   = timeProvider.currentDateTime
-    val taxCheck     = HECTaxCheck(taxCheckData, taxCheckCode, expiryDate, createDate)
+    val taxCheck     = HECTaxCheck(taxCheckData, taxCheckCode, expiryDate, createDate, false)
 
     taxCheckStore.store(taxCheck).map(_ => taxCheck)
   }
 
-  def updateTaxCheck(
-    taxCheck: HECTaxCheck
+  def updateHecTaxCheck(
+    updatedHecTaxCheck: HECTaxCheck
   )(implicit hc: HeaderCarrier): EitherT[Future, Error, HECTaxCheck] =
-    taxCheckStore.store(taxCheck.copy(isExtracted = true)).map(_ => taxCheck)
+    taxCheckStore.store(updatedHecTaxCheck).map(_ => updatedHecTaxCheck)
 
-  def updateAllHecTaxCheckStatus(list: List[HECTaxCheck])(implicit
+  def updateAllHecTaxCheck(list: List[HECTaxCheck])(implicit
     hc: HeaderCarrier
   ): EitherT[Future, models.Error, List[HECTaxCheck]] =
-    list.traverse[EitherT[Future, models.Error, *], HECTaxCheck](updateTaxCheck)
+    list.traverse[EitherT[Future, models.Error, *], HECTaxCheck](updateHecTaxCheck)
 
   def matchTaxCheck(taxCheckMatchRequest: HECTaxCheckMatchRequest)(implicit
     hc: HeaderCarrier
@@ -143,8 +145,8 @@ class TaxCheckServiceImpl @Inject() (
       )
   }
 
-  override def getAllTaxCheckCodesByStatus(isExtracted: Boolean)(implicit
+  override def getAllTaxCheckCodesByExtractedStatus(isExtracted: Boolean)(implicit
     hc: HeaderCarrier
   ): EitherT[Future, Error, List[HECTaxCheck]] =
-    taxCheckStore.getAllTaxCheckCodesByStatus(isExtracted)
+    taxCheckStore.getAllTaxCheckCodesByExtractedStatus(isExtracted)
 }
