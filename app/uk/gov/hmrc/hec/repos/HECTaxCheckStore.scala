@@ -118,11 +118,10 @@ class HECTaxCheckStoreImpl @Inject() (
             false
           }
 
-      override def ensureIndexes(implicit ec: ExecutionContext): Future[Seq[Boolean]] = {
-        val _ = super.ensureIndexes
-        Future.sequence(indexes.map(ensureIndex))
-      }
-      override def indexes: Seq[Index]                                                      = hecIndexes
+      override def ensureIndexes(implicit ec: ExecutionContext): Future[Seq[Boolean]] =
+        super.ensureIndexes.flatMap(_ => Future.sequence(indexes.map(ensureIndex)))
+
+      override def indexes: Seq[Index] = hecIndexes
     }
   }
 
