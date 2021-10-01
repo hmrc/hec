@@ -97,7 +97,7 @@ class HECTaxCheckStoreImpl @Inject() (
 
       //TODO temporary till the issue is resolved by the team owning cacheRepository code
       //issue- indexes were not getting created
-      @SuppressWarnings(Array("org.wartremover.warts.Throw"))
+      @SuppressWarnings(Array("org.wartremover.warts.Throw", "org.wartremover.warts.NonUnitStatements"))
       private def ensureIndex(index: Index)(implicit ec: ExecutionContext): Future[Boolean] =
         collection.indexesManager
           .create(index)
@@ -118,11 +118,10 @@ class HECTaxCheckStoreImpl @Inject() (
             false
           }
 
-      override def ensureIndexes(implicit ec: ExecutionContext): Future[Seq[Boolean]] = {
-        super.ensureIndexes
-        Future.sequence(indexes.map(ensureIndex))
-      }
-      override def indexes: Seq[Index]                                                      = hecIndexes
+      override def ensureIndexes(implicit ec: ExecutionContext): Future[Seq[Boolean]] =
+        super.ensureIndexes.flatMap(_ => Future.sequence(indexes.map(ensureIndex)))
+
+      override def indexes: Seq[Index] = hecIndexes
     }
   }
 
