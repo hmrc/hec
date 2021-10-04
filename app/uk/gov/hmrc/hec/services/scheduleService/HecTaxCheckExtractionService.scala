@@ -29,7 +29,7 @@ import uk.gov.hmrc.mongo.lock.{LockService, MongoLockRepository}
 
 import javax.inject.Singleton
 import scala.concurrent.Future
-import scala.concurrent.duration.{Duration, MINUTES}
+import scala.concurrent.duration.FiniteDuration
 
 @ImplementedBy(classOf[HecTaxCheckExtractionServiceImpl])
 trait HecTaxCheckExtractionService {
@@ -53,7 +53,7 @@ class HecTaxCheckExtractionServiceImpl @Inject() (
   val lockService: LockService = LockService(
     mongoLockRepository,
     lockId = "hecTaxChecks",
-    ttl = Duration(config.get[Long]("mongo-lock.forceLockReleaseAfter"), MINUTES)
+    ttl = config.get[FiniteDuration]("mongo-lock.force-lock-release-after")
   )
 
   override def lockAndExtractJob(): Future[Option[Either[models.Error, List[HECTaxCheck]]]] =

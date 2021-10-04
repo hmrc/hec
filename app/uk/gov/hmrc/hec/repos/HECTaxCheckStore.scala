@@ -16,17 +16,12 @@
 
 package uk.gov.hmrc.hec.repos
 
-import akka.util.Helpers.Requiring
 import cats.data.{EitherT, OptionT}
 import cats.instances.either._
 import cats.syntax.either._
 import com.google.inject.{ImplementedBy, Inject, Singleton}
 import org.mongodb.scala.bson.BsonDocument
-import org.mongodb.scala.model.{IndexModel, IndexOptions, Indexes}
-import uk.gov.hmrc.mongo.MongoUtils
-
-import java.util.concurrent.TimeUnit
-import org.mongodb.scala.model.Filters
+import org.mongodb.scala.model.{Filters, IndexModel, IndexOptions, Indexes}
 import play.api.Configuration
 import play.api.libs.json.{JsError, JsSuccess, JsonValidationError}
 import uk.gov.hmrc.hec.models.ids.GGCredId
@@ -34,7 +29,7 @@ import uk.gov.hmrc.hec.models.{Error, HECTaxCheck, HECTaxCheckCode}
 import uk.gov.hmrc.hec.util.Logging
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.mongo.cache.{CacheIdType, DataKey, MongoCacheRepository}
-import uk.gov.hmrc.mongo.{CurrentTimestampSupport, MongoComponent}
+import uk.gov.hmrc.mongo.{CurrentTimestampSupport, MongoComponent, MongoUtils}
 import uk.gov.hmrc.play.http.logging.Mdc.preservingMdc
 
 import scala.concurrent.duration._
@@ -75,7 +70,7 @@ class HECTaxCheckStoreImpl @Inject() (
       mongoComponent = mongo,
       replaceIndexes = true,
       collectionName = "hecTaxChecks",
-      ttl = configuration.get[FiniteDuration]("hec-tax-check.ttl").value,
+      ttl = configuration.get[FiniteDuration]("hec-tax-check.ttl"),
       timestampSupport = new CurrentTimestampSupport(), // Provide a different one for testing
       cacheIdType = CacheIdType.SimpleCacheId // Here, CacheId to be represented with `String`
     )
@@ -85,18 +80,6 @@ class HECTaxCheckStoreImpl @Inject() (
   val key: String                      = "hec-tax-check"
   private val ggCredIdField: String    = s"data.$key.taxCheckData.applicantDetails.ggCredId"
   private val isExtractedField: String = s"data.$key.isExtracted"
-
-  //had to create default index on lastUpdated explicitly as it was not getting created .
-  //calling super.index was calling indexes field of PlayMongoRepository, which is final and hence was giving run time error.
-  def defaultIndexes: Seq[IndexModel] = Seq(
-    IndexModel(
-      Indexes.ascending("modifiedDetails.lastUpdated"),
-      IndexOptions()
-        .background(false)
-        .name("lastUpdatedIndex")
-        .expireAfter((configuration.get[FiniteDuration]("hec-tax-check.ttl").value).toMillis, TimeUnit.MILLISECONDS)
-    )
-  )
 
   //indexes for hecTaxChecks collection
   def mongoNewIndexes: Seq[IndexModel] = Seq(
@@ -112,7 +95,7 @@ class HECTaxCheckStoreImpl @Inject() (
   )
 
   override def ensureIndexes: Future[Seq[String]] =
-    MongoUtils.ensureIndexes(collection, defaultIndexes ++ mongoNewIndexes, false)
+    super.ensureIndexes.flatMap(_ => MongoUtils.ensureIndexes(collection, mongoNewIndexes, false))
 
   def get(taxCheckCode: HECTaxCheckCode)(implicit
     hc: HeaderCarrier
@@ -123,8 +106,8 @@ class HECTaxCheckStoreImpl @Inject() (
           .map { maybeCache =>
             val response: OptionT[Either[Error, *], HECTaxCheck] = for {
               cache ← OptionT.fromOption[Either[Error, *]](maybeCache)
-              //even if there is no data , cache returns with cache {"id" : "code1", data : {}}
-              //so added a logic if there is no data at all, then return None
+              //even if there is no data , cache returns with -> {"id" : "code1", data : {}}
+              //so added a logic if the json is empty, then return None
               // but if there is, then proceed to validate json
               cacheLength = cache.data.keys.size
               data       <- OptionT.fromOption[Either[Error, *]](if (cacheLength == 0) None else Some(cache.data))
