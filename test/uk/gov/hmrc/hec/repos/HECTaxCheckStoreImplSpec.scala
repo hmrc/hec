@@ -23,7 +23,6 @@ import org.scalatest.wordspec.AnyWordSpec
 import play.api.Configuration
 import play.api.libs.json.{JsNumber, JsObject, Json}
 import play.api.test.Helpers._
-import uk.gov.hmrc.cache.model.{Cache, Id}
 import uk.gov.hmrc.hec.models.ApplicantDetails.CompanyApplicantDetails
 import uk.gov.hmrc.hec.models.HECTaxCheckData.CompanyHECTaxCheckData
 import uk.gov.hmrc.hec.models.TaxDetails.CompanyTaxDetails
@@ -32,14 +31,14 @@ import uk.gov.hmrc.hec.models.licence.{LicenceDetails, LicenceTimeTrading, Licen
 import uk.gov.hmrc.hec.models.{HECTaxCheck, HECTaxCheckCode}
 import uk.gov.hmrc.hec.util.TimeUtils
 import uk.gov.hmrc.http.HeaderCarrier
-import uk.gov.hmrc.mongo.DatabaseUpdate
+import uk.gov.hmrc.mongo.cache.{CacheItem, DataKey}
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
 class HECTaxCheckStoreImplSpec extends AnyWordSpec with Matchers with Eventually with MongoSupport {
 
-  val config = Configuration(
+  val config: Configuration = Configuration(
     ConfigFactory.parseString(
       """
         | hec-tax-check.ttl = 1 day
@@ -47,7 +46,7 @@ class HECTaxCheckStoreImplSpec extends AnyWordSpec with Matchers with Eventually
     )
   )
 
-  val taxCheckStore = new HECTaxCheckStoreImpl(reactiveMongoComponent, config)
+  val taxCheckStore = new HECTaxCheckStoreImpl(mongoComponent, config)
 
   implicit val hc: HeaderCarrier = HeaderCarrier()
 
@@ -127,15 +126,12 @@ class HECTaxCheckStoreImplSpec extends AnyWordSpec with Matchers with Eventually
     "return an error" when {
 
       "the data in mongo cannot be parsed" in {
-        val taxCheckCode                          = HECTaxCheckCode("invalid-data")
-        val invalidData                           = JsObject(Map("hec-tax-check" -> JsNumber(1)))
-        val create: Future[DatabaseUpdate[Cache]] =
-          taxCheckStore.cacheRepository.createOrUpdate(
-            Id(taxCheckCode.value),
-            "hec-tax-check",
-            invalidData
-          )
-        await(create).writeResult.inError                   shouldBe false
+        val taxCheckCode              = HECTaxCheckCode("invalid-data")
+        val invalidData               = JsObject(Map("hec-tax-check" -> JsNumber(1)))
+        val create: Future[CacheItem] =
+          taxCheckStore.put(taxCheckCode.value)(DataKey("hec-tax-check"), invalidData)
+
+        await(create).id                                    shouldBe "invalid-data"
         await(taxCheckStore.get(taxCheckCode).value).isLeft shouldBe true
       }
 
@@ -169,14 +165,7 @@ class HECTaxCheckStoreImplSpec extends AnyWordSpec with Matchers with Eventually
                                    |}""".stripMargin)
 
       // insert invalid data
-      val create: Future[DatabaseUpdate[Cache]] =
-        taxCheckStore.cacheRepository.createOrUpdate(
-          Id(taxCheckCode),
-          "hec-tax-check",
-          invalidData
-        )
-      await(create).writeResult.inError shouldBe false
-
+      taxCheckStore.put(taxCheckCode)(DataKey("hec-tax-check"), invalidData)
       await(taxCheckStore.getTaxCheckCodes(GGCredId(ggCredId)).value).isLeft shouldBe true
     }
 
@@ -209,14 +198,8 @@ class HECTaxCheckStoreImplSpec extends AnyWordSpec with Matchers with Eventually
                                       |}""".stripMargin)
 
       // insert invalid data
-      val create: Future[DatabaseUpdate[Cache]] =
-        taxCheckStore.cacheRepository.createOrUpdate(
-          Id(taxCheckCode),
-          "hec-tax-check",
-          invalidData
-        )
-      await(create).writeResult.inError shouldBe false
 
+      taxCheckStore.put(taxCheckCode)(DataKey("hec-tax-check"), invalidData)
       await(taxCheckStore.getAllTaxCheckCodesByExtractedStatus(false).value).isLeft shouldBe true
     }
   }

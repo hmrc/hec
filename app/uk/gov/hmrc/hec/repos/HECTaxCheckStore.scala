@@ -20,20 +20,16 @@ import cats.data.{EitherT, OptionT}
 import cats.instances.either._
 import cats.syntax.either._
 import com.google.inject.{ImplementedBy, Inject, Singleton}
-import configs.syntax._
+import org.mongodb.scala.bson.BsonDocument
+import org.mongodb.scala.model.{Filters, IndexModel, IndexOptions, Indexes}
 import play.api.Configuration
-import play.api.libs.json.Json.JsValueWrapper
-import play.api.libs.json.{JsError, JsSuccess, Json, JsonValidationError}
-import play.modules.reactivemongo.ReactiveMongoComponent
-import reactivemongo.api.indexes.{Index, IndexType}
-import reactivemongo.bson.BSONDocument
-import reactivemongo.core.errors.GenericDatabaseException
-import uk.gov.hmrc.cache.model.Id
-import uk.gov.hmrc.cache.repository.CacheMongoRepository
+import play.api.libs.json.{JsError, JsSuccess, JsonValidationError}
 import uk.gov.hmrc.hec.models.ids.GGCredId
 import uk.gov.hmrc.hec.models.{Error, HECTaxCheck, HECTaxCheckCode}
 import uk.gov.hmrc.hec.util.Logging
 import uk.gov.hmrc.http.HeaderCarrier
+import uk.gov.hmrc.mongo.cache.{CacheIdType, DataKey, MongoCacheRepository}
+import uk.gov.hmrc.mongo.{CurrentTimestampSupport, MongoComponent, MongoUtils}
 import uk.gov.hmrc.play.http.logging.Mdc.preservingMdc
 
 import scala.concurrent.duration._
@@ -66,76 +62,55 @@ trait HECTaxCheckStore {
 
 @Singleton
 class HECTaxCheckStoreImpl @Inject() (
-  mongo: ReactiveMongoComponent,
+  mongo: MongoComponent,
   configuration: Configuration
 )(implicit
   ec: ExecutionContext
-) extends HECTaxCheckStore
+) extends MongoCacheRepository(
+      mongoComponent = mongo,
+      replaceIndexes = true,
+      collectionName = "hecTaxChecks",
+      ttl = configuration.get[FiniteDuration]("hec-tax-check.ttl"),
+      timestampSupport = new CurrentTimestampSupport(), // Provide a different one for testing
+      cacheIdType = CacheIdType.SimpleCacheId // Here, CacheId to be represented with `String`
+    )
+    with HECTaxCheckStore
     with Logging {
 
   val key: String                      = "hec-tax-check"
   private val ggCredIdField: String    = s"data.$key.taxCheckData.applicantDetails.ggCredId"
   private val isExtractedField: String = s"data.$key.isExtracted"
 
-  private val hecIndexes = Seq(
-    Index(Seq("ggCredId" -> IndexType.Ascending)),
-    Index(
-      Seq("isExtracted" -> IndexType.Ascending),
-      partialFilter = Some(BSONDocument("isExtracted" -> false))
+  //indexes for hecTaxChecks collection
+  def mongoIndexes: Seq[IndexModel] = Seq(
+    IndexModel(
+      Indexes.ascending("ggCredId")
+    ),
+    IndexModel(
+      Indexes.ascending("isExtracted"),
+      IndexOptions()
+        .name("isExtractedIndex")
+        .partialFilterExpression(BsonDocument("isExtracted" -> false))
     )
   )
 
-  val cacheRepository: CacheMongoRepository = {
-    val expireAfter: FiniteDuration = configuration.underlying
-      .get[FiniteDuration]("hec-tax-check.ttl")
-      .value
-
-    new CacheMongoRepository("hecTaxChecks", expireAfter.toSeconds)(
-      mongo.mongoConnector.db,
-      ec
-    ) {
-
-      //TODO temporary till the issue is resolved by the team owning cacheRepository code
-      //issue- indexes were not getting created
-      @SuppressWarnings(Array("org.wartremover.warts.Throw", "org.wartremover.warts.NonUnitStatements"))
-      private def ensureIndex(index: Index)(implicit ec: ExecutionContext): Future[Boolean] =
-        collection.indexesManager
-          .create(index)
-          .map { wr =>
-            if (!wr.ok) {
-              val msg      = wr.writeErrors.mkString(", ")
-              val maybeMsg = if (msg.contains("E11000")) {
-                // this is for backwards compatibility to mongodb 2.6.x
-
-                throw GenericDatabaseException(msg, wr.code)
-              } else Some(msg)
-              logger.error(s"$message (${index.eventualName}) : '${maybeMsg.map(_.toString)}'")
-            }
-            wr.ok
-          }
-          .recover { case t =>
-            logger.error(s"$message (${index.eventualName})", t)
-            false
-          }
-
-      override def ensureIndexes(implicit ec: ExecutionContext): Future[Seq[Boolean]] =
-        super.ensureIndexes.flatMap(_ => Future.sequence(indexes.map(ensureIndex)))
-
-      override def indexes: Seq[Index] = hecIndexes
-    }
-  }
+  override def ensureIndexes: Future[Seq[String]] =
+    super.ensureIndexes.flatMap(_ => MongoUtils.ensureIndexes(collection, mongoIndexes, false))
 
   def get(taxCheckCode: HECTaxCheckCode)(implicit
     hc: HeaderCarrier
   ): EitherT[Future, Error, Option[HECTaxCheck]] =
     EitherT(
       preservingMdc {
-        cacheRepository
-          .findById(Id(taxCheckCode.value))
+        findById(taxCheckCode.value)
           .map { maybeCache =>
             val response: OptionT[Either[Error, *], HECTaxCheck] = for {
               cache ← OptionT.fromOption[Either[Error, *]](maybeCache)
-              data ← OptionT.fromOption[Either[Error, *]](cache.data)
+              //even if there is no data , cache returns with -> {"id" : "code1", data : {}}
+              //so added a logic if the json is empty, then return None
+              // but if there is, then proceed to validate json
+              cacheLength = cache.data.keys.size
+              data       <- OptionT.fromOption[Either[Error, *]](if (cacheLength == 0) None else Some(cache.data))
               result ← OptionT.liftF[Either[Error, *], HECTaxCheck](
                          (data \ key)
                            .validate[HECTaxCheck]
@@ -162,78 +137,56 @@ class HECTaxCheckStoreImpl @Inject() (
     */
   def getTaxCheckCodes(ggCredId: GGCredId)(implicit
     hc: HeaderCarrier
-  ): EitherT[Future, Error, List[HECTaxCheck]] = find(ggCredIdField -> ggCredId.value)
+  ): EitherT[Future, Error, List[HECTaxCheck]] = find[String](ggCredIdField, ggCredId.value)
 
   def getAllTaxCheckCodesByExtractedStatus(isExtracted: Boolean)(implicit
     hc: HeaderCarrier
-  ): EitherT[Future, Error, List[HECTaxCheck]] = find(isExtractedField -> isExtracted)
+  ): EitherT[Future, Error, List[HECTaxCheck]] = find[Boolean](isExtractedField, isExtracted)
 
   def store(
     taxCheck: HECTaxCheck
   )(implicit hc: HeaderCarrier): EitherT[Future, Error, Unit] =
     EitherT(
       preservingMdc {
-        cacheRepository
-          .createOrUpdate(Id(taxCheck.taxCheckCode.value), key, Json.toJson(taxCheck))
-          .map[Either[Error, Unit]] { dbUpdate ⇒
-            if (dbUpdate.writeResult.inError)
-              Left(
-                Error(
-                  dbUpdate.writeResult.errmsg.getOrElse(
-                    "unknown error during inserting tax check in mongo"
-                  )
-                )
-              )
-            else
-              Right(())
-          }
-          .recover { case e ⇒ Left(Error(e)) }
+        put[HECTaxCheck](taxCheck.taxCheckCode.value)(DataKey(key), taxCheck)
+          .map(_ => Right(()))
+          .recover { case e => Left(Error(e)) }
       }
     )
 
   def delete(taxCheckCode: HECTaxCheckCode)(implicit hc: HeaderCarrier): EitherT[Future, Error, Unit] =
     EitherT(
       preservingMdc {
-        cacheRepository
-          .removeById(Id(taxCheckCode.value))
-          .map[Either[Error, Unit]] { writeResult ⇒
-            if (!writeResult.ok)
-              Left(
-                Error(
-                  s"Mongo write error: ${writeResult.writeErrors}"
-                )
-              )
-            else
-              Right(())
-          }
-          .recover { case e ⇒ Left(Error(e)) }
+        delete[HECTaxCheck](taxCheckCode.value)(DataKey(key))
+          .map(Right(_))
+          .recover { case e => Left(Error(e)) }
       }
     )
 
-  def deleteAll()(implicit hc: HeaderCarrier): EitherT[Future, Error, Unit] =
-    EitherT(
-      preservingMdc {
-        cacheRepository.drop
-          .map[Either[Error, Unit]] { success ⇒
-            if (!success)
-              Left(Error("Could not drop mongo collection"))
-            else
-              Right(())
-          }
-          .recover { case e ⇒ Left(Error(e)) }
-      }
-    )
+  def deleteAll()(implicit hc: HeaderCarrier): EitherT[Future, Error, Unit] = EitherT(
+    preservingMdc {
+      collection
+        .drop()
+        .toFuture()
+        .map(_ => ())
+        .map[Either[Error, Unit]](Right(_))
+        .recover { case e => Left(Error(e)) }
+    }
+  )
 
-  private def find(
-    query: (String, JsValueWrapper)
+  private def find[T](
+    fieldName: String,
+    value: T
   ): EitherT[Future, Error, List[HECTaxCheck]] =
     EitherT(
       preservingMdc {
-        cacheRepository
-          .find(query)
+        collection
+          .find(Filters.equal[T](fieldName, value))
+          .toFuture()
           .map { caches =>
             val jsons = caches
-              .flatMap(_.data.toList)
+              .map(_.data)
+              .toList
               .map(json => (json \ key).validate[HECTaxCheck])
 
             val (valid, invalid) =
