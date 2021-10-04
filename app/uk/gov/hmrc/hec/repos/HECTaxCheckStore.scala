@@ -26,7 +26,6 @@ import org.mongodb.scala.model.{IndexModel, IndexOptions, Indexes}
 import uk.gov.hmrc.mongo.MongoUtils
 
 import java.util.concurrent.TimeUnit
-//import org.mongodb.scala.bson.BsonDocument
 import org.mongodb.scala.model.Filters
 import play.api.Configuration
 import play.api.libs.json.{JsError, JsSuccess, JsonValidationError}
@@ -124,7 +123,11 @@ class HECTaxCheckStoreImpl @Inject() (
           .map { maybeCache =>
             val response: OptionT[Either[Error, *], HECTaxCheck] = for {
               cache ← OptionT.fromOption[Either[Error, *]](maybeCache)
-              data = cache.data
+              //even if there is no data , cache returns with cache {"id" : "code1", data : {}}
+              //so added a logic if there is no data at all, then return None
+              // but if there is, then proceed to validate json
+              cacheLength = cache.data.keys.size
+              data       <- OptionT.fromOption[Either[Error, *]](if (cacheLength == 0) None else Some(cache.data))
               result ← OptionT.liftF[Either[Error, *], HECTaxCheck](
                          (data \ key)
                            .validate[HECTaxCheck]
