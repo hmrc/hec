@@ -19,18 +19,17 @@ package uk.gov.hmrc.hec.services.scheduleService
 import cats.data.EitherT
 import cats.implicits._
 import com.google.inject.{ImplementedBy, Inject}
-import org.joda.time.Duration
 import play.api.Configuration
-import play.modules.reactivemongo.ReactiveMongoComponent
 import uk.gov.hmrc.hec.models
 import uk.gov.hmrc.hec.models.HECTaxCheck
 import uk.gov.hmrc.hec.services.TaxCheckService
 import uk.gov.hmrc.hec.util.Logging
 import uk.gov.hmrc.http.HeaderCarrier
-import uk.gov.hmrc.lock.{LockKeeper, LockMongoRepository, LockRepository}
+import uk.gov.hmrc.mongo.lock.{LockService, MongoLockRepository}
 
 import javax.inject.Singleton
 import scala.concurrent.Future
+import scala.concurrent.duration.{Duration, MINUTES}
 
 @ImplementedBy(classOf[HecTaxCheckExtractionServiceImpl])
 trait HecTaxCheckExtractionService {
@@ -42,7 +41,7 @@ trait HecTaxCheckExtractionService {
 @Singleton
 class HecTaxCheckExtractionServiceImpl @Inject() (
   taxCheckService: TaxCheckService,
-  mongo: ReactiveMongoComponent,
+  mongoLockRepository: MongoLockRepository,
   config: Configuration
 )(implicit
   hecTaxCheckExtractionContext: HECTaxCheckExtractionContext
@@ -51,17 +50,14 @@ class HecTaxCheckExtractionServiceImpl @Inject() (
 
   implicit val hc: HeaderCarrier = HeaderCarrier()
 
-  val generateLock: LockKeeper =
-    new LockKeeper {
-
-      override def repo: LockRepository            = LockMongoRepository(mongo.mongoConnector.db)
-      override def lockId: String                  = "hecTaxChecks"
-      override val forceLockReleaseAfter: Duration =
-        Duration.standardMinutes(config.get[Long]("mongo-lock.forceLockReleaseAfter"))
-    }
+  val lockService: LockService = LockService(
+    mongoLockRepository,
+    lockId = "hecTaxChecks",
+    ttl = Duration(config.get[Long]("mongo-lock.forceLockReleaseAfter"), MINUTES)
+  )
 
   override def lockAndExtractJob(): Future[Option[Either[models.Error, List[HECTaxCheck]]]] =
-    generateLock tryLock processHecData
+    lockService.withLock(processHecData)
 
   private def processHecData()(implicit hc: HeaderCarrier): Future[Either[models.Error, List[HECTaxCheck]]] = {
     val result: EitherT[Future, models.Error, List[HECTaxCheck]] = {
