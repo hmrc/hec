@@ -82,7 +82,7 @@ class HECTaxCheckStoreImpl @Inject() (
   private val isExtractedField: String = s"data.$key.isExtracted"
 
   //indexes for hecTaxChecks collection
-  def mongoNewIndexes: Seq[IndexModel] = Seq(
+  def mongoIndexes: Seq[IndexModel] = Seq(
     IndexModel(
       Indexes.ascending("ggCredId")
     ),
@@ -95,7 +95,7 @@ class HECTaxCheckStoreImpl @Inject() (
   )
 
   override def ensureIndexes: Future[Seq[String]] =
-    super.ensureIndexes.flatMap(_ => MongoUtils.ensureIndexes(collection, mongoNewIndexes, false))
+    super.ensureIndexes.flatMap(_ => MongoUtils.ensureIndexes(collection, mongoIndexes, false))
 
   def get(taxCheckCode: HECTaxCheckCode)(implicit
     hc: HeaderCarrier
