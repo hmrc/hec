@@ -157,7 +157,7 @@ class HECTaxCheckStoreImpl @Inject() (
   def delete(taxCheckCode: HECTaxCheckCode)(implicit hc: HeaderCarrier): EitherT[Future, Error, Unit] =
     EitherT(
       preservingMdc {
-        delete[HECTaxCheck](taxCheckCode.value)(DataKey(key))
+        deleteEntity(taxCheckCode.value)
           .map(Right(_))
           .recover { case e => Left(Error(e)) }
       }
