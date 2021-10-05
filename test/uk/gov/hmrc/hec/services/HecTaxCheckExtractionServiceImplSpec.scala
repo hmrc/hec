@@ -92,7 +92,7 @@ class HecTaxCheckExtractionServiceImplSpec
     )
   )
 
-  val jobRunTime: LocalTime = LocalTime.now().withSecond(0).withNano(0)
+  val jobRunTime: LocalTime = LocalTime.now().withSecond(0).withNano(1000000)
   val timeString: String    = jobRunTime.format(DateTimeFormatter.ofPattern("HH:mm"))
   val configuration         = config(timeString)
 
