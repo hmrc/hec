@@ -33,14 +33,16 @@ import uk.gov.hmrc.hec.testonly.models.SaveTaxCheckRequest
 import uk.gov.hmrc.hec.util.{TimeProvider, TimeUtils}
 import uk.gov.hmrc.http.HeaderCarrier
 
-import java.time.LocalDate
+import java.time.{LocalDate, ZonedDateTime}
 import scala.concurrent.ExecutionContext.Implicits.global
 
 class TaxCheckServiceImplSpec extends AnyWordSpec with Matchers with MockFactory {
 
   val mockTaxCheckStore = mock[HECTaxCheckStore]
 
-  val service = new TaxCheckServiceImpl(mockTaxCheckStore)
+  val mockTimeProvider = mock[TimeProvider]
+
+  val service = new TaxCheckServiceImpl(mockTaxCheckStore, mockTimeProvider)
 
   def mockStoreTaxCheck(taxCheck: HECTaxCheck)(result: Either[Error, Unit]) =
     (mockTaxCheckStore
@@ -66,9 +68,7 @@ class TaxCheckServiceImplSpec extends AnyWordSpec with Matchers with MockFactory
       .expects(*)
       .returning(EitherT.fromEither(result))
 
-  val mockTimeProvider = mock[TimeProvider]
-
-  def mockTimeProviderToday(d: LocalDate) = (mockTimeProvider.currentDate _).expects().returning(d)
+  def mockTimeProviderNow(result: ZonedDateTime) = (mockTimeProvider.currentDateTime _).expects().returning(result)
 
   implicit val hc: HeaderCarrier = HeaderCarrier()
 
@@ -84,9 +84,7 @@ class TaxCheckServiceImplSpec extends AnyWordSpec with Matchers with MockFactory
           HECTaxCheckCode("ABCDEF234"),
           LicenceType.ScrapMetalDealerSite,
           verifier,
-          today,
-          now,
-          false
+          today
         )
 
       "return an error" when {
@@ -98,10 +96,11 @@ class TaxCheckServiceImplSpec extends AnyWordSpec with Matchers with MockFactory
             request.taxCheckCode,
             request.expiresAfter,
             now,
-            false
+            isExtracted = false
           )
 
           inSequence {
+            mockTimeProviderNow(now)
             mockStoreTaxCheck(taxCheck)(Left(Error("")))
           }
 
@@ -120,10 +119,11 @@ class TaxCheckServiceImplSpec extends AnyWordSpec with Matchers with MockFactory
             request.taxCheckCode,
             request.expiresAfter,
             now,
-            false
+            isExtracted = false
           )
 
           inSequence {
+            mockTimeProviderNow(now)
             mockStoreTaxCheck(taxCheck)(Right(()))
           }
 
@@ -142,6 +142,7 @@ class TaxCheckServiceImplSpec extends AnyWordSpec with Matchers with MockFactory
           )
 
           inSequence {
+            mockTimeProviderNow(now)
             mockStoreTaxCheck(taxCheck)(Right(()))
           }
 

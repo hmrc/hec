@@ -100,9 +100,7 @@ class TaxCheckControllerSpec extends ControllerSpec {
            |  "taxCheckCode" : "${r.taxCheckCode.value}",
            |  "licenceType" : "${r.licenceType.toString}",
            |  "verifier" : $verifierJson,
-           |  "expiresAfter" : "${toJsonString(r.expiresAfter)}",
-           |  "createDate" : "${r.createDate}",
-           |  "isExtracted": false
+           |  "expiresAfter" : "${toJsonString(r.expiresAfter)}"
            |}
            |""".stripMargin
       }
@@ -115,9 +113,7 @@ class TaxCheckControllerSpec extends ControllerSpec {
           HECTaxCheckCode(invalidTaxCheckCode),
           LicenceType.DriverOfTaxisAndPrivateHires,
           Right(dateOfBirth),
-          TimeUtils.today(),
-          TimeUtils.now(),
-          false
+          TimeUtils.today()
         )
         val body        = Json.parse(requestJsonString(request))
 
@@ -158,9 +154,7 @@ class TaxCheckControllerSpec extends ControllerSpec {
             taxCheckCode = validTaxCheckCode,
             licenceType = LicenceType.DriverOfTaxisAndPrivateHires,
             verifier = Right(dateOfBirth),
-            expiresAfter = TimeUtils.today(),
-            createDate = TimeUtils.now(),
-            isExtracted = false
+            expiresAfter = TimeUtils.today()
           )
           val body        = Json.parse(requestJsonString(request))
 
@@ -181,9 +175,7 @@ class TaxCheckControllerSpec extends ControllerSpec {
             validTaxCheckCode,
             LicenceType.DriverOfTaxisAndPrivateHires,
             Right(dateOfBirth),
-            TimeUtils.today(),
-            TimeUtils.now(),
-            false
+            TimeUtils.today()
           )
           val body        = Json.parse(requestJsonString(request))
 
@@ -199,9 +191,7 @@ class TaxCheckControllerSpec extends ControllerSpec {
             validTaxCheckCode,
             LicenceType.DriverOfTaxisAndPrivateHires,
             Left(crn),
-            TimeUtils.today(),
-            TimeUtils.now(),
-            false
+            TimeUtils.today()
           )
           val body    = Json.parse(requestJsonString(request))
 

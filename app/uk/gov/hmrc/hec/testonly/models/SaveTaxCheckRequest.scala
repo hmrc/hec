@@ -22,15 +22,13 @@ import uk.gov.hmrc.hec.models.licence.LicenceType
 import uk.gov.hmrc.hec.models.{DateOfBirth, HECTaxCheckCode}
 import uk.gov.hmrc.hec.models.EitherUtils.eitherFormat
 import java.time.format.DateTimeFormatter
-import java.time.{LocalDate, ZonedDateTime}
+import java.time.LocalDate
 
 final case class SaveTaxCheckRequest(
   taxCheckCode: HECTaxCheckCode,
   licenceType: LicenceType,
   verifier: Either[CRN, DateOfBirth],
-  expiresAfter: LocalDate,
-  createDate: ZonedDateTime,
-  isExtracted: Boolean
+  expiresAfter: LocalDate
 )
 
 object SaveTaxCheckRequest {
