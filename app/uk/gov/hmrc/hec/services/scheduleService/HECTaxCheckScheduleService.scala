@@ -60,21 +60,17 @@ class HECTaxCheckScheduleService @Inject() (
           mayBeValue match {
             case Some(value) =>
               value match {
-                case Left(error: models.Error) => logger.info(s"Job did not run because of the error :: $error.")
+                case Left(error: models.Error) => logger.warn(s"Job failed because of the error :: $error.")
                 case Right(list)               => logger.info(s"Job ran successfully for ${list.size} tax checks")
 
               }
-            case None        => logger.info(s"Job failed as lock can't be obtained.")
+            case None        => logger.info(s"Job did not run as lock couldn't be obtained.")
           }
 
         case Failure(ex) =>
-          new ResourceLockedException
-          logger.info(s"Job failed with exception ${ex.getMessage}.")
+          new Exception
+          logger.warn(s"Job failed as the resource is already locked by another request with error:: ${ex.getMessage}.")
       }
-
       scheduleNextJob()
     }
-
 }
-
-class ResourceLockedException extends Exception("The resource is already locked by another request")
