@@ -68,7 +68,6 @@ class HECTaxCheckScheduleService @Inject() (
           }
 
         case Failure(ex) =>
-          new Exception
           logger.warn(s"Job failed as the resource is already locked by another request with error:: ${ex.getMessage}.")
       }
       scheduleNextJob()
