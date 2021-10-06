@@ -32,7 +32,7 @@ trait TimeCalculator {
 @Singleton
 class TimeCalculatorImpl @Inject() (timeProvider: TimeProvider) extends TimeCalculator {
 
-  private val twentyFourHoursInSeconds: Long = 24.hours.toSeconds
+  private val twentyFourHoursInNanoSeconds: Long = 24.hours.toNanos
 
   /**
     * Calculating the time until the time passed in parameters from now.
@@ -41,18 +41,19 @@ class TimeCalculatorImpl @Inject() (timeProvider: TimeProvider) extends TimeCalc
     * @return FiniteDuration
     */
   def timeUntil(t: LocalTime, zone: ZoneId): FiniteDuration = {
+
     val now = timeProvider.currentTime(zone)
 
     val seconds = {
-      val delta = now.until(t, java.time.temporal.ChronoUnit.SECONDS)
+      val delta = now.until(t, java.time.temporal.ChronoUnit.NANOS)
       if (delta < 0) {
-        twentyFourHoursInSeconds + delta
+        twentyFourHoursInNanoSeconds + delta
       } else {
         delta
       }
     }
 
-    seconds.seconds
+    seconds.nanosecond
   }
 
 }
