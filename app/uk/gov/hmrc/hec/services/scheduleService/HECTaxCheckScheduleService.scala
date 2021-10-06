@@ -41,7 +41,7 @@ class HECTaxCheckScheduleService @Inject() (
 
   //plusNanos(1000000) added to change 00:00 to 00:00:00.001, so that job is not scheduled again if it's over in few milliseconds
   val jobStartTime: LocalTime                    =
-    LocalTime.parse(config.get[String]("hec-file-extraction-details.extraction-time")).plusNanos(1000000)
+    LocalTime.parse(config.get[String]("hec-file-extraction-details.extraction-time"))
   private def timeUntilNextJob(): FiniteDuration = timeCalculator.timeUntil(jobStartTime, extractionTimeZone)
 
   def scheduleNextJob(): Unit = {
