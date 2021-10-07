@@ -19,11 +19,16 @@ package uk.gov.hmrc.hec.models.licence
 import ai.x.play.json.Jsonx
 import ai.x.play.json.SingletonEncoder.simpleName
 import ai.x.play.json.implicits.formatSingleton
+import enumeratum.{Enum, EnumEntry}
 import play.api.libs.json.Format
+import uk.gov.hmrc.hec.models.fileFormat.EnumFileBody
 
-sealed trait LicenceTimeTrading extends Product with Serializable
+import scala.collection.immutable
 
-object LicenceTimeTrading {
+sealed trait LicenceTimeTrading extends EnumEntry with Product with Serializable
+
+object LicenceTimeTrading extends Enum[LicenceTimeTrading] {
+
   case object ZeroToTwoYears extends LicenceTimeTrading
 
   case object TwoToFourYears extends LicenceTimeTrading
@@ -32,6 +37,22 @@ object LicenceTimeTrading {
 
   case object EightYearsOrMore extends LicenceTimeTrading
 
+  val values: immutable.IndexedSeq[LicenceTimeTrading] = findValues
+
   @SuppressWarnings(Array("org.wartremover.warts.Throw", "org.wartremover.warts.Equals"))
   implicit val format: Format[LicenceTimeTrading] = Jsonx.formatSealed[LicenceTimeTrading]
+
+  def enumKeysAndValue(licenceTimeTrading: LicenceTimeTrading): (String, String) = licenceTimeTrading match {
+    case ZeroToTwoYears   => ("00", "Zero to two years")
+    case TwoToFourYears   => ("01", "Two to four years")
+    case FourToEightYears => ("02", "Four to eight years")
+    case EightYearsOrMore => ("03", "More than eight years")
+  }
+
+  def toEnumFileBody: List[EnumFileBody] =
+    values
+      .map(enumKeysAndValue)
+      .map(keyValue => EnumFileBody(recordId = keyValue._1, recordDescription = keyValue._2))
+      .toList
+
 }

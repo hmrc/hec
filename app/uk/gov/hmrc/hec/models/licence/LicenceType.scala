@@ -20,11 +20,15 @@ import ai.x.play.json.Jsonx
 import ai.x.play.json.SingletonEncoder.simpleName
 import ai.x.play.json.implicits.formatSingleton
 import cats.Eq
+import enumeratum._
 import play.api.libs.json.Format
+import uk.gov.hmrc.hec.models.fileFormat.EnumFileBody
 
-sealed trait LicenceType extends Product with Serializable
+import scala.collection.immutable
 
-object LicenceType {
+sealed trait LicenceType extends EnumEntry with Product with Serializable
+
+object LicenceType extends Enum[LicenceType] {
 
   case object DriverOfTaxisAndPrivateHires extends LicenceType
 
@@ -34,9 +38,24 @@ object LicenceType {
 
   case object ScrapMetalDealerSite extends LicenceType
 
+  val values: immutable.IndexedSeq[LicenceType] = findValues
+
   @SuppressWarnings(Array("org.wartremover.warts.Throw", "org.wartremover.warts.Equals"))
   implicit val format: Format[LicenceType] = Jsonx.formatSealed[LicenceType]
 
   implicit val eq: Eq[LicenceType] = Eq.fromUniversalEquals
+
+  def enumKeysAndValue(licenceType: LicenceType): (String, String) = licenceType match {
+    case DriverOfTaxisAndPrivateHires  => ("00", "Driver of taxis and private hires")
+    case OperatorOfPrivateHireVehicles => ("01", "Operator of private hire vehicles")
+    case ScrapMetalMobileCollector     => ("02", "Scrap metal mobile collector")
+    case ScrapMetalDealerSite          => ("03", "Scrap metal dealer site")
+  }
+
+  def toEnumFileBody: List[EnumFileBody] =
+    values
+      .map(enumKeysAndValue)
+      .map(keyValue => EnumFileBody(recordId = keyValue._1, recordDescription = keyValue._2))
+      .toList
 
 }
