@@ -29,10 +29,10 @@ import play.api.Configuration
 import uk.gov.hmrc.hec.actors.TimeCalculator
 import uk.gov.hmrc.hec.models
 import uk.gov.hmrc.hec.models.{Error, HECTaxCheck, SchedulerProvider}
-import uk.gov.hmrc.hec.services.HecTaxCheckExtractionServiceImplSpec.{TestHecTaxCheckScheduleService, TestScheduler, TestSchedulerProvider, TestTimeCalculator}
-import uk.gov.hmrc.hec.services.HecTaxCheckExtractionServiceImplSpec.TestHecTaxCheckScheduleService.{RunJobRequest, RunJobResponse}
-import uk.gov.hmrc.hec.services.HecTaxCheckExtractionServiceImplSpec.TestTimeCalculator.{TimeUntilRequest, TimeUntilResponse}
-import uk.gov.hmrc.hec.services.HecTaxCheckExtractionServiceImplSpec.TestScheduler.JobScheduledOnce
+import uk.gov.hmrc.hec.services.HecTaxCheckScheduleServiceImplSpec.{TestHecTaxCheckScheduleService, TestScheduler, TestSchedulerProvider, TestTimeCalculator}
+import uk.gov.hmrc.hec.services.HecTaxCheckScheduleServiceImplSpec.TestHecTaxCheckScheduleService.{RunJobRequest, RunJobResponse}
+import uk.gov.hmrc.hec.services.HecTaxCheckScheduleServiceImplSpec.TestTimeCalculator.{TimeUntilRequest, TimeUntilResponse}
+import uk.gov.hmrc.hec.services.HecTaxCheckScheduleServiceImplSpec.TestScheduler.JobScheduledOnce
 import uk.gov.hmrc.hec.services.scheduleService.{HECTaxCheckExtractionContext, HECTaxCheckScheduleService, HecTaxCheckExtractionService}
 import uk.gov.hmrc.http.HeaderCarrier
 
@@ -42,7 +42,7 @@ import scala.concurrent.duration._
 import scala.concurrent.{Await, ExecutionContext, Future}
 import scala.concurrent.ExecutionContext.{global => globalExecutionContext}
 
-class HecTaxCheckExtractionServiceImplSpec
+class HecTaxCheckScheduleServiceImplSpec
     extends TestKit(
       ActorSystem(
         "hec-tax-check-extraction-service-impl",
@@ -65,11 +65,11 @@ class HecTaxCheckExtractionServiceImplSpec
 
   implicit val hc: HeaderCarrier = HeaderCarrier()
 
-  val testProbe = TestProbe()
+  val testProbe: TestProbe = TestProbe()
 
   // set up with `TestScheduler` here so that when we can be sure that the job has actually been scheduled
   // (after we receive a `JobScheduledOnce` message) before advancing time
-  val virtualTime = new VirtualTime() {
+  val virtualTime: VirtualTime = new VirtualTime() {
     override val scheduler = new TestScheduler(testProbe.ref, this)
   }
 
@@ -78,9 +78,9 @@ class HecTaxCheckExtractionServiceImplSpec
   val testHecTaxCheckScheduleService = new TestHecTaxCheckScheduleService(testProbe.ref)
   val testTimeCalculator             = new TestTimeCalculator(testProbe.ref)
 
-  implicit val hecTaxCheckExtractionContext = new HECTaxCheckExtractionContext(system)
+  implicit val hecTaxCheckExtractionContext: HECTaxCheckExtractionContext = new HECTaxCheckExtractionContext(system)
 
-  def config(time: String) = Configuration(
+  def config(time: String): Configuration = Configuration(
     ConfigFactory.parseString(
       s"""
         |hec-file-extraction-details {
@@ -92,11 +92,11 @@ class HecTaxCheckExtractionServiceImplSpec
     )
   )
 
-  val jobRunTime: LocalTime = LocalTime.now().withSecond(0).withNano(0)
-  val timeString: String    = jobRunTime.format(DateTimeFormatter.ofPattern("HH:mm"))
-  val configuration         = config(timeString)
+  val jobRunTime: LocalTime        = LocalTime.now().withSecond(0).withNano(0)
+  val timeString: String           = jobRunTime.format(DateTimeFormatter.ofPattern("HH:mm"))
+  val configuration: Configuration = config(timeString)
 
-  "HECTaxCheckExtractionService" must {
+  "HecTaxCheckScheduleServiceSpec" must {
 
     "schedule a job that runs repeatedly at the set interval with the correct initial delay" in {
 
@@ -152,7 +152,7 @@ class HecTaxCheckExtractionServiceImplSpec
 
 }
 
-object HecTaxCheckExtractionServiceImplSpec {
+object HecTaxCheckScheduleServiceImplSpec {
 
   implicit val timeout: Timeout = Timeout(5.seconds)
 

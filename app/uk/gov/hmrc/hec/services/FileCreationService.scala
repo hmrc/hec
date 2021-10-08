@@ -32,7 +32,7 @@ import scala.concurrent.Future
 @ImplementedBy(classOf[FileCreationServiceImpl])
 trait FileCreationService {
 
-  //create the file content and returns the file content and full file name in a tuple
+  //creates the file content and returns it along with full file name in a tuple
   def createFileContent[A](
     inputType: A,
     seqNum: String,
@@ -43,6 +43,9 @@ trait FileCreationService {
 
 @Singleton
 class FileCreationServiceImpl @Inject() (timeProvider: TimeProvider) extends FileCreationService {
+
+  val DATE_FORMATTER: DateTimeFormatter = DateTimeFormatter.ofPattern("yyyyMMdd")
+  val TIME_FORMATTER: DateTimeFormatter = DateTimeFormatter.ofPattern("HHmmss")
 
   override def createFileContent[A](
     inputType: A,
@@ -55,7 +58,7 @@ class FileCreationServiceImpl @Inject() (timeProvider: TimeProvider) extends Fil
         Future.successful(Right(createContent(seqNum, partialFileName, enumFileBody)))
     })
 
-  //Create the  file body contents only and not header and trailer
+  //Create the  file body contents excluding header and trailer
   private def getFileBodyContents[A](inputType: A): Either[Error, List[EnumFileBody]] =
     inputType match {
       case LicenceType           => Right(LicenceType.toEnumFileBody)
@@ -66,15 +69,13 @@ class FileCreationServiceImpl @Inject() (timeProvider: TimeProvider) extends Fil
 
   //Create the  full file content including header and trailer
   private def createContent(seqNum: String, partialFileName: String, enumFileBody: List[EnumFileBody]) = {
-    val dateFormatter = DateTimeFormatter.ofPattern("yyyyMMdd")
-    val timeFormatter = DateTimeFormatter.ofPattern("HHmmss")
-    val extractDate   = timeProvider.currentDate.format(dateFormatter)
-    val fileName      = s"HEC_SSA_${seqNum}_${extractDate}_$partialFileName.dat"
+    val extractDate = timeProvider.currentDate.format(DATE_FORMATTER)
+    val fileName    = s"HEC_SSA_${seqNum}_${extractDate}_$partialFileName.dat"
 
     val fileHeader  = FileHeader(
       fileName = fileName,
       dateOfExtract = extractDate,
-      timeOfExtract = timeProvider.currentTime(ZoneId.of("Europe/London")).format(timeFormatter)
+      timeOfExtract = timeProvider.currentTime(ZoneId.of("Europe/London")).format(TIME_FORMATTER)
     )
     val fileTrailer =
       FileTrailer(fileName = fileName, recordCount = (2L + enumFileBody.size.toLong), inSequenceFlag = 'Y')

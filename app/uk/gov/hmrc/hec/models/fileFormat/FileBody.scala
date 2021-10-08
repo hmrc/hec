@@ -27,6 +27,7 @@ final case class EnumFileBody(recordType: String = "01", recordId: String, recor
     with Product
     with Serializable {
 
+  //convert the file body to pipe delimited string
   override def toRowString: String = this.productIterator.mkString("|")
 
 }

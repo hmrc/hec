@@ -14,12 +14,13 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.hec.services.scheduleService
+package uk.gov.hmrc.hec.services
 
 import cats.data.EitherT
 import com.google.inject.{ImplementedBy, Inject}
 import play.api.Configuration
 import uk.gov.hmrc.hec.models
+import uk.gov.hmrc.hec.services.scheduleService.HECTaxCheckExtractionContext
 import uk.gov.hmrc.hec.util.Logging
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.objectstore.client.play.PlayObjectStoreClient
@@ -31,6 +32,7 @@ import scala.concurrent.Future
 @ImplementedBy(classOf[FileStoreServiceImpl])
 trait FileStoreService {
 
+  //store the file in object store
   def storeFile(
     fileContent: String,
     fileName: String,

@@ -37,6 +37,9 @@ object LicenceTimeTrading extends Enum[LicenceTimeTrading] {
 
   case object EightYearsOrMore extends LicenceTimeTrading
 
+  //used enumeratum to create set of LicenceTimeTrading, so that we don't have to create that manullay
+  //enumeratum library is not interfering with our existing json library
+  //data insertion in mongo is not impacted
   val values: immutable.IndexedSeq[LicenceTimeTrading] = findValues
 
   @SuppressWarnings(Array("org.wartremover.warts.Throw", "org.wartremover.warts.Equals"))
@@ -46,7 +49,7 @@ object LicenceTimeTrading extends Enum[LicenceTimeTrading] {
     case ZeroToTwoYears   => ("00", "0 to 2 years")
     case TwoToFourYears   => ("01", "2 to 4 years")
     case FourToEightYears => ("02", "4 to 8 years")
-    case EightYearsOrMore => ("03", "8 years or more")
+    case EightYearsOrMore => ("03", "More than 8 years")
   }
 
   def toEnumFileBody: List[EnumFileBody] =

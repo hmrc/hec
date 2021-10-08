@@ -19,7 +19,7 @@ package uk.gov.hmrc.hec.models.fileFormat
 final case class FileFormat(header: FileHeader, body: List[FileBody], trailer: FileTrailer)
 
 object FileFormat {
-
+//convert the whole file content into pipe delimited string with appropriate new line
   def toFileContent(fileFormat: FileFormat): String =
     s"${FileHeader.toRowString(fileFormat.header)}\n${fileFormat.body.map(_.toRowString).mkString("\n")}\n${FileTrailer
       .toRowString(fileFormat.trailer)}"

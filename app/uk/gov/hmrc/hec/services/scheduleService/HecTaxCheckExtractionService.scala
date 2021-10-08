@@ -19,18 +19,15 @@ package uk.gov.hmrc.hec.services.scheduleService
 import cats.data.EitherT
 import cats.implicits._
 import com.google.inject.{ImplementedBy, Inject}
-import play.api.Configuration
 import uk.gov.hmrc.hec.models
-import uk.gov.hmrc.hec.models.{Error, HECTaxCheck}
 import uk.gov.hmrc.hec.models.licence.{LicenceTimeTrading, LicenceType, LicenceValidityPeriod}
-import uk.gov.hmrc.hec.services.{FileCreationService, TaxCheckService}
+import uk.gov.hmrc.hec.models.{Error, HECTaxCheck}
+import uk.gov.hmrc.hec.services.{FileCreationService, FileStoreService, MongoLockService, TaxCheckService}
 import uk.gov.hmrc.hec.util.Logging
 import uk.gov.hmrc.http.HeaderCarrier
-import uk.gov.hmrc.mongo.lock.{LockService, MongoLockRepository}
 
 import javax.inject.Singleton
 import scala.concurrent.Future
-import scala.concurrent.duration.FiniteDuration
 
 @ImplementedBy(classOf[HecTaxCheckExtractionServiceImpl])
 trait HecTaxCheckExtractionService {
@@ -42,10 +39,9 @@ trait HecTaxCheckExtractionService {
 @Singleton
 class HecTaxCheckExtractionServiceImpl @Inject() (
   taxCheckService: TaxCheckService,
-  mongoLockRepository: MongoLockRepository,
+  mongoLockService: MongoLockService,
   fileCreationService: FileCreationService,
-  fileStoreService: FileStoreService,
-  config: Configuration
+  fileStoreService: FileStoreService
 )(implicit
   hecTaxCheckExtractionContext: HECTaxCheckExtractionContext
 ) extends HecTaxCheckExtractionService
@@ -57,14 +53,8 @@ class HecTaxCheckExtractionServiceImpl @Inject() (
   val licenceTimeTrading: (String, String)    = ("licence-time-trading", "LICENCE_TIME_TRADING")
   val licenceValidityPeriod: (String, String) = ("licence-validity-period", "LICENCE_VALIDITY_PERIOD")
 
-  val lockService: LockService = LockService(
-    mongoLockRepository,
-    lockId = "hecTaxChecks",
-    ttl = config.get[FiniteDuration]("mongo-lock.force-lock-release-after")
-  )
-
   override def lockAndExtractJob(): Future[Option[Either[models.Error, List[HECTaxCheck]]]] =
-    lockService.withLock(processHecData)
+    mongoLockService.withLock(processHecData)
 
   private def processHecData()(implicit hc: HeaderCarrier): Future[Either[models.Error, List[HECTaxCheck]]] = {
     val seqNum = "0001"
