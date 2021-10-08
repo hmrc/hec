@@ -30,7 +30,7 @@ import scala.concurrent.duration.FiniteDuration
 @ImplementedBy(classOf[MongoLockServiceImpl])
 trait MongoLockService {
 
-  def withLock(data: Future[Either[models.Error, List[HECTaxCheck]]])(implicit
+  def withLock(data: => Future[Either[models.Error, List[HECTaxCheck]]])(implicit
     hecTaxCheckExtractionContext: HECTaxCheckExtractionContext
   ): Future[Option[Either[models.Error, List[HECTaxCheck]]]]
 
@@ -46,7 +46,7 @@ class MongoLockServiceImpl @Inject() (mongoLockRepository: MongoLockRepository, 
     ttl = config.get[FiniteDuration]("mongo-lock.force-lock-release-after")
   )
 
-  override def withLock(data: Future[Either[models.Error, List[HECTaxCheck]]])(implicit
+  override def withLock(data: => Future[Either[models.Error, List[HECTaxCheck]]])(implicit
     hecTaxCheckExtractionContext: HECTaxCheckExtractionContext
   ): Future[Option[Either[models.Error, List[HECTaxCheck]]]] =
     lockService.withLock(data)
