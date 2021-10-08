@@ -43,10 +43,10 @@ object LicenceTimeTrading extends Enum[LicenceTimeTrading] {
   implicit val format: Format[LicenceTimeTrading] = Jsonx.formatSealed[LicenceTimeTrading]
 
   def enumKeysAndValue(licenceTimeTrading: LicenceTimeTrading): (String, String) = licenceTimeTrading match {
-    case ZeroToTwoYears   => ("00", "Zero to two years")
-    case TwoToFourYears   => ("01", "Two to four years")
-    case FourToEightYears => ("02", "Four to eight years")
-    case EightYearsOrMore => ("03", "More than eight years")
+    case ZeroToTwoYears   => ("00", "0 to 2 years")
+    case TwoToFourYears   => ("01", "2 to 4 years")
+    case FourToEightYears => ("02", "4 to 8 years")
+    case EightYearsOrMore => ("03", "8 years or more")
   }
 
   def toEnumFileBody: List[EnumFileBody] =

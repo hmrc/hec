@@ -66,7 +66,10 @@ class FileStoreServiceImpl @Inject() (client: PlayObjectStoreClient, config: Con
           contentType = Some("plain/text"),
           owner = "hec"
         )
-        .map(Right(_))
+        .map { _ =>
+          logger.info(s"Storing contents for file :: $fileName")
+          Right(())
+        }
         .recover { case e: Exception =>
           logger.error(s"Document save failed with error: ${e.getMessage}")
           Left(models.Error(e))

@@ -41,11 +41,11 @@ object LicenceValidityPeriod extends Enum[LicenceValidityPeriod] {
   implicit val format: Format[LicenceValidityPeriod] = Jsonx.formatSealed[LicenceValidityPeriod]
 
   def enumKeysAndValue(licenceValidityPeriod: LicenceValidityPeriod): (String, String) = licenceValidityPeriod match {
-    case UpToOneYear    => ("00", "Up to one year")
-    case UpToTwoYears   => ("01", "Up to 2 year")
-    case UpToThreeYears => ("02", "Up to 3 year")
-    case UpToFourYears  => ("03", "Up to 4 year")
-    case UpToFiveYears  => ("04", "Up to 5 year")
+    case UpToOneYear    => ("00", "Up to 1 year")
+    case UpToTwoYears   => ("01", "Up to 2 years")
+    case UpToThreeYears => ("02", "Up to 3 years")
+    case UpToFourYears  => ("03", "Up to 4 years")
+    case UpToFiveYears  => ("04", "Up to 5 years")
   }
 
   def toEnumFileBody: List[EnumFileBody] =
