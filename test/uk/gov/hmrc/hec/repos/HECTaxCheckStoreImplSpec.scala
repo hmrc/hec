@@ -165,7 +165,7 @@ class HECTaxCheckStoreImplSpec extends AnyWordSpec with Matchers with Eventually
                                    |}""".stripMargin)
 
       // insert invalid data
-      taxCheckStore.put(taxCheckCode)(DataKey("hec-tax-check"), invalidData)
+      await(taxCheckStore.put(taxCheckCode)(DataKey("hec-tax-check"), invalidData))
       await(taxCheckStore.getTaxCheckCodes(GGCredId(ggCredId)).value).isLeft shouldBe true
     }
 
@@ -198,8 +198,7 @@ class HECTaxCheckStoreImplSpec extends AnyWordSpec with Matchers with Eventually
                                       |}""".stripMargin)
 
       // insert invalid data
-
-      taxCheckStore.put(taxCheckCode)(DataKey("hec-tax-check"), invalidData)
+      await(taxCheckStore.put(taxCheckCode)(DataKey("hec-tax-check"), invalidData))
       await(taxCheckStore.getAllTaxCheckCodesByExtractedStatus(false).value).isLeft shouldBe true
     }
   }
