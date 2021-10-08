@@ -48,15 +48,18 @@ class HecTaxCheckExtractionServiceSpec extends AnyWordSpec with Matchers with Mo
       .returning(EitherT.fromEither[Future](result))
 
   @SuppressWarnings(Array("org.wartremover.warts.All"))
-  def mockWithLock(
-    data: Either[models.Error, List[HECTaxCheck]]
-  )(result: Option[Either[models.Error, List[HECTaxCheck]]]) =
+  def mockWithLock(lockObtained: Boolean) =
     //val f: Future[Either[models.Error, List[HECTaxCheck]]] = getValue(data)
     (mockMongoLockService
       .withLock(_: Future[Either[models.Error, List[HECTaxCheck]]])(_: HECTaxCheckExtractionContext))
-      .expects(Future.successful(data), *)
-      //.returning(Future.successful(result))
-      .onCall(test => Future.successful(Some(test.productElement())))
+      .expects(*, *)
+      // .returning(Future.successful(result))
+      .onCall { test =>
+        if (lockObtained)
+          test.productElement(0).asInstanceOf[() => Future[Either[models.Error, List[HECTaxCheck]]]]().map(Some(_))
+        else
+          Future.successful(None)
+      }
 
   def mockUpdateAllHecTaxCheck(hecTaxCheckList: List[HECTaxCheck])(result: Either[models.Error, List[HECTaxCheck]]) =
     (mockTaxCheckService
@@ -119,14 +122,27 @@ class HecTaxCheckExtractionServiceSpec extends AnyWordSpec with Matchers with Mo
 
       "there is an error in fetching data from mongo db" in {
         inSequence {
-          mockGetAlltaxCheckByExtractedStatus(false)(Left(models.Error("")))
+          mockWithLock(lockObtained = false)
+
+//          mockGetAlltaxCheckByExtractedStatus(false)(Left(models.Error("")))
           //mockCreateFileContent("licenceTYpe", "001", "licence_type")(Left(models.Error("")))
-          mockWithLock(Left(models.Error(Left(""))))(Some(Left(models.Error(""))))
         }
         val result: Future[Option[Either[models.Error, List[HECTaxCheck]]]] =
           hecTaxCheckExtractionService.lockAndExtractJob()
 
-        await(result) shouldBe Some(Left(models.Error("")))
+        await(result) shouldBe None
+      }
+
+      "there is an success in fetching data from mongo db" in {
+        inSequence {
+          mockWithLock(lockObtained = true)
+          mockGetAlltaxCheckByExtractedStatus(false)(Left(models.Error("a")))
+          //mockCreateFileContent("licenceTYpe", "001", "licence_type")(Left(models.Error("")))
+        }
+        val result: Future[Option[Either[models.Error, List[HECTaxCheck]]]] =
+          hecTaxCheckExtractionService.lockAndExtractJob()
+
+        await(result) shouldBe Some(Left(models.Error("a")))
       }
 
     }
