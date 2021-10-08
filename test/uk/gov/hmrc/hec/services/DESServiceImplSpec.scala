@@ -91,8 +91,8 @@ class DESServiceImplSpec extends AnyWordSpec with Matchers with MockFactory {
           testIsError[BackendError](Right(HttpResponse(404, errorJson)))
         }
 
-        "the call to fetch CTUTR returns with 404 not found response with NO_DATA_FOUND code" in {
-          val notFoundErrorJson = getErrorJson("NO_DATA_FOUND")
+        "the call to fetch CTUTR returns with 404 not found response with NOT_FOUND code" in {
+          val notFoundErrorJson = getErrorJson("NOT_FOUND")
           testIsError[DataNotFoundError](Right(HttpResponse(404, notFoundErrorJson)))
         }
 

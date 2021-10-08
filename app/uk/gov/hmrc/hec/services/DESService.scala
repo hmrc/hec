@@ -61,7 +61,7 @@ class DESServiceImpl @Inject() (
       case Right(failure) =>
         val errorMsg = s"$responseError - $failure"
         (httpResponse.status, failure.code) match {
-          case (NOT_FOUND, "NO_DATA_FOUND") => Left(DataNotFoundError(errorMsg))
+          case (NOT_FOUND, "NOT_FOUND")     => Left(DataNotFoundError(errorMsg))
           case (BAD_REQUEST, "INVALID_CRN") => Left(InvalidCRNError(errorMsg))
           case _                            => Left(BackendError(Error(errorMsg)))
         }
