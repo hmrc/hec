@@ -179,7 +179,7 @@ object HecTaxCheckScheduleServiceImplSpec {
 
   class TestHecTaxCheckScheduleService(reportTo: ActorRef) extends HecTaxCheckExtractionService {
 
-    def lockAndExtractJob(): Future[Option[Either[models.Error, List[HECTaxCheck]]]] =
+    def lockAndProcessHecData(): Future[Option[Either[models.Error, List[HECTaxCheck]]]] =
       (reportTo ? RunJobRequest).mapTo[RunJobResponse].map(_.result)(globalExecutionContext)
   }
 

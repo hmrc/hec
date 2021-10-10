@@ -32,7 +32,7 @@ import scala.concurrent.Future
 @ImplementedBy(classOf[HecTaxCheckExtractionServiceImpl])
 trait HecTaxCheckExtractionService {
 
-  def lockAndExtractJob(): Future[Option[Either[models.Error, List[HECTaxCheck]]]]
+  def lockAndProcessHecData(): Future[Option[Either[models.Error, List[HECTaxCheck]]]]
 
 }
 
@@ -53,31 +53,23 @@ class HecTaxCheckExtractionServiceImpl @Inject() (
   val licenceTimeTrading: (String, String)    = ("licence-time-trading", "LICENCE_TIME_TRADING")
   val licenceValidityPeriod: (String, String) = ("licence-validity-period", "LICENCE_VALIDITY_PERIOD")
 
-  override def lockAndExtractJob(): Future[Option[Either[models.Error, List[HECTaxCheck]]]] =
+  override def lockAndProcessHecData(): Future[Option[Either[models.Error, List[HECTaxCheck]]]] =
     mongoLockService.withLock(processHecData)
 
   private def processHecData()(implicit hc: HeaderCarrier): Future[Either[models.Error, List[HECTaxCheck]]] = {
     val seqNum = "0001"
-    println(" inside processHecData")
     val result: EitherT[Future, models.Error, List[HECTaxCheck]] = {
-      println(" inside result")
       for {
         hecTaxCheck      <- taxCheckService.getAllTaxCheckCodesByExtractedStatus(false)
-        _                 = println("hecTaxCheck is ::" + hecTaxCheck.toString)
         _                 = hecTaxCheck.foreach(h =>
                               logger.info(s" Job submitted to extract hec Tax check code :: ${h.taxCheckCode.value}")
                             )
         updatedHecTaxChek = hecTaxCheck.map(_.copy(isExtracted = true))
-        _                 = println("here 1")
         _                <- createAndStoreFile(LicenceType, seqNum, licenceType._2, licenceType._1)
-        _                 = println("here 2")
         _                <- createAndStoreFile(LicenceTimeTrading, seqNum, licenceTimeTrading._2, licenceTimeTrading._1)
-        _                 = println("here 3")
         _                <- createAndStoreFile(LicenceValidityPeriod, seqNum, licenceValidityPeriod._2, licenceValidityPeriod._1)
-        _                 = println("here 4")
         //updating isExtracted to true for the the processed hec tax check codes
         newHecTaxCheck   <- taxCheckService.updateAllHecTaxCheck(updatedHecTaxChek)
-        _                 = println("hecTaxCheck is ::" + hecTaxCheck.toString)
       } yield newHecTaxCheck
     }
     result.value

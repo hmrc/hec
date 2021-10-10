@@ -23,12 +23,17 @@ import com.typesafe.config.ConfigFactory
 import org.scalamock.scalatest.MockFactory
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
-
 import play.api.Configuration
 import play.api.test.Helpers._
 import uk.gov.hmrc.hec.models
-import uk.gov.hmrc.hec.models.HECTaxCheck
+import uk.gov.hmrc.hec.models.ApplicantDetails.CompanyApplicantDetails
+import uk.gov.hmrc.hec.models.{HECTaxCheck, HECTaxCheckCode}
+import uk.gov.hmrc.hec.models.HECTaxCheckData.CompanyHECTaxCheckData
+import uk.gov.hmrc.hec.models.TaxDetails.CompanyTaxDetails
+import uk.gov.hmrc.hec.models.ids.{CRN, CTUTR, GGCredId}
+import uk.gov.hmrc.hec.models.licence.{LicenceDetails, LicenceTimeTrading, LicenceType, LicenceValidityPeriod}
 import uk.gov.hmrc.hec.services.scheduleService.{HECTaxCheckExtractionContext, HecTaxCheckExtractionServiceImpl}
+import uk.gov.hmrc.hec.util.TimeUtils
 import uk.gov.hmrc.http.HeaderCarrier
 
 import scala.concurrent.Future
@@ -39,8 +44,6 @@ class HecTaxCheckExtractionServiceSpec extends AnyWordSpec with Matchers with Mo
   val mockFileCreationService = mock[FileCreationService]
   val mockFileStoreService    = mock[FileStoreService]
 
-  def getValue(data: Either[models.Error, List[HECTaxCheck]]) = Future.successful(data)
-
   def mockGetAlltaxCheckByExtractedStatus(isExtracted: Boolean)(result: Either[models.Error, List[HECTaxCheck]]) =
     (mockTaxCheckService
       .getAllTaxCheckCodesByExtractedStatus(_: Boolean)(_: HeaderCarrier))
@@ -49,11 +52,9 @@ class HecTaxCheckExtractionServiceSpec extends AnyWordSpec with Matchers with Mo
 
   @SuppressWarnings(Array("org.wartremover.warts.All"))
   def mockWithLock(lockObtained: Boolean) =
-    //val f: Future[Either[models.Error, List[HECTaxCheck]]] = getValue(data)
     (mockMongoLockService
       .withLock(_: Future[Either[models.Error, List[HECTaxCheck]]])(_: HECTaxCheckExtractionContext))
       .expects(*, *)
-      // .returning(Future.successful(result))
       .onCall { test =>
         if (lockObtained)
           test.productElement(0).asInstanceOf[() => Future[Either[models.Error, List[HECTaxCheck]]]]().map(Some(_))
@@ -101,50 +102,141 @@ class HecTaxCheckExtractionServiceSpec extends AnyWordSpec with Matchers with Mo
 
   "HecTaxCheckExtractionServiceSpec" must {
 
-    "return an error" when {
-//      val taxCheckData  = CompanyHECTaxCheckData(
-//        CompanyApplicantDetails(GGCredId(""), CRN("")),
-//        LicenceDetails(
-//          LicenceType.ScrapMetalDealerSite,
-//          LicenceTimeTrading.EightYearsOrMore,
-//          LicenceValidityPeriod.UpToOneYear
-//        ),
-//        CompanyTaxDetails(CTUTR(""))
-//      )
-//      val taxCheckCode1 = HECTaxCheckCode("code1")
-//      val taxCheckCode2 = HECTaxCheckCode("code12")
-//      val taxCheckCode3 = HECTaxCheckCode("code13")
-//      val taxCheck1     = HECTaxCheck(taxCheckData, taxCheckCode1, TimeUtils.today(), TimeUtils.now(), false)
-//      val taxCheck2     = taxCheck1.copy(taxCheckCode = taxCheckCode2)
-//      val taxCheck3     = taxCheck1.copy(taxCheckCode = taxCheckCode3, isExtracted = true)
-//
-//      val hecTaxCheckList = List(taxCheck1, taxCheck2, taxCheck3)
+    val taxCheckData  = CompanyHECTaxCheckData(
+      CompanyApplicantDetails(GGCredId(""), CRN("")),
+      LicenceDetails(
+        LicenceType.ScrapMetalDealerSite,
+        LicenceTimeTrading.EightYearsOrMore,
+        LicenceValidityPeriod.UpToOneYear
+      ),
+      CompanyTaxDetails(CTUTR(""))
+    )
+    val taxCheckCode1 = HECTaxCheckCode("code1")
+    val taxCheckCode2 = HECTaxCheckCode("code12")
+    val taxCheckCode3 = HECTaxCheckCode("code13")
+    val taxCheck1     = HECTaxCheck(taxCheckData, taxCheckCode1, TimeUtils.today(), TimeUtils.now(), false)
+    val taxCheck2     = taxCheck1.copy(taxCheckCode = taxCheckCode2)
+    val taxCheck3     = taxCheck1.copy(taxCheckCode = taxCheckCode3, isExtracted = false)
 
-      "there is an error in fetching data from mongo db" in {
+    val hecTaxCheckList        = List(taxCheck1, taxCheck2, taxCheck3)
+    val updatedHecTaxCheckList =
+      List(taxCheck1.copy(isExtracted = true), taxCheck2.copy(isExtracted = true), taxCheck3.copy(isExtracted = true))
+
+    "return None" when {
+
+      " no lock is obtained on mongo db" in {
         inSequence {
           mockWithLock(lockObtained = false)
-
-//          mockGetAlltaxCheckByExtractedStatus(false)(Left(models.Error("")))
-          //mockCreateFileContent("licenceTYpe", "001", "licence_type")(Left(models.Error("")))
         }
         val result: Future[Option[Either[models.Error, List[HECTaxCheck]]]] =
-          hecTaxCheckExtractionService.lockAndExtractJob()
+          hecTaxCheckExtractionService.lockAndProcessHecData()
 
         await(result) shouldBe None
       }
 
-      "there is an success in fetching data from mongo db" in {
+    }
+
+    "return an error" when {
+
+      "there is error in fetching data from mongo" in {
         inSequence {
           mockWithLock(lockObtained = true)
           mockGetAlltaxCheckByExtractedStatus(false)(Left(models.Error("a")))
-          //mockCreateFileContent("licenceTYpe", "001", "licence_type")(Left(models.Error("")))
         }
         val result: Future[Option[Either[models.Error, List[HECTaxCheck]]]] =
-          hecTaxCheckExtractionService.lockAndExtractJob()
-
+          hecTaxCheckExtractionService.lockAndProcessHecData()
         await(result) shouldBe Some(Left(models.Error("a")))
       }
 
+      "There is an error in file creation" in {
+        inSequence {
+          mockWithLock(lockObtained = true)
+          mockGetAlltaxCheckByExtractedStatus(false)(Right(hecTaxCheckList))
+          mockCreateFileContent(LicenceType, "0001", "LICENCE_TYPE")(Left(models.Error("err")))
+        }
+        val result: Future[Option[Either[models.Error, List[HECTaxCheck]]]] =
+          hecTaxCheckExtractionService.lockAndProcessHecData()
+        await(result) shouldBe Some(Left(models.Error("err")))
+      }
+
+      "There is an error in file storage" in {
+        inSequence {
+          mockWithLock(lockObtained = true)
+          mockGetAlltaxCheckByExtractedStatus(false)(Right(hecTaxCheckList))
+          mockCreateFileContent(LicenceType, "0001", "LICENCE_TYPE")(
+            Right(("00|file1.dat|HEC|SSA|20210909|154556|000001|001", "file1.dat"))
+          )
+          mockStoreFile("00|file1.dat|HEC|SSA|20210909|154556|000001|001", "file1.dat", "licence-type")(
+            Left(models.Error("err"))
+          )
+        }
+        val result: Future[Option[Either[models.Error, List[HECTaxCheck]]]] =
+          hecTaxCheckExtractionService.lockAndProcessHecData()
+        await(result) shouldBe Some(Left(models.Error("err")))
+      }
+
+      "There is an error in mongo record update" in {
+        inSequence {
+          mockWithLock(lockObtained = true)
+          mockGetAlltaxCheckByExtractedStatus(false)(Right(hecTaxCheckList))
+          mockCreateFileContent(LicenceType, "0001", "LICENCE_TYPE")(
+            Right(("00|file1.dat|HEC|SSA|20210909|154556|000001|001", "file1.dat"))
+          )
+          mockStoreFile("00|file1.dat|HEC|SSA|20210909|154556|000001|001", "file1.dat", "licence-type")(
+            Right(())
+          )
+          mockCreateFileContent(LicenceTimeTrading, "0001", "LICENCE_TIME_TRADING")(
+            Right(("00|file1.dat|HEC|SSA|20210909|154556|000001|001", "file1.dat"))
+          )
+          mockStoreFile("00|file1.dat|HEC|SSA|20210909|154556|000001|001", "file1.dat", "licence-time-trading")(
+            Right(())
+          )
+          mockCreateFileContent(LicenceValidityPeriod, "0001", "LICENCE_VALIDITY_PERIOD")(
+            Right(("00|file1.dat|HEC|SSA|20210909|154556|000001|001", "file1.dat"))
+          )
+          mockStoreFile("00|file1.dat|HEC|SSA|20210909|154556|000001|001", "file1.dat", "licence-validity-period")(
+            Right(())
+          )
+          mockUpdateAllHecTaxCheck(updatedHecTaxCheckList)(Left(models.Error("err")))
+        }
+        val result: Future[Option[Either[models.Error, List[HECTaxCheck]]]] =
+          hecTaxCheckExtractionService.lockAndProcessHecData()
+        await(result) shouldBe Some(Left(models.Error("err")))
+      }
+
+    }
+
+    "lock and process the hec data" when {
+
+      "all fetch , update , file creation and storage passed without error" in {
+        inSequence {
+          mockWithLock(lockObtained = true)
+          mockGetAlltaxCheckByExtractedStatus(false)(Right(hecTaxCheckList))
+          mockCreateFileContent(LicenceType, "0001", "LICENCE_TYPE")(
+            Right(("00|file1.dat|HEC|SSA|20210909|154556|000001|001", "file1.dat"))
+          )
+          mockStoreFile("00|file1.dat|HEC|SSA|20210909|154556|000001|001", "file1.dat", "licence-type")(
+            Right(())
+          )
+          mockCreateFileContent(LicenceTimeTrading, "0001", "LICENCE_TIME_TRADING")(
+            Right(("00|file1.dat|HEC|SSA|20210909|154556|000001|001", "file1.dat"))
+          )
+          mockStoreFile("00|file1.dat|HEC|SSA|20210909|154556|000001|001", "file1.dat", "licence-time-trading")(
+            Right(())
+          )
+          mockCreateFileContent(LicenceValidityPeriod, "0001", "LICENCE_VALIDITY_PERIOD")(
+            Right(("00|file1.dat|HEC|SSA|20210909|154556|000001|001", "file1.dat"))
+          )
+          mockStoreFile("00|file1.dat|HEC|SSA|20210909|154556|000001|001", "file1.dat", "licence-validity-period")(
+            Right(())
+          )
+          mockUpdateAllHecTaxCheck(updatedHecTaxCheckList)(Right(updatedHecTaxCheckList))
+        }
+        val result: Future[Option[Either[models.Error, List[HECTaxCheck]]]] =
+          hecTaxCheckExtractionService.lockAndProcessHecData()
+        await(result) shouldBe Some(Right(updatedHecTaxCheckList))
+
+      }
     }
   }
 

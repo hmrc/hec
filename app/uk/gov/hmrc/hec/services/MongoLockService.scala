@@ -18,8 +18,6 @@ package uk.gov.hmrc.hec.services
 
 import com.google.inject.{ImplementedBy, Inject}
 import play.api.Configuration
-import uk.gov.hmrc.hec.models
-import uk.gov.hmrc.hec.models.HECTaxCheck
 import uk.gov.hmrc.hec.services.scheduleService.HECTaxCheckExtractionContext
 import uk.gov.hmrc.mongo.lock.{LockService, MongoLockRepository}
 
@@ -30,9 +28,9 @@ import scala.concurrent.duration.FiniteDuration
 @ImplementedBy(classOf[MongoLockServiceImpl])
 trait MongoLockService {
 
-  def withLock(data: => Future[Either[models.Error, List[HECTaxCheck]]])(implicit
+  def withLock[T](data: => Future[T])(implicit
     hecTaxCheckExtractionContext: HECTaxCheckExtractionContext
-  ): Future[Option[Either[models.Error, List[HECTaxCheck]]]]
+  ): Future[Option[T]]
 
 }
 
@@ -46,8 +44,8 @@ class MongoLockServiceImpl @Inject() (mongoLockRepository: MongoLockRepository, 
     ttl = config.get[FiniteDuration]("mongo-lock.force-lock-release-after")
   )
 
-  override def withLock(data: => Future[Either[models.Error, List[HECTaxCheck]]])(implicit
+  override def withLock[T](data: => Future[T])(implicit
     hecTaxCheckExtractionContext: HECTaxCheckExtractionContext
-  ): Future[Option[Either[models.Error, List[HECTaxCheck]]]] =
+  ): Future[Option[T]] =
     lockService.withLock(data)
 }
