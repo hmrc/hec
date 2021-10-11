@@ -45,7 +45,7 @@ import scala.concurrent.ExecutionContext.{global => globalExecutionContext}
 class HecTaxCheckScheduleServiceImplSpec
     extends TestKit(
       ActorSystem(
-        "hec-tax-check-extraction-service-impl",
+        "hec-tax-check-schedule-service-impl",
         ConfigFactory
           .defaultApplication()
           .resolve()

@@ -16,18 +16,19 @@
 
 package uk.gov.hmrc.hec.services
 
-import cats.data.EitherT
 import com.google.inject.{ImplementedBy, Inject}
 import uk.gov.hmrc.hec.models.Error
 import uk.gov.hmrc.hec.models.fileFormat.FileFormat.toFileContent
 import uk.gov.hmrc.hec.models.fileFormat.{EnumFileBody, FileFormat, FileHeader, FileTrailer}
+import uk.gov.hmrc.hec.models.licence.LicenceTimeTrading.{EightYearsOrMore, FourToEightYears, TwoToFourYears, ZeroToTwoYears}
+import uk.gov.hmrc.hec.models.licence.LicenceType.{DriverOfTaxisAndPrivateHires, OperatorOfPrivateHireVehicles, ScrapMetalDealerSite, ScrapMetalMobileCollector}
+import uk.gov.hmrc.hec.models.licence.LicenceValidityPeriod.{UpToFiveYears, UpToFourYears, UpToOneYear, UpToThreeYears, UpToTwoYears}
 import uk.gov.hmrc.hec.models.licence.{LicenceTimeTrading, LicenceType, LicenceValidityPeriod}
 import uk.gov.hmrc.hec.util.TimeProvider
 
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 import javax.inject.Singleton
-import scala.concurrent.Future
 
 @ImplementedBy(classOf[FileCreationServiceImpl])
 trait FileCreationService {
@@ -37,7 +38,7 @@ trait FileCreationService {
     inputType: A,
     seqNum: String,
     partialFileName: String
-  ): EitherT[Future, Error, (String, String)]
+  ): Either[Error, (String, String)]
 
 }
 
@@ -51,19 +52,61 @@ class FileCreationServiceImpl @Inject() (timeProvider: TimeProvider) extends Fil
     inputType: A,
     seqNum: String,
     partialFileName: String
-  ): EitherT[Future, Error, (String, String)] =
-    EitherT(getFileBodyContents(inputType) match {
-      case Left(e)             => Future.successful(Left(e))
+  ): Either[Error, (String, String)]                                                  =
+    getFileBodyContents(inputType) match {
+      case Left(e)             => Left(e)
       case Right(enumFileBody) =>
-        Future.successful(Right(createContent(seqNum, partialFileName, enumFileBody)))
-    })
+        Right(createContent(seqNum, partialFileName, enumFileBody))
+    }
 
+  private def createLicenceTimeTradingEnumFileBody = {
+
+    def enumKeysAndValue(licenceTimeTrading: LicenceTimeTrading): (String, String) = licenceTimeTrading match {
+      case ZeroToTwoYears   => ("00", "0 to 2 years")
+      case TwoToFourYears   => ("01", "2 to 4 years")
+      case FourToEightYears => ("02", "4 to 8 years")
+      case EightYearsOrMore => ("03", "More than 8 years")
+    }
+    LicenceTimeTrading.values.map { values =>
+      val keyValue = enumKeysAndValue(values)
+      EnumFileBody(recordId = keyValue._1, recordDescription = keyValue._2)
+    }.toList
+  }
+
+  private def createLicenceTypeEnumFileBody = {
+
+    def enumKeysAndValue(licenceType: LicenceType): (String, String) = licenceType match {
+      case DriverOfTaxisAndPrivateHires  => ("00", "Driver of taxis and private hires")
+      case OperatorOfPrivateHireVehicles => ("01", "Operator of private hire vehicles")
+      case ScrapMetalMobileCollector     => ("02", "Scrap metal mobile collector")
+      case ScrapMetalDealerSite          => ("03", "Scrap metal dealer site")
+    }
+    LicenceType.values.map { values =>
+      val keyValue = enumKeysAndValue(values)
+      EnumFileBody(recordId = keyValue._1, recordDescription = keyValue._2)
+    }.toList
+  }
+
+  private def createLicenceValidityPeriodFileBody = {
+
+    def enumKeysAndValue(licenceValidityPeriod: LicenceValidityPeriod): (String, String) = licenceValidityPeriod match {
+      case UpToOneYear    => ("00", "Up to 1 year")
+      case UpToTwoYears   => ("01", "Up to 2 years")
+      case UpToThreeYears => ("02", "Up to 3 years")
+      case UpToFourYears  => ("03", "Up to 4 years")
+      case UpToFiveYears  => ("04", "Up to 5 years")
+    }
+    LicenceValidityPeriod.values.map { values =>
+      val keyValue = enumKeysAndValue(values)
+      EnumFileBody(recordId = keyValue._1, recordDescription = keyValue._2)
+    }.toList
+  }
   //Create the  file body contents excluding header and trailer
   private def getFileBodyContents[A](inputType: A): Either[Error, List[EnumFileBody]] =
     inputType match {
-      case LicenceType           => Right(LicenceType.toEnumFileBody)
-      case LicenceTimeTrading    => Right(LicenceTimeTrading.toEnumFileBody)
-      case LicenceValidityPeriod => Right(LicenceValidityPeriod.toEnumFileBody)
+      case LicenceType           => Right(createLicenceTypeEnumFileBody)
+      case LicenceTimeTrading    => Right(createLicenceTimeTradingEnumFileBody)
+      case LicenceValidityPeriod => Right(createLicenceValidityPeriodFileBody)
       case _                     => Left(Error("Input Type is not valid."))
     }
 

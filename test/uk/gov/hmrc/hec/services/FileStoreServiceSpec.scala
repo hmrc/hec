@@ -20,13 +20,14 @@ import akka.NotUsed
 import akka.actor.ActorSystem
 import akka.stream.Materializer
 import akka.stream.scaladsl.Source
+import akka.testkit.TestKit
 import akka.util.ByteString
-import com.typesafe.config.ConfigFactory
+import com.typesafe.config.{ConfigFactory, ConfigValueFactory}
 import org.scalamock.scalatest.MockFactory
-import org.scalatest.OptionValues
 import org.scalatest.concurrent.ScalaFutures
 import org.scalatest.matchers.should.Matchers
-import org.scalatest.wordspec.AnyWordSpec
+import org.scalatest.wordspec.AnyWordSpecLike
+import org.scalatest.{BeforeAndAfterAll, OptionValues}
 import play.api.Configuration
 import uk.gov.hmrc.hec.services.scheduleService.HECTaxCheckExtractionContext
 import uk.gov.hmrc.http.HeaderCarrier
@@ -34,7 +35,27 @@ import uk.gov.hmrc.objectstore.client.config.ObjectStoreClientConfig
 import uk.gov.hmrc.objectstore.client.play.test.stub.StubPlayObjectStoreClient
 import uk.gov.hmrc.objectstore.client.{Path, RetentionPeriod}
 
-class FileStoreServiceSpec extends AnyWordSpec with Matchers with MockFactory with ScalaFutures with OptionValues {
+class FileStoreServiceSpec
+    extends TestKit(
+      ActorSystem(
+        "file-storage-impl",
+        ConfigFactory
+          .defaultApplication()
+          .resolve()
+          .withValue("akka.test.single-expect-default", ConfigValueFactory.fromAnyRef("3 seconds"))
+      )
+    )
+    with AnyWordSpecLike
+    with Matchers
+    with MockFactory
+    with ScalaFutures
+    with OptionValues
+    with BeforeAndAfterAll {
+
+  override def afterAll(): Unit = {
+    super.afterAll()
+    TestKit.shutdownActorSystem(system)
+  }
 
   "FileStoreServiceSpec" must {
 
@@ -55,9 +76,8 @@ class FileStoreServiceSpec extends AnyWordSpec with Matchers with MockFactory wi
         .getOrElse(RetentionPeriod.OneWeek)
     )
 
-    implicit val sys: ActorSystem                                           = ActorSystem("MyTest")
-    implicit val hecTaxCheckExtractionContext: HECTaxCheckExtractionContext = new HECTaxCheckExtractionContext(sys)
-    implicit val mat: Materializer                                          = Materializer(sys)
+    implicit val hecTaxCheckExtractionContext: HECTaxCheckExtractionContext = new HECTaxCheckExtractionContext(system)
+    implicit val mat: Materializer                                          = Materializer(system)
     val client: StubPlayObjectStoreClient                                   = new StubPlayObjectStoreClient(objectStoreConfig)
 
     val fileStoreService: FileStoreServiceImpl = new FileStoreServiceImpl(client, config)

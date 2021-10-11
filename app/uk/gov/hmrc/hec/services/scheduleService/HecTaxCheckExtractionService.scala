@@ -22,6 +22,7 @@ import com.google.inject.{ImplementedBy, Inject}
 import uk.gov.hmrc.hec.models
 import uk.gov.hmrc.hec.models.licence.{LicenceTimeTrading, LicenceType, LicenceValidityPeriod}
 import uk.gov.hmrc.hec.models.{Error, HECTaxCheck}
+import uk.gov.hmrc.hec.services.scheduleService.HecTaxCheckExtractionServiceImpl._
 import uk.gov.hmrc.hec.services.{FileCreationService, FileStoreService, MongoLockService, TaxCheckService}
 import uk.gov.hmrc.hec.util.Logging
 import uk.gov.hmrc.http.HeaderCarrier
@@ -49,9 +50,11 @@ class HecTaxCheckExtractionServiceImpl @Inject() (
 
   implicit val hc: HeaderCarrier = HeaderCarrier()
 
-  val licenceType: (String, String)           = ("licence-type", "LICENCE_TYPE")
-  val licenceTimeTrading: (String, String)    = ("licence-time-trading", "LICENCE_TIME_TRADING")
-  val licenceValidityPeriod: (String, String) = ("licence-validity-period", "LICENCE_VALIDITY_PERIOD")
+  val licenceType: FileDetails[LicenceType]                     = FileDetails[LicenceType]("licence-type", "LICENCE_TYPE")
+  val licenceTimeTrading: FileDetails[LicenceTimeTrading]       =
+    FileDetails[LicenceTimeTrading]("licence-time-trading", "LICENCE_TIME_TRADING")
+  val licenceValidityPeriod: FileDetails[LicenceValidityPeriod] =
+    FileDetails[LicenceValidityPeriod]("licence-validity-period", "LICENCE_VALIDITY_PERIOD")
 
   override def lockAndProcessHecData(): Future[Option[Either[models.Error, List[HECTaxCheck]]]] =
     mongoLockService.withLock(processHecData)
@@ -65,9 +68,15 @@ class HecTaxCheckExtractionServiceImpl @Inject() (
                               logger.info(s" Job submitted to extract hec Tax check code :: ${h.taxCheckCode.value}")
                             )
         updatedHecTaxChek = hecTaxCheck.map(_.copy(isExtracted = true))
-        _                <- createAndStoreFile(LicenceType, seqNum, licenceType._2, licenceType._1)
-        _                <- createAndStoreFile(LicenceTimeTrading, seqNum, licenceTimeTrading._2, licenceTimeTrading._1)
-        _                <- createAndStoreFile(LicenceValidityPeriod, seqNum, licenceValidityPeriod._2, licenceValidityPeriod._1)
+        _                <- createAndStoreFile(LicenceType, seqNum, licenceType.partialFileName, licenceType.dirName)
+        _                <-
+          createAndStoreFile(LicenceTimeTrading, seqNum, licenceTimeTrading.partialFileName, licenceTimeTrading.dirName)
+        _                <- createAndStoreFile(
+                              LicenceValidityPeriod,
+                              seqNum,
+                              licenceValidityPeriod.partialFileName,
+                              licenceValidityPeriod.dirName
+                            )
         //updating isExtracted to true for the the processed hec tax check codes
         newHecTaxCheck   <- taxCheckService.updateAllHecTaxCheck(updatedHecTaxChek)
       } yield newHecTaxCheck
@@ -83,9 +92,14 @@ class HecTaxCheckExtractionServiceImpl @Inject() (
     partialFileName: String,
     dirName: String
   )(implicit hc: HeaderCarrier): EitherT[Future, Error, Unit] = for {
-    fileContent <- fileCreationService.createFileContent(inputType, seqNum, partialFileName)
+    fileContent <- EitherT.fromEither[Future](fileCreationService.createFileContent(inputType, seqNum, partialFileName))
     _           <- fileStoreService.storeFile(fileContent._1, fileContent._2, dirName)
 
   } yield ()
+
+}
+
+object HecTaxCheckExtractionServiceImpl {
+  final case class FileDetails[A](dirName: String, partialFileName: String)
 
 }

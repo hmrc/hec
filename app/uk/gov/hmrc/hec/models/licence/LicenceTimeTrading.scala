@@ -21,7 +21,6 @@ import ai.x.play.json.SingletonEncoder.simpleName
 import ai.x.play.json.implicits.formatSingleton
 import enumeratum.{Enum, EnumEntry}
 import play.api.libs.json.Format
-import uk.gov.hmrc.hec.models.fileFormat.EnumFileBody
 
 import scala.collection.immutable
 
@@ -44,18 +43,5 @@ object LicenceTimeTrading extends Enum[LicenceTimeTrading] {
 
   @SuppressWarnings(Array("org.wartremover.warts.Throw", "org.wartremover.warts.Equals"))
   implicit val format: Format[LicenceTimeTrading] = Jsonx.formatSealed[LicenceTimeTrading]
-
-  def enumKeysAndValue(licenceTimeTrading: LicenceTimeTrading): (String, String) = licenceTimeTrading match {
-    case ZeroToTwoYears   => ("00", "0 to 2 years")
-    case TwoToFourYears   => ("01", "2 to 4 years")
-    case FourToEightYears => ("02", "4 to 8 years")
-    case EightYearsOrMore => ("03", "More than 8 years")
-  }
-
-  def toEnumFileBody: List[EnumFileBody] =
-    values
-      .map(enumKeysAndValue)
-      .map(keyValue => EnumFileBody(recordId = keyValue._1, recordDescription = keyValue._2))
-      .toList
 
 }

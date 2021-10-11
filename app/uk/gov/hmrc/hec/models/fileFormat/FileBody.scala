@@ -16,17 +16,13 @@
 
 package uk.gov.hmrc.hec.models.fileFormat
 
-trait FileBody {
+trait FileBody extends Product with Serializable {
   def recordType: String
   def toRowString: String
 }
 
 //file body for enum file
-final case class EnumFileBody(recordType: String = "01", recordId: String, recordDescription: String)
-    extends FileBody
-    with Product
-    with Serializable {
-
+final case class EnumFileBody(recordType: String = "01", recordId: String, recordDescription: String) extends FileBody {
   //convert the file body to pipe delimited string
   override def toRowString: String = this.productIterator.mkString("|")
 

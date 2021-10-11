@@ -22,7 +22,6 @@ import ai.x.play.json.implicits.formatSingleton
 import cats.Eq
 import enumeratum._
 import play.api.libs.json.Format
-import uk.gov.hmrc.hec.models.fileFormat.EnumFileBody
 
 import scala.collection.immutable
 
@@ -44,18 +43,5 @@ object LicenceType extends Enum[LicenceType] {
   implicit val format: Format[LicenceType] = Jsonx.formatSealed[LicenceType]
 
   implicit val eq: Eq[LicenceType] = Eq.fromUniversalEquals
-
-  def enumKeysAndValue(licenceType: LicenceType): (String, String) = licenceType match {
-    case DriverOfTaxisAndPrivateHires  => ("00", "Driver of taxis and private hires")
-    case OperatorOfPrivateHireVehicles => ("01", "Operator of private hire vehicles")
-    case ScrapMetalMobileCollector     => ("02", "Scrap metal mobile collector")
-    case ScrapMetalDealerSite          => ("03", "Scrap metal dealer site")
-  }
-
-  def toEnumFileBody: List[EnumFileBody] =
-    values
-      .map(enumKeysAndValue)
-      .map(keyValue => EnumFileBody(recordId = keyValue._1, recordDescription = keyValue._2))
-      .toList
 
 }

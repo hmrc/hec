@@ -19,19 +19,23 @@ package uk.gov.hmrc.hec.services
 import org.scalamock.scalatest.MockFactory
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
-import play.api.test.Helpers._
+import uk.gov.hmrc.hec.models.Error
 import uk.gov.hmrc.hec.models.licence.{LicenceTimeTrading, LicenceType, LicenceValidityPeriod}
 import uk.gov.hmrc.hec.util.TimeProvider
 
 import java.time.{LocalDate, LocalTime, ZoneId}
 
 class FileCreationServiceSpec extends AnyWordSpec with Matchers with MockFactory {
+
   val mockTimeProvider = mock[TimeProvider]
 
   val fileCreationService = new FileCreationServiceImpl(mockTimeProvider)
 
-  def mockDateProviderToday(d: LocalDate) = (mockTimeProvider.currentDate _).expects().returning(d)
-  def mockTimeProviderToday(d: LocalTime) = (mockTimeProvider.currentTime(_: ZoneId)).expects(*).returning(d)
+  def mockDateProviderToday(d: LocalDate)               = (mockTimeProvider.currentDate _).expects().returning(d)
+  def mockTimeProviderNow(d: LocalTime, zoneId: ZoneId) =
+    (mockTimeProvider.currentTime(_: ZoneId)).expects(zoneId).returning(d)
+
+  val zoneId = ZoneId.of("Europe/London")
 
   "FileCreationServiceSpec" must {
 
@@ -41,20 +45,21 @@ class FileCreationServiceSpec extends AnyWordSpec with Matchers with MockFactory
 
         inSequence {
           mockDateProviderToday(LocalDate.of(2021, 10, 10))
-          mockTimeProviderToday(LocalTime.of(11, 36, 5))
+          mockTimeProviderNow(LocalTime.of(11, 36, 5), zoneId)
         }
-        val result   = fileCreationService.createFileContent(LicenceType, "0001", "LICENCE_TYPE").value
+        val result: Either[Error, (String, String)] =
+          fileCreationService.createFileContent(LicenceType, "0001", "LICENCE_TYPE")
         //In future if content grows we can reduce the test to check only for few lines or header and trailer.
         //As of now content is less, so no harm in testing i guess
         //same applies for other test
-        val expected = s"""|00|HEC_SSA_0001_20211010_LICENCE_TYPE.dat|HEC|SSA|20211010|113605|000001|001
+        val expected                                = s"""|00|HEC_SSA_0001_20211010_LICENCE_TYPE.dat|HEC|SSA|20211010|113605|000001|001
              |01|00|Driver of taxis and private hires
              |01|01|Operator of private hire vehicles
              |01|02|Scrap metal mobile collector
              |01|03|Scrap metal dealer site
              |99|HEC_SSA_0001_20211010_LICENCE_TYPE.dat|6|Y""".stripMargin
 
-        await(result) shouldBe Right((expected, "HEC_SSA_0001_20211010_LICENCE_TYPE.dat"))
+        result shouldBe (Right((expected, "HEC_SSA_0001_20211010_LICENCE_TYPE.dat")))
 
       }
 
@@ -62,17 +67,18 @@ class FileCreationServiceSpec extends AnyWordSpec with Matchers with MockFactory
 
         inSequence {
           mockDateProviderToday(LocalDate.of(2021, 10, 10))
-          mockTimeProviderToday(LocalTime.of(11, 36, 5))
+          mockTimeProviderNow(LocalTime.of(11, 36, 5), zoneId)
         }
-        val result   = fileCreationService.createFileContent(LicenceTimeTrading, "0001", "LICENCE_TIME_TRADING").value
-        val expected = s"""|00|HEC_SSA_0001_20211010_LICENCE_TIME_TRADING.dat|HEC|SSA|20211010|113605|000001|001
+        val result: Either[Error, (String, String)] =
+          fileCreationService.createFileContent(LicenceTimeTrading, "0001", "LICENCE_TIME_TRADING")
+        val expected                                = s"""|00|HEC_SSA_0001_20211010_LICENCE_TIME_TRADING.dat|HEC|SSA|20211010|113605|000001|001
                            |01|00|0 to 2 years
                            |01|01|2 to 4 years
                            |01|02|4 to 8 years
                            |01|03|More than 8 years
                            |99|HEC_SSA_0001_20211010_LICENCE_TIME_TRADING.dat|6|Y""".stripMargin
 
-        await(result) shouldBe Right((expected, "HEC_SSA_0001_20211010_LICENCE_TIME_TRADING.dat"))
+        result shouldBe Right((expected, "HEC_SSA_0001_20211010_LICENCE_TIME_TRADING.dat"))
 
       }
 
@@ -80,11 +86,11 @@ class FileCreationServiceSpec extends AnyWordSpec with Matchers with MockFactory
 
         inSequence {
           mockDateProviderToday(LocalDate.of(2021, 10, 10))
-          mockTimeProviderToday(LocalTime.of(11, 36, 5))
+          mockTimeProviderNow(LocalTime.of(11, 36, 5), zoneId)
         }
-        val result   =
-          fileCreationService.createFileContent(LicenceValidityPeriod, "0001", "LICENCE_VALIDITY_PERIOD").value
-        val expected = s"""|00|HEC_SSA_0001_20211010_LICENCE_VALIDITY_PERIOD.dat|HEC|SSA|20211010|113605|000001|001
+        val result: Either[Error, (String, String)] =
+          fileCreationService.createFileContent(LicenceValidityPeriod, "0001", "LICENCE_VALIDITY_PERIOD")
+        val expected                                = s"""|00|HEC_SSA_0001_20211010_LICENCE_VALIDITY_PERIOD.dat|HEC|SSA|20211010|113605|000001|001
                            |01|00|Up to 1 year
                            |01|01|Up to 2 years
                            |01|02|Up to 3 years
@@ -92,7 +98,7 @@ class FileCreationServiceSpec extends AnyWordSpec with Matchers with MockFactory
                            |01|04|Up to 5 years
                            |99|HEC_SSA_0001_20211010_LICENCE_VALIDITY_PERIOD.dat|7|Y""".stripMargin
 
-        await(result) shouldBe Right((expected, "HEC_SSA_0001_20211010_LICENCE_VALIDITY_PERIOD.dat"))
+        result shouldBe Right((expected, "HEC_SSA_0001_20211010_LICENCE_VALIDITY_PERIOD.dat"))
 
       }
 
@@ -101,9 +107,10 @@ class FileCreationServiceSpec extends AnyWordSpec with Matchers with MockFactory
     "return an error" when {
 
       "input type doesn't match the expected" in {
-        val result = fileCreationService.createFileContent("LicenceType", "0001", "LICENCE_TYPE").value
+        val result: Either[Error, (String, String)] =
+          fileCreationService.createFileContent("LicenceType", "0001", "LICENCE_TYPE")
 
-        await(result).isLeft shouldBe true
+        result.isLeft shouldBe true
 
       }
     }

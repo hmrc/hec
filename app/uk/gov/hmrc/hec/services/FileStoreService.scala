@@ -48,6 +48,7 @@ trait FileStoreService {
 class FileStoreServiceImpl @Inject() (client: PlayObjectStoreClient, config: Configuration)
     extends FileStoreService
     with Logging {
+
   override def storeFile(
     fileContent: String,
     fileName: String,
@@ -56,16 +57,14 @@ class FileStoreServiceImpl @Inject() (client: PlayObjectStoreClient, config: Con
     hc: HeaderCarrier,
     hecTaxCheckExtractionContext: HECTaxCheckExtractionContext
   ): EitherT[Future, models.Error, Unit] = {
+
     import uk.gov.hmrc.objectstore.client.play.Implicits._
     EitherT(
       client
         .putObject(
           path = Path.Directory(dirName).file(fileName),
           content = fileContent,
-          retentionPeriod = RetentionPeriod
-            .parse(config.get[String]("object-store.default-retention-period"))
-            .getOrElse(RetentionPeriod.OneWeek),
-          contentType = Some("plain/text"),
+          retentionPeriod = getRetentionPeriod,
           owner = "hec"
         )
         .map { _ =>
@@ -78,4 +77,8 @@ class FileStoreServiceImpl @Inject() (client: PlayObjectStoreClient, config: Con
         }
     )
   }
+
+  private def getRetentionPeriod: RetentionPeriod = RetentionPeriod
+    .parse(config.get[String]("object-store.default-retention-period"))
+    .getOrElse(RetentionPeriod.OneWeek)
 }

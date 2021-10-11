@@ -17,32 +17,52 @@
 package uk.gov.hmrc.hec.services
 
 import akka.actor.ActorSystem
+import akka.testkit.TestKit
 import cats.data.EitherT
 import cats.instances.future._
-import com.typesafe.config.ConfigFactory
+import com.typesafe.config.{ConfigFactory, ConfigValueFactory}
 import org.scalamock.scalatest.MockFactory
+import org.scalatest.BeforeAndAfterAll
 import org.scalatest.matchers.should.Matchers
-import org.scalatest.wordspec.AnyWordSpec
+import org.scalatest.wordspec.AnyWordSpecLike
 import play.api.Configuration
 import play.api.test.Helpers._
 import uk.gov.hmrc.hec.models
 import uk.gov.hmrc.hec.models.ApplicantDetails.CompanyApplicantDetails
-import uk.gov.hmrc.hec.models.{HECTaxCheck, HECTaxCheckCode}
 import uk.gov.hmrc.hec.models.HECTaxCheckData.CompanyHECTaxCheckData
 import uk.gov.hmrc.hec.models.TaxDetails.CompanyTaxDetails
 import uk.gov.hmrc.hec.models.ids.{CRN, CTUTR, GGCredId}
 import uk.gov.hmrc.hec.models.licence.{LicenceDetails, LicenceTimeTrading, LicenceType, LicenceValidityPeriod}
+import uk.gov.hmrc.hec.models.{HECTaxCheck, HECTaxCheckCode}
 import uk.gov.hmrc.hec.services.scheduleService.{HECTaxCheckExtractionContext, HecTaxCheckExtractionServiceImpl}
 import uk.gov.hmrc.hec.util.TimeUtils
 import uk.gov.hmrc.http.HeaderCarrier
 
 import scala.concurrent.Future
 
-class HecTaxCheckExtractionServiceSpec extends AnyWordSpec with Matchers with MockFactory {
+class HecTaxCheckExtractionServiceSpec
+    extends TestKit(
+      ActorSystem(
+        "hec-tax-check-extraction-service-impl",
+        ConfigFactory
+          .defaultApplication()
+          .resolve()
+          .withValue("akka.test.single-expect-default", ConfigValueFactory.fromAnyRef("3 seconds"))
+      )
+    )
+    with AnyWordSpecLike
+    with Matchers
+    with MockFactory
+    with BeforeAndAfterAll {
   val mockTaxCheckService     = mock[TaxCheckService]
   val mockMongoLockService    = mock[MongoLockService]
   val mockFileCreationService = mock[FileCreationService]
   val mockFileStoreService    = mock[FileStoreService]
+
+  override def afterAll(): Unit = {
+    super.afterAll()
+    TestKit.shutdownActorSystem(system)
+  }
 
   def mockGetAlltaxCheckByExtractedStatus(isExtracted: Boolean)(result: Either[models.Error, List[HECTaxCheck]]) =
     (mockTaxCheckService
@@ -74,7 +94,7 @@ class HecTaxCheckExtractionServiceSpec extends AnyWordSpec with Matchers with Mo
     (mockFileCreationService
       .createFileContent[A](_: A, _: String, _: String))
       .expects(inputType, seqNum, partialFileName)
-      .returning(EitherT.fromEither[Future](result))
+      .returning(result)
 
   def mockStoreFile(fileContent: String, fileName: String, dirName: String)(result: Either[models.Error, Unit]) =
     (mockFileStoreService
@@ -82,8 +102,7 @@ class HecTaxCheckExtractionServiceSpec extends AnyWordSpec with Matchers with Mo
       .expects(fileContent, fileName, dirName, *, *)
       .returning(EitherT.fromEither[Future](result))
 
-  implicit val sys: ActorSystem                                           = ActorSystem("MyTest")
-  implicit val hecTaxCheckExtractionContext: HECTaxCheckExtractionContext = new HECTaxCheckExtractionContext(sys)
+  implicit val hecTaxCheckExtractionContext: HECTaxCheckExtractionContext = new HECTaxCheckExtractionContext(system)
 
   val config: Configuration = Configuration(
     ConfigFactory.parseString(
