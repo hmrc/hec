@@ -54,7 +54,7 @@ class HECTaxCheckScheduleService @Inject() (
   //Once that is done, call the scheduleNextJob() again to schedule the next job
   // as per the extraction time in conf
   def runScheduledJob(): Unit =
-    hecTaxCheckExtractionService.lockAndExtractJob().onComplete { result =>
+    hecTaxCheckExtractionService.lockAndProcessHecData().onComplete { result =>
       result match {
         case Success(mayBeValue) =>
           mayBeValue match {

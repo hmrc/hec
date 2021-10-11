@@ -19,11 +19,15 @@ package uk.gov.hmrc.hec.models.licence
 import ai.x.play.json.Jsonx
 import ai.x.play.json.SingletonEncoder.simpleName
 import ai.x.play.json.implicits.formatSingleton
+import enumeratum.{Enum, EnumEntry}
 import play.api.libs.json.Format
 
-sealed trait LicenceTimeTrading extends Product with Serializable
+import scala.collection.immutable
 
-object LicenceTimeTrading {
+sealed trait LicenceTimeTrading extends EnumEntry with Product with Serializable
+
+object LicenceTimeTrading extends Enum[LicenceTimeTrading] {
+
   case object ZeroToTwoYears extends LicenceTimeTrading
 
   case object TwoToFourYears extends LicenceTimeTrading
@@ -32,6 +36,12 @@ object LicenceTimeTrading {
 
   case object EightYearsOrMore extends LicenceTimeTrading
 
+  //used enumeratum to create set of LicenceTimeTrading, so that we don't have to create that manullay
+  //enumeratum library is not interfering with our existing json library
+  //data insertion in mongo is not impacted
+  val values: immutable.IndexedSeq[LicenceTimeTrading] = findValues
+
   @SuppressWarnings(Array("org.wartremover.warts.Throw", "org.wartremover.warts.Equals"))
   implicit val format: Format[LicenceTimeTrading] = Jsonx.formatSealed[LicenceTimeTrading]
+
 }

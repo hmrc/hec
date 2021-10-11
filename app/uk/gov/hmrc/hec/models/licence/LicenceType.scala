@@ -20,11 +20,14 @@ import ai.x.play.json.Jsonx
 import ai.x.play.json.SingletonEncoder.simpleName
 import ai.x.play.json.implicits.formatSingleton
 import cats.Eq
+import enumeratum._
 import play.api.libs.json.Format
 
-sealed trait LicenceType extends Product with Serializable
+import scala.collection.immutable
 
-object LicenceType {
+sealed trait LicenceType extends EnumEntry with Product with Serializable
+
+object LicenceType extends Enum[LicenceType] {
 
   case object DriverOfTaxisAndPrivateHires extends LicenceType
 
@@ -33,6 +36,8 @@ object LicenceType {
   case object ScrapMetalMobileCollector extends LicenceType
 
   case object ScrapMetalDealerSite extends LicenceType
+
+  val values: immutable.IndexedSeq[LicenceType] = findValues
 
   @SuppressWarnings(Array("org.wartremover.warts.Throw", "org.wartremover.warts.Equals"))
   implicit val format: Format[LicenceType] = Jsonx.formatSealed[LicenceType]

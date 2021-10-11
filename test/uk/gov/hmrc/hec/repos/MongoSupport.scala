@@ -19,7 +19,7 @@ package uk.gov.hmrc.hec.repos
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.{BeforeAndAfterAll, BeforeAndAfterEach, Suite}
 import play.api.test.Helpers.await
-import uk.gov.hmrc.hec.services.HecTaxCheckExtractionServiceImplSpec.timeout
+import uk.gov.hmrc.hec.services.HecTaxCheckScheduleServiceImplSpec.timeout
 import uk.gov.hmrc.mongo.{MongoComponent, MongoSpecSupport}
 
 import scala.concurrent.ExecutionContext.Implicits.global

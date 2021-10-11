@@ -19,17 +19,22 @@ package uk.gov.hmrc.hec.models.licence
 import ai.x.play.json.Jsonx
 import ai.x.play.json.SingletonEncoder.simpleName
 import ai.x.play.json.implicits.formatSingleton
+import enumeratum.{Enum, EnumEntry}
 import play.api.libs.json.Format
 
-sealed trait LicenceValidityPeriod extends Product with Serializable
+import scala.collection.immutable
 
-object LicenceValidityPeriod {
+sealed trait LicenceValidityPeriod extends EnumEntry with Product with Serializable
+
+object LicenceValidityPeriod extends Enum[LicenceValidityPeriod] {
 
   case object UpToOneYear extends LicenceValidityPeriod
   case object UpToTwoYears extends LicenceValidityPeriod
   case object UpToThreeYears extends LicenceValidityPeriod
   case object UpToFourYears extends LicenceValidityPeriod
   case object UpToFiveYears extends LicenceValidityPeriod
+
+  val values: immutable.IndexedSeq[LicenceValidityPeriod] = findValues
 
   @SuppressWarnings(Array("org.wartremover.warts.Throw", "org.wartremover.warts.Equals"))
   implicit val format: Format[LicenceValidityPeriod] = Jsonx.formatSealed[LicenceValidityPeriod]
