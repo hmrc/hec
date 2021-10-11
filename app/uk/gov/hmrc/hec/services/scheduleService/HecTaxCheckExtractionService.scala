@@ -50,11 +50,11 @@ class HecTaxCheckExtractionServiceImpl @Inject() (
 
   implicit val hc: HeaderCarrier = HeaderCarrier()
 
-  val licenceType: FileDetails[LicenceType]                     = FileDetails[LicenceType]("licence-type", "LICENCE_TYPE")
+  val licenceType: FileDetails[LicenceType]                     = FileDetails[LicenceType]("licence-type", "HEC_LICENCE_TYPE")
   val licenceTimeTrading: FileDetails[LicenceTimeTrading]       =
-    FileDetails[LicenceTimeTrading]("licence-time-trading", "LICENCE_TIME_TRADING")
+    FileDetails[LicenceTimeTrading]("licence-time-trading", "HEC_LICENCE_TIME_TRADING")
   val licenceValidityPeriod: FileDetails[LicenceValidityPeriod] =
-    FileDetails[LicenceValidityPeriod]("licence-validity-period", "LICENCE_VALIDITY_PERIOD")
+    FileDetails[LicenceValidityPeriod]("licence-validity-period", "HEC_LICENCE_VALIDITY_PERIOD")
 
   override def lockAndProcessHecData(): Future[Option[Either[models.Error, List[HECTaxCheck]]]] =
     mongoLockService.withLock(processHecData)

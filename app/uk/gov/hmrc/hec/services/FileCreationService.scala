@@ -53,11 +53,7 @@ class FileCreationServiceImpl @Inject() (timeProvider: TimeProvider) extends Fil
     seqNum: String,
     partialFileName: String
   ): Either[Error, (String, String)]                                                  =
-    getFileBodyContents(inputType) match {
-      case Left(e)             => Left(e)
-      case Right(enumFileBody) =>
-        Right(createContent(seqNum, partialFileName, enumFileBody))
-    }
+    getFileBodyContents(inputType).map(createContent(seqNum, partialFileName, _))
 
   private def createLicenceTimeTradingEnumFileBody = {
 

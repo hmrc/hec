@@ -24,7 +24,7 @@ final case class FileHeader(
   dateOfExtract: String,
   timeOfExtract: String,
   sequenceNumber: String = "000001",
-  meteDataVersion: String = "001"
+  metaDataVersion: String = "001"
 ) extends Product
     with Serializable
 

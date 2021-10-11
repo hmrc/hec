@@ -48,18 +48,18 @@ class FileCreationServiceSpec extends AnyWordSpec with Matchers with MockFactory
           mockTimeProviderNow(LocalTime.of(11, 36, 5), zoneId)
         }
         val result: Either[Error, (String, String)] =
-          fileCreationService.createFileContent(LicenceType, "0001", "LICENCE_TYPE")
+          fileCreationService.createFileContent(LicenceType, "0001", "HEC_LICENCE_TYPE")
         //In future if content grows we can reduce the test to check only for few lines or header and trailer.
         //As of now content is less, so no harm in testing i guess
         //same applies for other test
-        val expected                                = s"""|00|HEC_SSA_0001_20211010_LICENCE_TYPE.dat|HEC|SSA|20211010|113605|000001|001
+        val expected                                = s"""|00|HEC_SSA_0001_20211010_HEC_LICENCE_TYPE.dat|HEC|SSA|20211010|113605|000001|001
              |01|00|Driver of taxis and private hires
              |01|01|Operator of private hire vehicles
              |01|02|Scrap metal mobile collector
              |01|03|Scrap metal dealer site
-             |99|HEC_SSA_0001_20211010_LICENCE_TYPE.dat|6|Y""".stripMargin
+             |99|HEC_SSA_0001_20211010_HEC_LICENCE_TYPE.dat|6|Y""".stripMargin
 
-        result shouldBe (Right((expected, "HEC_SSA_0001_20211010_LICENCE_TYPE.dat")))
+        result shouldBe (Right((expected, "HEC_SSA_0001_20211010_HEC_LICENCE_TYPE.dat")))
 
       }
 
@@ -70,15 +70,15 @@ class FileCreationServiceSpec extends AnyWordSpec with Matchers with MockFactory
           mockTimeProviderNow(LocalTime.of(11, 36, 5), zoneId)
         }
         val result: Either[Error, (String, String)] =
-          fileCreationService.createFileContent(LicenceTimeTrading, "0001", "LICENCE_TIME_TRADING")
-        val expected                                = s"""|00|HEC_SSA_0001_20211010_LICENCE_TIME_TRADING.dat|HEC|SSA|20211010|113605|000001|001
+          fileCreationService.createFileContent(LicenceTimeTrading, "0001", "HEC_LICENCE_TIME_TRADING")
+        val expected                                = s"""|00|HEC_SSA_0001_20211010_HEC_LICENCE_TIME_TRADING.dat|HEC|SSA|20211010|113605|000001|001
                            |01|00|0 to 2 years
                            |01|01|2 to 4 years
                            |01|02|4 to 8 years
                            |01|03|More than 8 years
-                           |99|HEC_SSA_0001_20211010_LICENCE_TIME_TRADING.dat|6|Y""".stripMargin
+                           |99|HEC_SSA_0001_20211010_HEC_LICENCE_TIME_TRADING.dat|6|Y""".stripMargin
 
-        result shouldBe Right((expected, "HEC_SSA_0001_20211010_LICENCE_TIME_TRADING.dat"))
+        result shouldBe Right((expected, "HEC_SSA_0001_20211010_HEC_LICENCE_TIME_TRADING.dat"))
 
       }
 
@@ -89,16 +89,16 @@ class FileCreationServiceSpec extends AnyWordSpec with Matchers with MockFactory
           mockTimeProviderNow(LocalTime.of(11, 36, 5), zoneId)
         }
         val result: Either[Error, (String, String)] =
-          fileCreationService.createFileContent(LicenceValidityPeriod, "0001", "LICENCE_VALIDITY_PERIOD")
-        val expected                                = s"""|00|HEC_SSA_0001_20211010_LICENCE_VALIDITY_PERIOD.dat|HEC|SSA|20211010|113605|000001|001
+          fileCreationService.createFileContent(LicenceValidityPeriod, "0001", "HEC_LICENCE_VALIDITY_PERIOD")
+        val expected                                = s"""|00|HEC_SSA_0001_20211010_HEC_LICENCE_VALIDITY_PERIOD.dat|HEC|SSA|20211010|113605|000001|001
                            |01|00|Up to 1 year
                            |01|01|Up to 2 years
                            |01|02|Up to 3 years
                            |01|03|Up to 4 years
                            |01|04|Up to 5 years
-                           |99|HEC_SSA_0001_20211010_LICENCE_VALIDITY_PERIOD.dat|7|Y""".stripMargin
+                           |99|HEC_SSA_0001_20211010_HEC_LICENCE_VALIDITY_PERIOD.dat|7|Y""".stripMargin
 
-        result shouldBe Right((expected, "HEC_SSA_0001_20211010_LICENCE_VALIDITY_PERIOD.dat"))
+        result shouldBe Right((expected, "HEC_SSA_0001_20211010_HEC_LICENCE_VALIDITY_PERIOD.dat"))
 
       }
 
