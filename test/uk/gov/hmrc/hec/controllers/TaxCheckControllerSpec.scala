@@ -49,7 +49,7 @@ class TaxCheckControllerSpec extends ControllerSpec with AuthSupport {
       bind[TaxCheckService].toInstance(mockTaxCheckService)
     )
 
-  val zonedDateTimeNow = ZonedDateTime.of(2021, 10, 9, 9, 12, 34, 0, ZoneId.of("Europe/London"))
+  val taxCheckStartDateTime = ZonedDateTime.of(2021, 10, 9, 9, 12, 34, 0, ZoneId.of("Europe/London"))
 
   val controller = instanceOf[TaxCheckController]
 
@@ -94,7 +94,7 @@ class TaxCheckControllerSpec extends ControllerSpec with AuthSupport {
           None,
           None
         ),
-        Some(zonedDateTimeNow)
+        taxCheckStartDateTime
       )
 
       "return a 415 (unsupported media type)" when {

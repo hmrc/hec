@@ -53,7 +53,7 @@ class HECTaxCheckStoreImplSpec extends AnyWordSpec with Matchers with Eventually
 
   "HECTaxCheckStoreImpl" must {
 
-    val zonedDateTimeNow = ZonedDateTime.of(2021, 10, 9, 9, 12, 34, 0, ZoneId.of("Europe/London"))
+    val taxCheckStartDateTime = ZonedDateTime.of(2021, 10, 9, 9, 12, 34, 0, ZoneId.of("Europe/London"))
 
     val taxCheckData = CompanyHECTaxCheckData(
       CompanyApplicantDetails(GGCredId(""), CRN("")),
@@ -63,7 +63,7 @@ class HECTaxCheckStoreImplSpec extends AnyWordSpec with Matchers with Eventually
         LicenceValidityPeriod.UpToOneYear
       ),
       CompanyTaxDetails(CTUTR("")),
-      Some(zonedDateTimeNow)
+      taxCheckStartDateTime
     )
 
     val taxCheckCode1 = HECTaxCheckCode("code1")

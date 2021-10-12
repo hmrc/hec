@@ -30,7 +30,7 @@ class HECTaxCheckDataSpec extends AnyWordSpec with Matchers {
 
   "HECTaxCheckData" must {
 
-    val zonedDateTimeNow = ZonedDateTime.of(2021, 10, 9, 9, 12, 34, 0, ZoneId.of("Europe/London"))
+    val taxCheckStartDateTime = ZonedDateTime.of(2021, 10, 9, 9, 12, 34, 0, ZoneId.of("Europe/London"))
 
     "perform JSON de/serialisation correctly" must {
       val dateOfBirthStr = "20001010"
@@ -55,7 +55,7 @@ class HECTaxCheckDataSpec extends AnyWordSpec with Matchers {
             Some(IncomeDeclared.Yes),
             None
           ),
-          Some(zonedDateTimeNow)
+          taxCheckStartDateTime
         )
 
       val individualJson = Json.parse(s"""{
@@ -96,7 +96,7 @@ class HECTaxCheckDataSpec extends AnyWordSpec with Matchers {
           CompanyTaxDetails(
             CTUTR("utr")
           ),
-          Some(zonedDateTimeNow)
+          taxCheckStartDateTime
         )
 
       val companyJson = Json.parse("""{

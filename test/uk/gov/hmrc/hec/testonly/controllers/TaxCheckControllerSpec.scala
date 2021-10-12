@@ -74,7 +74,7 @@ class TaxCheckControllerSpec extends ControllerSpec {
       .expects(*)
       .returning(EitherT.fromEither(result))
 
-  val zonedDateTimeNow = ZonedDateTime.of(2021, 10, 9, 9, 12, 34, 0, ZoneId.of("Europe/London"))
+  val taxCheckStartDateTime = ZonedDateTime.of(2021, 10, 9, 9, 12, 34, 0, ZoneId.of("Europe/London"))
 
   val controller = instanceOf[TaxCheckController]
 
@@ -97,7 +97,7 @@ class TaxCheckControllerSpec extends ControllerSpec {
           dob => s"""{ "dateofbirth" : "${toJsonString(dob.value)}" }"""
         )
 
-        val getStartDateTime = r.taxCheckStartDateTime.getOrElse(TimeUtils.now()).toString
+        val getStartDateTime = r.taxCheckStartDateTime.toString
 
         s"""
            |{
@@ -122,7 +122,7 @@ class TaxCheckControllerSpec extends ControllerSpec {
           Right(dateOfBirth),
           TimeUtils.today(),
           TimeUtils.now(),
-          Some(zonedDateTimeNow),
+          taxCheckStartDateTime,
           false
         )
         val body        = Json.parse(requestJsonString(request))
@@ -166,7 +166,7 @@ class TaxCheckControllerSpec extends ControllerSpec {
             verifier = Right(dateOfBirth),
             expiresAfter = TimeUtils.today(),
             createDate = TimeUtils.now(),
-            taxCheckStartDateTime = Some(zonedDateTimeNow),
+            taxCheckStartDateTime = taxCheckStartDateTime,
             isExtracted = false
           )
           val body        = Json.parse(requestJsonString(request))
@@ -191,7 +191,7 @@ class TaxCheckControllerSpec extends ControllerSpec {
             Right(dateOfBirth),
             TimeUtils.today(),
             TimeUtils.now(),
-            Some(zonedDateTimeNow),
+            taxCheckStartDateTime,
             false
           )
           val body        = Json.parse(requestJsonString(request))
@@ -210,7 +210,7 @@ class TaxCheckControllerSpec extends ControllerSpec {
             Left(crn),
             TimeUtils.today(),
             TimeUtils.now(),
-            Some(zonedDateTimeNow),
+            taxCheckStartDateTime,
             false
           )
           val body    = Json.parse(requestJsonString(request))
@@ -274,7 +274,7 @@ class TaxCheckControllerSpec extends ControllerSpec {
               Some(IncomeDeclared.Yes),
               None
             ),
-            Some(zonedDateTimeNow)
+            taxCheckStartDateTime
           )
           val taxCheck     = HECTaxCheck(taxCheckData, validTaxCheckCode, TimeUtils.today(), TimeUtils.now(), false)
 

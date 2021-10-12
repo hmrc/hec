@@ -82,7 +82,7 @@ class TaxCheckServiceImplSpec extends AnyWordSpec with Matchers with MockFactory
   def mockTimeProviderToday(d: LocalDate) = (mockTimeProvider.currentDate _).expects().returning(d)
 
   implicit val hc: HeaderCarrier = HeaderCarrier()
-  val zonedDateTimeNow           = ZonedDateTime.of(2021, 10, 9, 9, 12, 34, 0, ZoneId.of("Europe/London"))
+  val taxCheckStartDateTime      = ZonedDateTime.of(2021, 10, 9, 9, 12, 34, 0, ZoneId.of("Europe/London"))
   private val now                = TimeUtils.now()
   private val today              = TimeUtils.today()
 
@@ -104,7 +104,7 @@ class TaxCheckServiceImplSpec extends AnyWordSpec with Matchers with MockFactory
           Some(IncomeDeclared.Yes),
           None
         ),
-        Some(zonedDateTimeNow)
+        taxCheckStartDateTime
       )
 
       val expectedExpiryDate = TimeUtils.today().plusDays(expiresAfter.toDays)
@@ -177,7 +177,7 @@ class TaxCheckServiceImplSpec extends AnyWordSpec with Matchers with MockFactory
               Some(IncomeDeclared.No),
               None
             ),
-            Some(zonedDateTimeNow)
+            taxCheckStartDateTime
           ),
           taxCheckCode,
           TimeUtils.today().plusMonths(1L),
@@ -191,7 +191,7 @@ class TaxCheckServiceImplSpec extends AnyWordSpec with Matchers with MockFactory
             CompanyApplicantDetails(GGCredId(""), storedCRN),
             storedLicenceDetails,
             CompanyTaxDetails(CTUTR("")),
-            Some(zonedDateTimeNow)
+            taxCheckStartDateTime
           ),
           taxCheckCode,
           TimeUtils.today().plusMonths(1L),
@@ -384,7 +384,7 @@ class TaxCheckServiceImplSpec extends AnyWordSpec with Matchers with MockFactory
           LicenceValidityPeriod.UpToOneYear
         ),
         CompanyTaxDetails(CTUTR("")),
-        Some(zonedDateTimeNow)
+        taxCheckStartDateTime
       )
 
       "return an error" when {
@@ -442,7 +442,7 @@ class TaxCheckServiceImplSpec extends AnyWordSpec with Matchers with MockFactory
           LicenceValidityPeriod.UpToOneYear
         ),
         CompanyTaxDetails(CTUTR("")),
-        Some(zonedDateTimeNow)
+        taxCheckStartDateTime
       )
 
       "return an error" when {
