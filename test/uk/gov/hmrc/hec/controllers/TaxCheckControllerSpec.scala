@@ -35,7 +35,7 @@ import uk.gov.hmrc.hec.services.TaxCheckService
 import uk.gov.hmrc.hec.util.TimeUtils
 import uk.gov.hmrc.http.HeaderCarrier
 
-import java.time.{LocalDate, ZonedDateTime}
+import java.time.{LocalDate, ZoneId, ZonedDateTime}
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
@@ -48,6 +48,8 @@ class TaxCheckControllerSpec extends ControllerSpec with AuthSupport {
       bind[AuthConnector].toInstance(mockAuthConnector),
       bind[TaxCheckService].toInstance(mockTaxCheckService)
     )
+
+  val zonedDateTimeNow = ZonedDateTime.of(2021, 10, 9, 9, 12, 34, 0, ZoneId.of("Europe/London"))
 
   val controller = instanceOf[TaxCheckController]
 
@@ -89,8 +91,10 @@ class TaxCheckControllerSpec extends ControllerSpec with AuthSupport {
           NINO(""),
           Some(SAUTR("")),
           TaxSituation.PAYE,
+          None,
           None
-        )
+        ),
+        Some(zonedDateTimeNow)
       )
 
       "return a 415 (unsupported media type)" when {

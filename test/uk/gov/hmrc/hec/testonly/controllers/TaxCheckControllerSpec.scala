@@ -36,7 +36,7 @@ import uk.gov.hmrc.hec.testonly.services.TaxCheckService
 import uk.gov.hmrc.hec.util.TimeUtils
 import uk.gov.hmrc.http.HeaderCarrier
 
-import java.time.LocalDate
+import java.time.{LocalDate, ZoneId, ZonedDateTime}
 import java.time.format.DateTimeFormatter
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
@@ -74,6 +74,8 @@ class TaxCheckControllerSpec extends ControllerSpec {
       .expects(*)
       .returning(EitherT.fromEither(result))
 
+  val zonedDateTimeNow = ZonedDateTime.of(2021, 10, 9, 9, 12, 34, 0, ZoneId.of("Europe/London"))
+
   val controller = instanceOf[TaxCheckController]
 
   "TaxCheckController" when {
@@ -95,6 +97,8 @@ class TaxCheckControllerSpec extends ControllerSpec {
           dob => s"""{ "dateofbirth" : "${toJsonString(dob.value)}" }"""
         )
 
+        val getStartDateTime = r.taxCheckStartDateTime.getOrElse(TimeUtils.now()).toString
+
         s"""
            |{
            |  "taxCheckCode" : "${r.taxCheckCode.value}",
@@ -102,6 +106,7 @@ class TaxCheckControllerSpec extends ControllerSpec {
            |  "verifier" : $verifierJson,
            |  "expiresAfter" : "${toJsonString(r.expiresAfter)}",
            |  "createDate" : "${r.createDate}",
+           |  "taxCheckStartDateTime": "$getStartDateTime",
            |  "isExtracted": false
            |}
            |""".stripMargin
@@ -117,6 +122,7 @@ class TaxCheckControllerSpec extends ControllerSpec {
           Right(dateOfBirth),
           TimeUtils.today(),
           TimeUtils.now(),
+          Some(zonedDateTimeNow),
           false
         )
         val body        = Json.parse(requestJsonString(request))
@@ -160,9 +166,11 @@ class TaxCheckControllerSpec extends ControllerSpec {
             verifier = Right(dateOfBirth),
             expiresAfter = TimeUtils.today(),
             createDate = TimeUtils.now(),
+            taxCheckStartDateTime = Some(zonedDateTimeNow),
             isExtracted = false
           )
           val body        = Json.parse(requestJsonString(request))
+          println(" body is ::" + body.toString())
 
           mockSaveTaxCheck(request)(Left(Error("")))
 
@@ -183,6 +191,7 @@ class TaxCheckControllerSpec extends ControllerSpec {
             Right(dateOfBirth),
             TimeUtils.today(),
             TimeUtils.now(),
+            Some(zonedDateTimeNow),
             false
           )
           val body        = Json.parse(requestJsonString(request))
@@ -201,6 +210,7 @@ class TaxCheckControllerSpec extends ControllerSpec {
             Left(crn),
             TimeUtils.today(),
             TimeUtils.now(),
+            Some(zonedDateTimeNow),
             false
           )
           val body    = Json.parse(requestJsonString(request))
@@ -261,8 +271,10 @@ class TaxCheckControllerSpec extends ControllerSpec {
               NINO(""),
               Some(SAUTR("")),
               TaxSituation.SAPAYE,
-              Some(IncomeDeclared.Yes)
-            )
+              Some(IncomeDeclared.Yes),
+              None
+            ),
+            Some(zonedDateTimeNow)
           )
           val taxCheck     = HECTaxCheck(taxCheckData, validTaxCheckCode, TimeUtils.today(), TimeUtils.now(), false)
 

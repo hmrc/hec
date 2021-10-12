@@ -38,6 +38,7 @@ import uk.gov.hmrc.hec.services.scheduleService.{HECTaxCheckExtractionContext, H
 import uk.gov.hmrc.hec.util.TimeUtils
 import uk.gov.hmrc.http.HeaderCarrier
 
+import java.time.{ZoneId, ZonedDateTime}
 import scala.concurrent.Future
 
 class HecTaxCheckExtractionServiceSpec
@@ -58,6 +59,8 @@ class HecTaxCheckExtractionServiceSpec
   val mockMongoLockService    = mock[MongoLockService]
   val mockFileCreationService = mock[FileCreationService]
   val mockFileStoreService    = mock[FileStoreService]
+
+  val zonedDateTimeNow = ZonedDateTime.of(2021, 10, 9, 9, 12, 34, 0, ZoneId.of("Europe/London"))
 
   override def afterAll(): Unit = {
     super.afterAll()
@@ -128,7 +131,8 @@ class HecTaxCheckExtractionServiceSpec
         LicenceTimeTrading.EightYearsOrMore,
         LicenceValidityPeriod.UpToOneYear
       ),
-      CompanyTaxDetails(CTUTR(""))
+      CompanyTaxDetails(CTUTR("")),
+      Some(zonedDateTimeNow)
     )
     val taxCheckCode1 = HECTaxCheckCode("code1")
     val taxCheckCode2 = HECTaxCheckCode("code12")

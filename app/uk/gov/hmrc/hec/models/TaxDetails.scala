@@ -27,7 +27,8 @@ object TaxDetails {
     nino: NINO,
     sautr: Option[SAUTR],
     taxSituation: TaxSituation,
-    saIncomeDeclared: Option[IncomeDeclared]
+    saIncomeDeclared: Option[IncomeDeclared],
+    saStatusResponse: Option[SAStatusResponse]
   ) extends TaxDetails
 
   final case class CompanyTaxDetails(
