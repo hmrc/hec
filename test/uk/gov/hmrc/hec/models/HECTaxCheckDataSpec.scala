@@ -16,8 +16,7 @@
 
 package uk.gov.hmrc.hec.models
 
-import java.time.LocalDate
-
+import java.time.{LocalDate, ZoneId, ZonedDateTime}
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
 import play.api.libs.json.Json
@@ -30,6 +29,8 @@ import uk.gov.hmrc.hec.models.licence.{LicenceDetails, LicenceTimeTrading, Licen
 class HECTaxCheckDataSpec extends AnyWordSpec with Matchers {
 
   "HECTaxCheckData" must {
+
+    val taxCheckStartDateTime = ZonedDateTime.of(2021, 10, 9, 9, 12, 34, 0, ZoneId.of("Europe/London"))
 
     "perform JSON de/serialisation correctly" must {
       val dateOfBirthStr = "20001010"
@@ -51,8 +52,10 @@ class HECTaxCheckDataSpec extends AnyWordSpec with Matchers {
             NINO("nino"),
             Some(SAUTR("utr")),
             TaxSituation.SA,
-            Some(IncomeDeclared.Yes)
-          )
+            Some(IncomeDeclared.Yes),
+            None
+          ),
+          taxCheckStartDateTime
         )
 
       val individualJson = Json.parse(s"""{
@@ -75,6 +78,7 @@ class HECTaxCheckDataSpec extends AnyWordSpec with Matchers {
                                          |    "taxSituation":"SA",
                                          |    "saIncomeDeclared":"Yes"
                                          | },
+                                         | "taxCheckStartDateTime" : "2021-10-09T09:12:34+01:00[Europe/London]",
                                          | "type":"Individual"
                                          |}""".stripMargin)
 
@@ -91,7 +95,8 @@ class HECTaxCheckDataSpec extends AnyWordSpec with Matchers {
           ),
           CompanyTaxDetails(
             CTUTR("utr")
-          )
+          ),
+          taxCheckStartDateTime
         )
 
       val companyJson = Json.parse("""{
@@ -107,6 +112,7 @@ class HECTaxCheckDataSpec extends AnyWordSpec with Matchers {
                                      | "taxDetails":{
                                      |   "ctutr":"utr"
                                      | },
+                                     | "taxCheckStartDateTime" : "2021-10-09T09:12:34+01:00[Europe/London]",
                                      | "type":"Company"
                                      |}""".stripMargin)
 

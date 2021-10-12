@@ -91,12 +91,22 @@ class TaxCheckServiceImpl @Inject() (
       case Left(crn) =>
         val companyDetails    = CompanyApplicantDetails(ggCredId, crn)
         val companyTaxDetails = CompanyTaxDetails(CTUTR("1234567895"))
-        CompanyHECTaxCheckData(companyDetails, licenceDetails, companyTaxDetails)
+        CompanyHECTaxCheckData(
+          companyDetails,
+          licenceDetails,
+          companyTaxDetails,
+          saveTaxCheckRequest.taxCheckStartDateTime
+        )
 
       case Right(dob) =>
         val individualDetails    = IndividualApplicantDetails(ggCredId, Name("TestFirst", "TestLast"), dob)
-        val individualTaxDetails = IndividualTaxDetails(NINO("AB123456C"), None, TaxSituation.PAYE, None)
-        IndividualHECTaxCheckData(individualDetails, licenceDetails, individualTaxDetails)
+        val individualTaxDetails = IndividualTaxDetails(NINO("AB123456C"), None, TaxSituation.PAYE, None, None)
+        IndividualHECTaxCheckData(
+          individualDetails,
+          licenceDetails,
+          individualTaxDetails,
+          saveTaxCheckRequest.taxCheckStartDateTime
+        )
     }
 
   }

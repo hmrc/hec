@@ -33,6 +33,7 @@ import uk.gov.hmrc.hec.util.TimeUtils
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.mongo.cache.{CacheItem, DataKey}
 
+import java.time.{ZoneId, ZonedDateTime}
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
@@ -52,6 +53,8 @@ class HECTaxCheckStoreImplSpec extends AnyWordSpec with Matchers with Eventually
 
   "HECTaxCheckStoreImpl" must {
 
+    val taxCheckStartDateTime = ZonedDateTime.of(2021, 10, 9, 9, 12, 34, 0, ZoneId.of("Europe/London"))
+
     val taxCheckData = CompanyHECTaxCheckData(
       CompanyApplicantDetails(GGCredId(""), CRN("")),
       LicenceDetails(
@@ -59,7 +62,8 @@ class HECTaxCheckStoreImplSpec extends AnyWordSpec with Matchers with Eventually
         LicenceTimeTrading.EightYearsOrMore,
         LicenceValidityPeriod.UpToOneYear
       ),
-      CompanyTaxDetails(CTUTR(""))
+      CompanyTaxDetails(CTUTR("")),
+      taxCheckStartDateTime
     )
 
     val taxCheckCode1 = HECTaxCheckCode("code1")

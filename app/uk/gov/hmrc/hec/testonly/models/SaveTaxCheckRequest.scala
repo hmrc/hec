@@ -30,6 +30,7 @@ final case class SaveTaxCheckRequest(
   verifier: Either[CRN, DateOfBirth],
   expiresAfter: LocalDate,
   createDate: ZonedDateTime,
+  taxCheckStartDateTime: ZonedDateTime,
   isExtracted: Boolean
 )
 

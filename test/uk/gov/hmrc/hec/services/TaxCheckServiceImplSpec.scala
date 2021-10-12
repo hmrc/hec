@@ -33,7 +33,7 @@ import uk.gov.hmrc.hec.repos.HECTaxCheckStore
 import uk.gov.hmrc.hec.util.{TimeProvider, TimeUtils}
 import uk.gov.hmrc.http.HeaderCarrier
 
-import java.time.{LocalDate, ZonedDateTime}
+import java.time.{LocalDate, ZoneId, ZonedDateTime}
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.duration._
 
@@ -82,9 +82,9 @@ class TaxCheckServiceImplSpec extends AnyWordSpec with Matchers with MockFactory
   def mockTimeProviderToday(d: LocalDate) = (mockTimeProvider.currentDate _).expects().returning(d)
 
   implicit val hc: HeaderCarrier = HeaderCarrier()
-
-  private val now   = TimeUtils.now()
-  private val today = TimeUtils.today()
+  val taxCheckStartDateTime      = ZonedDateTime.of(2021, 10, 9, 9, 12, 34, 0, ZoneId.of("Europe/London"))
+  private val now                = TimeUtils.now()
+  private val today              = TimeUtils.today()
 
   "TaxCheckServiceImpl" when {
 
@@ -101,8 +101,10 @@ class TaxCheckServiceImplSpec extends AnyWordSpec with Matchers with MockFactory
           NINO(""),
           Some(SAUTR("")),
           TaxSituation.SAPAYE,
-          Some(IncomeDeclared.Yes)
-        )
+          Some(IncomeDeclared.Yes),
+          None
+        ),
+        taxCheckStartDateTime
       )
 
       val expectedExpiryDate = TimeUtils.today().plusDays(expiresAfter.toDays)
@@ -172,8 +174,10 @@ class TaxCheckServiceImplSpec extends AnyWordSpec with Matchers with MockFactory
               NINO(""),
               Some(SAUTR("")),
               TaxSituation.SAPAYE,
-              Some(IncomeDeclared.No)
-            )
+              Some(IncomeDeclared.No),
+              None
+            ),
+            taxCheckStartDateTime
           ),
           taxCheckCode,
           TimeUtils.today().plusMonths(1L),
@@ -186,7 +190,8 @@ class TaxCheckServiceImplSpec extends AnyWordSpec with Matchers with MockFactory
           CompanyHECTaxCheckData(
             CompanyApplicantDetails(GGCredId(""), storedCRN),
             storedLicenceDetails,
-            CompanyTaxDetails(CTUTR(""))
+            CompanyTaxDetails(CTUTR("")),
+            taxCheckStartDateTime
           ),
           taxCheckCode,
           TimeUtils.today().plusMonths(1L),
@@ -378,7 +383,8 @@ class TaxCheckServiceImplSpec extends AnyWordSpec with Matchers with MockFactory
           LicenceTimeTrading.EightYearsOrMore,
           LicenceValidityPeriod.UpToOneYear
         ),
-        CompanyTaxDetails(CTUTR(""))
+        CompanyTaxDetails(CTUTR("")),
+        taxCheckStartDateTime
       )
 
       "return an error" when {
@@ -435,7 +441,8 @@ class TaxCheckServiceImplSpec extends AnyWordSpec with Matchers with MockFactory
           LicenceTimeTrading.EightYearsOrMore,
           LicenceValidityPeriod.UpToOneYear
         ),
-        CompanyTaxDetails(CTUTR(""))
+        CompanyTaxDetails(CTUTR("")),
+        taxCheckStartDateTime
       )
 
       "return an error" when {

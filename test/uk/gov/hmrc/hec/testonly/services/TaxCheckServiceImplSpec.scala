@@ -33,12 +33,14 @@ import uk.gov.hmrc.hec.testonly.models.SaveTaxCheckRequest
 import uk.gov.hmrc.hec.util.{TimeProvider, TimeUtils}
 import uk.gov.hmrc.http.HeaderCarrier
 
-import java.time.LocalDate
+import java.time.{LocalDate, ZoneId, ZonedDateTime}
 import scala.concurrent.ExecutionContext.Implicits.global
 
 class TaxCheckServiceImplSpec extends AnyWordSpec with Matchers with MockFactory {
 
   val mockTaxCheckStore = mock[HECTaxCheckStore]
+
+  val taxCheckStartDateTime = ZonedDateTime.of(2021, 10, 9, 9, 12, 34, 0, ZoneId.of("Europe/London"))
 
   val service = new TaxCheckServiceImpl(mockTaxCheckStore)
 
@@ -86,6 +88,7 @@ class TaxCheckServiceImplSpec extends AnyWordSpec with Matchers with MockFactory
           verifier,
           today,
           now,
+          taxCheckStartDateTime,
           false
         )
 
@@ -178,8 +181,10 @@ class TaxCheckServiceImplSpec extends AnyWordSpec with Matchers with MockFactory
               NINO(""),
               Some(SAUTR("")),
               TaxSituation.SAPAYE,
-              Some(IncomeDeclared.Yes)
-            )
+              Some(IncomeDeclared.Yes),
+              None
+            ),
+            taxCheckStartDateTime
           )
           val taxCheck     = HECTaxCheck(taxCheckData, taxCheckCode, TimeUtils.today(), now, false)
 
