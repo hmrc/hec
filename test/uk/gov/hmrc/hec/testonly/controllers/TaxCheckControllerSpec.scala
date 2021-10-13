@@ -102,6 +102,7 @@ class TaxCheckControllerSpec extends ControllerSpec {
         s"""
            |{
            |  "taxCheckCode" : "${r.taxCheckCode.value}",
+           |  "ggCredId" : "${r.ggCredId.value}",
            |  "licenceType" : "${r.licenceType.toString}",
            |  "verifier" : $verifierJson,
            |  "expiresAfter" : "${toJsonString(r.expiresAfter)}",
@@ -118,6 +119,7 @@ class TaxCheckControllerSpec extends ControllerSpec {
         val dateOfBirth = DateOfBirth(TimeUtils.today())
         val request     = SaveTaxCheckRequest(
           HECTaxCheckCode(invalidTaxCheckCode),
+          GGCredId("AB123"),
           LicenceType.DriverOfTaxisAndPrivateHires,
           Right(dateOfBirth),
           TimeUtils.today(),
@@ -162,6 +164,7 @@ class TaxCheckControllerSpec extends ControllerSpec {
           val dateOfBirth = DateOfBirth(TimeUtils.today())
           val request     = SaveTaxCheckRequest(
             taxCheckCode = validTaxCheckCode,
+            GGCredId("AB123"),
             licenceType = LicenceType.DriverOfTaxisAndPrivateHires,
             verifier = Right(dateOfBirth),
             expiresAfter = TimeUtils.today(),
@@ -170,7 +173,6 @@ class TaxCheckControllerSpec extends ControllerSpec {
             isExtracted = false
           )
           val body        = Json.parse(requestJsonString(request))
-          println(" body is ::" + body.toString())
 
           mockSaveTaxCheck(request)(Left(Error("")))
 
@@ -187,6 +189,7 @@ class TaxCheckControllerSpec extends ControllerSpec {
           val dateOfBirth = DateOfBirth(TimeUtils.today())
           val request     = SaveTaxCheckRequest(
             validTaxCheckCode,
+            GGCredId("AB123"),
             LicenceType.DriverOfTaxisAndPrivateHires,
             Right(dateOfBirth),
             TimeUtils.today(),
@@ -206,6 +209,7 @@ class TaxCheckControllerSpec extends ControllerSpec {
           val crn     = CRN("1234567895")
           val request = SaveTaxCheckRequest(
             validTaxCheckCode,
+            GGCredId("AB123"),
             LicenceType.DriverOfTaxisAndPrivateHires,
             Left(crn),
             TimeUtils.today(),
