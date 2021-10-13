@@ -84,6 +84,7 @@ class TaxCheckServiceImplSpec extends AnyWordSpec with Matchers with MockFactory
       def saveTaxCheckRequest(verifier: Either[CRN, DateOfBirth]) =
         SaveTaxCheckRequest(
           HECTaxCheckCode("ABCDEF234"),
+          GGCredId("AB123"),
           LicenceType.ScrapMetalDealerSite,
           verifier,
           today,

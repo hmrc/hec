@@ -21,7 +21,7 @@ import com.google.inject.{ImplementedBy, Inject, Singleton}
 import uk.gov.hmrc.hec.models.ApplicantDetails.{CompanyApplicantDetails, IndividualApplicantDetails}
 import uk.gov.hmrc.hec.models.HECTaxCheckData.{CompanyHECTaxCheckData, IndividualHECTaxCheckData}
 import uk.gov.hmrc.hec.models.TaxDetails.{CompanyTaxDetails, IndividualTaxDetails}
-import uk.gov.hmrc.hec.models.ids.{CTUTR, GGCredId, NINO}
+import uk.gov.hmrc.hec.models.ids.{CTUTR, NINO}
 import uk.gov.hmrc.hec.models.licence.{LicenceDetails, LicenceTimeTrading, LicenceValidityPeriod}
 import uk.gov.hmrc.hec.models.{Error, HECTaxCheck, HECTaxCheckCode, HECTaxCheckData, Name, TaxSituation}
 import uk.gov.hmrc.hec.repos.HECTaxCheckStore
@@ -85,7 +85,7 @@ class TaxCheckServiceImpl @Inject() (
       LicenceValidityPeriod.UpToOneYear
     )
 
-    val ggCredId = GGCredId("testCredId")
+    val ggCredId = saveTaxCheckRequest.ggCredId
 
     saveTaxCheckRequest.verifier match {
       case Left(crn) =>
