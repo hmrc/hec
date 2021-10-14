@@ -28,7 +28,7 @@ import uk.gov.hmrc.hec.models.HECTaxCheckData.CompanyHECTaxCheckData
 import uk.gov.hmrc.hec.models.TaxDetails.CompanyTaxDetails
 import uk.gov.hmrc.hec.models.ids.{CRN, CTUTR, GGCredId}
 import uk.gov.hmrc.hec.models.licence.{LicenceDetails, LicenceTimeTrading, LicenceType, LicenceValidityPeriod}
-import uk.gov.hmrc.hec.models.{HECTaxCheck, HECTaxCheckCode}
+import uk.gov.hmrc.hec.models.{HECTaxCheck, HECTaxCheckCode, HECTaxCheckSource}
 import uk.gov.hmrc.hec.util.TimeUtils
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.mongo.cache.{CacheItem, DataKey}
@@ -63,7 +63,8 @@ class HECTaxCheckStoreImplSpec extends AnyWordSpec with Matchers with Eventually
         LicenceValidityPeriod.UpToOneYear
       ),
       CompanyTaxDetails(CTUTR("")),
-      taxCheckStartDateTime
+      taxCheckStartDateTime,
+      HECTaxCheckSource.Digital
     )
 
     val taxCheckCode1 = HECTaxCheckCode("code1")

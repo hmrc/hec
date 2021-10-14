@@ -27,7 +27,7 @@ import uk.gov.hmrc.hec.models.HECTaxCheckData.IndividualHECTaxCheckData
 import uk.gov.hmrc.hec.models.TaxDetails.IndividualTaxDetails
 import uk.gov.hmrc.hec.models.ids.{CRN, GGCredId, NINO, SAUTR}
 import uk.gov.hmrc.hec.models.licence.{LicenceDetails, LicenceTimeTrading, LicenceType, LicenceValidityPeriod}
-import uk.gov.hmrc.hec.models.{DateOfBirth, Error, HECTaxCheck, HECTaxCheckCode, IncomeDeclared, Name, TaxSituation}
+import uk.gov.hmrc.hec.models.{DateOfBirth, Error, HECTaxCheck, HECTaxCheckCode, HECTaxCheckSource, IncomeDeclared, Name, TaxSituation}
 import uk.gov.hmrc.hec.repos.HECTaxCheckStore
 import uk.gov.hmrc.hec.testonly.models.SaveTaxCheckRequest
 import uk.gov.hmrc.hec.util.{TimeProvider, TimeUtils}
@@ -90,7 +90,8 @@ class TaxCheckServiceImplSpec extends AnyWordSpec with Matchers with MockFactory
           today,
           now,
           taxCheckStartDateTime,
-          false
+          false,
+          HECTaxCheckSource.Digital
         )
 
       "return an error" when {
@@ -185,7 +186,8 @@ class TaxCheckServiceImplSpec extends AnyWordSpec with Matchers with MockFactory
               Some(IncomeDeclared.Yes),
               None
             ),
-            taxCheckStartDateTime
+            taxCheckStartDateTime,
+            HECTaxCheckSource.Digital
           )
           val taxCheck     = HECTaxCheck(taxCheckData, taxCheckCode, TimeUtils.today(), now, false)
 

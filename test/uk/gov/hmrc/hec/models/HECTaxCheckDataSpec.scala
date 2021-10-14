@@ -55,7 +55,8 @@ class HECTaxCheckDataSpec extends AnyWordSpec with Matchers {
             Some(IncomeDeclared.Yes),
             None
           ),
-          taxCheckStartDateTime
+          taxCheckStartDateTime,
+          HECTaxCheckSource.Digital
         )
 
       val individualJson = Json.parse(s"""{
@@ -79,7 +80,8 @@ class HECTaxCheckDataSpec extends AnyWordSpec with Matchers {
                                          |    "saIncomeDeclared":"Yes"
                                          | },
                                          | "taxCheckStartDateTime" : "2021-10-09T09:12:34+01:00[Europe/London]",
-                                         | "type":"Individual"
+                                         | "type":"Individual",
+                                         | "source": "Digital"
                                          |}""".stripMargin)
 
       val companyTaxCheckData: HECTaxCheckData =
@@ -96,7 +98,8 @@ class HECTaxCheckDataSpec extends AnyWordSpec with Matchers {
           CompanyTaxDetails(
             CTUTR("utr")
           ),
-          taxCheckStartDateTime
+          taxCheckStartDateTime,
+          HECTaxCheckSource.Stride
         )
 
       val companyJson = Json.parse("""{
@@ -113,7 +116,8 @@ class HECTaxCheckDataSpec extends AnyWordSpec with Matchers {
                                      |   "ctutr":"utr"
                                      | },
                                      | "taxCheckStartDateTime" : "2021-10-09T09:12:34+01:00[Europe/London]",
-                                     | "type":"Company"
+                                     | "type":"Company",
+                                     | "source": "Stride"
                                      |}""".stripMargin)
 
       "serialize Individual data" in {
