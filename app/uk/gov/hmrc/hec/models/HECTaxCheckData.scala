@@ -27,6 +27,7 @@ sealed trait HECTaxCheckData extends Product with Serializable {
   val licenceDetails: LicenceDetails
   val entityType: EntityType
   val taxCheckStartDateTime: ZonedDateTime
+  val source: HECTaxCheckSource
 }
 
 object HECTaxCheckData {
@@ -35,7 +36,8 @@ object HECTaxCheckData {
     applicantDetails: IndividualApplicantDetails,
     licenceDetails: LicenceDetails,
     taxDetails: IndividualTaxDetails,
-    taxCheckStartDateTime: ZonedDateTime
+    taxCheckStartDateTime: ZonedDateTime,
+    source: HECTaxCheckSource
   ) extends HECTaxCheckData {
     val entityType: EntityType = EntityType.Individual
   }
@@ -44,7 +46,8 @@ object HECTaxCheckData {
     applicantDetails: CompanyApplicantDetails,
     licenceDetails: LicenceDetails,
     taxDetails: CompanyTaxDetails,
-    taxCheckStartDateTime: ZonedDateTime
+    taxCheckStartDateTime: ZonedDateTime,
+    source: HECTaxCheckSource
   ) extends HECTaxCheckData {
     val entityType: EntityType = EntityType.Company
   }

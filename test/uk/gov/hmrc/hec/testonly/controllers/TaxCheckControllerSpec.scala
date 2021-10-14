@@ -30,7 +30,7 @@ import uk.gov.hmrc.hec.models.HECTaxCheckData.IndividualHECTaxCheckData
 import uk.gov.hmrc.hec.models.TaxDetails.IndividualTaxDetails
 import uk.gov.hmrc.hec.models.ids.{CRN, GGCredId, NINO, SAUTR}
 import uk.gov.hmrc.hec.models.licence.{LicenceDetails, LicenceTimeTrading, LicenceType, LicenceValidityPeriod}
-import uk.gov.hmrc.hec.models.{DateOfBirth, Error, HECTaxCheck, HECTaxCheckCode, IncomeDeclared, Name, TaxSituation}
+import uk.gov.hmrc.hec.models.{DateOfBirth, Error, HECTaxCheck, HECTaxCheckCode, HECTaxCheckSource, IncomeDeclared, Name, TaxSituation}
 import uk.gov.hmrc.hec.testonly.models.SaveTaxCheckRequest
 import uk.gov.hmrc.hec.testonly.services.TaxCheckService
 import uk.gov.hmrc.hec.util.TimeUtils
@@ -108,7 +108,8 @@ class TaxCheckControllerSpec extends ControllerSpec {
            |  "expiresAfter" : "${toJsonString(r.expiresAfter)}",
            |  "createDate" : "${r.createDate}",
            |  "taxCheckStartDateTime": "$getStartDateTime",
-           |  "isExtracted": false
+           |  "isExtracted": false,
+           |  "source" : "${r.source.toString}"
            |}
            |""".stripMargin
       }
@@ -125,7 +126,8 @@ class TaxCheckControllerSpec extends ControllerSpec {
           TimeUtils.today(),
           TimeUtils.now(),
           taxCheckStartDateTime,
-          false
+          false,
+          HECTaxCheckSource.Digital
         )
         val body        = Json.parse(requestJsonString(request))
 
@@ -170,7 +172,8 @@ class TaxCheckControllerSpec extends ControllerSpec {
             expiresAfter = TimeUtils.today(),
             createDate = TimeUtils.now(),
             taxCheckStartDateTime = taxCheckStartDateTime,
-            isExtracted = false
+            isExtracted = false,
+            HECTaxCheckSource.Digital
           )
           val body        = Json.parse(requestJsonString(request))
 
@@ -195,7 +198,8 @@ class TaxCheckControllerSpec extends ControllerSpec {
             TimeUtils.today(),
             TimeUtils.now(),
             taxCheckStartDateTime,
-            false
+            false,
+            HECTaxCheckSource.Digital
           )
           val body        = Json.parse(requestJsonString(request))
 
@@ -215,7 +219,8 @@ class TaxCheckControllerSpec extends ControllerSpec {
             TimeUtils.today(),
             TimeUtils.now(),
             taxCheckStartDateTime,
-            false
+            false,
+            HECTaxCheckSource.Digital
           )
           val body    = Json.parse(requestJsonString(request))
 
@@ -278,7 +283,8 @@ class TaxCheckControllerSpec extends ControllerSpec {
               Some(IncomeDeclared.Yes),
               None
             ),
-            taxCheckStartDateTime
+            taxCheckStartDateTime,
+            HECTaxCheckSource.Digital
           )
           val taxCheck     = HECTaxCheck(taxCheckData, validTaxCheckCode, TimeUtils.today(), TimeUtils.now(), false)
 
