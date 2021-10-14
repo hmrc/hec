@@ -35,7 +35,7 @@ class FileCreationServiceSpec extends AnyWordSpec with Matchers with MockFactory
   def mockTimeProviderNow(d: LocalTime, zoneId: ZoneId) =
     (mockTimeProvider.currentTime(_: ZoneId)).expects(zoneId).returning(d)
 
-  val zoneId = ZoneId.of("Europe/London")
+  val zoneId = ZoneId.of("GMT")
 
   "FileCreationServiceSpec" must {
 

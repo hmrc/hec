@@ -17,7 +17,8 @@
 package uk.gov.hmrc.hec.services
 
 import com.google.inject.{ImplementedBy, Inject}
-import uk.gov.hmrc.hec.models.Error
+import uk.gov.hmrc.hec.models.CorrectiveAction._
+import uk.gov.hmrc.hec.models.{CorrectiveAction, Error}
 import uk.gov.hmrc.hec.models.fileFormat.FileFormat.toFileContent
 import uk.gov.hmrc.hec.models.fileFormat.{EnumFileBody, FileFormat, FileHeader, FileTrailer}
 import uk.gov.hmrc.hec.models.licence.LicenceTimeTrading.{EightYearsOrMore, FourToEightYears, TwoToFourYears, ZeroToTwoYears}
@@ -97,12 +98,26 @@ class FileCreationServiceImpl @Inject() (timeProvider: TimeProvider) extends Fil
       EnumFileBody(recordId = keyValue._1, recordDescription = keyValue._2)
     }.toList
   }
+
+  private def createCorrectiveActionFileBody = {
+    def enumKeysAndValue(correctiveAction: CorrectiveAction): (String, String) = correctiveAction match {
+      case Register => ("00", "Register new SA account")
+      case Dormant  => ("01", "Dormant account reactivated")
+      case Other    => ("02", "Other corrective action")
+
+    }
+    CorrectiveAction.values.map { values =>
+      val keyValue = enumKeysAndValue(values)
+      EnumFileBody(recordId = keyValue._1, recordDescription = keyValue._2)
+    }.toList
+  }
   //Create the  file body contents excluding header and trailer
   private def getFileBodyContents[A](inputType: A): Either[Error, List[EnumFileBody]] =
     inputType match {
       case LicenceType           => Right(createLicenceTypeEnumFileBody)
       case LicenceTimeTrading    => Right(createLicenceTimeTradingEnumFileBody)
       case LicenceValidityPeriod => Right(createLicenceValidityPeriodFileBody)
+      case CorrectiveAction      => Right(createCorrectiveActionFileBody)
       case _                     => Left(Error("Input Type is not valid."))
     }
 
@@ -114,7 +129,7 @@ class FileCreationServiceImpl @Inject() (timeProvider: TimeProvider) extends Fil
     val fileHeader  = FileHeader(
       fileName = fileName,
       dateOfExtract = extractDate,
-      timeOfExtract = timeProvider.currentTime(ZoneId.of("Europe/London")).format(TIME_FORMATTER)
+      timeOfExtract = timeProvider.currentTime(ZoneId.of("GMT")).format(TIME_FORMATTER)
     )
     val fileTrailer =
       FileTrailer(fileName = fileName, recordCount = (2L + enumFileBody.size.toLong), inSequenceFlag = 'Y')

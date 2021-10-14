@@ -23,7 +23,7 @@ object TimeUtils {
   val clock: Clock = Clock.systemUTC()
 
   def today(): LocalDate               = LocalDate.now(clock)
-  def now(): ZonedDateTime             = ZonedDateTime.now(ZoneId.of("Europe/London"))
+  def now(): ZonedDateTime             = ZonedDateTime.now().withZoneSameInstant(ZoneId.of("GMT"))
   def nowTime(zone: ZoneId): LocalTime = LocalTime.now(zone)
 
 }

@@ -38,7 +38,7 @@ class TimeCalculatorSpec extends AnyWordSpec with Matchers with MockFactory {
 
   "TimeCalculatorImpl" must {
 
-    val zoneId = ZoneId.of("Europe/London")
+    val zoneId = ZoneId.of("GMT")
 
     "calculate time between two times correctly if now is midnight" in {
       inSequence {

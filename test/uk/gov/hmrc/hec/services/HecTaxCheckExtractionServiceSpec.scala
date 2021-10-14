@@ -33,7 +33,7 @@ import uk.gov.hmrc.hec.models.HECTaxCheckData.CompanyHECTaxCheckData
 import uk.gov.hmrc.hec.models.TaxDetails.CompanyTaxDetails
 import uk.gov.hmrc.hec.models.ids.{CRN, CTUTR, GGCredId}
 import uk.gov.hmrc.hec.models.licence.{LicenceDetails, LicenceTimeTrading, LicenceType, LicenceValidityPeriod}
-import uk.gov.hmrc.hec.models.{HECTaxCheck, HECTaxCheckCode, HECTaxCheckSource}
+import uk.gov.hmrc.hec.models.{CorrectiveAction, HECTaxCheck, HECTaxCheckCode, HECTaxCheckSource}
 import uk.gov.hmrc.hec.services.scheduleService.{HECTaxCheckExtractionContext, HecTaxCheckExtractionServiceImpl}
 import uk.gov.hmrc.hec.util.TimeUtils
 import uk.gov.hmrc.http.HeaderCarrier
@@ -60,7 +60,7 @@ class HecTaxCheckExtractionServiceSpec
   val mockFileCreationService = mock[FileCreationService]
   val mockFileStoreService    = mock[FileStoreService]
 
-  val taxCheckStartDateTime = ZonedDateTime.of(2021, 10, 9, 9, 12, 34, 0, ZoneId.of("Europe/London"))
+  val taxCheckStartDateTime = ZonedDateTime.of(2021, 10, 9, 9, 12, 34, 0, ZoneId.of("GMT"))
 
   override def afterAll(): Unit = {
     super.afterAll()
@@ -221,6 +221,12 @@ class HecTaxCheckExtractionServiceSpec
           mockStoreFile("00|file1.dat|HEC|SSA|20210909|154556|000001|001", "file1.dat", "licence-validity-period")(
             Right(())
           )
+          mockCreateFileContent(CorrectiveAction, "0001", "HEC_CORRECTIVE_ACTION")(
+            Right(("00|file1.dat|HEC|SSA|20210909|154556|000001|001", "file1.dat"))
+          )
+          mockStoreFile("00|file1.dat|HEC|SSA|20210909|154556|000001|001", "file1.dat", "corrective-action")(
+            Right(())
+          )
           mockUpdateAllHecTaxCheck(updatedHecTaxCheckList)(Left(models.Error("err")))
         }
         val result: Future[Option[Either[models.Error, List[HECTaxCheck]]]] =
@@ -252,6 +258,12 @@ class HecTaxCheckExtractionServiceSpec
             Right(("00|file1.dat|HEC|SSA|20210909|154556|000001|001", "file1.dat"))
           )
           mockStoreFile("00|file1.dat|HEC|SSA|20210909|154556|000001|001", "file1.dat", "licence-validity-period")(
+            Right(())
+          )
+          mockCreateFileContent(CorrectiveAction, "0001", "HEC_CORRECTIVE_ACTION")(
+            Right(("00|file1.dat|HEC|SSA|20210909|154556|000001|001", "file1.dat"))
+          )
+          mockStoreFile("00|file1.dat|HEC|SSA|20210909|154556|000001|001", "file1.dat", "corrective-action")(
             Right(())
           )
           mockUpdateAllHecTaxCheck(updatedHecTaxCheckList)(Right(updatedHecTaxCheckList))

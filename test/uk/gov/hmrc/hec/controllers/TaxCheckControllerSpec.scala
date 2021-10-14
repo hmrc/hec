@@ -49,7 +49,7 @@ class TaxCheckControllerSpec extends ControllerSpec with AuthSupport {
       bind[TaxCheckService].toInstance(mockTaxCheckService)
     )
 
-  val taxCheckStartDateTime = ZonedDateTime.of(2021, 10, 9, 9, 12, 34, 0, ZoneId.of("Europe/London"))
+  val taxCheckStartDateTime = ZonedDateTime.of(2021, 10, 9, 9, 12, 34, 0, ZoneId.of("GMT"))
 
   val controller = instanceOf[TaxCheckController]
 

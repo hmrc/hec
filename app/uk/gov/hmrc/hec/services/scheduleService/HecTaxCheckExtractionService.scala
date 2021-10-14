@@ -21,7 +21,7 @@ import cats.implicits._
 import com.google.inject.{ImplementedBy, Inject}
 import uk.gov.hmrc.hec.models
 import uk.gov.hmrc.hec.models.licence.{LicenceTimeTrading, LicenceType, LicenceValidityPeriod}
-import uk.gov.hmrc.hec.models.{Error, HECTaxCheck}
+import uk.gov.hmrc.hec.models.{CorrectiveAction, Error, HECTaxCheck}
 import uk.gov.hmrc.hec.services.scheduleService.HecTaxCheckExtractionServiceImpl._
 import uk.gov.hmrc.hec.services.{FileCreationService, FileStoreService, MongoLockService, TaxCheckService}
 import uk.gov.hmrc.hec.util.Logging
@@ -56,6 +56,9 @@ class HecTaxCheckExtractionServiceImpl @Inject() (
   val licenceValidityPeriod: FileDetails[LicenceValidityPeriod] =
     FileDetails[LicenceValidityPeriod]("licence-validity-period", "HEC_LICENCE_VALIDITY_PERIOD")
 
+  val correctiveAction: FileDetails[CorrectiveAction] =
+    FileDetails[CorrectiveAction]("corrective-action", "HEC_CORRECTIVE_ACTION")
+
   override def lockAndProcessHecData(): Future[Option[Either[models.Error, List[HECTaxCheck]]]] =
     mongoLockService.withLock(processHecData)
 
@@ -76,6 +79,12 @@ class HecTaxCheckExtractionServiceImpl @Inject() (
                               seqNum,
                               licenceValidityPeriod.partialFileName,
                               licenceValidityPeriod.dirName
+                            )
+        _                <- createAndStoreFile(
+                              CorrectiveAction,
+                              seqNum,
+                              correctiveAction.partialFileName,
+                              correctiveAction.dirName
                             )
         //updating isExtracted to true for the the processed hec tax check codes
         newHecTaxCheck   <- taxCheckService.updateAllHecTaxCheck(updatedHecTaxChek)

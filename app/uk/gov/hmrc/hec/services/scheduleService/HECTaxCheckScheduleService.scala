@@ -37,7 +37,7 @@ class HECTaxCheckScheduleService @Inject() (
   hECTaxCheckExtractionContext: HECTaxCheckExtractionContext
 ) extends Logging {
 
-  val extractionTimeZone: ZoneId = ZoneId.of(config.get[String]("hec-file-extraction-details.extraction-timezone"))
+  val extractionTimeZone: ZoneId = ZoneId.of("GMT")
 
   val jobStartTime: LocalTime =
     LocalTime.parse(config.get[String]("hec-file-extraction-details.extraction-time"))

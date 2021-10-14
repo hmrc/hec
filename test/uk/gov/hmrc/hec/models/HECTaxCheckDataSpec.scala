@@ -30,7 +30,7 @@ class HECTaxCheckDataSpec extends AnyWordSpec with Matchers {
 
   "HECTaxCheckData" must {
 
-    val taxCheckStartDateTime = ZonedDateTime.of(2021, 10, 9, 9, 12, 34, 0, ZoneId.of("Europe/London"))
+    val taxCheckStartDateTime = ZonedDateTime.of(2021, 10, 9, 9, 12, 34, 0, ZoneId.of("GMT"))
 
     "perform JSON de/serialisation correctly" must {
       val dateOfBirthStr = "20001010"
@@ -79,7 +79,7 @@ class HECTaxCheckDataSpec extends AnyWordSpec with Matchers {
                                          |    "taxSituation":"SA",
                                          |    "saIncomeDeclared":"Yes"
                                          | },
-                                         | "taxCheckStartDateTime" : "2021-10-09T09:12:34+01:00[Europe/London]",
+                                         | "taxCheckStartDateTime" : "2021-10-09T09:12:34Z[GMT]",
                                          | "type":"Individual",
                                          | "source": "Digital"
                                          |}""".stripMargin)
@@ -115,7 +115,7 @@ class HECTaxCheckDataSpec extends AnyWordSpec with Matchers {
                                      | "taxDetails":{
                                      |   "ctutr":"utr"
                                      | },
-                                     | "taxCheckStartDateTime" : "2021-10-09T09:12:34+01:00[Europe/London]",
+                                     | "taxCheckStartDateTime" : "2021-10-09T09:12:34Z[GMT]",
                                      | "type":"Company",
                                      | "source": "Stride"
                                      |}""".stripMargin)

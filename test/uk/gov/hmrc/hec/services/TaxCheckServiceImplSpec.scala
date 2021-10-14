@@ -82,7 +82,7 @@ class TaxCheckServiceImplSpec extends AnyWordSpec with Matchers with MockFactory
   def mockTimeProviderToday(d: LocalDate) = (mockTimeProvider.currentDate _).expects().returning(d)
 
   implicit val hc: HeaderCarrier = HeaderCarrier()
-  val taxCheckStartDateTime      = ZonedDateTime.of(2021, 10, 9, 9, 12, 34, 0, ZoneId.of("Europe/London"))
+  val taxCheckStartDateTime      = ZonedDateTime.of(2021, 10, 9, 9, 12, 34, 0, ZoneId.of("GMT"))
   private val now                = TimeUtils.now()
   private val today              = TimeUtils.today()
 
