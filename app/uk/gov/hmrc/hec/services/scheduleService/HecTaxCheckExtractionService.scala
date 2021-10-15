@@ -21,15 +21,15 @@ import cats.implicits._
 import com.google.inject.{ImplementedBy, Inject}
 import play.api.Configuration
 import uk.gov.hmrc.hec.models
-import uk.gov.hmrc.hec.models.fileFormat.HECTaxCheckFile
 import uk.gov.hmrc.hec.models.licence.{LicenceTimeTrading, LicenceType, LicenceValidityPeriod}
-import uk.gov.hmrc.hec.models.{CorrectiveAction, Error, HECTaxCheck}
+import uk.gov.hmrc.hec.models.{CorrectiveAction, Error, HECTaxCheck, HECTaxCheckFileBodyList}
 import uk.gov.hmrc.hec.services.scheduleService.HecTaxCheckExtractionServiceImpl._
 import uk.gov.hmrc.hec.services.{FileCreationService, FileStoreService, MongoLockService, TaxCheckService}
 import uk.gov.hmrc.hec.util.Logging
 import uk.gov.hmrc.http.HeaderCarrier
 
 import javax.inject.Singleton
+import scala.annotation.tailrec
 import scala.concurrent.Future
 
 @ImplementedBy(classOf[HecTaxCheckExtractionServiceImpl])
@@ -52,8 +52,8 @@ class HecTaxCheckExtractionServiceImpl @Inject() (
     with Logging {
 
   implicit val hc: HeaderCarrier = HeaderCarrier()
-  val count                      = config.get[Int]("hec-tax-heck-file.default-size")
-  val hec                        = "HEC"
+  val count: Int                 = config.get[Int]("hec-tax-heck-file.default-size")
+  val hec: String                = "HEC"
 
   val licenceType: FileDetails[LicenceType]                     = FileDetails[LicenceType]("licence-type", s"${hec}_LICENCE_TYPE")
   val licenceTimeTrading: FileDetails[LicenceTimeTrading]       =
@@ -64,7 +64,7 @@ class HecTaxCheckExtractionServiceImpl @Inject() (
   val correctiveAction: FileDetails[CorrectiveAction] =
     FileDetails[CorrectiveAction]("corrective-action", s"${hec}_CORRECTIVE_ACTION")
 
-  val hecData = FileDetails[HECTaxCheckFile]("tax-checks", s"$hec")
+  val hecData: FileDetails[List[HECTaxCheck]] = FileDetails[List[HECTaxCheck]]("tax-checks", s"$hec")
 
   override def lockAndProcessHecData(): Future[Option[Either[models.Error, Unit]]] =
     mongoLockService.withLock(processHecData)
@@ -73,29 +73,31 @@ class HecTaxCheckExtractionServiceImpl @Inject() (
     val seqNum = "0001"
     val result: EitherT[Future, models.Error, Unit] = {
       for {
-        _           <- createAndStoreFile(LicenceType, seqNum, licenceType.partialFileName, licenceType.dirName)
+        _           <- createAndStoreFile(LicenceType, seqNum, licenceType.partialFileName, licenceType.dirName, false)
         _           <-
-          createAndStoreFile(LicenceTimeTrading, seqNum, licenceTimeTrading.partialFileName, licenceTimeTrading.dirName)
+          createAndStoreFile(
+            LicenceTimeTrading,
+            seqNum,
+            licenceTimeTrading.partialFileName,
+            licenceTimeTrading.dirName,
+            false
+          )
         _           <- createAndStoreFile(
                          LicenceValidityPeriod,
                          seqNum,
                          licenceValidityPeriod.partialFileName,
-                         licenceValidityPeriod.dirName
+                         licenceValidityPeriod.dirName,
+                         false
                        )
         _           <- createAndStoreFile(
                          CorrectiveAction,
                          seqNum,
                          correctiveAction.partialFileName,
-                         correctiveAction.dirName
-                       )
-        _           <- createAndStoreFile(
-                         "HECTaxCheckFile",
-                         seqNum,
-                         correctiveAction.partialFileName,
-                         correctiveAction.dirName
+                         correctiveAction.dirName,
+                         false
                        )
         hecTaxCheck <- taxCheckService.getAllTaxCheckCodesByExtractedStatus(false)
-        _           <- createHecFile(hecTaxCheck, count, hecData.partialFileName, hecData.dirName)
+        _           <- createHecFile(HECTaxCheckFileBodyList(hecTaxCheck), count, hecData.partialFileName, hecData.dirName)
         //updating isExtracted to true for the the processed hec tax check codes
         // newHecTaxCheck   <- taxCheckService.updateAllHecTaxCheck(updatedHecTaxChek)
       } yield ()
@@ -104,27 +106,35 @@ class HecTaxCheckExtractionServiceImpl @Inject() (
   }
 
   private def createHecFile(
-    hecTaxCheckList: List[HECTaxCheck],
+    hecTaxCheckList: HECTaxCheckFileBodyList,
     count: Int,
     partialFileName: String,
     dirname: String
   ) = {
 
+    @tailrec
     def loop(
       hecTaxCheckList: List[HECTaxCheck],
-      offset: Int,
       count: Int,
       seqNumInt: Int,
       partialFileName: String,
       dirname: String
     ): EitherT[Future, Error, Unit] = {
-      val hecList = hecTaxCheckList.slice(offset, count)
+      val hecList       = hecTaxCheckList.take(count)
+      val remainingList = hecTaxCheckList.drop(count)
+      val isRemaining   = remainingList.toIterator.hasNext
       if (hecList.size =!= 0) {
-        createAndStoreFile(hecTaxCheckList, seqNumInt.toString.takeRight(4), partialFileName, dirname)
-        loop(hecTaxCheckList, offset + count, count, seqNumInt + 1, partialFileName, dirname)
+        val _ = createAndStoreFile(
+          HECTaxCheckFileBodyList(hecList),
+          seqNumInt.toString.takeRight(4),
+          partialFileName,
+          dirname,
+          isRemaining
+        )
+        loop(remainingList, count, seqNumInt + 1, partialFileName, dirname)
       } else { EitherT.fromEither[Future](Right(())) }
     }
-    loop(hecTaxCheckList, 0, count, 1001, partialFileName, dirname)
+    loop(hecTaxCheckList.list, count, 10001, partialFileName, dirname)
 
   }
 
@@ -134,9 +144,11 @@ class HecTaxCheckExtractionServiceImpl @Inject() (
     inputType: A,
     seqNum: String,
     partialFileName: String,
-    dirName: String
+    dirName: String,
+    isRemaining: Boolean
   )(implicit hc: HeaderCarrier): EitherT[Future, Error, Unit] = for {
-    fileContent <- EitherT.fromEither[Future](fileCreationService.createFileContent(inputType, seqNum, partialFileName))
+    fileContent <-
+      EitherT.fromEither[Future](fileCreationService.createFileContent(inputType, seqNum, partialFileName, isRemaining))
     _           <- fileStoreService.storeFile(fileContent._1, fileContent._2, dirName)
 
   } yield ()

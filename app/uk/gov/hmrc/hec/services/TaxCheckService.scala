@@ -73,7 +73,7 @@ class TaxCheckServiceImpl @Inject() (
     val taxCheckCode = taxCheckCodeGeneratorService.generateTaxCheckCode()
     val expiryDate   = timeProvider.currentDate.plusDays(taxCheckCodeExpiresAfterDays)
     val createDate   = timeProvider.currentDateTime
-    val taxCheck     = HECTaxCheck(taxCheckData, taxCheckCode, expiryDate, createDate, false)
+    val taxCheck     = HECTaxCheck(taxCheckData, taxCheckCode, expiryDate, createDate, false, None)
 
     taxCheckStore.store(taxCheck).map(_ => taxCheck)
   }

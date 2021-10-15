@@ -19,11 +19,12 @@ package uk.gov.hmrc.hec.services
 import com.google.inject.{ImplementedBy, Inject}
 import uk.gov.hmrc.hec.models.CorrectiveAction._
 import uk.gov.hmrc.hec.models.HECTaxCheckData.IndividualHECTaxCheckData
+import uk.gov.hmrc.hec.models.HECTaxCheckSource.Digital
 import uk.gov.hmrc.hec.models.SAStatus._
-import uk.gov.hmrc.hec.models.{CorrectiveAction, Error, HECTaxCheck, SAStatus, TaxSituation}
+import uk.gov.hmrc.hec.models.{CorrectiveAction, Error, HECTaxCheck, HECTaxCheckFileBodyList, SAStatus, TaxSituation}
 import uk.gov.hmrc.hec.models.fileFormat.FileFormat.toFileContent
 import uk.gov.hmrc.hec.models.TaxSituation._
-import uk.gov.hmrc.hec.models.fileFormat.{EnumFileBody, FileFormat, FileHeader, FileTrailer, HECTaxCheckFileBody}
+import uk.gov.hmrc.hec.models.fileFormat.{EnumFileBody, FileBody, FileFormat, FileHeader, FileTrailer, HECTaxCheckFileBody}
 import uk.gov.hmrc.hec.models.licence.LicenceTimeTrading.{EightYearsOrMore, FourToEightYears, TwoToFourYears, ZeroToTwoYears}
 import uk.gov.hmrc.hec.models.licence.LicenceType.{DriverOfTaxisAndPrivateHires, OperatorOfPrivateHireVehicles, ScrapMetalDealerSite, ScrapMetalMobileCollector}
 import uk.gov.hmrc.hec.models.licence.LicenceValidityPeriod.{UpToFiveYears, UpToFourYears, UpToOneYear, UpToThreeYears, UpToTwoYears}
@@ -41,7 +42,8 @@ trait FileCreationService {
   def createFileContent[A](
     inputType: A,
     seqNum: String,
-    partialFileName: String
+    partialFileName: String,
+    isRemaining: Boolean
   ): Either[Error, (String, String)]
 
 }
@@ -49,15 +51,19 @@ trait FileCreationService {
 @Singleton
 class FileCreationServiceImpl @Inject() (timeProvider: TimeProvider) extends FileCreationService {
 
-  val DATE_FORMATTER: DateTimeFormatter = DateTimeFormatter.ofPattern("yyyyMMdd")
-  val TIME_FORMATTER: DateTimeFormatter = DateTimeFormatter.ofPattern("HHmmss")
+  val DATE_FORMATTER: DateTimeFormatter      = DateTimeFormatter.ofPattern("yyyyMMdd")
+  val TIME_FORMATTER: DateTimeFormatter      = DateTimeFormatter.ofPattern("HHmmss")
+  val DATE_TIME_FORMATTER: DateTimeFormatter = DateTimeFormatter.ofPattern("yyyyMMdd HHmmss")
 
   override def createFileContent[A](
     inputType: A,
     seqNum: String,
-    partialFileName: String
+    partialFileName: String,
+    isRemaining: Boolean
   ): Either[Error, (String, String)] =
-    getFileBodyContents(inputType).map(createContent(seqNum, partialFileName, _))
+    getFileBodyContents(inputType).map { fileBody =>
+      createContent(seqNum, partialFileName, fileBody, isRemaining)
+    }
 
   def licenceTimeTradingEKV(licenceTimeTrading: LicenceTimeTrading): (String, String) = licenceTimeTrading match {
     case ZeroToTwoYears   => ("00", "0 to 2 years")
@@ -131,8 +137,8 @@ class FileCreationServiceImpl @Inject() (timeProvider: TimeProvider) extends Fil
     case None                     => SAStatusMapping(None, None)
   }
 
-  private def createHecTaxCheckFileBody(hecTaxCheckList: List[HECTaxCheck]): List[EnumFileBody] =
-    hecTaxCheckList.map(hecTaxCheck =>
+  private def createHecTaxCheckFileBody(hecTaxCheckList: List[HECTaxCheck]): List[HECTaxCheckFileBody] =
+    hecTaxCheckList.map { hecTaxCheck =>
       hecTaxCheck.taxCheckData match {
         case i: IndividualHECTaxCheckData =>
           HECTaxCheckFileBody(
@@ -152,36 +158,53 @@ class FileCreationServiceImpl @Inject() (timeProvider: TimeProvider) extends Fil
             incomeTaxYear = i.taxDetails.saStatusResponse.map(_.taxYear.startYear + 1),
             returnReceived = saStatusMapping(i.taxDetails.saStatusResponse.map(_.status)).returnReceived,
             noticeToFile = saStatusMapping(i.taxDetails.saStatusResponse.map(_.status)).noticeToFileIssued,
-            taxComplianceDeclaration = if(saStatusMapping(i.taxDetails.saStatusResponse.map(_.status)).returnReceived == 'Y') Some('Y') else Some('N'),
-            correctiveAction =
+            taxComplianceDeclaration = saStatusMapping(i.taxDetails.saStatusResponse.map(_.status)).returnReceived,
+            customerDeclaration = 'Y',
+            taxCheckStartDateTime =
+              i.taxCheckStartDateTime.withZoneSameInstant(ZoneId.of("GMT")).format(DATE_TIME_FORMATTER),
+            taxCheckCompleteDateTime =
+              hecTaxCheck.createDate.withZoneSameInstant(ZoneId.of("GMT")).format(DATE_TIME_FORMATTER),
+            taxCheckCode = hecTaxCheck.taxCheckCode.value,
+            taxCheckExpiryDate = hecTaxCheck.expiresAfter.format(DATE_FORMATTER),
+            onlineApplication = if (i.source == Digital) 'Y' else 'N'
           )
-        case _                            => List.empty
+        case _                            => sys.error("no company data")
       }
-    )
+    }
 
   //Create the  file body contents excluding header and trailer
-  private def getFileBodyContents[A](inputType: A): Either[Error, List[EnumFileBody]] =
+  private def getFileBodyContents[A](inputType: A): Either[Error, List[FileBody]] =
     inputType match {
-      case LicenceType                                   => Right(createLicenceTypeEnumFileBody)
-      case LicenceTimeTrading                            => Right(createLicenceTimeTradingEnumFileBody)
-      case LicenceValidityPeriod                         => Right(createLicenceValidityPeriodFileBody)
-      case CorrectiveAction                              => Right(createCorrectiveActionFileBody)
-      case (h: HECTaxCheck) :: (tail: List[HECTaxCheck]) => Right(createHecTaxCheckFileBody(h :: tail))
-      case _                                             => Left(Error("Input Type is not valid."))
+      case LicenceType                   => Right(createLicenceTypeEnumFileBody)
+      case LicenceTimeTrading            => Right(createLicenceTimeTradingEnumFileBody)
+      case LicenceValidityPeriod         => Right(createLicenceValidityPeriodFileBody)
+      case CorrectiveAction              => Right(createCorrectiveActionFileBody)
+      case HECTaxCheckFileBodyList(list) => Right(createHecTaxCheckFileBody(list))
+      case _                             => Left(Error("Input Type is not valid."))
     }
 
   //Create the  full file content including header and trailer
-  private def createContent(seqNum: String, partialFileName: String, enumFileBody: List[EnumFileBody]) = {
+  private def createContent(
+    seqNum: String,
+    partialFileName: String,
+    enumFileBody: List[FileBody],
+    isRemaining: Boolean
+  ) = {
     val extractDate = timeProvider.currentDate.format(DATE_FORMATTER)
     val fileName    = s"HEC_SSA_${seqNum}_${extractDate}_$partialFileName.dat"
 
     val fileHeader  = FileHeader(
       fileName = fileName,
       dateOfExtract = extractDate,
-      timeOfExtract = timeProvider.currentTime(ZoneId.of("GMT")).format(TIME_FORMATTER)
+      timeOfExtract = timeProvider.currentTime(ZoneId.of("GMT")).format(TIME_FORMATTER),
+      sequenceNumber = s"00$seqNum"
     )
     val fileTrailer =
-      FileTrailer(fileName = fileName, recordCount = (2L + enumFileBody.size.toLong), inSequenceFlag = 'Y')
+      FileTrailer(
+        fileName = fileName,
+        recordCount = (2L + enumFileBody.size.toLong),
+        inSequenceFlag = if (isRemaining) 'N' else 'Y'
+      )
     (toFileContent(FileFormat(fileHeader, enumFileBody, fileTrailer)), fileName)
 
   }

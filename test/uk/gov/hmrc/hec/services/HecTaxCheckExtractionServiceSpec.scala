@@ -60,7 +60,7 @@ class HecTaxCheckExtractionServiceSpec
   val mockFileCreationService = mock[FileCreationService]
   val mockFileStoreService    = mock[FileStoreService]
 
-  val taxCheckStartDateTime = ZonedDateTime.of(2021, 10, 9, 9, 12, 34, 0, ZoneId.of("GMT"))
+  val taxCheckStartDateTime = ZonedDateTime.of(2021, 10, 9, 9, 12, 34, 0, ZoneId.of("Europe/London"))
 
   override def afterAll(): Unit = {
     super.afterAll()

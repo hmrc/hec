@@ -16,8 +16,6 @@
 
 package uk.gov.hmrc.hec.models.fileFormat
 
-import uk.gov.hmrc.hec.models.HECTaxCheckFile
-
 trait FileBody extends Product with Serializable {
   def recordType: String
   def toRowString: String
@@ -57,14 +55,15 @@ final case class HECTaxCheckFileBody(
   returnReceived: Option[Char] = None,
   noticeToFile: Option[Char] = None,
   taxComplianceDeclaration: Option[Char] = None,
-  correctiveAction: String,
+  correctiveAction: Option[String] = None,
   customerDeclaration: Char,
   taxCheckStartDateTime: String,
   taxCheckCompleteDateTime: String,
   taxCheckCode: String,
   taxCheckExpiryDate: String,
   onlineApplication: Char
-) extends FileBody
-    with HECTaxCheckFile {
+) extends FileBody {
+
   override def toRowString: String = this.productIterator.mkString("|").replaceAll("None", "null")
+
 }

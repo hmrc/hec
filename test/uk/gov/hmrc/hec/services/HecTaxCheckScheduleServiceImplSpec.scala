@@ -84,7 +84,7 @@ class HecTaxCheckScheduleServiceImplSpec
     ConfigFactory.parseString(
       s"""
         |hec-file-extraction-details {
-        |   extraction-timezone   = "GMT"
+        |   extraction-timezone   = "Europe/London"
         |   extraction-time       = "$time"
         |   interval = 1 day
         |}
@@ -112,7 +112,7 @@ class HecTaxCheckScheduleServiceImplSpec
       }
 
       // the service should ask how long there is until the next job run time
-      testProbe.expectMsg(TimeUntilRequest(jobRunTime, ZoneId.of("GMT")))
+      testProbe.expectMsg(TimeUntilRequest(jobRunTime, ZoneId.of("Europe/London")))
       testProbe.reply(TimeUntilResponse(1.minute))
 
       testProbe.expectMsg(JobScheduledOnce(1.minute))
@@ -126,7 +126,7 @@ class HecTaxCheckScheduleServiceImplSpec
       testProbe.reply(RunJobResponse(Some(Left(Error("")))))
 
       // the next job should be scheduled after the current job has run. Repeat the above
-      testProbe.expectMsg(TimeUntilRequest(jobRunTime, ZoneId.of("GMT")))
+      testProbe.expectMsg(TimeUntilRequest(jobRunTime, ZoneId.of("Europe/London")))
       testProbe.reply(TimeUntilResponse(24.hours))
 
       testProbe.expectMsg(JobScheduledOnce(24.hours))
@@ -141,7 +141,7 @@ class HecTaxCheckScheduleServiceImplSpec
       testProbe.reply(RunJobResponse(None))
 
       // the next job should be scheduled after the current job finishes
-      testProbe.expectMsg(TimeUntilRequest(jobRunTime, ZoneId.of("GMT")))
+      testProbe.expectMsg(TimeUntilRequest(jobRunTime, ZoneId.of("Europe/London")))
       testProbe.reply(TimeUntilResponse(24.hours))
       testProbe.expectMsg(JobScheduledOnce(24.hours))
 
