@@ -16,6 +16,8 @@
 
 package uk.gov.hmrc.hec.models.fileFormat
 
+import uk.gov.hmrc.hec.models.HECTaxCheckFile
+
 trait FileBody extends Product with Serializable {
   def recordType: String
   def toRowString: String
@@ -26,4 +28,43 @@ final case class EnumFileBody(recordType: String = "01", recordId: String, recor
   //convert the file body to pipe delimited string
   override def toRowString: String = this.productIterator.mkString("|")
 
+}
+
+final case class HECTaxCheckFileBody(
+  recordType: String = "01",
+  ggCredID: Option[String] = None,
+  nino: Option[String] = None,
+  firstName: Option[String] = None,
+  lastName: Option[String] = None,
+  dob: Option[String] = None,
+  SAUTR: Option[Int] = None,
+  CTUTR: Option[String] = None,
+  crn: Option[String] = None,
+  companyName: Option[String] = None,
+  licenceType: String,
+  licenceValidityPeriod: String,
+  licenceTimeTrading: String,
+  entityType: Char,
+  notChargeable: Option[Char] = None,
+  PAYE: Option[Char] = None,
+  SA: Option[Char] = None,
+  CT: Option[Char] = None,
+  incomeTaxYear: Option[Int] = None,
+  hasAccountingPeriod: Option[Char] = None,
+  accountingPeriodStartDate: Option[String] = None,
+  accountingPeriodEndDate: Option[String] = None,
+  recentlyStartedTrading: Option[Char] = None,
+  returnReceived: Option[Char] = None,
+  noticeToFile: Option[Char] = None,
+  taxComplianceDeclaration: Option[Char] = None,
+  correctiveAction: String,
+  customerDeclaration: Char,
+  taxCheckStartDateTime: String,
+  taxCheckCompleteDateTime: String,
+  taxCheckCode: String,
+  taxCheckExpiryDate: String,
+  onlineApplication: Char
+) extends FileBody
+    with HECTaxCheckFile {
+  override def toRowString: String = this.productIterator.mkString("|").replaceAll("None", "null")
 }

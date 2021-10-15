@@ -18,9 +18,12 @@ package uk.gov.hmrc.hec.services
 
 import com.google.inject.{ImplementedBy, Inject}
 import uk.gov.hmrc.hec.models.CorrectiveAction._
-import uk.gov.hmrc.hec.models.{CorrectiveAction, Error}
+import uk.gov.hmrc.hec.models.HECTaxCheckData.IndividualHECTaxCheckData
+import uk.gov.hmrc.hec.models.SAStatus._
+import uk.gov.hmrc.hec.models.{CorrectiveAction, Error, HECTaxCheck, SAStatus, TaxSituation}
 import uk.gov.hmrc.hec.models.fileFormat.FileFormat.toFileContent
-import uk.gov.hmrc.hec.models.fileFormat.{EnumFileBody, FileFormat, FileHeader, FileTrailer}
+import uk.gov.hmrc.hec.models.TaxSituation._
+import uk.gov.hmrc.hec.models.fileFormat.{EnumFileBody, FileFormat, FileHeader, FileTrailer, HECTaxCheckFileBody}
 import uk.gov.hmrc.hec.models.licence.LicenceTimeTrading.{EightYearsOrMore, FourToEightYears, TwoToFourYears, ZeroToTwoYears}
 import uk.gov.hmrc.hec.models.licence.LicenceType.{DriverOfTaxisAndPrivateHires, OperatorOfPrivateHireVehicles, ScrapMetalDealerSite, ScrapMetalMobileCollector}
 import uk.gov.hmrc.hec.models.licence.LicenceValidityPeriod.{UpToFiveYears, UpToFourYears, UpToOneYear, UpToThreeYears, UpToTwoYears}
@@ -53,72 +56,118 @@ class FileCreationServiceImpl @Inject() (timeProvider: TimeProvider) extends Fil
     inputType: A,
     seqNum: String,
     partialFileName: String
-  ): Either[Error, (String, String)]                                                  =
+  ): Either[Error, (String, String)] =
     getFileBodyContents(inputType).map(createContent(seqNum, partialFileName, _))
 
-  private def createLicenceTimeTradingEnumFileBody = {
-
-    def enumKeysAndValue(licenceTimeTrading: LicenceTimeTrading): (String, String) = licenceTimeTrading match {
-      case ZeroToTwoYears   => ("00", "0 to 2 years")
-      case TwoToFourYears   => ("01", "2 to 4 years")
-      case FourToEightYears => ("02", "4 to 8 years")
-      case EightYearsOrMore => ("03", "More than 8 years")
-    }
-    LicenceTimeTrading.values.map { values =>
-      val keyValue = enumKeysAndValue(values)
-      EnumFileBody(recordId = keyValue._1, recordDescription = keyValue._2)
-    }.toList
+  def licenceTimeTradingEKV(licenceTimeTrading: LicenceTimeTrading): (String, String) = licenceTimeTrading match {
+    case ZeroToTwoYears   => ("00", "0 to 2 years")
+    case TwoToFourYears   => ("01", "2 to 4 years")
+    case FourToEightYears => ("02", "4 to 8 years")
+    case EightYearsOrMore => ("03", "More than 8 years")
   }
 
-  private def createLicenceTypeEnumFileBody = {
-
-    def enumKeysAndValue(licenceType: LicenceType): (String, String) = licenceType match {
-      case DriverOfTaxisAndPrivateHires  => ("00", "Driver of taxis and private hires")
-      case OperatorOfPrivateHireVehicles => ("01", "Operator of private hire vehicles")
-      case ScrapMetalMobileCollector     => ("02", "Scrap metal mobile collector")
-      case ScrapMetalDealerSite          => ("03", "Scrap metal dealer site")
-    }
-    LicenceType.values.map { values =>
-      val keyValue = enumKeysAndValue(values)
-      EnumFileBody(recordId = keyValue._1, recordDescription = keyValue._2)
-    }.toList
+  private def licenceTypeEKV(licenceType: LicenceType): (String, String) = licenceType match {
+    case DriverOfTaxisAndPrivateHires  => ("00", "Driver of taxis and private hires")
+    case OperatorOfPrivateHireVehicles => ("01", "Operator of private hire vehicles")
+    case ScrapMetalMobileCollector     => ("02", "Scrap metal mobile collector")
+    case ScrapMetalDealerSite          => ("03", "Scrap metal dealer site")
   }
 
-  private def createLicenceValidityPeriodFileBody = {
-
-    def enumKeysAndValue(licenceValidityPeriod: LicenceValidityPeriod): (String, String) = licenceValidityPeriod match {
+  def licenceValidityPeriodEKV(licenceValidityPeriod: LicenceValidityPeriod): (String, String) =
+    licenceValidityPeriod match {
       case UpToOneYear    => ("00", "Up to 1 year")
       case UpToTwoYears   => ("01", "Up to 2 years")
       case UpToThreeYears => ("02", "Up to 3 years")
       case UpToFourYears  => ("03", "Up to 4 years")
       case UpToFiveYears  => ("04", "Up to 5 years")
     }
+
+  def correctiveActionEKV(correctiveAction: CorrectiveAction): (String, String) = correctiveAction match {
+    case Register => ("00", "Register new SA account")
+    case Dormant  => ("01", "Dormant account reactivated")
+    case Other    => ("02", "Other corrective action")
+
+  }
+
+  private def createLicenceTimeTradingEnumFileBody =
+    LicenceTimeTrading.values.map { values =>
+      val keyValue = licenceTimeTradingEKV(values)
+      EnumFileBody(recordId = keyValue._1, recordDescription = keyValue._2)
+    }.toList
+
+  private def createLicenceTypeEnumFileBody =
+    LicenceType.values.map { values =>
+      val keyValue = licenceTypeEKV(values)
+      EnumFileBody(recordId = keyValue._1, recordDescription = keyValue._2)
+    }.toList
+
+  private def createLicenceValidityPeriodFileBody =
     LicenceValidityPeriod.values.map { values =>
-      val keyValue = enumKeysAndValue(values)
+      val keyValue = licenceValidityPeriodEKV(values)
       EnumFileBody(recordId = keyValue._1, recordDescription = keyValue._2)
     }.toList
-  }
 
-  private def createCorrectiveActionFileBody = {
-    def enumKeysAndValue(correctiveAction: CorrectiveAction): (String, String) = correctiveAction match {
-      case Register => ("00", "Register new SA account")
-      case Dormant  => ("01", "Dormant account reactivated")
-      case Other    => ("02", "Other corrective action")
-
-    }
+  private def createCorrectiveActionFileBody =
     CorrectiveAction.values.map { values =>
-      val keyValue = enumKeysAndValue(values)
+      val keyValue = correctiveActionEKV(values)
       EnumFileBody(recordId = keyValue._1, recordDescription = keyValue._2)
     }.toList
+
+  case class TaxSituationMapping(SA: Option[Char], PAYE: Option[Char], NotChargeable: Option[Char])
+
+  private def taxSituationMapping(taxSituation: TaxSituation) = taxSituation match {
+    case PAYE          => TaxSituationMapping(Some('N'), Some('Y'), None)
+    case SA            => TaxSituationMapping(Some('Y'), Some('N'), None)
+    case SAPAYE        => TaxSituationMapping(Some('Y'), Some('Y'), None)
+    case NotChargeable => TaxSituationMapping(None, None, Some('Y'))
   }
+
+  case class SAStatusMapping(returnReceived: Option[Char], noticeToFileIssued: Option[Char])
+
+  private def saStatusMapping(saStatus: Option[SAStatus]) = saStatus match {
+    case Some(ReturnFound)        => SAStatusMapping(Some('Y'), None)
+    case Some(NoticeToFileIssued) => SAStatusMapping(Some('N'), Some('Y'))
+    case Some(NoReturnFound)      => SAStatusMapping(Some('N'), Some('N'))
+    case None                     => SAStatusMapping(None, None)
+  }
+
+  private def createHecTaxCheckFileBody(hecTaxCheckList: List[HECTaxCheck]): List[EnumFileBody] =
+    hecTaxCheckList.map(hecTaxCheck =>
+      hecTaxCheck.taxCheckData match {
+        case i: IndividualHECTaxCheckData =>
+          HECTaxCheckFileBody(
+            ggCredID = Some(i.applicantDetails.ggCredId.value),
+            nino = Some(i.taxDetails.nino.value),
+            firstName = Some(i.applicantDetails.name.firstName),
+            lastName = Some(i.applicantDetails.name.lastName),
+            dob = Some(i.applicantDetails.dateOfBirth.value.format(DATE_FORMATTER)),
+            SAUTR = i.taxDetails.sautr.map(_.value.toInt),
+            licenceType = licenceTypeEKV(i.licenceDetails.licenceType)._1,
+            licenceValidityPeriod = licenceValidityPeriodEKV(i.licenceDetails.licenceValidityPeriod)._1,
+            licenceTimeTrading = licenceTimeTradingEKV(i.licenceDetails.licenceTimeTrading)._1,
+            entityType = 'I',
+            notChargeable = taxSituationMapping(i.taxDetails.taxSituation).NotChargeable,
+            PAYE = taxSituationMapping(i.taxDetails.taxSituation).PAYE,
+            SA = taxSituationMapping(i.taxDetails.taxSituation).SA,
+            incomeTaxYear = i.taxDetails.saStatusResponse.map(_.taxYear.startYear + 1),
+            returnReceived = saStatusMapping(i.taxDetails.saStatusResponse.map(_.status)).returnReceived,
+            noticeToFile = saStatusMapping(i.taxDetails.saStatusResponse.map(_.status)).noticeToFileIssued,
+            taxComplianceDeclaration = if(saStatusMapping(i.taxDetails.saStatusResponse.map(_.status)).returnReceived == 'Y') Some('Y') else Some('N'),
+            correctiveAction =
+          )
+        case _                            => List.empty
+      }
+    )
+
   //Create the  file body contents excluding header and trailer
   private def getFileBodyContents[A](inputType: A): Either[Error, List[EnumFileBody]] =
     inputType match {
-      case LicenceType           => Right(createLicenceTypeEnumFileBody)
-      case LicenceTimeTrading    => Right(createLicenceTimeTradingEnumFileBody)
-      case LicenceValidityPeriod => Right(createLicenceValidityPeriodFileBody)
-      case CorrectiveAction      => Right(createCorrectiveActionFileBody)
-      case _                     => Left(Error("Input Type is not valid."))
+      case LicenceType                                   => Right(createLicenceTypeEnumFileBody)
+      case LicenceTimeTrading                            => Right(createLicenceTimeTradingEnumFileBody)
+      case LicenceValidityPeriod                         => Right(createLicenceValidityPeriodFileBody)
+      case CorrectiveAction                              => Right(createCorrectiveActionFileBody)
+      case (h: HECTaxCheck) :: (tail: List[HECTaxCheck]) => Right(createHecTaxCheckFileBody(h :: tail))
+      case _                                             => Left(Error("Input Type is not valid."))
     }
 
   //Create the  full file content including header and trailer
