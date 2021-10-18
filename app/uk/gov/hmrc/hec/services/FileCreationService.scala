@@ -16,19 +16,20 @@
 
 package uk.gov.hmrc.hec.services
 
+import cats.syntax.eq._
 import com.google.inject.{ImplementedBy, Inject}
 import uk.gov.hmrc.hec.models.CorrectiveAction._
 import uk.gov.hmrc.hec.models.HECTaxCheckData.IndividualHECTaxCheckData
 import uk.gov.hmrc.hec.models.HECTaxCheckSource.Digital
 import uk.gov.hmrc.hec.models.SAStatus._
-import uk.gov.hmrc.hec.models.{CorrectiveAction, Error, HECTaxCheck, HECTaxCheckFileBodyList, SAStatus, TaxSituation}
-import uk.gov.hmrc.hec.models.fileFormat.FileFormat.toFileContent
 import uk.gov.hmrc.hec.models.TaxSituation._
-import uk.gov.hmrc.hec.models.fileFormat.{EnumFileBody, FileBody, FileFormat, FileHeader, FileTrailer, HECTaxCheckFileBody}
+import uk.gov.hmrc.hec.models.fileFormat.FileFormat.toFileContent
+import uk.gov.hmrc.hec.models.fileFormat._
 import uk.gov.hmrc.hec.models.licence.LicenceTimeTrading.{EightYearsOrMore, FourToEightYears, TwoToFourYears, ZeroToTwoYears}
 import uk.gov.hmrc.hec.models.licence.LicenceType.{DriverOfTaxisAndPrivateHires, OperatorOfPrivateHireVehicles, ScrapMetalDealerSite, ScrapMetalMobileCollector}
 import uk.gov.hmrc.hec.models.licence.LicenceValidityPeriod.{UpToFiveYears, UpToFourYears, UpToOneYear, UpToThreeYears, UpToTwoYears}
 import uk.gov.hmrc.hec.models.licence.{LicenceTimeTrading, LicenceType, LicenceValidityPeriod}
+import uk.gov.hmrc.hec.models.{CorrectiveAction, Error, HECTaxCheck, HECTaxCheckFileBodyList, SAStatus, TaxSituation}
 import uk.gov.hmrc.hec.util.TimeProvider
 
 import java.time.ZoneId
@@ -53,7 +54,7 @@ class FileCreationServiceImpl @Inject() (timeProvider: TimeProvider) extends Fil
 
   val DATE_FORMATTER: DateTimeFormatter      = DateTimeFormatter.ofPattern("yyyyMMdd")
   val TIME_FORMATTER: DateTimeFormatter      = DateTimeFormatter.ofPattern("HHmmss")
-  val DATE_TIME_FORMATTER: DateTimeFormatter = DateTimeFormatter.ofPattern("yyyyMMdd HHmmss")
+  val DATE_TIME_FORMATTER: DateTimeFormatter = DateTimeFormatter.ofPattern("yyyyMMddHHmmss")
 
   override def createFileContent[A](
     inputType: A,
@@ -141,23 +142,25 @@ class FileCreationServiceImpl @Inject() (timeProvider: TimeProvider) extends Fil
     hecTaxCheckList.map { hecTaxCheck =>
       hecTaxCheck.taxCheckData match {
         case i: IndividualHECTaxCheckData =>
+          val taxSituationMap = taxSituationMapping(i.taxDetails.taxSituation)
+          val saStatusMap     = saStatusMapping(i.taxDetails.saStatusResponse.map(_.status))
           HECTaxCheckFileBody(
             ggCredID = Some(i.applicantDetails.ggCredId.value),
             nino = Some(i.taxDetails.nino.value),
             firstName = Some(i.applicantDetails.name.firstName),
             lastName = Some(i.applicantDetails.name.lastName),
             dob = Some(i.applicantDetails.dateOfBirth.value.format(DATE_FORMATTER)),
-            SAUTR = i.taxDetails.sautr.map(_.value.toInt),
+            SAUTR = i.taxDetails.sautr.map(_.value),
             licenceType = licenceTypeEKV(i.licenceDetails.licenceType)._1,
             licenceValidityPeriod = licenceValidityPeriodEKV(i.licenceDetails.licenceValidityPeriod)._1,
             licenceTimeTrading = licenceTimeTradingEKV(i.licenceDetails.licenceTimeTrading)._1,
             entityType = 'I',
-            notChargeable = taxSituationMapping(i.taxDetails.taxSituation).NotChargeable,
-            PAYE = taxSituationMapping(i.taxDetails.taxSituation).PAYE,
-            SA = taxSituationMapping(i.taxDetails.taxSituation).SA,
+            notChargeable = taxSituationMap.NotChargeable,
+            PAYE = taxSituationMap.PAYE,
+            SA = taxSituationMap.SA,
             incomeTaxYear = i.taxDetails.saStatusResponse.map(_.taxYear.startYear + 1),
-            returnReceived = saStatusMapping(i.taxDetails.saStatusResponse.map(_.status)).returnReceived,
-            noticeToFile = saStatusMapping(i.taxDetails.saStatusResponse.map(_.status)).noticeToFileIssued,
+            returnReceived = saStatusMap.returnReceived,
+            noticeToFile = saStatusMap.noticeToFileIssued,
             taxComplianceDeclaration = saStatusMapping(i.taxDetails.saStatusResponse.map(_.status)).returnReceived,
             customerDeclaration = 'Y',
             taxCheckStartDateTime =
@@ -166,7 +169,7 @@ class FileCreationServiceImpl @Inject() (timeProvider: TimeProvider) extends Fil
               hecTaxCheck.createDate.withZoneSameInstant(ZoneId.of("GMT")).format(DATE_TIME_FORMATTER),
             taxCheckCode = hecTaxCheck.taxCheckCode.value,
             taxCheckExpiryDate = hecTaxCheck.expiresAfter.format(DATE_FORMATTER),
-            onlineApplication = if (i.source == Digital) 'Y' else 'N'
+            onlineApplication = if (i.source === Digital) 'Y' else 'N'
           )
         case _                            => sys.error("no company data")
       }
@@ -187,7 +190,7 @@ class FileCreationServiceImpl @Inject() (timeProvider: TimeProvider) extends Fil
   private def createContent(
     seqNum: String,
     partialFileName: String,
-    enumFileBody: List[FileBody],
+    fileBody: List[FileBody],
     isRemaining: Boolean
   ) = {
     val extractDate = timeProvider.currentDate.format(DATE_FORMATTER)
@@ -202,10 +205,10 @@ class FileCreationServiceImpl @Inject() (timeProvider: TimeProvider) extends Fil
     val fileTrailer =
       FileTrailer(
         fileName = fileName,
-        recordCount = (2L + enumFileBody.size.toLong),
+        recordCount = (2L + fileBody.size.toLong),
         inSequenceFlag = if (isRemaining) 'N' else 'Y'
       )
-    (toFileContent(FileFormat(fileHeader, enumFileBody, fileTrailer)), fileName)
+    (toFileContent(FileFormat(fileHeader, fileBody, fileTrailer)), fileName)
 
   }
 

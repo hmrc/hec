@@ -35,7 +35,7 @@ final case class HECTaxCheckFileBody(
   firstName: Option[String] = None,
   lastName: Option[String] = None,
   dob: Option[String] = None,
-  SAUTR: Option[Int] = None,
+  SAUTR: Option[String] = None,
   CTUTR: Option[String] = None,
   crn: Option[String] = None,
   companyName: Option[String] = None,
@@ -46,7 +46,6 @@ final case class HECTaxCheckFileBody(
   notChargeable: Option[Char] = None,
   PAYE: Option[Char] = None,
   SA: Option[Char] = None,
-  CT: Option[Char] = None,
   incomeTaxYear: Option[Int] = None,
   hasAccountingPeriod: Option[Char] = None,
   accountingPeriodStartDate: Option[String] = None,
@@ -68,7 +67,7 @@ final case class HECTaxCheckFileBody(
   override def toRowString: String = this.productIterator
     .map {
       case Some(value) => value
-      case None        => "null"
+      case None        => ""
       case rest        => rest
     }
     .mkString("|")

@@ -108,12 +108,14 @@ class HecTaxCheckExtractionServiceImpl @Inject() (
     result.value
   }
 
+  private def toFormattedString(i: Int) = f"$i%04d"
+
   private def createHecFile(
     hecTaxCheckList: HECTaxCheckFileBodyList,
     count: Int,
     partialFileName: String,
     dirname: String
-  ) = {
+  ): EitherT[Future, Error, List[Unit]] = {
     @tailrec
     def loopHecTaxCheckRecords(
       hecTaxCheckList: List[HECTaxCheck],
@@ -121,20 +123,20 @@ class HecTaxCheckExtractionServiceImpl @Inject() (
       seqNumInt: Int,
       partialFileName: String,
       dirname: String
-    ): EitherT[Future, Error, Unit] = {
+    ): List[EitherT[Future, Error, Unit]] = {
       val hecList       = hecTaxCheckList.take(count)
       val remainingList = hecTaxCheckList.drop(count)
       val isRemaining   = remainingList.size > 0
-      //If list is empty or sequence number exceeds 19999, then halt the process
-      if (hecList.size === 0 || seqNumInt > 19999) {
+      //If list is empty or sequence number exceeds 9999, then halt the process
+      if (hecList.size === 0 || seqNumInt > 9999) {
         logger.info(
           "Hec tax Check file creation process halted:: Either there are no more records to process or the sequence number exceeds 9999. "
         )
-        EitherT.fromEither[Future](Right(()))
+        List(EitherT.fromEither[Future](Right(())))
       } else {
         val _ = createAndStoreFile(
           HECTaxCheckFileBodyList(hecList),
-          seqNumInt.toString.takeRight(4),
+          toFormattedString(seqNumInt),
           partialFileName,
           dirname,
           isRemaining
@@ -143,9 +145,8 @@ class HecTaxCheckExtractionServiceImpl @Inject() (
       }
     }
 
-    //Started with 10001, so that we can do increment and then takeRight(4), will become the sequence number.
-    //This done as addition t 0001 will give just 2
-    loopHecTaxCheckRecords(hecTaxCheckList.list, count, 10001, partialFileName, dirname)
+    loopHecTaxCheckRecords(hecTaxCheckList.list, count, 1, partialFileName, dirname)
+      .sequence[EitherT[Future, Error, *], Unit]
 
   }
 
