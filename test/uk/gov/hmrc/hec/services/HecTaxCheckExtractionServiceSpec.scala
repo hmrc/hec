@@ -254,7 +254,7 @@ class HecTaxCheckExtractionServiceSpec
           mockCreateFileContent(HECTaxCheckFileBodyList(hecTaxCheckList.take(2)), "0001", "HEC", false)(
             Right(("00|file1.dat|HEC|SSA|20210909|154556|000001|001", "file1.dat"))
           )
-          //mockUpdateAllHecTaxCheck(updatedHecTaxCheckList.take(2))(Left(models.Error("err")))
+          mockUpdateAllHecTaxCheck(updatedHecTaxCheckList.take(2))(Left(models.Error("err")))
         }
         val result =
           hecTaxCheckExtractionService.lockAndProcessHecData()
