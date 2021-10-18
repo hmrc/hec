@@ -103,7 +103,8 @@ class TaxCheckServiceImplSpec extends AnyWordSpec with Matchers with MockFactory
             request.taxCheckCode,
             request.expiresAfter,
             now,
-            false
+            false,
+            None
           )
 
           inSequence {
@@ -125,7 +126,8 @@ class TaxCheckServiceImplSpec extends AnyWordSpec with Matchers with MockFactory
             request.taxCheckCode,
             request.expiresAfter,
             now,
-            false
+            false,
+            None
           )
 
           inSequence {
@@ -143,7 +145,8 @@ class TaxCheckServiceImplSpec extends AnyWordSpec with Matchers with MockFactory
             request.taxCheckCode,
             request.expiresAfter,
             now,
-            false
+            false,
+            None
           )
 
           inSequence {
@@ -189,7 +192,7 @@ class TaxCheckServiceImplSpec extends AnyWordSpec with Matchers with MockFactory
             taxCheckStartDateTime,
             HECTaxCheckSource.Digital
           )
-          val taxCheck     = HECTaxCheck(taxCheckData, taxCheckCode, TimeUtils.today(), now, false)
+          val taxCheck     = HECTaxCheck(taxCheckData, taxCheckCode, TimeUtils.today(), now, false, None)
 
           mockGetTaxCheck(taxCheckCode)(Right(Some(taxCheck)))
 

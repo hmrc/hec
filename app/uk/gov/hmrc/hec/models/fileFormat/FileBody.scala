@@ -64,6 +64,13 @@ final case class HECTaxCheckFileBody(
   onlineApplication: Char
 ) extends FileBody {
 
-  override def toRowString: String = this.productIterator.mkString("|").replaceAll("None", "null")
+  @SuppressWarnings(Array("org.wartremover.warts.Any"))
+  override def toRowString: String = this.productIterator
+    .map {
+      case Some(value) => value
+      case None        => "null"
+      case rest        => rest
+    }
+    .mkString("|")
 
 }

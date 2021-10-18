@@ -286,7 +286,7 @@ class TaxCheckControllerSpec extends ControllerSpec {
             taxCheckStartDateTime,
             HECTaxCheckSource.Digital
           )
-          val taxCheck     = HECTaxCheck(taxCheckData, validTaxCheckCode, TimeUtils.today(), TimeUtils.now(), false)
+          val taxCheck     = HECTaxCheck(taxCheckData, validTaxCheckCode, TimeUtils.today(), TimeUtils.now(), false, None)
 
           mockGetTaxCheck(validTaxCheckCode)(Right(Some(taxCheck)))
 

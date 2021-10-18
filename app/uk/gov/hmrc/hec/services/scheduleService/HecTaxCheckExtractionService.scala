@@ -73,8 +73,8 @@ class HecTaxCheckExtractionServiceImpl @Inject() (
     val seqNum = "0001"
     val result: EitherT[Future, models.Error, Unit] = {
       for {
-        _           <- createAndStoreFile(LicenceType, seqNum, licenceType.partialFileName, licenceType.dirName, false)
-        _           <-
+        _                <- createAndStoreFile(LicenceType, seqNum, licenceType.partialFileName, licenceType.dirName, false)
+        _                <-
           createAndStoreFile(
             LicenceTimeTrading,
             seqNum,
@@ -82,24 +82,27 @@ class HecTaxCheckExtractionServiceImpl @Inject() (
             licenceTimeTrading.dirName,
             false
           )
-        _           <- createAndStoreFile(
-                         LicenceValidityPeriod,
-                         seqNum,
-                         licenceValidityPeriod.partialFileName,
-                         licenceValidityPeriod.dirName,
-                         false
-                       )
-        _           <- createAndStoreFile(
-                         CorrectiveAction,
-                         seqNum,
-                         correctiveAction.partialFileName,
-                         correctiveAction.dirName,
-                         false
-                       )
-        hecTaxCheck <- taxCheckService.getAllTaxCheckCodesByExtractedStatus(false)
-        _           <- createHecFile(HECTaxCheckFileBodyList(hecTaxCheck), count, hecData.partialFileName, hecData.dirName)
-        //updating isExtracted to true for the the processed hec tax check codes
-        // newHecTaxCheck   <- taxCheckService.updateAllHecTaxCheck(updatedHecTaxChek)
+        _                <- createAndStoreFile(
+                              LicenceValidityPeriod,
+                              seqNum,
+                              licenceValidityPeriod.partialFileName,
+                              licenceValidityPeriod.dirName,
+                              false
+                            )
+        _                <- createAndStoreFile(
+                              CorrectiveAction,
+                              seqNum,
+                              correctiveAction.partialFileName,
+                              correctiveAction.dirName,
+                              false
+                            )
+        hecTaxCheck      <- taxCheckService.getAllTaxCheckCodesByExtractedStatus(false)
+        _                <- createHecFile(HECTaxCheckFileBodyList(hecTaxCheck), count, hecData.partialFileName, hecData.dirName)
+        updatedHecTaxChek = hecTaxCheck.map(_.copy(isExtracted = true))
+
+        //i think we don't need to bring the whole list of codes which are updated ,
+        // it may cause performance issue, so now it's returning Unit.
+        _ <- taxCheckService.updateAllHecTaxCheck(updatedHecTaxChek)
       } yield ()
     }
     result.value
@@ -111,9 +114,8 @@ class HecTaxCheckExtractionServiceImpl @Inject() (
     partialFileName: String,
     dirname: String
   ) = {
-
     @tailrec
-    def loop(
+    def loopHecTaxCheckRecords(
       hecTaxCheckList: List[HECTaxCheck],
       count: Int,
       seqNumInt: Int,
@@ -122,8 +124,14 @@ class HecTaxCheckExtractionServiceImpl @Inject() (
     ): EitherT[Future, Error, Unit] = {
       val hecList       = hecTaxCheckList.take(count)
       val remainingList = hecTaxCheckList.drop(count)
-      val isRemaining   = remainingList.toIterator.hasNext
-      if (hecList.size =!= 0) {
+      val isRemaining   = remainingList.size > 0
+      //If list is empty or sequence number exceeds 19999, then halt the process
+      if (hecList.size === 0 || seqNumInt > 19999) {
+        logger.info(
+          "Hec tax Check file creation process halted:: Either there are no more records to process or the sequence number exceeds 9999. "
+        )
+        EitherT.fromEither[Future](Right(()))
+      } else {
         val _ = createAndStoreFile(
           HECTaxCheckFileBodyList(hecList),
           seqNumInt.toString.takeRight(4),
@@ -131,10 +139,13 @@ class HecTaxCheckExtractionServiceImpl @Inject() (
           dirname,
           isRemaining
         )
-        loop(remainingList, count, seqNumInt + 1, partialFileName, dirname)
-      } else { EitherT.fromEither[Future](Right(())) }
+        loopHecTaxCheckRecords(remainingList, count, seqNumInt + 1, partialFileName, dirname)
+      }
     }
-    loop(hecTaxCheckList.list, count, 10001, partialFileName, dirname)
+
+    //Started with 10001, so that we can do increment and then takeRight(4), will become the sequence number.
+    //This done as addition t 0001 will give just 2
+    loopHecTaxCheckRecords(hecTaxCheckList.list, count, 10001, partialFileName, dirname)
 
   }
 

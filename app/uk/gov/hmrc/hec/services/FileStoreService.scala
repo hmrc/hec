@@ -28,6 +28,7 @@ import uk.gov.hmrc.objectstore.client.{Path, RetentionPeriod}
 
 import javax.inject.Singleton
 import scala.concurrent.Future
+import scala.io.Source
 
 @ImplementedBy(classOf[FileStoreServiceImpl])
 trait FileStoreService {
@@ -63,7 +64,7 @@ class FileStoreServiceImpl @Inject() (client: PlayObjectStoreClient, config: Con
       client
         .putObject(
           path = Path.Directory(dirName).file(fileName),
-          content = fileContent,
+          content = Source.fromBytes(fileContent.getBytes("US-ASCII"), "UTF-8").mkString,
           retentionPeriod = getRetentionPeriod,
           owner = "hec"
         )
