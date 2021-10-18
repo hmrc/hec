@@ -122,30 +122,38 @@ class HecTaxCheckExtractionServiceImpl @Inject() (
       count: Int,
       seqNumInt: Int,
       partialFileName: String,
-      dirname: String
+      dirname: String,
+      acc: List[EitherT[Future, Error, Unit]]
     ): List[EitherT[Future, Error, Unit]] = {
-      val hecList       = hecTaxCheckList.take(count)
-      val remainingList = hecTaxCheckList.drop(count)
-      val isRemaining   = remainingList.size > 0
+      val hecList          = hecTaxCheckList.take(count)
+      val remainingList    = hecTaxCheckList.drop(count)
+      val isLastInSequence = remainingList.size > 0
       //If list is empty or sequence number exceeds 9999, then halt the process
       if (hecList.size === 0 || seqNumInt > 9999) {
         logger.info(
           "Hec tax Check file creation process halted:: Either there are no more records to process or the sequence number exceeds 9999. "
         )
-        List(EitherT.fromEither[Future](Right(())))
+        acc
       } else {
-        val _ = createAndStoreFile(
-          HECTaxCheckFileBodyList(hecList),
-          toFormattedString(seqNumInt),
+
+        loopHecTaxCheckRecords(
+          remainingList,
+          count,
+          seqNumInt + 1,
           partialFileName,
           dirname,
-          isRemaining
+          createAndStoreFile(
+            HECTaxCheckFileBodyList(hecList),
+            toFormattedString(seqNumInt),
+            partialFileName,
+            dirname,
+            isLastInSequence
+          ) :: acc
         )
-        loopHecTaxCheckRecords(remainingList, count, seqNumInt + 1, partialFileName, dirname)
       }
     }
 
-    loopHecTaxCheckRecords(hecTaxCheckList.list, count, 1, partialFileName, dirname)
+    loopHecTaxCheckRecords(hecTaxCheckList.list, count, 1, partialFileName, dirname, List())
       .sequence[EitherT[Future, Error, *], Unit]
 
   }
@@ -157,10 +165,12 @@ class HecTaxCheckExtractionServiceImpl @Inject() (
     seqNum: String,
     partialFileName: String,
     dirName: String,
-    isRemaining: Boolean
+    isLastInSequence: Boolean
   )(implicit hc: HeaderCarrier): EitherT[Future, Error, Unit] = for {
     fileContent <-
-      EitherT.fromEither[Future](fileCreationService.createFileContent(inputType, seqNum, partialFileName, isRemaining))
+      EitherT.fromEither[Future](
+        fileCreationService.createFileContent(inputType, seqNum, partialFileName, isLastInSequence)
+      )
     _           <- fileStoreService.storeFile(fileContent._1, fileContent._2, dirName)
 
   } yield ()

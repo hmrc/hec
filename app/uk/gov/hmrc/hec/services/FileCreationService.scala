@@ -44,7 +44,7 @@ trait FileCreationService {
     inputType: A,
     seqNum: String,
     partialFileName: String,
-    isRemaining: Boolean
+    isLastInSequence: Boolean
   ): Either[Error, (String, String)]
 
 }
@@ -60,10 +60,10 @@ class FileCreationServiceImpl @Inject() (timeProvider: TimeProvider) extends Fil
     inputType: A,
     seqNum: String,
     partialFileName: String,
-    isRemaining: Boolean
+    isLastInSequence: Boolean
   ): Either[Error, (String, String)] =
     getFileBodyContents(inputType).map { fileBody =>
-      createContent(seqNum, partialFileName, fileBody, isRemaining)
+      createContent(seqNum, partialFileName, fileBody, isLastInSequence)
     }
 
   def licenceTimeTradingEKV(licenceTimeTrading: LicenceTimeTrading): (String, String) = licenceTimeTrading match {
@@ -191,7 +191,7 @@ class FileCreationServiceImpl @Inject() (timeProvider: TimeProvider) extends Fil
     seqNum: String,
     partialFileName: String,
     fileBody: List[FileBody],
-    isRemaining: Boolean
+    isLastInSequence: Boolean
   ) = {
     val extractDate = timeProvider.currentDate.format(DATE_FORMATTER)
     val fileName    = s"HEC_SSA_${seqNum}_${extractDate}_$partialFileName.dat"
@@ -206,7 +206,7 @@ class FileCreationServiceImpl @Inject() (timeProvider: TimeProvider) extends Fil
       FileTrailer(
         fileName = fileName,
         recordCount = (2L + fileBody.size.toLong),
-        inSequenceFlag = if (isRemaining) 'N' else 'Y'
+        inSequenceFlag = if (isLastInSequence) 'N' else 'Y'
       )
     (toFileContent(FileFormat(fileHeader, fileBody, fileTrailer)), fileName)
 

@@ -254,6 +254,9 @@ class HecTaxCheckExtractionServiceSpec
           mockCreateFileContent(HECTaxCheckFileBodyList(hecTaxCheckList.take(2)), "0001", "HEC", false)(
             Right(("00|file1.dat|HEC|SSA|20210909|154556|000001|001", "file1.dat"))
           )
+          mockStoreFile("00|file1.dat|HEC|SSA|20210909|154556|000001|001", "file1.dat", "tax-checks")(
+            Right(())
+          )
           mockUpdateAllHecTaxCheck(updatedHecTaxCheckList.take(2))(Left(models.Error("err")))
         }
         val result =
@@ -295,6 +298,9 @@ class HecTaxCheckExtractionServiceSpec
           mockGetAlltaxCheckByExtractedStatus(false)(Right(hecTaxCheckList.take(2)))
           mockCreateFileContent(HECTaxCheckFileBodyList(hecTaxCheckList.take(2)), "0001", "HEC", false)(
             Right(("00|file1.dat|HEC|SSA|20210909|154556|000001|001", "file1.dat"))
+          )
+          mockStoreFile("00|file1.dat|HEC|SSA|20210909|154556|000001|001", "file1.dat", "tax-checks")(
+            Right(())
           )
           mockUpdateAllHecTaxCheck(updatedHecTaxCheckList.take(2))(Right(updatedHecTaxCheckList))
         }
