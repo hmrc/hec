@@ -28,19 +28,19 @@ import org.scalatest.wordspec.AnyWordSpecLike
 import play.api.Configuration
 import uk.gov.hmrc.hec.actors.TimeCalculator
 import uk.gov.hmrc.hec.models
-import uk.gov.hmrc.hec.models.{Error, HECTaxCheck, SchedulerProvider}
-import uk.gov.hmrc.hec.services.HecTaxCheckScheduleServiceImplSpec.{TestHecTaxCheckScheduleService, TestScheduler, TestSchedulerProvider, TestTimeCalculator}
+import uk.gov.hmrc.hec.models.{Error, SchedulerProvider}
 import uk.gov.hmrc.hec.services.HecTaxCheckScheduleServiceImplSpec.TestHecTaxCheckScheduleService.{RunJobRequest, RunJobResponse}
-import uk.gov.hmrc.hec.services.HecTaxCheckScheduleServiceImplSpec.TestTimeCalculator.{TimeUntilRequest, TimeUntilResponse}
 import uk.gov.hmrc.hec.services.HecTaxCheckScheduleServiceImplSpec.TestScheduler.JobScheduledOnce
+import uk.gov.hmrc.hec.services.HecTaxCheckScheduleServiceImplSpec.TestTimeCalculator.{TimeUntilRequest, TimeUntilResponse}
+import uk.gov.hmrc.hec.services.HecTaxCheckScheduleServiceImplSpec.{TestHecTaxCheckScheduleService, TestScheduler, TestSchedulerProvider, TestTimeCalculator}
 import uk.gov.hmrc.hec.services.scheduleService.{HECTaxCheckExtractionContext, HECTaxCheckScheduleService, HecTaxCheckExtractionService}
 import uk.gov.hmrc.http.HeaderCarrier
 
 import java.time.format.DateTimeFormatter
 import java.time.{LocalTime, ZoneId}
+import scala.concurrent.ExecutionContext.{global => globalExecutionContext}
 import scala.concurrent.duration._
 import scala.concurrent.{Await, ExecutionContext, Future}
-import scala.concurrent.ExecutionContext.{global => globalExecutionContext}
 
 class HecTaxCheckScheduleServiceImplSpec
     extends TestKit(
@@ -179,7 +179,7 @@ object HecTaxCheckScheduleServiceImplSpec {
 
   class TestHecTaxCheckScheduleService(reportTo: ActorRef) extends HecTaxCheckExtractionService {
 
-    def lockAndProcessHecData(): Future[Option[Either[models.Error, List[HECTaxCheck]]]] =
+    def lockAndProcessHecData(): Future[Option[Either[models.Error, Unit]]] =
       (reportTo ? RunJobRequest).mapTo[RunJobResponse].map(_.result)(globalExecutionContext)
   }
 
@@ -187,7 +187,7 @@ object HecTaxCheckScheduleServiceImplSpec {
 
     case object RunJobRequest
 
-    final case class RunJobResponse(result: Option[Either[models.Error, List[HECTaxCheck]]])
+    final case class RunJobResponse(result: Option[Either[models.Error, Unit]])
 
   }
 

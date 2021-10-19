@@ -25,7 +25,8 @@ final case class HECTaxCheck(
   taxCheckCode: HECTaxCheckCode,
   expiresAfter: LocalDate,
   createDate: ZonedDateTime,
-  isExtracted: Boolean
+  isExtracted: Boolean,
+  correctiveAction: Option[CorrectiveAction]
 )
 
 object HECTaxCheck {
@@ -33,3 +34,5 @@ object HECTaxCheck {
   implicit val format: OFormat[HECTaxCheck] = Json.format
 
 }
+
+final case class HECTaxCheckFileBodyList(list: List[HECTaxCheck])

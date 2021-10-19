@@ -61,7 +61,7 @@ class HECTaxCheckScheduleService @Inject() (
             case Some(value) =>
               value match {
                 case Left(error: models.Error) => logger.warn(s"Job failed because of the error :: $error.")
-                case Right(list)               => logger.info(s"Job ran successfully for ${list.size} tax checks")
+                case Right(_)                  => logger.info(s"Job ran successfully for creating and storing  tax checks files")
 
               }
             case None        => logger.info(s"Job did not run as lock couldn't be obtained.")

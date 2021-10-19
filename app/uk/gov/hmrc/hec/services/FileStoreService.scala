@@ -18,6 +18,7 @@ package uk.gov.hmrc.hec.services
 
 import cats.data.EitherT
 import com.google.inject.{ImplementedBy, Inject}
+import org.apache.commons.codec.binary.StringUtils
 import play.api.Configuration
 import uk.gov.hmrc.hec.models
 import uk.gov.hmrc.hec.services.scheduleService.HECTaxCheckExtractionContext
@@ -57,13 +58,13 @@ class FileStoreServiceImpl @Inject() (client: PlayObjectStoreClient, config: Con
     hc: HeaderCarrier,
     hecTaxCheckExtractionContext: HECTaxCheckExtractionContext
   ): EitherT[Future, models.Error, Unit] = {
-
+    val bytes = StringUtils.getBytesUtf8(fileContent)
     import uk.gov.hmrc.objectstore.client.play.Implicits._
     EitherT(
       client
         .putObject(
           path = Path.Directory(dirName).file(fileName),
-          content = fileContent,
+          content = StringUtils.newStringUtf8(bytes),
           retentionPeriod = getRetentionPeriod,
           owner = "hec"
         )

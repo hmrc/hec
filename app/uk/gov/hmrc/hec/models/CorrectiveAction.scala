@@ -19,20 +19,19 @@ package uk.gov.hmrc.hec.models
 import ai.x.play.json.Jsonx
 import ai.x.play.json.SingletonEncoder.simpleName
 import ai.x.play.json.implicits.formatSingleton
-import cats.Eq
+import enumeratum.{Enum, EnumEntry}
 import play.api.libs.json.Format
 
-sealed trait HECTaxCheckSource extends Product with Serializable
+sealed trait CorrectiveAction extends EnumEntry with Product with Serializable
 
-object HECTaxCheckSource {
+object CorrectiveAction extends Enum[CorrectiveAction] {
+  case object Register extends CorrectiveAction
+  case object Dormant extends CorrectiveAction
+  case object Other extends CorrectiveAction
 
-  case object Digital extends HECTaxCheckSource
-
-  case object Stride extends HECTaxCheckSource
+  val values = findValues
 
   @SuppressWarnings(Array("org.wartremover.warts.Throw", "org.wartremover.warts.Equals"))
-  implicit val format: Format[HECTaxCheckSource] = Jsonx.formatSealed[HECTaxCheckSource]
-
-  implicit val eq: Eq[HECTaxCheckSource] = Eq.fromUniversalEquals
+  implicit val format: Format[CorrectiveAction] = Jsonx.formatSealed[CorrectiveAction]
 
 }
