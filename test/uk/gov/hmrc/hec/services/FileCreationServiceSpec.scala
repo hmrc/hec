@@ -54,7 +54,7 @@ class FileCreationServiceSpec extends AnyWordSpec with Matchers with MockFactory
           mockTimeProviderNow(LocalTime.of(11, 36, 5), zoneId)
         }
         val result: Either[Error, (String, String)] =
-          fileCreationService.createFileContent(LicenceType, "0001", "HEC_LICENCE_TYPE", false)
+          fileCreationService.createFileContent(LicenceType, "0001", "HEC_LICENCE_TYPE", true)
         //In future if content grows we can reduce the test to check only for few lines or header and trailer.
         //As of now content is less, so no harm in testing i guess
         //same applies for other test
@@ -76,7 +76,7 @@ class FileCreationServiceSpec extends AnyWordSpec with Matchers with MockFactory
           mockTimeProviderNow(LocalTime.of(11, 36, 5), zoneId)
         }
         val result: Either[Error, (String, String)] =
-          fileCreationService.createFileContent(LicenceTimeTrading, "0001", "HEC_LICENCE_TIME_TRADING", false)
+          fileCreationService.createFileContent(LicenceTimeTrading, "0001", "HEC_LICENCE_TIME_TRADING", true)
         val expected                                = s"""|00|HEC_SSA_0001_20211010_HEC_LICENCE_TIME_TRADING.dat|HEC|SSA|20211010|113605|000001|001
                            |01|00|0 to 2 years
                            |01|01|2 to 4 years
@@ -95,7 +95,7 @@ class FileCreationServiceSpec extends AnyWordSpec with Matchers with MockFactory
           mockTimeProviderNow(LocalTime.of(11, 36, 5), zoneId)
         }
         val result: Either[Error, (String, String)] =
-          fileCreationService.createFileContent(LicenceValidityPeriod, "0001", "HEC_LICENCE_VALIDITY_PERIOD", false)
+          fileCreationService.createFileContent(LicenceValidityPeriod, "0001", "HEC_LICENCE_VALIDITY_PERIOD", true)
         val expected                                = s"""|00|HEC_SSA_0001_20211010_HEC_LICENCE_VALIDITY_PERIOD.dat|HEC|SSA|20211010|113605|000001|001
                            |01|00|Up to 1 year
                            |01|01|Up to 2 years
@@ -117,7 +117,7 @@ class FileCreationServiceSpec extends AnyWordSpec with Matchers with MockFactory
           mockTimeProviderNow(LocalTime.of(11, 36, 5), zoneId)
         }
         val result: Either[Error, (String, String)] =
-          fileCreationService.createFileContent(CorrectiveAction, "0001", partialFileName, false)
+          fileCreationService.createFileContent(CorrectiveAction, "0001", partialFileName, true)
         val expected                                = s"""|00|HEC_SSA_0001_20211010_$partialFileName.dat|HEC|SSA|20211010|113605|000001|001
                                                           |01|00|Register new SA account
                                                           |01|01|Dormant account reactivated
@@ -205,7 +205,7 @@ class FileCreationServiceSpec extends AnyWordSpec with Matchers with MockFactory
               HECTaxCheckFileBodyList(hecTaxCheckList),
               "0001",
               partialFileName,
-              false
+              true
             )
           val expected                                = s"""|00|HEC_SSA_0001_20211010_$partialFileName.dat|HEC|SSA|20211010|113605|000001|001
                                                             |01|AB123|AB123456C|Karen|mcFie|19221201|1234567||||00|04|02|I||Y|N|2022|||||Y||Y||Y|20210909090900|20210909090900|XNFFGBDD6|99990210|Y
@@ -255,7 +255,7 @@ class FileCreationServiceSpec extends AnyWordSpec with Matchers with MockFactory
               HECTaxCheckFileBodyList(hecTaxCheckList),
               "0001",
               partialFileName,
-              false
+              true
             )
           val expected                                = s"""|00|HEC_SSA_0001_20211010_$partialFileName.dat|HEC|SSA|20211010|113605|000001|001
                                                             |01|AB123|AB123456C|Karen|mcFie|19221201|1234567||||01|00|02|I||N|Y|2022|||||Y||Y||Y|20210909090900|20210909090900|XNFFGBDD6|99990210|Y
@@ -305,7 +305,7 @@ class FileCreationServiceSpec extends AnyWordSpec with Matchers with MockFactory
               HECTaxCheckFileBodyList(hecTaxCheckList),
               "0001",
               partialFileName,
-              false
+              true
             )
           val expected                                = s"""|00|HEC_SSA_0001_20211010_$partialFileName.dat|HEC|SSA|20211010|113605|000001|001
                                                             |01|AB123|AB123456C|Karen|mcFie|19221201|1234567||||01|00|02|I||Y|Y|2022|||||Y||Y||Y|20210909090900|20210909090900|XNFFGBDD6|99990210|Y
@@ -355,7 +355,7 @@ class FileCreationServiceSpec extends AnyWordSpec with Matchers with MockFactory
               HECTaxCheckFileBodyList(hecTaxCheckList),
               "0001",
               partialFileName,
-              false
+              true
             )
           val expected                                = s"""|00|HEC_SSA_0001_20211010_$partialFileName.dat|HEC|SSA|20211010|113605|000001|001
                                                             |01|AB123|AB123456C|Karen|mcFie|19221201|1234567||||01|00|02|I|Y|||2022|||||Y||Y||Y|20210909090900|20210909090900|XNFFGBDD6|99990210|Y

@@ -206,7 +206,7 @@ class FileCreationServiceImpl @Inject() (timeProvider: TimeProvider) extends Fil
       FileTrailer(
         fileName = fileName,
         recordCount = (2L + fileBody.size.toLong),
-        inSequenceFlag = if (isLastInSequence) 'N' else 'Y'
+        inSequenceFlag = if (isLastInSequence) 'Y' else 'N'
       )
     (toFileContent(FileFormat(fileHeader, fileBody, fileTrailer)), fileName)
 

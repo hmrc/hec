@@ -91,12 +91,12 @@ class HecTaxCheckExtractionServiceSpec
       .expects(hecTaxCheckList, *)
       .returning(EitherT.fromEither[Future](result))
 
-  def mockCreateFileContent[A](inputType: A, seqNum: String, partialFileName: String, isRemaining: Boolean)(
+  def mockCreateFileContent[A](inputType: A, seqNum: String, partialFileName: String, isLastInSequence: Boolean)(
     result: Either[models.Error, (String, String)]
   ) =
     (mockFileCreationService
       .createFileContent[A](_: A, _: String, _: String, _: Boolean))
-      .expects(inputType, seqNum, partialFileName, isRemaining)
+      .expects(inputType, seqNum, partialFileName, isLastInSequence)
       .returning(result)
 
   def mockStoreFile(fileContent: String, fileName: String, dirName: String)(result: Either[models.Error, Unit]) =
@@ -167,25 +167,25 @@ class HecTaxCheckExtractionServiceSpec
       "there is error in fetching data from mongo" in {
         inSequence {
           mockWithLock(lockObtained = true)
-          mockCreateFileContent(LicenceType, "0001", "HEC_LICENCE_TYPE", false)(
+          mockCreateFileContent(LicenceType, "0001", "HEC_LICENCE_TYPE", true)(
             Right(("00|file1.dat|HEC|SSA|20210909|154556|000001|001", "file1.dat"))
           )
           mockStoreFile("00|file1.dat|HEC|SSA|20210909|154556|000001|001", "file1.dat", "licence-type")(
             Right(())
           )
-          mockCreateFileContent(LicenceTimeTrading, "0001", "HEC_LICENCE_TIME_TRADING", false)(
+          mockCreateFileContent(LicenceTimeTrading, "0001", "HEC_LICENCE_TIME_TRADING", true)(
             Right(("00|file1.dat|HEC|SSA|20210909|154556|000001|001", "file1.dat"))
           )
           mockStoreFile("00|file1.dat|HEC|SSA|20210909|154556|000001|001", "file1.dat", "licence-time-trading")(
             Right(())
           )
-          mockCreateFileContent(LicenceValidityPeriod, "0001", "HEC_LICENCE_VALIDITY_PERIOD", false)(
+          mockCreateFileContent(LicenceValidityPeriod, "0001", "HEC_LICENCE_VALIDITY_PERIOD", true)(
             Right(("00|file1.dat|HEC|SSA|20210909|154556|000001|001", "file1.dat"))
           )
           mockStoreFile("00|file1.dat|HEC|SSA|20210909|154556|000001|001", "file1.dat", "licence-validity-period")(
             Right(())
           )
-          mockCreateFileContent(CorrectiveAction, "0001", "HEC_CORRECTIVE_ACTION", false)(
+          mockCreateFileContent(CorrectiveAction, "0001", "HEC_CORRECTIVE_ACTION", true)(
             Right(("00|file1.dat|HEC|SSA|20210909|154556|000001|001", "file1.dat"))
           )
           mockStoreFile("00|file1.dat|HEC|SSA|20210909|154556|000001|001", "file1.dat", "corrective-action")(
@@ -201,7 +201,7 @@ class HecTaxCheckExtractionServiceSpec
       "There is an error in file creation" in {
         inSequence {
           mockWithLock(lockObtained = true)
-          mockCreateFileContent(LicenceType, "0001", "HEC_LICENCE_TYPE", false)(Left(models.Error("err")))
+          mockCreateFileContent(LicenceType, "0001", "HEC_LICENCE_TYPE", true)(Left(models.Error("err")))
         }
         val result =
           hecTaxCheckExtractionService.lockAndProcessHecData()
@@ -211,7 +211,7 @@ class HecTaxCheckExtractionServiceSpec
       "There is an error in file storage" in {
         inSequence {
           mockWithLock(lockObtained = true)
-          mockCreateFileContent(LicenceType, "0001", "HEC_LICENCE_TYPE", false)(
+          mockCreateFileContent(LicenceType, "0001", "HEC_LICENCE_TYPE", true)(
             Right(("00|file1.dat|HEC|SSA|20210909|154556|000001|001", "file1.dat"))
           )
           mockStoreFile("00|file1.dat|HEC|SSA|20210909|154556|000001|001", "file1.dat", "licence-type")(
@@ -226,32 +226,32 @@ class HecTaxCheckExtractionServiceSpec
       "There is an error in mongo record update" in {
         inSequence {
           mockWithLock(lockObtained = true)
-          mockCreateFileContent(LicenceType, "0001", "HEC_LICENCE_TYPE", false)(
+          mockCreateFileContent(LicenceType, "0001", "HEC_LICENCE_TYPE", true)(
             Right(("00|file1.dat|HEC|SSA|20210909|154556|000001|001", "file1.dat"))
           )
           mockStoreFile("00|file1.dat|HEC|SSA|20210909|154556|000001|001", "file1.dat", "licence-type")(
             Right(())
           )
-          mockCreateFileContent(LicenceTimeTrading, "0001", "HEC_LICENCE_TIME_TRADING", false)(
+          mockCreateFileContent(LicenceTimeTrading, "0001", "HEC_LICENCE_TIME_TRADING", true)(
             Right(("00|file1.dat|HEC|SSA|20210909|154556|000001|001", "file1.dat"))
           )
           mockStoreFile("00|file1.dat|HEC|SSA|20210909|154556|000001|001", "file1.dat", "licence-time-trading")(
             Right(())
           )
-          mockCreateFileContent(LicenceValidityPeriod, "0001", "HEC_LICENCE_VALIDITY_PERIOD", false)(
+          mockCreateFileContent(LicenceValidityPeriod, "0001", "HEC_LICENCE_VALIDITY_PERIOD", true)(
             Right(("00|file1.dat|HEC|SSA|20210909|154556|000001|001", "file1.dat"))
           )
           mockStoreFile("00|file1.dat|HEC|SSA|20210909|154556|000001|001", "file1.dat", "licence-validity-period")(
             Right(())
           )
-          mockCreateFileContent(CorrectiveAction, "0001", "HEC_CORRECTIVE_ACTION", false)(
+          mockCreateFileContent(CorrectiveAction, "0001", "HEC_CORRECTIVE_ACTION", true)(
             Right(("00|file1.dat|HEC|SSA|20210909|154556|000001|001", "file1.dat"))
           )
           mockStoreFile("00|file1.dat|HEC|SSA|20210909|154556|000001|001", "file1.dat", "corrective-action")(
             Right(())
           )
           mockGetAlltaxCheckByExtractedStatus(false)(Right(hecTaxCheckList.take(2)))
-          mockCreateFileContent(HECTaxCheckFileBodyList(hecTaxCheckList.take(2)), "0001", "HEC", false)(
+          mockCreateFileContent(HECTaxCheckFileBodyList(hecTaxCheckList.take(2)), "0001", "HEC", true)(
             Right(("00|file1.dat|HEC|SSA|20210909|154556|000001|001", "file1.dat"))
           )
           mockStoreFile("00|file1.dat|HEC|SSA|20210909|154556|000001|001", "file1.dat", "tax-checks")(
@@ -271,32 +271,32 @@ class HecTaxCheckExtractionServiceSpec
       "all fetch , update , file creation and storage passed without error, number of records equal to default process size" in {
         inSequence {
           mockWithLock(lockObtained = true)
-          mockCreateFileContent(LicenceType, "0001", "HEC_LICENCE_TYPE", false)(
+          mockCreateFileContent(LicenceType, "0001", "HEC_LICENCE_TYPE", true)(
             Right(("00|file1.dat|HEC|SSA|20210909|154556|000001|001", "file1.dat"))
           )
           mockStoreFile("00|file1.dat|HEC|SSA|20210909|154556|000001|001", "file1.dat", "licence-type")(
             Right(())
           )
-          mockCreateFileContent(LicenceTimeTrading, "0001", "HEC_LICENCE_TIME_TRADING", false)(
+          mockCreateFileContent(LicenceTimeTrading, "0001", "HEC_LICENCE_TIME_TRADING", true)(
             Right(("00|file1.dat|HEC|SSA|20210909|154556|000001|001", "file1.dat"))
           )
           mockStoreFile("00|file1.dat|HEC|SSA|20210909|154556|000001|001", "file1.dat", "licence-time-trading")(
             Right(())
           )
-          mockCreateFileContent(LicenceValidityPeriod, "0001", "HEC_LICENCE_VALIDITY_PERIOD", false)(
+          mockCreateFileContent(LicenceValidityPeriod, "0001", "HEC_LICENCE_VALIDITY_PERIOD", true)(
             Right(("00|file1.dat|HEC|SSA|20210909|154556|000001|001", "file1.dat"))
           )
           mockStoreFile("00|file1.dat|HEC|SSA|20210909|154556|000001|001", "file1.dat", "licence-validity-period")(
             Right(())
           )
-          mockCreateFileContent(CorrectiveAction, "0001", "HEC_CORRECTIVE_ACTION", false)(
+          mockCreateFileContent(CorrectiveAction, "0001", "HEC_CORRECTIVE_ACTION", true)(
             Right(("00|file1.dat|HEC|SSA|20210909|154556|000001|001", "file1.dat"))
           )
           mockStoreFile("00|file1.dat|HEC|SSA|20210909|154556|000001|001", "file1.dat", "corrective-action")(
             Right(())
           )
           mockGetAlltaxCheckByExtractedStatus(false)(Right(hecTaxCheckList.take(2)))
-          mockCreateFileContent(HECTaxCheckFileBodyList(hecTaxCheckList.take(2)), "0001", "HEC", false)(
+          mockCreateFileContent(HECTaxCheckFileBodyList(hecTaxCheckList.take(2)), "0001", "HEC", true)(
             Right(("00|file1.dat|HEC|SSA|20210909|154556|000001|001", "file1.dat"))
           )
           mockStoreFile("00|file1.dat|HEC|SSA|20210909|154556|000001|001", "file1.dat", "tax-checks")(

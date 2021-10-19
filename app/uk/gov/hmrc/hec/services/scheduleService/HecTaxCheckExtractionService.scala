@@ -52,7 +52,7 @@ class HecTaxCheckExtractionServiceImpl @Inject() (
     with Logging {
 
   implicit val hc: HeaderCarrier = HeaderCarrier()
-  val count: Int                 = config.get[Int]("hec-tax-heck-file.default-size")
+  val maxTaxChecksPerFile: Int   = config.get[Int]("hec-tax-heck-file.default-size")
   val hec: String                = "HEC"
 
   val licenceType: FileDetails[LicenceType]                     = FileDetails[LicenceType]("licence-type", s"${hec}_LICENCE_TYPE")
@@ -73,31 +73,36 @@ class HecTaxCheckExtractionServiceImpl @Inject() (
     val seqNum = "0001"
     val result: EitherT[Future, models.Error, Unit] = {
       for {
-        _                <- createAndStoreFile(LicenceType, seqNum, licenceType.partialFileName, licenceType.dirName, false)
+        _                <- createAndStoreFile(LicenceType, seqNum, licenceType.partialFileName, licenceType.dirName, true)
         _                <-
           createAndStoreFile(
             LicenceTimeTrading,
             seqNum,
             licenceTimeTrading.partialFileName,
             licenceTimeTrading.dirName,
-            false
+            true
           )
         _                <- createAndStoreFile(
                               LicenceValidityPeriod,
                               seqNum,
                               licenceValidityPeriod.partialFileName,
                               licenceValidityPeriod.dirName,
-                              false
+                              true
                             )
         _                <- createAndStoreFile(
                               CorrectiveAction,
                               seqNum,
                               correctiveAction.partialFileName,
                               correctiveAction.dirName,
-                              false
+                              true
                             )
         hecTaxCheck      <- taxCheckService.getAllTaxCheckCodesByExtractedStatus(false)
-        _                <- createHecFile(HECTaxCheckFileBodyList(hecTaxCheck), count, hecData.partialFileName, hecData.dirName)
+        _                <- createHecFile(
+                              HECTaxCheckFileBodyList(hecTaxCheck),
+                              maxTaxChecksPerFile,
+                              hecData.partialFileName,
+                              hecData.dirName
+                            )
         updatedHecTaxChek = hecTaxCheck.map(_.copy(isExtracted = true))
 
         //i think we don't need to bring the whole list of codes which are updated ,
@@ -127,7 +132,7 @@ class HecTaxCheckExtractionServiceImpl @Inject() (
     ): List[EitherT[Future, Error, Unit]] = {
       val hecList          = hecTaxCheckList.take(count)
       val remainingList    = hecTaxCheckList.drop(count)
-      val isLastInSequence = remainingList.size > 0
+      val isLastInSequence = remainingList.size === 0
       //If list is empty or sequence number exceeds 9999, then halt the process
       if (hecList.size === 0 || seqNumInt > 9999) {
         logger.info(
