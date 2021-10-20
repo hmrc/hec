@@ -38,7 +38,7 @@ import uk.gov.hmrc.hec.services.scheduleService.{HECTaxCheckExtractionContext, H
 import uk.gov.hmrc.hec.util.TimeUtils
 import uk.gov.hmrc.http.HeaderCarrier
 
-import java.time.{ZoneId, ZonedDateTime}
+import java.time.{LocalDate, ZoneId, ZonedDateTime}
 import scala.concurrent.Future
 
 class HecTaxCheckExtractionServiceSpec
@@ -136,7 +136,12 @@ class HecTaxCheckExtractionServiceSpec
       CompanyTaxDetails(
         CTUTR("1111111111"),
         Some(YesNoAnswer.Yes),
-        None,
+        CTStatusResponse(
+          CTUTR("1111111111"),
+          LocalDate.of(2020, 10, 9),
+          LocalDate.of(2021, 10, 9),
+          Some(CTAccountingPeriod(LocalDate.of(2020, 10, 9), LocalDate.of(2021, 10, 9), CTStatus.ReturnFound))
+        ),
         None,
         Some(YesNoAnswer.Yes)
       ),

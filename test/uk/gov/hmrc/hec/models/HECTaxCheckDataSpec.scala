@@ -95,14 +95,12 @@ class HECTaxCheckDataSpec extends AnyWordSpec with Matchers {
           CompanyTaxDetails(
             ctutr = CTUTR("1111111111"),
             ctIncomeDeclared = Some(YesNoAnswer.Yes),
-            ctStatus = Some(
-              CTStatusResponse(
-                ctutr = CTUTR("1111111111"),
-                startDate = LocalDate.of(2020, 10, 9),
-                endDate = LocalDate.of(2021, 10, 9),
-                latestAccountingPeriod =
-                  Some(CTAccountingPeriod(LocalDate.of(2020, 10, 9), LocalDate.of(2021, 10, 9), CTStatus.ReturnFound))
-              )
+            ctStatus = CTStatusResponse(
+              ctutr = CTUTR("1111111111"),
+              startDate = LocalDate.of(2020, 10, 9),
+              endDate = LocalDate.of(2021, 10, 9),
+              latestAccountingPeriod =
+                Some(CTAccountingPeriod(LocalDate.of(2020, 10, 9), LocalDate.of(2021, 10, 9), CTStatus.ReturnFound))
             ),
             recentlyStaredTrading = None,
             Some(YesNoAnswer.Yes)

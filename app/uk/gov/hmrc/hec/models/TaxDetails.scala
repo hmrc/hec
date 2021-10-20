@@ -34,7 +34,7 @@ object TaxDetails {
   final case class CompanyTaxDetails(
     ctutr: CTUTR,
     ctIncomeDeclared: Option[YesNoAnswer],
-    ctStatus: Option[CTStatusResponse],
+    ctStatus: CTStatusResponse,
     recentlyStaredTrading: Option[YesNoAnswer],
     chargeableForCT: Option[YesNoAnswer]
   ) extends TaxDetails

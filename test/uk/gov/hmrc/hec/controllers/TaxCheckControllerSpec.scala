@@ -108,13 +108,11 @@ class TaxCheckControllerSpec extends ControllerSpec with AuthSupport {
         CompanyTaxDetails(
           CTUTR("1111111111"),
           Some(YesNoAnswer.Yes),
-          Some(
-            CTStatusResponse(
-              CTUTR("1111111111"),
-              LocalDate.of(2020, 10, 9),
-              LocalDate.of(2021, 10, 9),
-              Some(CTAccountingPeriod(LocalDate.of(2020, 10, 9), LocalDate.of(2021, 10, 9), CTStatus.ReturnFound))
-            )
+          CTStatusResponse(
+            CTUTR("1111111111"),
+            LocalDate.of(2020, 10, 9),
+            LocalDate.of(2021, 10, 9),
+            Some(CTAccountingPeriod(LocalDate.of(2020, 10, 9), LocalDate.of(2021, 10, 9), CTStatus.ReturnFound))
           ),
           None,
           Some(YesNoAnswer.Yes)
