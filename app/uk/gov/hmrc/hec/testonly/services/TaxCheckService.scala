@@ -103,7 +103,8 @@ class TaxCheckServiceImpl @Inject() (
               Some(CTAccountingPeriod(LocalDate.of(2020, 10, 9), LocalDate.of(2021, 10, 9), CTStatus.ReturnFound))
             )
           ),
-          None
+          None,
+          Some(YesNoAnswer.Yes)
         )
         CompanyHECTaxCheckData(
           companyDetails,

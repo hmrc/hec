@@ -26,7 +26,7 @@ import uk.gov.hmrc.hec.models.TaxDetails.IndividualTaxDetails
 import uk.gov.hmrc.hec.models.ids.{GGCredId, NINO, SAUTR}
 import uk.gov.hmrc.hec.models.licence.LicenceType.{DriverOfTaxisAndPrivateHires, OperatorOfPrivateHireVehicles, ScrapMetalDealerSite, ScrapMetalMobileCollector}
 import uk.gov.hmrc.hec.models.licence.{LicenceDetails, LicenceTimeTrading, LicenceType, LicenceValidityPeriod}
-import uk.gov.hmrc.hec.models.{CorrectiveAction, DateOfBirth, Error, HECTaxCheck, HECTaxCheckCode, HECTaxCheckFileBodyList, IncomeDeclared, Name, SAStatus, SAStatusResponse, TaxSituation, TaxYear}
+import uk.gov.hmrc.hec.models.{CorrectiveAction, DateOfBirth, Error, HECTaxCheck, HECTaxCheckCode, HECTaxCheckFileBodyList, Name, SAStatus, SAStatusResponse, TaxSituation, TaxYear, YesNoAnswer}
 import uk.gov.hmrc.hec.util.TimeProvider
 
 import java.time.{LocalDate, LocalTime, ZoneId, ZonedDateTime}
@@ -139,7 +139,7 @@ class FileCreationServiceSpec extends AnyWordSpec with Matchers with MockFactory
             NINO("AB123456C"),
             Some(SAUTR("1234567")),
             taxSituation,
-            Some(IncomeDeclared.Yes),
+            Some(YesNoAnswer.Yes),
             saStatusResponse
           )
 

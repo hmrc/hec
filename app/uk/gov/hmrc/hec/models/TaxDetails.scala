@@ -27,7 +27,7 @@ object TaxDetails {
     nino: NINO,
     sautr: Option[SAUTR],
     taxSituation: TaxSituation,
-    saIncomeDeclared: Option[IncomeDeclared],
+    saIncomeDeclared: Option[YesNoAnswer],
     saStatusResponse: Option[SAStatusResponse]
   ) extends TaxDetails
 
@@ -35,7 +35,8 @@ object TaxDetails {
     ctutr: CTUTR,
     ctIncomeDeclared: Option[YesNoAnswer],
     ctStatus: Option[CTStatusResponse],
-    recentlyStaredTrading: Option[YesNoAnswer]
+    recentlyStaredTrading: Option[YesNoAnswer],
+    chargeableForCT: Option[YesNoAnswer]
   ) extends TaxDetails
 
   implicit val individualTaxDetailsFormat: OFormat[IndividualTaxDetails] = Json.format

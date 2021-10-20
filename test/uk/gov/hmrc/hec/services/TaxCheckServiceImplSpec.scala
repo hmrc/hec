@@ -28,7 +28,7 @@ import uk.gov.hmrc.hec.models.HECTaxCheckData.{CompanyHECTaxCheckData, Individua
 import uk.gov.hmrc.hec.models.TaxDetails.{CompanyTaxDetails, IndividualTaxDetails}
 import uk.gov.hmrc.hec.models.ids._
 import uk.gov.hmrc.hec.models.licence.{LicenceDetails, LicenceTimeTrading, LicenceType, LicenceValidityPeriod}
-import uk.gov.hmrc.hec.models.{CompanyHouseName, DateOfBirth, Error, HECTaxCheck, HECTaxCheckCode, HECTaxCheckData, HECTaxCheckMatchRequest, HECTaxCheckMatchResult, HECTaxCheckMatchStatus, HECTaxCheckSource, IncomeDeclared, Name, TaxCheckListItem, TaxSituation, YesNoAnswer}
+import uk.gov.hmrc.hec.models.{CompanyHouseName, DateOfBirth, Error, HECTaxCheck, HECTaxCheckCode, HECTaxCheckData, HECTaxCheckMatchRequest, HECTaxCheckMatchResult, HECTaxCheckMatchStatus, HECTaxCheckSource, Name, TaxCheckListItem, TaxSituation, YesNoAnswer}
 import uk.gov.hmrc.hec.repos.HECTaxCheckStore
 import uk.gov.hmrc.hec.util.{TimeProvider, TimeUtils}
 import uk.gov.hmrc.http.HeaderCarrier
@@ -101,7 +101,7 @@ class TaxCheckServiceImplSpec extends AnyWordSpec with Matchers with MockFactory
           NINO(""),
           Some(SAUTR("")),
           TaxSituation.SAPAYE,
-          Some(IncomeDeclared.Yes),
+          Some(YesNoAnswer.Yes),
           None
         ),
         taxCheckStartDateTime,
@@ -175,7 +175,7 @@ class TaxCheckServiceImplSpec extends AnyWordSpec with Matchers with MockFactory
               NINO(""),
               Some(SAUTR("")),
               TaxSituation.SAPAYE,
-              Some(IncomeDeclared.No),
+              Some(YesNoAnswer.No),
               None
             ),
             taxCheckStartDateTime,
@@ -197,7 +197,8 @@ class TaxCheckServiceImplSpec extends AnyWordSpec with Matchers with MockFactory
               CTUTR("1111111111"),
               Some(YesNoAnswer.Yes),
               None,
-              None
+              None,
+              Some(YesNoAnswer.Yes)
             ),
             taxCheckStartDateTime,
             HECTaxCheckSource.Digital
@@ -397,7 +398,8 @@ class TaxCheckServiceImplSpec extends AnyWordSpec with Matchers with MockFactory
           CTUTR("1111111111"),
           Some(YesNoAnswer.Yes),
           None,
-          None
+          None,
+          Some(YesNoAnswer.Yes)
         ),
         taxCheckStartDateTime,
         HECTaxCheckSource.Digital
@@ -461,7 +463,8 @@ class TaxCheckServiceImplSpec extends AnyWordSpec with Matchers with MockFactory
           CTUTR("1111111111"),
           Some(YesNoAnswer.Yes),
           None,
-          None
+          None,
+          Some(YesNoAnswer.Yes)
         ),
         taxCheckStartDateTime,
         HECTaxCheckSource.Digital

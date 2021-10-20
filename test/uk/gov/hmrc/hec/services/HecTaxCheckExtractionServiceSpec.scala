@@ -137,7 +137,8 @@ class HecTaxCheckExtractionServiceSpec
         CTUTR("1111111111"),
         Some(YesNoAnswer.Yes),
         None,
-        None
+        None,
+        Some(YesNoAnswer.Yes)
       ),
       taxCheckStartDateTime,
       HECTaxCheckSource.Digital

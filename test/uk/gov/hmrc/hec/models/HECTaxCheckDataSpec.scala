@@ -52,7 +52,7 @@ class HECTaxCheckDataSpec extends AnyWordSpec with Matchers {
             NINO("nino"),
             Some(SAUTR("utr")),
             TaxSituation.SA,
-            Some(IncomeDeclared.Yes),
+            Some(YesNoAnswer.Yes),
             None
           ),
           taxCheckStartDateTime,
@@ -104,7 +104,8 @@ class HECTaxCheckDataSpec extends AnyWordSpec with Matchers {
                   Some(CTAccountingPeriod(LocalDate.of(2020, 10, 9), LocalDate.of(2021, 10, 9), CTStatus.ReturnFound))
               )
             ),
-            recentlyStaredTrading = None
+            recentlyStaredTrading = None,
+            Some(YesNoAnswer.Yes)
           ),
           taxCheckStartDateTime,
           HECTaxCheckSource.Stride
@@ -133,7 +134,8 @@ class HECTaxCheckDataSpec extends AnyWordSpec with Matchers {
                                      |           "endDate":"2021-10-09",
                                      |           "ctStatus":"ReturnFound"
                                      |      }
-                                     |   }
+                                     |   },
+                                     |   "chargeableForCT" : "Yes"
                                      | },
                                      | "taxCheckStartDateTime" : "2021-10-09T09:12:34+01:00[Europe/London]",
                                      | "source": "Stride",
