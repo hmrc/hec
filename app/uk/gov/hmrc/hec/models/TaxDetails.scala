@@ -32,7 +32,10 @@ object TaxDetails {
   ) extends TaxDetails
 
   final case class CompanyTaxDetails(
-    ctutr: CTUTR
+    ctutr: CTUTR,
+    ctIncomeDeclared: Option[YesNoAnswer],
+    ctStatus: Option[CTStatusResponse],
+    recentlyStaredTrading: Option[YesNoAnswer]
   ) extends TaxDetails
 
   implicit val individualTaxDetailsFormat: OFormat[IndividualTaxDetails] = Json.format

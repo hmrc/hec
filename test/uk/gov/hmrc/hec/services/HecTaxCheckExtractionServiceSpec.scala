@@ -33,7 +33,7 @@ import uk.gov.hmrc.hec.models.HECTaxCheckData.CompanyHECTaxCheckData
 import uk.gov.hmrc.hec.models.TaxDetails.CompanyTaxDetails
 import uk.gov.hmrc.hec.models.ids.{CRN, CTUTR, GGCredId}
 import uk.gov.hmrc.hec.models.licence.{LicenceDetails, LicenceTimeTrading, LicenceType, LicenceValidityPeriod}
-import uk.gov.hmrc.hec.models.{CorrectiveAction, HECTaxCheck, HECTaxCheckCode, HECTaxCheckFileBodyList, HECTaxCheckSource}
+import uk.gov.hmrc.hec.models._
 import uk.gov.hmrc.hec.services.scheduleService.{HECTaxCheckExtractionContext, HecTaxCheckExtractionServiceImpl}
 import uk.gov.hmrc.hec.util.TimeUtils
 import uk.gov.hmrc.http.HeaderCarrier
@@ -127,13 +127,18 @@ class HecTaxCheckExtractionServiceSpec
   "HecTaxCheckExtractionServiceSpec" must {
 
     val taxCheckData  = CompanyHECTaxCheckData(
-      CompanyApplicantDetails(GGCredId(""), CRN("")),
+      CompanyApplicantDetails(GGCredId(""), CRN(""), CompanyHouseName("Test Tech Ltd")),
       LicenceDetails(
         LicenceType.ScrapMetalDealerSite,
         LicenceTimeTrading.EightYearsOrMore,
         LicenceValidityPeriod.UpToOneYear
       ),
-      CompanyTaxDetails(CTUTR("")),
+      CompanyTaxDetails(
+        CTUTR("1111111111"),
+        Some(YesNoAnswer.Yes),
+        None,
+        None
+      ),
       taxCheckStartDateTime,
       HECTaxCheckSource.Digital
     )

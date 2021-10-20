@@ -25,12 +25,12 @@ import play.api.mvc.Result
 import play.api.test.FakeRequest
 import play.api.test.Helpers._
 import uk.gov.hmrc.auth.core.AuthConnector
-import uk.gov.hmrc.hec.models.ApplicantDetails.IndividualApplicantDetails
-import uk.gov.hmrc.hec.models.HECTaxCheckData.IndividualHECTaxCheckData
-import uk.gov.hmrc.hec.models.TaxDetails.IndividualTaxDetails
-import uk.gov.hmrc.hec.models.ids.{CRN, GGCredId, NINO, SAUTR}
+import uk.gov.hmrc.hec.models.ApplicantDetails.{CompanyApplicantDetails, IndividualApplicantDetails}
+import uk.gov.hmrc.hec.models.HECTaxCheckData.{CompanyHECTaxCheckData, IndividualHECTaxCheckData}
+import uk.gov.hmrc.hec.models.TaxDetails.{CompanyTaxDetails, IndividualTaxDetails}
+import uk.gov.hmrc.hec.models.ids.{CRN, CTUTR, GGCredId, NINO, SAUTR}
 import uk.gov.hmrc.hec.models.licence.{LicenceDetails, LicenceTimeTrading, LicenceType, LicenceValidityPeriod}
-import uk.gov.hmrc.hec.models.{DateOfBirth, Error, HECTaxCheck, HECTaxCheckCode, HECTaxCheckData, HECTaxCheckMatchRequest, HECTaxCheckMatchResult, HECTaxCheckMatchStatus, HECTaxCheckSource, Name, TaxCheckListItem, TaxSituation}
+import uk.gov.hmrc.hec.models.{CTAccountingPeriod, CTStatus, CTStatusResponse, CompanyHouseName, DateOfBirth, Error, HECTaxCheck, HECTaxCheckCode, HECTaxCheckData, HECTaxCheckMatchRequest, HECTaxCheckMatchResult, HECTaxCheckMatchStatus, HECTaxCheckSource, Name, TaxCheckListItem, TaxSituation, YesNoAnswer}
 import uk.gov.hmrc.hec.services.TaxCheckService
 import uk.gov.hmrc.hec.util.TimeUtils
 import uk.gov.hmrc.http.HeaderCarrier
@@ -80,7 +80,7 @@ class TaxCheckControllerSpec extends ControllerSpec with AuthSupport {
         controller.saveTaxCheck(request)
       }
 
-      val taxCheckData: HECTaxCheckData = IndividualHECTaxCheckData(
+      val taxCheckDataIndividual: HECTaxCheckData = IndividualHECTaxCheckData(
         IndividualApplicantDetails(GGCredId(""), Name("", ""), DateOfBirth(LocalDate.now())),
         LicenceDetails(
           LicenceType.ScrapMetalDealerSite,
@@ -92,6 +92,30 @@ class TaxCheckControllerSpec extends ControllerSpec with AuthSupport {
           Some(SAUTR("")),
           TaxSituation.PAYE,
           None,
+          None
+        ),
+        taxCheckStartDateTime,
+        HECTaxCheckSource.Digital
+      )
+
+      val taxCheckDataCompany: HECTaxCheckData = CompanyHECTaxCheckData(
+        CompanyApplicantDetails(GGCredId(""), CRN("12345678"), CompanyHouseName("Test Tech Ltd")),
+        LicenceDetails(
+          LicenceType.ScrapMetalDealerSite,
+          LicenceTimeTrading.EightYearsOrMore,
+          LicenceValidityPeriod.UpToOneYear
+        ),
+        CompanyTaxDetails(
+          CTUTR("1111111111"),
+          Some(YesNoAnswer.Yes),
+          Some(
+            CTStatusResponse(
+              CTUTR("1111111111"),
+              LocalDate.of(2020, 10, 9),
+              LocalDate.of(2021, 10, 9),
+              Some(CTAccountingPeriod(LocalDate.of(2020, 10, 9), LocalDate.of(2021, 10, 9), CTStatus.ReturnFound))
+            )
+          ),
           None
         ),
         taxCheckStartDateTime,
@@ -127,9 +151,9 @@ class TaxCheckControllerSpec extends ControllerSpec with AuthSupport {
       "return an 500 (internal server error)" when {
 
         "there is an error saving the tax check" in {
-          mockSaveTaxCheck(taxCheckData)(Left(Error(new Exception("Oh no!"))))
+          mockSaveTaxCheck(taxCheckDataIndividual)(Left(Error(new Exception("Oh no!"))))
 
-          val result = performActionWithJsonBody(Json.toJson(taxCheckData))
+          val result = performActionWithJsonBody(Json.toJson(taxCheckDataIndividual))
           status(result) shouldBe INTERNAL_SERVER_ERROR
         }
 
@@ -137,14 +161,28 @@ class TaxCheckControllerSpec extends ControllerSpec with AuthSupport {
 
       "return a created (201)" when {
 
-        "the tax check has been saved" in {
+        "the tax check has been saved for individual" in {
           val taxCheckCode     = HECTaxCheckCode("code")
           val expiresAfterDate = LocalDate.MIN
-          val taxCheck         = HECTaxCheck(taxCheckData, taxCheckCode, expiresAfterDate, TimeUtils.now(), false, None)
+          val taxCheck         =
+            HECTaxCheck(taxCheckDataIndividual, taxCheckCode, expiresAfterDate, TimeUtils.now(), false, None)
 
-          mockSaveTaxCheck(taxCheckData)(Right(taxCheck))
+          mockSaveTaxCheck(taxCheckDataIndividual)(Right(taxCheck))
 
-          val result = performActionWithJsonBody(Json.toJson(taxCheckData))
+          val result = performActionWithJsonBody(Json.toJson(taxCheckDataIndividual))
+          status(result)                              shouldBe CREATED
+          contentAsJson(result).validate[HECTaxCheck] shouldBe JsSuccess(taxCheck)
+        }
+
+        "the tax check has been saved for company" in {
+          val taxCheckCode     = HECTaxCheckCode("code")
+          val expiresAfterDate = LocalDate.MIN
+          val taxCheck         =
+            HECTaxCheck(taxCheckDataCompany, taxCheckCode, expiresAfterDate, TimeUtils.now(), false, None)
+
+          mockSaveTaxCheck(taxCheckDataCompany)(Right(taxCheck))
+
+          val result = performActionWithJsonBody(Json.toJson(taxCheckDataCompany))
           status(result)                              shouldBe CREATED
           contentAsJson(result).validate[HECTaxCheck] shouldBe JsSuccess(taxCheck)
         }

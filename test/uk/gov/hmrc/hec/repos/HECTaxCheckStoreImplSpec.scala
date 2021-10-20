@@ -28,12 +28,12 @@ import uk.gov.hmrc.hec.models.HECTaxCheckData.CompanyHECTaxCheckData
 import uk.gov.hmrc.hec.models.TaxDetails.CompanyTaxDetails
 import uk.gov.hmrc.hec.models.ids.{CRN, CTUTR, GGCredId}
 import uk.gov.hmrc.hec.models.licence.{LicenceDetails, LicenceTimeTrading, LicenceType, LicenceValidityPeriod}
-import uk.gov.hmrc.hec.models.{HECTaxCheck, HECTaxCheckCode, HECTaxCheckSource}
+import uk.gov.hmrc.hec.models.{CTAccountingPeriod, CTStatus, CTStatusResponse, CompanyHouseName, HECTaxCheck, HECTaxCheckCode, HECTaxCheckSource, YesNoAnswer}
 import uk.gov.hmrc.hec.util.TimeUtils
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.mongo.cache.{CacheItem, DataKey}
 
-import java.time.{ZoneId, ZonedDateTime}
+import java.time.{LocalDate, ZoneId, ZonedDateTime}
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
@@ -56,13 +56,25 @@ class HECTaxCheckStoreImplSpec extends AnyWordSpec with Matchers with Eventually
     val taxCheckStartDateTime = ZonedDateTime.of(2021, 10, 9, 9, 12, 34, 0, ZoneId.of("Europe/London"))
 
     val taxCheckData = CompanyHECTaxCheckData(
-      CompanyApplicantDetails(GGCredId(""), CRN("")),
+      CompanyApplicantDetails(GGCredId(""), CRN(""), CompanyHouseName("Test Tech Ltd")),
       LicenceDetails(
         LicenceType.ScrapMetalDealerSite,
         LicenceTimeTrading.EightYearsOrMore,
         LicenceValidityPeriod.UpToOneYear
       ),
-      CompanyTaxDetails(CTUTR("")),
+      CompanyTaxDetails(
+        CTUTR("1111111111"),
+        Some(YesNoAnswer.Yes),
+        Some(
+          CTStatusResponse(
+            CTUTR("1111111111"),
+            LocalDate.of(2020, 10, 9),
+            LocalDate.of(2021, 10, 9),
+            Some(CTAccountingPeriod(LocalDate.of(2020, 10, 9), LocalDate.of(2021, 10, 9), CTStatus.ReturnFound))
+          )
+        ),
+        None
+      ),
       taxCheckStartDateTime,
       HECTaxCheckSource.Digital
     )
