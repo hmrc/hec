@@ -64,6 +64,7 @@ class HECTaxCheckStoreImplSpec extends AnyWordSpec with Matchers with Eventually
       ),
       CompanyTaxDetails(
         CTUTR("1111111111"),
+        Some(CTUTR("1111111111")),
         Some(YesNoAnswer.Yes),
         CTStatusResponse(
           CTUTR("1111111111"),

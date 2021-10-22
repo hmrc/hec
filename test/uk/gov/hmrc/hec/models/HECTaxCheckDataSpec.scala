@@ -93,7 +93,8 @@ class HECTaxCheckDataSpec extends AnyWordSpec with Matchers {
             LicenceValidityPeriod.UpToThreeYears
           ),
           CompanyTaxDetails(
-            ctutr = CTUTR("1111111111"),
+            desCTUTR = CTUTR("1111111111"),
+            Some(CTUTR("1111111111")),
             ctIncomeDeclared = Some(YesNoAnswer.Yes),
             ctStatus = CTStatusResponse(
               ctutr = CTUTR("1111111111"),
@@ -121,7 +122,8 @@ class HECTaxCheckDataSpec extends AnyWordSpec with Matchers {
                                      |   "licenceValidityPeriod":"UpToThreeYears"
                                      | },
                                      | "taxDetails":{
-                                     |   "ctutr":"1111111111",
+                                        "desCTUTR":"1111111111",
+                                     |   "userSuppliedCTUTR":"1111111111",
                                      |   "ctIncomeDeclared" : "Yes",
                                      |   "ctStatus": {
                                      |      "ctutr":"1111111111",

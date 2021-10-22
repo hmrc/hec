@@ -195,6 +195,7 @@ class TaxCheckServiceImplSpec extends AnyWordSpec with Matchers with MockFactory
             storedLicenceDetails,
             CompanyTaxDetails(
               CTUTR("1111111111"),
+              Some(CTUTR("1111111111")),
               Some(YesNoAnswer.Yes),
               CTStatusResponse(
                 CTUTR("1111111111"),
@@ -401,6 +402,7 @@ class TaxCheckServiceImplSpec extends AnyWordSpec with Matchers with MockFactory
         ),
         CompanyTaxDetails(
           CTUTR("1111111111"),
+          Some(CTUTR("1111111111")),
           Some(YesNoAnswer.Yes),
           CTStatusResponse(
             CTUTR("1111111111"),
@@ -471,6 +473,7 @@ class TaxCheckServiceImplSpec extends AnyWordSpec with Matchers with MockFactory
         ),
         CompanyTaxDetails(
           CTUTR("1111111111"),
+          Some(CTUTR("1111111111")),
           Some(YesNoAnswer.Yes),
           CTStatusResponse(
             CTUTR("1111111111"),

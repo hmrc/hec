@@ -94,6 +94,7 @@ class TaxCheckServiceImpl @Inject() (
         val companyDetails    = CompanyApplicantDetails(ggCredId, crn, CompanyHouseName("Test Tech Ltd"))
         val companyTaxDetails = CompanyTaxDetails(
           CTUTR("1111111111"),
+          Some(CTUTR("1111111111")),
           Some(YesNoAnswer.Yes),
           CTStatusResponse(
             CTUTR("1111111111"),
