@@ -26,9 +26,9 @@ import play.api.test.Helpers._
 import uk.gov.hmrc.hec.models.ApplicantDetails.{CompanyApplicantDetails, IndividualApplicantDetails}
 import uk.gov.hmrc.hec.models.HECTaxCheckData.{CompanyHECTaxCheckData, IndividualHECTaxCheckData}
 import uk.gov.hmrc.hec.models.TaxDetails.{CompanyTaxDetails, IndividualTaxDetails}
-import uk.gov.hmrc.hec.models.{DateOfBirth, Error, HECTaxCheck, HECTaxCheckCode, HECTaxCheckData, HECTaxCheckMatchRequest, HECTaxCheckMatchResult, HECTaxCheckMatchStatus, HECTaxCheckSource, IncomeDeclared, Name, TaxCheckListItem, TaxSituation}
-import uk.gov.hmrc.hec.models.ids.{CRN, CTUTR, GGCredId, NINO, SAUTR}
+import uk.gov.hmrc.hec.models.ids._
 import uk.gov.hmrc.hec.models.licence.{LicenceDetails, LicenceTimeTrading, LicenceType, LicenceValidityPeriod}
+import uk.gov.hmrc.hec.models.{CTAccountingPeriod, CTStatus, CTStatusResponse, CompanyHouseName, DateOfBirth, Error, HECTaxCheck, HECTaxCheckCode, HECTaxCheckData, HECTaxCheckMatchRequest, HECTaxCheckMatchResult, HECTaxCheckMatchStatus, HECTaxCheckSource, Name, TaxCheckListItem, TaxSituation, YesNoAnswer}
 import uk.gov.hmrc.hec.repos.HECTaxCheckStore
 import uk.gov.hmrc.hec.util.{TimeProvider, TimeUtils}
 import uk.gov.hmrc.http.HeaderCarrier
@@ -101,7 +101,7 @@ class TaxCheckServiceImplSpec extends AnyWordSpec with Matchers with MockFactory
           NINO(""),
           Some(SAUTR("")),
           TaxSituation.SAPAYE,
-          Some(IncomeDeclared.Yes),
+          Some(YesNoAnswer.Yes),
           None
         ),
         taxCheckStartDateTime,
@@ -175,7 +175,7 @@ class TaxCheckServiceImplSpec extends AnyWordSpec with Matchers with MockFactory
               NINO(""),
               Some(SAUTR("")),
               TaxSituation.SAPAYE,
-              Some(IncomeDeclared.No),
+              Some(YesNoAnswer.No),
               None
             ),
             taxCheckStartDateTime,
@@ -191,9 +191,21 @@ class TaxCheckServiceImplSpec extends AnyWordSpec with Matchers with MockFactory
       val storedCompanyTaxCheck =
         HECTaxCheck(
           CompanyHECTaxCheckData(
-            CompanyApplicantDetails(GGCredId(""), storedCRN),
+            CompanyApplicantDetails(GGCredId(""), storedCRN, CompanyHouseName("Test Tech Ltd")),
             storedLicenceDetails,
-            CompanyTaxDetails(CTUTR("")),
+            CompanyTaxDetails(
+              CTUTR("1111111111"),
+              Some(CTUTR("1111111111")),
+              Some(YesNoAnswer.Yes),
+              CTStatusResponse(
+                CTUTR("1111111111"),
+                LocalDate.of(2020, 10, 9),
+                LocalDate.of(2021, 10, 9),
+                Some(CTAccountingPeriod(LocalDate.of(2020, 10, 9), LocalDate.of(2021, 10, 9), CTStatus.ReturnFound))
+              ),
+              None,
+              Some(YesNoAnswer.Yes)
+            ),
             taxCheckStartDateTime,
             HECTaxCheckSource.Digital
           ),
@@ -382,13 +394,25 @@ class TaxCheckServiceImplSpec extends AnyWordSpec with Matchers with MockFactory
       val today    = LocalDate.of(2020, 1, 10)
 
       val taxCheckData = CompanyHECTaxCheckData(
-        CompanyApplicantDetails(ggCredId, CRN("")),
+        CompanyApplicantDetails(ggCredId, CRN(""), CompanyHouseName("Test Tech Ltd")),
         LicenceDetails(
           LicenceType.ScrapMetalDealerSite,
           LicenceTimeTrading.EightYearsOrMore,
           LicenceValidityPeriod.UpToOneYear
         ),
-        CompanyTaxDetails(CTUTR("")),
+        CompanyTaxDetails(
+          CTUTR("1111111111"),
+          Some(CTUTR("1111111111")),
+          Some(YesNoAnswer.Yes),
+          CTStatusResponse(
+            CTUTR("1111111111"),
+            LocalDate.of(2020, 10, 9),
+            LocalDate.of(2021, 10, 9),
+            Some(CTAccountingPeriod(LocalDate.of(2020, 10, 9), LocalDate.of(2021, 10, 9), CTStatus.ReturnFound))
+          ),
+          None,
+          Some(YesNoAnswer.Yes)
+        ),
         taxCheckStartDateTime,
         HECTaxCheckSource.Digital
       )
@@ -441,13 +465,25 @@ class TaxCheckServiceImplSpec extends AnyWordSpec with Matchers with MockFactory
       val ggCredId = GGCredId("ggCredId")
 
       val taxCheckData: HECTaxCheckData = CompanyHECTaxCheckData(
-        CompanyApplicantDetails(ggCredId, CRN("")),
+        CompanyApplicantDetails(ggCredId, CRN(""), CompanyHouseName("Test Tech Ltd")),
         LicenceDetails(
           LicenceType.ScrapMetalDealerSite,
           LicenceTimeTrading.EightYearsOrMore,
           LicenceValidityPeriod.UpToOneYear
         ),
-        CompanyTaxDetails(CTUTR("")),
+        CompanyTaxDetails(
+          CTUTR("1111111111"),
+          Some(CTUTR("1111111111")),
+          Some(YesNoAnswer.Yes),
+          CTStatusResponse(
+            CTUTR("1111111111"),
+            LocalDate.of(2020, 10, 9),
+            LocalDate.of(2021, 10, 9),
+            Some(CTAccountingPeriod(LocalDate.of(2020, 10, 9), LocalDate.of(2021, 10, 9), CTStatus.ReturnFound))
+          ),
+          None,
+          Some(YesNoAnswer.Yes)
+        ),
         taxCheckStartDateTime,
         HECTaxCheckSource.Digital
       )

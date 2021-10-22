@@ -16,20 +16,10 @@
 
 package uk.gov.hmrc.hec.models
 
-import ai.x.play.json.Jsonx
-import ai.x.play.json.SingletonEncoder.simpleName
-import ai.x.play.json.implicits.formatSingleton
-import play.api.libs.json.Format
+import play.api.libs.json.{Format, Json}
 
-sealed trait IncomeDeclared extends Product with Serializable
+final case class CompanyHouseName(name: String)
 
-object IncomeDeclared {
-
-  case object Yes extends IncomeDeclared
-
-  case object No extends IncomeDeclared
-
-  @SuppressWarnings(Array("org.wartremover.warts.Throw", "org.wartremover.warts.Equals"))
-  implicit val format: Format[IncomeDeclared] = Jsonx.formatSealed[IncomeDeclared]
-
+object CompanyHouseName {
+  implicit val format: Format[CompanyHouseName] = Json.valueFormat
 }

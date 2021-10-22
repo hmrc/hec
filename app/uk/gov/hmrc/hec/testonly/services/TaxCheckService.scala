@@ -23,11 +23,12 @@ import uk.gov.hmrc.hec.models.HECTaxCheckData.{CompanyHECTaxCheckData, Individua
 import uk.gov.hmrc.hec.models.TaxDetails.{CompanyTaxDetails, IndividualTaxDetails}
 import uk.gov.hmrc.hec.models.ids.{CTUTR, NINO}
 import uk.gov.hmrc.hec.models.licence.{LicenceDetails, LicenceTimeTrading, LicenceValidityPeriod}
-import uk.gov.hmrc.hec.models.{Error, HECTaxCheck, HECTaxCheckCode, HECTaxCheckData, Name, TaxSituation}
+import uk.gov.hmrc.hec.models.{CTAccountingPeriod, CTStatus, CTStatusResponse, CompanyHouseName, Error, HECTaxCheck, HECTaxCheckCode, HECTaxCheckData, Name, TaxSituation, YesNoAnswer}
 import uk.gov.hmrc.hec.repos.HECTaxCheckStore
 import uk.gov.hmrc.hec.testonly.models.SaveTaxCheckRequest
 import uk.gov.hmrc.http.HeaderCarrier
 
+import java.time.LocalDate
 import scala.concurrent.Future
 
 @ImplementedBy(classOf[TaxCheckServiceImpl])
@@ -90,8 +91,20 @@ class TaxCheckServiceImpl @Inject() (
 
     saveTaxCheckRequest.verifier match {
       case Left(crn) =>
-        val companyDetails    = CompanyApplicantDetails(ggCredId, crn)
-        val companyTaxDetails = CompanyTaxDetails(CTUTR("1234567895"))
+        val companyDetails    = CompanyApplicantDetails(ggCredId, crn, CompanyHouseName("Test Tech Ltd"))
+        val companyTaxDetails = CompanyTaxDetails(
+          CTUTR("1111111111"),
+          Some(CTUTR("1111111111")),
+          Some(YesNoAnswer.Yes),
+          CTStatusResponse(
+            CTUTR("1111111111"),
+            LocalDate.of(2020, 10, 9),
+            LocalDate.of(2021, 10, 9),
+            Some(CTAccountingPeriod(LocalDate.of(2020, 10, 9), LocalDate.of(2021, 10, 9), CTStatus.ReturnFound))
+          ),
+          None,
+          Some(YesNoAnswer.Yes)
+        )
         CompanyHECTaxCheckData(
           companyDetails,
           licenceDetails,

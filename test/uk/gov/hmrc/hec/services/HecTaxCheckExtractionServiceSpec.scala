@@ -33,12 +33,12 @@ import uk.gov.hmrc.hec.models.HECTaxCheckData.CompanyHECTaxCheckData
 import uk.gov.hmrc.hec.models.TaxDetails.CompanyTaxDetails
 import uk.gov.hmrc.hec.models.ids.{CRN, CTUTR, GGCredId}
 import uk.gov.hmrc.hec.models.licence.{LicenceDetails, LicenceTimeTrading, LicenceType, LicenceValidityPeriod}
-import uk.gov.hmrc.hec.models.{CorrectiveAction, HECTaxCheck, HECTaxCheckCode, HECTaxCheckFileBodyList, HECTaxCheckSource}
+import uk.gov.hmrc.hec.models._
 import uk.gov.hmrc.hec.services.scheduleService.{HECTaxCheckExtractionContext, HecTaxCheckExtractionServiceImpl}
 import uk.gov.hmrc.hec.util.TimeUtils
 import uk.gov.hmrc.http.HeaderCarrier
 
-import java.time.{ZoneId, ZonedDateTime}
+import java.time.{LocalDate, ZoneId, ZonedDateTime}
 import scala.concurrent.Future
 
 class HecTaxCheckExtractionServiceSpec
@@ -127,13 +127,25 @@ class HecTaxCheckExtractionServiceSpec
   "HecTaxCheckExtractionServiceSpec" must {
 
     val taxCheckData  = CompanyHECTaxCheckData(
-      CompanyApplicantDetails(GGCredId(""), CRN("")),
+      CompanyApplicantDetails(GGCredId(""), CRN(""), CompanyHouseName("Test Tech Ltd")),
       LicenceDetails(
         LicenceType.ScrapMetalDealerSite,
         LicenceTimeTrading.EightYearsOrMore,
         LicenceValidityPeriod.UpToOneYear
       ),
-      CompanyTaxDetails(CTUTR("")),
+      CompanyTaxDetails(
+        CTUTR("1111111111"),
+        Some(CTUTR("1111111111")),
+        Some(YesNoAnswer.Yes),
+        CTStatusResponse(
+          CTUTR("1111111111"),
+          LocalDate.of(2020, 10, 9),
+          LocalDate.of(2021, 10, 9),
+          Some(CTAccountingPeriod(LocalDate.of(2020, 10, 9), LocalDate.of(2021, 10, 9), CTStatus.ReturnFound))
+        ),
+        None,
+        Some(YesNoAnswer.Yes)
+      ),
       taxCheckStartDateTime,
       HECTaxCheckSource.Digital
     )

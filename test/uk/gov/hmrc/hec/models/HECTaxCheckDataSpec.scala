@@ -52,7 +52,7 @@ class HECTaxCheckDataSpec extends AnyWordSpec with Matchers {
             NINO("nino"),
             Some(SAUTR("utr")),
             TaxSituation.SA,
-            Some(IncomeDeclared.Yes),
+            Some(YesNoAnswer.Yes),
             None
           ),
           taxCheckStartDateTime,
@@ -86,17 +86,25 @@ class HECTaxCheckDataSpec extends AnyWordSpec with Matchers {
 
       val companyTaxCheckData: HECTaxCheckData =
         CompanyHECTaxCheckData(
-          CompanyApplicantDetails(
-            GGCredId("ggCredId"),
-            CRN("crn")
-          ),
+          CompanyApplicantDetails(GGCredId("ggCredId"), CRN("12345678"), CompanyHouseName("Test Tech Ltd")),
           LicenceDetails(
             LicenceType.ScrapMetalMobileCollector,
             LicenceTimeTrading.EightYearsOrMore,
             LicenceValidityPeriod.UpToThreeYears
           ),
           CompanyTaxDetails(
-            CTUTR("utr")
+            desCTUTR = CTUTR("1111111111"),
+            Some(CTUTR("1111111111")),
+            ctIncomeDeclared = Some(YesNoAnswer.Yes),
+            ctStatus = CTStatusResponse(
+              ctutr = CTUTR("1111111111"),
+              startDate = LocalDate.of(2020, 10, 9),
+              endDate = LocalDate.of(2021, 10, 9),
+              latestAccountingPeriod =
+                Some(CTAccountingPeriod(LocalDate.of(2020, 10, 9), LocalDate.of(2021, 10, 9), CTStatus.ReturnFound))
+            ),
+            recentlyStaredTrading = None,
+            Some(YesNoAnswer.Yes)
           ),
           taxCheckStartDateTime,
           HECTaxCheckSource.Stride
@@ -105,7 +113,8 @@ class HECTaxCheckDataSpec extends AnyWordSpec with Matchers {
       val companyJson = Json.parse("""{
                                      | "applicantDetails":{
                                      |   "ggCredId":"ggCredId",
-                                     |   "crn":"crn"
+                                     |   "crn":"12345678",
+                                     |   "companyName":"Test Tech Ltd"
                                      | },
                                      | "licenceDetails":{
                                      |   "licenceType":"ScrapMetalMobileCollector",
@@ -113,11 +122,24 @@ class HECTaxCheckDataSpec extends AnyWordSpec with Matchers {
                                      |   "licenceValidityPeriod":"UpToThreeYears"
                                      | },
                                      | "taxDetails":{
-                                     |   "ctutr":"utr"
+                                        "desCTUTR":"1111111111",
+                                     |   "userSuppliedCTUTR":"1111111111",
+                                     |   "ctIncomeDeclared" : "Yes",
+                                     |   "ctStatus": {
+                                     |      "ctutr":"1111111111",
+                                     |      "startDate":"2020-10-09",
+                                     |      "endDate":"2021-10-09",
+                                     |      "latestAccountingPeriod" : {
+                                     |          "startDate":"2020-10-09",
+                                     |           "endDate":"2021-10-09",
+                                     |           "ctStatus":"ReturnFound"
+                                     |      }
+                                     |   },
+                                     |   "chargeableForCT" : "Yes"
                                      | },
                                      | "taxCheckStartDateTime" : "2021-10-09T09:12:34+01:00[Europe/London]",
-                                     | "type":"Company",
-                                     | "source": "Stride"
+                                     | "source": "Stride",
+                                     |  "type":"Company"
                                      |}""".stripMargin)
 
       "serialize Individual data" in {

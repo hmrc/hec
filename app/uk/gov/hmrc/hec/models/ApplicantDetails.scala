@@ -31,7 +31,8 @@ object ApplicantDetails {
 
   final case class CompanyApplicantDetails(
     ggCredId: GGCredId,
-    crn: CRN
+    crn: CRN,
+    companyName: CompanyHouseName
   ) extends ApplicantDetails
 
   implicit val individualApplicantDetailsFormat: OFormat[IndividualApplicantDetails] = Json.format
