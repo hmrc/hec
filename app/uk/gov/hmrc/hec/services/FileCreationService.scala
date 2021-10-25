@@ -133,7 +133,7 @@ class FileCreationServiceImpl @Inject() (timeProvider: TimeProvider) extends Fil
   case class CTStatusMapping(
     returnReceived: Option[Char],
     noticeToFileIssued: Option[Char],
-    accounTingPeriod: Option[Char]
+    accountingPeriod: Option[Char]
   )
 
   private def saStatusMapping(saStatus: Option[SAStatus]) = saStatus match {
@@ -209,13 +209,13 @@ class FileCreationServiceImpl @Inject() (timeProvider: TimeProvider) extends Fil
             licenceTimeTrading = licenceTimeTradingEKV(c.licenceDetails.licenceTimeTrading)._1,
             entityType = 'C',
             notChargeable = getNotChargeableInfo(c.taxDetails.chargeableForCT),
-            hasAccountingPeriod = ctStatusMap.accounTingPeriod,
+            hasAccountingPeriod = ctStatusMap.accountingPeriod,
             accountingPeriodStartDate = accountingPeriod.map(_.startDate.format(DATE_FORMATTER)),
             accountingPeriodEndDate = accountingPeriod.map(_.endDate.format(DATE_FORMATTER)),
             recentlyStartedTrading = yesNoAnswerMap(c.taxDetails.recentlyStaredTrading),
             returnReceived = ctStatusMap.returnReceived,
             noticeToFile = ctStatusMap.noticeToFileIssued,
-            taxComplianceDeclaration = ctStatusMap.returnReceived,
+            taxComplianceDeclaration = yesNoAnswerMap(c.taxDetails.ctIncomeDeclared),
             correctiveAction = hecTaxCheck.correctiveAction.map(ca => correctiveActionEKV(ca)._1),
             customerDeclaration = 'Y',
             taxCheckStartDateTime =

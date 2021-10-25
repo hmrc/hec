@@ -493,7 +493,7 @@ class FileCreationServiceSpec extends AnyWordSpec with Matchers with MockFactory
               )
 
             val expected = s"""|00|HEC_SSA_0001_20211010_$partialFileName.dat|HEC|SSA|20211010|113605|000001|001
-                               |01|AB123||||||1111111111|1123456|Test Tech Ltd|01|00|01|C|N||||Y|20201009|20211009||N|Y|N|00|Y|20210909090900|20210909090900|XNFFGBDD6|99990210|Y
+                               |01|AB123||||||1111111111|1123456|Test Tech Ltd|01|00|01|C|N||||Y|20201009|20211009||N|Y|Y|00|Y|20210909090900|20210909090900|XNFFGBDD6|99990210|Y
                                |99|HEC_SSA_0001_20211010_$partialFileName.dat|3|Y""".stripMargin
 
             result shouldBe Right((expected, s"HEC_SSA_0001_20211010_$partialFileName.dat"))
@@ -527,7 +527,7 @@ class FileCreationServiceSpec extends AnyWordSpec with Matchers with MockFactory
               )
 
             val expected = s"""|00|HEC_SSA_0001_20211010_$partialFileName.dat|HEC|SSA|20211010|113605|000001|001
-                               |01|AB123||||||1111111111|1123456|Test Tech Ltd|01|00|01|C|||||Y|20201009|20211009||N|N|N|00|Y|20210909090900|20210909090900|XNFFGBDD6|99990210|Y
+                               |01|AB123||||||1111111111|1123456|Test Tech Ltd|01|00|01|C|||||Y|20201009|20211009||N|N||00|Y|20210909090900|20210909090900|XNFFGBDD6|99990210|Y
                                |99|HEC_SSA_0001_20211010_$partialFileName.dat|3|Y""".stripMargin
 
             result shouldBe Right((expected, s"HEC_SSA_0001_20211010_$partialFileName.dat"))
