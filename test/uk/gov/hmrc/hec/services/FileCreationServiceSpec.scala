@@ -19,14 +19,15 @@ package uk.gov.hmrc.hec.services
 import org.scalamock.scalatest.MockFactory
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
-import uk.gov.hmrc.hec.models.ApplicantDetails.IndividualApplicantDetails
-import uk.gov.hmrc.hec.models.HECTaxCheckData.IndividualHECTaxCheckData
+import uk.gov.hmrc.hec.models.ApplicantDetails.{CompanyApplicantDetails, IndividualApplicantDetails}
+import uk.gov.hmrc.hec.models.CorrectiveAction.Register
+import uk.gov.hmrc.hec.models.HECTaxCheckData.{CompanyHECTaxCheckData, IndividualHECTaxCheckData}
 import uk.gov.hmrc.hec.models.HECTaxCheckSource.Digital
-import uk.gov.hmrc.hec.models.TaxDetails.IndividualTaxDetails
-import uk.gov.hmrc.hec.models.ids.{GGCredId, NINO, SAUTR}
+import uk.gov.hmrc.hec.models.TaxDetails.{CompanyTaxDetails, IndividualTaxDetails}
+import uk.gov.hmrc.hec.models.ids.{CRN, CTUTR, GGCredId, NINO, SAUTR}
 import uk.gov.hmrc.hec.models.licence.LicenceType.{DriverOfTaxisAndPrivateHires, OperatorOfPrivateHireVehicles, ScrapMetalDealerSite, ScrapMetalMobileCollector}
 import uk.gov.hmrc.hec.models.licence.{LicenceDetails, LicenceTimeTrading, LicenceType, LicenceValidityPeriod}
-import uk.gov.hmrc.hec.models.{CorrectiveAction, DateOfBirth, Error, HECTaxCheck, HECTaxCheckCode, HECTaxCheckFileBodyList, Name, SAStatus, SAStatusResponse, TaxSituation, TaxYear, YesNoAnswer}
+import uk.gov.hmrc.hec.models.{CTAccountingPeriod, CTStatus, CTStatusResponse, CompanyHouseName, CorrectiveAction, DateOfBirth, Error, HECTaxCheck, HECTaxCheckCode, HECTaxCheckFileBodyList, Name, SAStatus, SAStatusResponse, TaxSituation, TaxYear, YesNoAnswer}
 import uk.gov.hmrc.hec.util.TimeProvider
 
 import java.time.{LocalDate, LocalTime, ZoneId, ZonedDateTime}
@@ -130,240 +131,442 @@ class FileCreationServiceSpec extends AnyWordSpec with Matchers with MockFactory
 
       "content type is list of HecTaxChek" when {
 
-        val zonedDateTime              = ZonedDateTime.of(2021, 9, 9, 10, 9, 0, 0, ZoneId.of("Europe/London"))
-        val individualApplicantDetails =
-          IndividualApplicantDetails(GGCredId("AB123"), Name("Karen", "mcFie"), DateOfBirth(LocalDate.of(1922, 12, 1)))
+        val partialFileName = s"HEC"
 
-        def createTaxDetails(taxSituation: TaxSituation, saStatusResponse: Option[SAStatusResponse]) =
-          IndividualTaxDetails(
-            NINO("AB123456C"),
-            Some(SAUTR("1234567")),
-            taxSituation,
-            Some(YesNoAnswer.Yes),
-            saStatusResponse
-          )
+        val zonedDateTime = ZonedDateTime.of(2021, 9, 9, 10, 9, 0, 0, ZoneId.of("Europe/London"))
 
-        def createHecTaxCheck(
-          licenceType: LicenceType,
-          licenceTimeTrading: LicenceTimeTrading,
-          licenceValidityPeriod: LicenceValidityPeriod,
-          taxSituation: TaxSituation,
-          saStatusResponse: Option[SAStatusResponse],
-          correctiveAction: Option[CorrectiveAction]
-        ) =
-          HECTaxCheck(
-            IndividualHECTaxCheckData(
-              individualApplicantDetails,
-              LicenceDetails(licenceType, licenceTimeTrading, licenceValidityPeriod),
-              createTaxDetails(taxSituation, saStatusResponse),
+        "journey is for individual" when {
+
+          val individualApplicantDetails =
+            IndividualApplicantDetails(
+              GGCredId("AB123"),
+              Name("Karen", "mcFie"),
+              DateOfBirth(LocalDate.of(1922, 12, 1))
+            )
+
+          def createTaxDetails(taxSituation: TaxSituation, saStatusResponse: Option[SAStatusResponse]) =
+            IndividualTaxDetails(
+              NINO("AB123456C"),
+              Some(SAUTR("1234567")),
+              taxSituation,
+              Some(YesNoAnswer.Yes),
+              saStatusResponse
+            )
+
+          def createIndividualHecTaxCheck(
+            licenceType: LicenceType,
+            licenceTimeTrading: LicenceTimeTrading,
+            licenceValidityPeriod: LicenceValidityPeriod,
+            taxSituation: TaxSituation,
+            saStatusResponse: Option[SAStatusResponse],
+            correctiveAction: Option[CorrectiveAction]
+          ) =
+            HECTaxCheck(
+              IndividualHECTaxCheckData(
+                individualApplicantDetails,
+                LicenceDetails(licenceType, licenceTimeTrading, licenceValidityPeriod),
+                createTaxDetails(taxSituation, saStatusResponse),
+                zonedDateTime,
+                Digital
+              ),
+              HECTaxCheckCode("XNFFGBDD6"),
+              LocalDate.of(9999, 2, 10),
               zonedDateTime,
-              Digital
-            ),
-            HECTaxCheckCode("XNFFGBDD6"),
-            LocalDate.of(9999, 2, 10),
-            zonedDateTime,
-            false,
-            correctiveAction
-          )
-
-        "journey is for Individual as an Employee" in {
-          val hecTaxCheckList = List(
-            createHecTaxCheck(
-              DriverOfTaxisAndPrivateHires,
-              LicenceTimeTrading.FourToEightYears,
-              LicenceValidityPeriod.UpToFiveYears,
-              TaxSituation.PAYE,
-              Some(SAStatusResponse(SAUTR("1234567"), TaxYear(2021), SAStatus.ReturnFound)),
-              Some(CorrectiveAction.Register)
-            ),
-            createHecTaxCheck(
-              DriverOfTaxisAndPrivateHires,
-              LicenceTimeTrading.TwoToFourYears,
-              LicenceValidityPeriod.UpToFiveYears,
-              TaxSituation.PAYE,
-              Some(SAStatusResponse(SAUTR("1234567"), TaxYear(2021), SAStatus.NoticeToFileIssued)),
-              Some(CorrectiveAction.Register)
-            ),
-            createHecTaxCheck(
-              DriverOfTaxisAndPrivateHires,
-              LicenceTimeTrading.TwoToFourYears,
-              LicenceValidityPeriod.UpToFiveYears,
-              TaxSituation.PAYE,
-              Some(SAStatusResponse(SAUTR("1234567"), TaxYear(2021), SAStatus.NoReturnFound)),
-              Some(CorrectiveAction.Register)
+              false,
+              correctiveAction
             )
-          )
 
-          inSequence {
-            mockDateProviderToday(LocalDate.of(2021, 10, 10))
-            mockTimeProviderNow(LocalTime.of(11, 36, 5), zoneId)
+          "as an Employee" in {
+            val hecTaxCheckList = List(
+              createIndividualHecTaxCheck(
+                DriverOfTaxisAndPrivateHires,
+                LicenceTimeTrading.FourToEightYears,
+                LicenceValidityPeriod.UpToFiveYears,
+                TaxSituation.PAYE,
+                Some(SAStatusResponse(SAUTR("1234567"), TaxYear(2021), SAStatus.ReturnFound)),
+                Some(CorrectiveAction.Register)
+              ),
+              createIndividualHecTaxCheck(
+                DriverOfTaxisAndPrivateHires,
+                LicenceTimeTrading.TwoToFourYears,
+                LicenceValidityPeriod.UpToFiveYears,
+                TaxSituation.PAYE,
+                Some(SAStatusResponse(SAUTR("1234567"), TaxYear(2021), SAStatus.NoticeToFileIssued)),
+                Some(CorrectiveAction.Register)
+              ),
+              createIndividualHecTaxCheck(
+                DriverOfTaxisAndPrivateHires,
+                LicenceTimeTrading.TwoToFourYears,
+                LicenceValidityPeriod.UpToFiveYears,
+                TaxSituation.PAYE,
+                Some(SAStatusResponse(SAUTR("1234567"), TaxYear(2021), SAStatus.NoReturnFound)),
+                Some(CorrectiveAction.Register)
+              )
+            )
+
+            inSequence {
+              mockDateProviderToday(LocalDate.of(2021, 10, 10))
+              mockTimeProviderNow(LocalTime.of(11, 36, 5), zoneId)
+            }
+
+            val result: Either[Error, (String, String)] =
+              fileCreationService.createFileContent(
+                HECTaxCheckFileBodyList(hecTaxCheckList),
+                "0001",
+                partialFileName,
+                true
+              )
+            val expected                                = s"""|00|HEC_SSA_0001_20211010_$partialFileName.dat|HEC|SSA|20211010|113605|000001|001
+                                                              |01|AB123|AB123456C|Karen|mcFie|19221201|1234567||||00|04|02|I||Y|N|2022|||||Y||Y||Y|20210909090900|20210909090900|XNFFGBDD6|99990210|Y
+                                                              |01|AB123|AB123456C|Karen|mcFie|19221201|1234567||||00|04|01|I||Y|N|2022|||||N|Y|N||Y|20210909090900|20210909090900|XNFFGBDD6|99990210|Y
+                                                              |01|AB123|AB123456C|Karen|mcFie|19221201|1234567||||00|04|01|I||Y|N|2022|||||N|N|N||Y|20210909090900|20210909090900|XNFFGBDD6|99990210|Y
+                                                              |99|HEC_SSA_0001_20211010_$partialFileName.dat|5|Y""".stripMargin
+
+            result shouldBe Right((expected, s"HEC_SSA_0001_20211010_$partialFileName.dat"))
           }
 
-          val partialFileName                         = s"HEC"
-          val result: Either[Error, (String, String)] =
-            fileCreationService.createFileContent(
-              HECTaxCheckFileBodyList(hecTaxCheckList),
-              "0001",
-              partialFileName,
-              true
+          "Registered for SA" in {
+            val hecTaxCheckList = List(
+              createIndividualHecTaxCheck(
+                OperatorOfPrivateHireVehicles,
+                LicenceTimeTrading.FourToEightYears,
+                LicenceValidityPeriod.UpToOneYear,
+                TaxSituation.SA,
+                Some(SAStatusResponse(SAUTR("1234567"), TaxYear(2021), SAStatus.ReturnFound)),
+                Some(CorrectiveAction.Register)
+              ),
+              createIndividualHecTaxCheck(
+                ScrapMetalMobileCollector,
+                LicenceTimeTrading.TwoToFourYears,
+                LicenceValidityPeriod.UpToTwoYears,
+                TaxSituation.SA,
+                Some(SAStatusResponse(SAUTR("1234567"), TaxYear(2021), SAStatus.NoticeToFileIssued)),
+                Some(CorrectiveAction.Register)
+              ),
+              createIndividualHecTaxCheck(
+                ScrapMetalDealerSite,
+                LicenceTimeTrading.TwoToFourYears,
+                LicenceValidityPeriod.UpToThreeYears,
+                TaxSituation.SA,
+                Some(SAStatusResponse(SAUTR("1234567"), TaxYear(2021), SAStatus.NoReturnFound)),
+                Some(CorrectiveAction.Register)
+              )
             )
-          val expected                                = s"""|00|HEC_SSA_0001_20211010_$partialFileName.dat|HEC|SSA|20211010|113605|000001|001
-                                                            |01|AB123|AB123456C|Karen|mcFie|19221201|1234567||||00|04|02|I||Y|N|2022|||||Y||Y||Y|20210909090900|20210909090900|XNFFGBDD6|99990210|Y
-                                                            |01|AB123|AB123456C|Karen|mcFie|19221201|1234567||||00|04|01|I||Y|N|2022|||||N|Y|N||Y|20210909090900|20210909090900|XNFFGBDD6|99990210|Y
-                                                            |01|AB123|AB123456C|Karen|mcFie|19221201|1234567||||00|04|01|I||Y|N|2022|||||N|N|N||Y|20210909090900|20210909090900|XNFFGBDD6|99990210|Y
-                                                            |99|HEC_SSA_0001_20211010_$partialFileName.dat|5|Y""".stripMargin
 
-          result shouldBe Right((expected, s"HEC_SSA_0001_20211010_$partialFileName.dat"))
+            inSequence {
+              mockDateProviderToday(LocalDate.of(2021, 10, 10))
+              mockTimeProviderNow(LocalTime.of(11, 36, 5), zoneId)
+            }
+
+            val partialFileName                         = s"HEC"
+            val result: Either[Error, (String, String)] =
+              fileCreationService.createFileContent(
+                HECTaxCheckFileBodyList(hecTaxCheckList),
+                "0001",
+                partialFileName,
+                true
+              )
+            val expected                                = s"""|00|HEC_SSA_0001_20211010_$partialFileName.dat|HEC|SSA|20211010|113605|000001|001
+                                                              |01|AB123|AB123456C|Karen|mcFie|19221201|1234567||||01|00|02|I||N|Y|2022|||||Y||Y||Y|20210909090900|20210909090900|XNFFGBDD6|99990210|Y
+                                                              |01|AB123|AB123456C|Karen|mcFie|19221201|1234567||||02|01|01|I||N|Y|2022|||||N|Y|N||Y|20210909090900|20210909090900|XNFFGBDD6|99990210|Y
+                                                              |01|AB123|AB123456C|Karen|mcFie|19221201|1234567||||03|02|01|I||N|Y|2022|||||N|N|N||Y|20210909090900|20210909090900|XNFFGBDD6|99990210|Y
+                                                              |99|HEC_SSA_0001_20211010_$partialFileName.dat|5|Y""".stripMargin
+
+            result shouldBe Right((expected, s"HEC_SSA_0001_20211010_$partialFileName.dat"))
+          }
+
+          "Registered for SA and an employee" in {
+            val hecTaxCheckList = List(
+              createIndividualHecTaxCheck(
+                OperatorOfPrivateHireVehicles,
+                LicenceTimeTrading.FourToEightYears,
+                LicenceValidityPeriod.UpToOneYear,
+                TaxSituation.SAPAYE,
+                Some(SAStatusResponse(SAUTR("1234567"), TaxYear(2021), SAStatus.ReturnFound)),
+                Some(CorrectiveAction.Register)
+              ),
+              createIndividualHecTaxCheck(
+                ScrapMetalMobileCollector,
+                LicenceTimeTrading.TwoToFourYears,
+                LicenceValidityPeriod.UpToTwoYears,
+                TaxSituation.SAPAYE,
+                Some(SAStatusResponse(SAUTR("1234567"), TaxYear(2021), SAStatus.NoticeToFileIssued)),
+                Some(CorrectiveAction.Register)
+              ),
+              createIndividualHecTaxCheck(
+                ScrapMetalDealerSite,
+                LicenceTimeTrading.TwoToFourYears,
+                LicenceValidityPeriod.UpToThreeYears,
+                TaxSituation.SAPAYE,
+                Some(SAStatusResponse(SAUTR("1234567"), TaxYear(2021), SAStatus.NoReturnFound)),
+                Some(CorrectiveAction.Register)
+              )
+            )
+
+            inSequence {
+              mockDateProviderToday(LocalDate.of(2021, 10, 10))
+              mockTimeProviderNow(LocalTime.of(11, 36, 5), zoneId)
+            }
+
+            val partialFileName                         = s"HEC"
+            val result: Either[Error, (String, String)] =
+              fileCreationService.createFileContent(
+                HECTaxCheckFileBodyList(hecTaxCheckList),
+                "0001",
+                partialFileName,
+                true
+              )
+            val expected                                = s"""|00|HEC_SSA_0001_20211010_$partialFileName.dat|HEC|SSA|20211010|113605|000001|001
+                                                              |01|AB123|AB123456C|Karen|mcFie|19221201|1234567||||01|00|02|I||Y|Y|2022|||||Y||Y||Y|20210909090900|20210909090900|XNFFGBDD6|99990210|Y
+                                                              |01|AB123|AB123456C|Karen|mcFie|19221201|1234567||||02|01|01|I||Y|Y|2022|||||N|Y|N||Y|20210909090900|20210909090900|XNFFGBDD6|99990210|Y
+                                                              |01|AB123|AB123456C|Karen|mcFie|19221201|1234567||||03|02|01|I||Y|Y|2022|||||N|N|N||Y|20210909090900|20210909090900|XNFFGBDD6|99990210|Y
+                                                              |99|HEC_SSA_0001_20211010_$partialFileName.dat|5|Y""".stripMargin
+
+            result shouldBe Right((expected, s"HEC_SSA_0001_20211010_$partialFileName.dat"))
+          }
+
+          "Individual - who don't have to pay tax" in {
+            val hecTaxCheckList = List(
+              createIndividualHecTaxCheck(
+                OperatorOfPrivateHireVehicles,
+                LicenceTimeTrading.FourToEightYears,
+                LicenceValidityPeriod.UpToOneYear,
+                TaxSituation.NotChargeable,
+                Some(SAStatusResponse(SAUTR("1234567"), TaxYear(2021), SAStatus.ReturnFound)),
+                Some(CorrectiveAction.Register)
+              ),
+              createIndividualHecTaxCheck(
+                ScrapMetalMobileCollector,
+                LicenceTimeTrading.TwoToFourYears,
+                LicenceValidityPeriod.UpToTwoYears,
+                TaxSituation.NotChargeable,
+                Some(SAStatusResponse(SAUTR("1234567"), TaxYear(2021), SAStatus.NoticeToFileIssued)),
+                Some(CorrectiveAction.Register)
+              ),
+              createIndividualHecTaxCheck(
+                ScrapMetalDealerSite,
+                LicenceTimeTrading.TwoToFourYears,
+                LicenceValidityPeriod.UpToThreeYears,
+                TaxSituation.NotChargeable,
+                Some(SAStatusResponse(SAUTR("1234567"), TaxYear(2021), SAStatus.NoReturnFound)),
+                Some(CorrectiveAction.Register)
+              )
+            )
+
+            inSequence {
+              mockDateProviderToday(LocalDate.of(2021, 10, 10))
+              mockTimeProviderNow(LocalTime.of(11, 36, 5), zoneId)
+            }
+
+            val partialFileName                         = s"HEC"
+            val result: Either[Error, (String, String)] =
+              fileCreationService.createFileContent(
+                HECTaxCheckFileBodyList(hecTaxCheckList),
+                "0001",
+                partialFileName,
+                true
+              )
+            val expected                                = s"""|00|HEC_SSA_0001_20211010_$partialFileName.dat|HEC|SSA|20211010|113605|000001|001
+                                                              |01|AB123|AB123456C|Karen|mcFie|19221201|1234567||||01|00|02|I|Y|||2022|||||Y||Y||Y|20210909090900|20210909090900|XNFFGBDD6|99990210|Y
+                                                              |01|AB123|AB123456C|Karen|mcFie|19221201|1234567||||02|01|01|I|Y|||2022|||||N|Y|N||Y|20210909090900|20210909090900|XNFFGBDD6|99990210|Y
+                                                              |01|AB123|AB123456C|Karen|mcFie|19221201|1234567||||03|02|01|I|Y|||2022|||||N|N|N||Y|20210909090900|20210909090900|XNFFGBDD6|99990210|Y
+                                                              |99|HEC_SSA_0001_20211010_$partialFileName.dat|5|Y""".stripMargin
+
+            result shouldBe Right((expected, s"HEC_SSA_0001_20211010_$partialFileName.dat"))
+          }
+
         }
 
-        "journey is for Individual - Registered for SA" in {
-          val hecTaxCheckList = List(
-            createHecTaxCheck(
-              OperatorOfPrivateHireVehicles,
-              LicenceTimeTrading.FourToEightYears,
-              LicenceValidityPeriod.UpToOneYear,
-              TaxSituation.SA,
-              Some(SAStatusResponse(SAUTR("1234567"), TaxYear(2021), SAStatus.ReturnFound)),
-              Some(CorrectiveAction.Register)
-            ),
-            createHecTaxCheck(
-              ScrapMetalMobileCollector,
-              LicenceTimeTrading.TwoToFourYears,
-              LicenceValidityPeriod.UpToTwoYears,
-              TaxSituation.SA,
-              Some(SAStatusResponse(SAUTR("1234567"), TaxYear(2021), SAStatus.NoticeToFileIssued)),
-              Some(CorrectiveAction.Register)
-            ),
-            createHecTaxCheck(
-              ScrapMetalDealerSite,
-              LicenceTimeTrading.TwoToFourYears,
-              LicenceValidityPeriod.UpToThreeYears,
-              TaxSituation.SA,
-              Some(SAStatusResponse(SAUTR("1234567"), TaxYear(2021), SAStatus.NoReturnFound)),
-              Some(CorrectiveAction.Register)
-            )
+        "journey is for company" when {
+
+          val startDate = LocalDate.of(2020, 10, 9)
+          val endDate   = LocalDate.of(2021, 10, 9)
+
+          val companyDetails =
+            CompanyApplicantDetails(GGCredId("AB123"), CRN("1123456"), CompanyHouseName("Test Tech Ltd"))
+
+          def getCTStatusResponse(status: CTStatus) = CTStatusResponse(
+            CTUTR("1111111111"),
+            startDate,
+            endDate,
+            Some(CTAccountingPeriod(startDate, endDate, status))
           )
 
-          inSequence {
-            mockDateProviderToday(LocalDate.of(2021, 10, 10))
-            mockTimeProviderNow(LocalTime.of(11, 36, 5), zoneId)
-          }
-
-          val partialFileName                         = s"HEC"
-          val result: Either[Error, (String, String)] =
-            fileCreationService.createFileContent(
-              HECTaxCheckFileBodyList(hecTaxCheckList),
-              "0001",
-              partialFileName,
-              true
-            )
-          val expected                                = s"""|00|HEC_SSA_0001_20211010_$partialFileName.dat|HEC|SSA|20211010|113605|000001|001
-                                                            |01|AB123|AB123456C|Karen|mcFie|19221201|1234567||||01|00|02|I||N|Y|2022|||||Y||Y||Y|20210909090900|20210909090900|XNFFGBDD6|99990210|Y
-                                                            |01|AB123|AB123456C|Karen|mcFie|19221201|1234567||||02|01|01|I||N|Y|2022|||||N|Y|N||Y|20210909090900|20210909090900|XNFFGBDD6|99990210|Y
-                                                            |01|AB123|AB123456C|Karen|mcFie|19221201|1234567||||03|02|01|I||N|Y|2022|||||N|N|N||Y|20210909090900|20210909090900|XNFFGBDD6|99990210|Y
-                                                            |99|HEC_SSA_0001_20211010_$partialFileName.dat|5|Y""".stripMargin
-
-          result shouldBe Right((expected, s"HEC_SSA_0001_20211010_$partialFileName.dat"))
-        }
-
-        "journey is for Individual - Registered for SA and an employee" in {
-          val hecTaxCheckList = List(
-            createHecTaxCheck(
-              OperatorOfPrivateHireVehicles,
-              LicenceTimeTrading.FourToEightYears,
-              LicenceValidityPeriod.UpToOneYear,
-              TaxSituation.SAPAYE,
-              Some(SAStatusResponse(SAUTR("1234567"), TaxYear(2021), SAStatus.ReturnFound)),
-              Some(CorrectiveAction.Register)
-            ),
-            createHecTaxCheck(
-              ScrapMetalMobileCollector,
-              LicenceTimeTrading.TwoToFourYears,
-              LicenceValidityPeriod.UpToTwoYears,
-              TaxSituation.SAPAYE,
-              Some(SAStatusResponse(SAUTR("1234567"), TaxYear(2021), SAStatus.NoticeToFileIssued)),
-              Some(CorrectiveAction.Register)
-            ),
-            createHecTaxCheck(
-              ScrapMetalDealerSite,
-              LicenceTimeTrading.TwoToFourYears,
-              LicenceValidityPeriod.UpToThreeYears,
-              TaxSituation.SAPAYE,
-              Some(SAStatusResponse(SAUTR("1234567"), TaxYear(2021), SAStatus.NoReturnFound)),
-              Some(CorrectiveAction.Register)
-            )
+          def createTaxDetails(
+            ctStatusResponse: CTStatusResponse,
+            ctIncomeDeclared: Option[YesNoAnswer],
+            recentlyStaredTrading: Option[YesNoAnswer],
+            chargeableForCT: Option[YesNoAnswer]
+          ) = CompanyTaxDetails(
+            CTUTR("1111111111"),
+            Some(CTUTR("1111111111")),
+            ctIncomeDeclared,
+            ctStatusResponse,
+            recentlyStaredTrading,
+            chargeableForCT
           )
 
-          inSequence {
-            mockDateProviderToday(LocalDate.of(2021, 10, 10))
-            mockTimeProviderNow(LocalTime.of(11, 36, 5), zoneId)
+          def createCompanyHecTaxCheck(
+            licenceType: LicenceType,
+            licenceTimeTrading: LicenceTimeTrading,
+            licenceValidityPeriod: LicenceValidityPeriod,
+            ctStatusResponse: CTStatusResponse,
+            ctIncomeDeclared: Option[YesNoAnswer],
+            recentlyStaredTrading: Option[YesNoAnswer],
+            chargeableForCT: Option[YesNoAnswer],
+            correctiveAction: Option[CorrectiveAction]
+          ) =
+            HECTaxCheck(
+              CompanyHECTaxCheckData(
+                companyDetails,
+                LicenceDetails(licenceType, licenceTimeTrading, licenceValidityPeriod),
+                createTaxDetails(ctStatusResponse, ctIncomeDeclared, recentlyStaredTrading, chargeableForCT),
+                zonedDateTime,
+                Digital
+              ),
+              HECTaxCheckCode("XNFFGBDD6"),
+              LocalDate.of(9999, 2, 10),
+              zonedDateTime,
+              false,
+              correctiveAction
+            )
+
+          "ct status api response is return Found" in {
+            val hecTaxCheckList = List(
+              createCompanyHecTaxCheck(
+                OperatorOfPrivateHireVehicles,
+                LicenceTimeTrading.TwoToFourYears,
+                LicenceValidityPeriod.UpToOneYear,
+                getCTStatusResponse(CTStatus.ReturnFound),
+                Some(YesNoAnswer.Yes),
+                None,
+                Some(YesNoAnswer.Yes),
+                Some(Register)
+              )
+            )
+
+            inSequence {
+              mockDateProviderToday(LocalDate.of(2021, 10, 10))
+              mockTimeProviderNow(LocalTime.of(11, 36, 5), zoneId)
+            }
+
+            val result: Either[Error, (String, String)] =
+              fileCreationService.createFileContent(
+                HECTaxCheckFileBodyList(hecTaxCheckList),
+                "0001",
+                partialFileName,
+                true
+              )
+
+            val expected = s"""|00|HEC_SSA_0001_20211010_$partialFileName.dat|HEC|SSA|20211010|113605|000001|001
+                                                              |01|AB123||||||1111111111|1123456|Test Tech Ltd|01|00|01|C|N||||Y|20201009|20211009||Y||Y|00|Y|20210909090900|20210909090900|XNFFGBDD6|99990210|Y
+                                                              |99|HEC_SSA_0001_20211010_$partialFileName.dat|3|Y""".stripMargin
+
+            result shouldBe Right((expected, s"HEC_SSA_0001_20211010_$partialFileName.dat"))
           }
 
-          val partialFileName                         = s"HEC"
-          val result: Either[Error, (String, String)] =
-            fileCreationService.createFileContent(
-              HECTaxCheckFileBodyList(hecTaxCheckList),
-              "0001",
-              partialFileName,
-              true
+          "ct status api response is return NoticeToFile" in {
+            val hecTaxCheckList = List(
+              createCompanyHecTaxCheck(
+                licenceType = OperatorOfPrivateHireVehicles,
+                licenceTimeTrading = LicenceTimeTrading.TwoToFourYears,
+                licenceValidityPeriod = LicenceValidityPeriod.UpToOneYear,
+                ctStatusResponse = getCTStatusResponse(CTStatus.NoticeToFileIssued),
+                ctIncomeDeclared = Some(YesNoAnswer.Yes),
+                recentlyStaredTrading = None,
+                chargeableForCT = Some(YesNoAnswer.Yes),
+                correctiveAction = Some(Register)
+              )
             )
-          val expected                                = s"""|00|HEC_SSA_0001_20211010_$partialFileName.dat|HEC|SSA|20211010|113605|000001|001
-                                                            |01|AB123|AB123456C|Karen|mcFie|19221201|1234567||||01|00|02|I||Y|Y|2022|||||Y||Y||Y|20210909090900|20210909090900|XNFFGBDD6|99990210|Y
-                                                            |01|AB123|AB123456C|Karen|mcFie|19221201|1234567||||02|01|01|I||Y|Y|2022|||||N|Y|N||Y|20210909090900|20210909090900|XNFFGBDD6|99990210|Y
-                                                            |01|AB123|AB123456C|Karen|mcFie|19221201|1234567||||03|02|01|I||Y|Y|2022|||||N|N|N||Y|20210909090900|20210909090900|XNFFGBDD6|99990210|Y
-                                                            |99|HEC_SSA_0001_20211010_$partialFileName.dat|5|Y""".stripMargin
 
-          result shouldBe Right((expected, s"HEC_SSA_0001_20211010_$partialFileName.dat"))
-        }
+            inSequence {
+              mockDateProviderToday(LocalDate.of(2021, 10, 10))
+              mockTimeProviderNow(LocalTime.of(11, 36, 5), zoneId)
+            }
 
-        "journey is for Individual - who don't have to pay tax" in {
-          val hecTaxCheckList = List(
-            createHecTaxCheck(
-              OperatorOfPrivateHireVehicles,
-              LicenceTimeTrading.FourToEightYears,
-              LicenceValidityPeriod.UpToOneYear,
-              TaxSituation.NotChargeable,
-              Some(SAStatusResponse(SAUTR("1234567"), TaxYear(2021), SAStatus.ReturnFound)),
-              Some(CorrectiveAction.Register)
-            ),
-            createHecTaxCheck(
-              ScrapMetalMobileCollector,
-              LicenceTimeTrading.TwoToFourYears,
-              LicenceValidityPeriod.UpToTwoYears,
-              TaxSituation.NotChargeable,
-              Some(SAStatusResponse(SAUTR("1234567"), TaxYear(2021), SAStatus.NoticeToFileIssued)),
-              Some(CorrectiveAction.Register)
-            ),
-            createHecTaxCheck(
-              ScrapMetalDealerSite,
-              LicenceTimeTrading.TwoToFourYears,
-              LicenceValidityPeriod.UpToThreeYears,
-              TaxSituation.NotChargeable,
-              Some(SAStatusResponse(SAUTR("1234567"), TaxYear(2021), SAStatus.NoReturnFound)),
-              Some(CorrectiveAction.Register)
-            )
-          )
+            val result: Either[Error, (String, String)] =
+              fileCreationService.createFileContent(
+                HECTaxCheckFileBodyList(hecTaxCheckList),
+                "0001",
+                partialFileName,
+                true
+              )
 
-          inSequence {
-            mockDateProviderToday(LocalDate.of(2021, 10, 10))
-            mockTimeProviderNow(LocalTime.of(11, 36, 5), zoneId)
+            val expected = s"""|00|HEC_SSA_0001_20211010_$partialFileName.dat|HEC|SSA|20211010|113605|000001|001
+                               |01|AB123||||||1111111111|1123456|Test Tech Ltd|01|00|01|C|N||||Y|20201009|20211009||N|Y|Y|00|Y|20210909090900|20210909090900|XNFFGBDD6|99990210|Y
+                               |99|HEC_SSA_0001_20211010_$partialFileName.dat|3|Y""".stripMargin
+
+            result shouldBe Right((expected, s"HEC_SSA_0001_20211010_$partialFileName.dat"))
           }
 
-          val partialFileName                         = s"HEC"
-          val result: Either[Error, (String, String)] =
-            fileCreationService.createFileContent(
-              HECTaxCheckFileBodyList(hecTaxCheckList),
-              "0001",
-              partialFileName,
-              true
+          "ct status api response is return No return Found" in {
+            val hecTaxCheckList = List(
+              createCompanyHecTaxCheck(
+                licenceType = OperatorOfPrivateHireVehicles,
+                licenceTimeTrading = LicenceTimeTrading.TwoToFourYears,
+                licenceValidityPeriod = LicenceValidityPeriod.UpToOneYear,
+                ctStatusResponse = getCTStatusResponse(CTStatus.NoReturnFound),
+                ctIncomeDeclared = None,
+                recentlyStaredTrading = None,
+                chargeableForCT = None,
+                correctiveAction = Some(Register)
+              )
             )
-          val expected                                = s"""|00|HEC_SSA_0001_20211010_$partialFileName.dat|HEC|SSA|20211010|113605|000001|001
-                                                            |01|AB123|AB123456C|Karen|mcFie|19221201|1234567||||01|00|02|I|Y|||2022|||||Y||Y||Y|20210909090900|20210909090900|XNFFGBDD6|99990210|Y
-                                                            |01|AB123|AB123456C|Karen|mcFie|19221201|1234567||||02|01|01|I|Y|||2022|||||N|Y|N||Y|20210909090900|20210909090900|XNFFGBDD6|99990210|Y
-                                                            |01|AB123|AB123456C|Karen|mcFie|19221201|1234567||||03|02|01|I|Y|||2022|||||N|N|N||Y|20210909090900|20210909090900|XNFFGBDD6|99990210|Y
-                                                            |99|HEC_SSA_0001_20211010_$partialFileName.dat|5|Y""".stripMargin
 
-          result shouldBe Right((expected, s"HEC_SSA_0001_20211010_$partialFileName.dat"))
+            inSequence {
+              mockDateProviderToday(LocalDate.of(2021, 10, 10))
+              mockTimeProviderNow(LocalTime.of(11, 36, 5), zoneId)
+            }
+
+            val result: Either[Error, (String, String)] =
+              fileCreationService.createFileContent(
+                HECTaxCheckFileBodyList(hecTaxCheckList),
+                "0001",
+                partialFileName,
+                true
+              )
+
+            val expected = s"""|00|HEC_SSA_0001_20211010_$partialFileName.dat|HEC|SSA|20211010|113605|000001|001
+                               |01|AB123||||||1111111111|1123456|Test Tech Ltd|01|00|01|C|||||Y|20201009|20211009||N|N||00|Y|20210909090900|20210909090900|XNFFGBDD6|99990210|Y
+                               |99|HEC_SSA_0001_20211010_$partialFileName.dat|3|Y""".stripMargin
+
+            result shouldBe Right((expected, s"HEC_SSA_0001_20211010_$partialFileName.dat"))
+          }
+
+          "no accounting period found" in {
+            val hecTaxCheckList = List(
+              createCompanyHecTaxCheck(
+                licenceType = OperatorOfPrivateHireVehicles,
+                licenceTimeTrading = LicenceTimeTrading.TwoToFourYears,
+                licenceValidityPeriod = LicenceValidityPeriod.UpToOneYear,
+                ctStatusResponse = CTStatusResponse(CTUTR("1111111111"), startDate, endDate, None),
+                ctIncomeDeclared = None,
+                recentlyStaredTrading = Some(YesNoAnswer.Yes),
+                chargeableForCT = None,
+                correctiveAction = Some(Register)
+              )
+            )
+
+            inSequence {
+              mockDateProviderToday(LocalDate.of(2021, 10, 10))
+              mockTimeProviderNow(LocalTime.of(11, 36, 5), zoneId)
+            }
+
+            val result: Either[Error, (String, String)] =
+              fileCreationService.createFileContent(
+                HECTaxCheckFileBodyList(hecTaxCheckList),
+                "0001",
+                partialFileName,
+                true
+              )
+
+            val expected = s"""|00|HEC_SSA_0001_20211010_$partialFileName.dat|HEC|SSA|20211010|113605|000001|001
+                               |01|AB123||||||1111111111|1123456|Test Tech Ltd|01|00|01|C|||||N|||Y||||00|Y|20210909090900|20210909090900|XNFFGBDD6|99990210|Y
+                               |99|HEC_SSA_0001_20211010_$partialFileName.dat|3|Y""".stripMargin
+
+            result shouldBe Right((expected, s"HEC_SSA_0001_20211010_$partialFileName.dat"))
+          }
+
         }
 
       }

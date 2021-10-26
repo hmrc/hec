@@ -19,7 +19,7 @@ package uk.gov.hmrc.hec.services
 import cats.syntax.eq._
 import com.google.inject.{ImplementedBy, Inject}
 import uk.gov.hmrc.hec.models.CorrectiveAction._
-import uk.gov.hmrc.hec.models.HECTaxCheckData.IndividualHECTaxCheckData
+import uk.gov.hmrc.hec.models.HECTaxCheckData.{CompanyHECTaxCheckData, IndividualHECTaxCheckData}
 import uk.gov.hmrc.hec.models.HECTaxCheckSource.Digital
 import uk.gov.hmrc.hec.models.SAStatus._
 import uk.gov.hmrc.hec.models.TaxSituation._
@@ -29,7 +29,7 @@ import uk.gov.hmrc.hec.models.licence.LicenceTimeTrading.{EightYearsOrMore, Four
 import uk.gov.hmrc.hec.models.licence.LicenceType.{DriverOfTaxisAndPrivateHires, OperatorOfPrivateHireVehicles, ScrapMetalDealerSite, ScrapMetalMobileCollector}
 import uk.gov.hmrc.hec.models.licence.LicenceValidityPeriod.{UpToFiveYears, UpToFourYears, UpToOneYear, UpToThreeYears, UpToTwoYears}
 import uk.gov.hmrc.hec.models.licence.{LicenceTimeTrading, LicenceType, LicenceValidityPeriod}
-import uk.gov.hmrc.hec.models.{CorrectiveAction, Error, HECTaxCheck, HECTaxCheckFileBodyList, SAStatus, TaxSituation}
+import uk.gov.hmrc.hec.models.{CTStatus, CorrectiveAction, Error, HECTaxCheck, HECTaxCheckFileBodyList, SAStatus, TaxSituation, YesNoAnswer}
 import uk.gov.hmrc.hec.util.TimeProvider
 
 import java.time.ZoneId
@@ -130,12 +130,36 @@ class FileCreationServiceImpl @Inject() (timeProvider: TimeProvider) extends Fil
   }
 
   case class SAStatusMapping(returnReceived: Option[Char], noticeToFileIssued: Option[Char])
+  case class CTStatusMapping(
+    returnReceived: Option[Char],
+    noticeToFileIssued: Option[Char],
+    accountingPeriod: Option[Char]
+  )
 
   private def saStatusMapping(saStatus: Option[SAStatus]) = saStatus match {
     case Some(ReturnFound)        => SAStatusMapping(Some('Y'), None)
     case Some(NoticeToFileIssued) => SAStatusMapping(Some('N'), Some('Y'))
     case Some(NoReturnFound)      => SAStatusMapping(Some('N'), Some('N'))
     case None                     => SAStatusMapping(None, None)
+  }
+
+  private def ctStatusMapping(ctStatus: Option[CTStatus]) = ctStatus match {
+    case Some(CTStatus.ReturnFound)        => CTStatusMapping(Some('Y'), None, Some('Y'))
+    case Some(CTStatus.NoticeToFileIssued) => CTStatusMapping(Some('N'), Some('Y'), Some('Y'))
+    case Some(CTStatus.NoReturnFound)      => CTStatusMapping(Some('N'), Some('N'), Some('Y'))
+    case None                              => CTStatusMapping(None, None, Some('N'))
+  }
+
+  private def getNotChargeableInfo(ctChargeableOpt: Option[YesNoAnswer]): Option[Char] = ctChargeableOpt match {
+    case Some(YesNoAnswer.Yes) => Some('N')
+    case Some(YesNoAnswer.No)  => Some('Y')
+    case None                  => None
+  }
+
+  private def yesNoAnswerMap(yesNoAnswer: Option[YesNoAnswer]): Option[Char] = yesNoAnswer match {
+    case Some(YesNoAnswer.Yes) => Some('Y')
+    case Some(YesNoAnswer.No)  => Some('N')
+    case None                  => None
   }
 
   private def createHecTaxCheckFileBody(hecTaxCheckList: List[HECTaxCheck]): List[HECTaxCheckFileBody] =
@@ -161,7 +185,7 @@ class FileCreationServiceImpl @Inject() (timeProvider: TimeProvider) extends Fil
             incomeTaxYear = i.taxDetails.saStatusResponse.map(_.taxYear.startYear + 1),
             returnReceived = saStatusMap.returnReceived,
             noticeToFile = saStatusMap.noticeToFileIssued,
-            taxComplianceDeclaration = saStatusMapping(i.taxDetails.saStatusResponse.map(_.status)).returnReceived,
+            taxComplianceDeclaration = saStatusMap.returnReceived,
             customerDeclaration = 'Y',
             taxCheckStartDateTime =
               i.taxCheckStartDateTime.withZoneSameInstant(ZoneId.of("GMT")).format(DATE_TIME_FORMATTER),
@@ -170,6 +194,37 @@ class FileCreationServiceImpl @Inject() (timeProvider: TimeProvider) extends Fil
             taxCheckCode = hecTaxCheck.taxCheckCode.value,
             taxCheckExpiryDate = hecTaxCheck.expiresAfter.format(DATE_FORMATTER),
             onlineApplication = if (i.source === Digital) 'Y' else 'N'
+          )
+        case c: CompanyHECTaxCheckData    =>
+          val accountingPeriod = c.taxDetails.ctStatus.latestAccountingPeriod
+          val ctStatus         = accountingPeriod.map(_.ctStatus)
+          val ctStatusMap      = ctStatusMapping(ctStatus)
+          HECTaxCheckFileBody(
+            ggCredID = Some(c.applicantDetails.ggCredId.value),
+            CTUTR = Some(c.taxDetails.desCTUTR.value),
+            crn = Some(c.applicantDetails.crn.value),
+            companyName = Some(c.applicantDetails.companyName.name),
+            licenceType = licenceTypeEKV(c.licenceDetails.licenceType)._1,
+            licenceValidityPeriod = licenceValidityPeriodEKV(c.licenceDetails.licenceValidityPeriod)._1,
+            licenceTimeTrading = licenceTimeTradingEKV(c.licenceDetails.licenceTimeTrading)._1,
+            entityType = 'C',
+            notChargeable = getNotChargeableInfo(c.taxDetails.chargeableForCT),
+            hasAccountingPeriod = ctStatusMap.accountingPeriod,
+            accountingPeriodStartDate = accountingPeriod.map(_.startDate.format(DATE_FORMATTER)),
+            accountingPeriodEndDate = accountingPeriod.map(_.endDate.format(DATE_FORMATTER)),
+            recentlyStartedTrading = yesNoAnswerMap(c.taxDetails.recentlyStaredTrading),
+            returnReceived = ctStatusMap.returnReceived,
+            noticeToFile = ctStatusMap.noticeToFileIssued,
+            taxComplianceDeclaration = yesNoAnswerMap(c.taxDetails.ctIncomeDeclared),
+            correctiveAction = hecTaxCheck.correctiveAction.map(ca => correctiveActionEKV(ca)._1),
+            customerDeclaration = 'Y',
+            taxCheckStartDateTime =
+              c.taxCheckStartDateTime.withZoneSameInstant(ZoneId.of("GMT")).format(DATE_TIME_FORMATTER),
+            taxCheckCompleteDateTime =
+              hecTaxCheck.createDate.withZoneSameInstant(ZoneId.of("GMT")).format(DATE_TIME_FORMATTER),
+            taxCheckCode = hecTaxCheck.taxCheckCode.value,
+            taxCheckExpiryDate = hecTaxCheck.expiresAfter.format(DATE_FORMATTER),
+            onlineApplication = if (c.source === Digital) 'Y' else 'N'
           )
         case _                            => sys.error("no company data")
       }
