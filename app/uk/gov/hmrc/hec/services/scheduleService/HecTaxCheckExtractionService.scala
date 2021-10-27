@@ -54,17 +54,22 @@ class HecTaxCheckExtractionServiceImpl @Inject() (
   implicit val hc: HeaderCarrier = HeaderCarrier()
   val maxTaxChecksPerFile: Int   = config.get[Int]("hec-tax-heck-file.default-size")
   val hec: String                = "HEC"
+  val sdesDirectory: String      = "sdes"
 
-  val licenceType: FileDetails[LicenceType]                     = FileDetails[LicenceType]("licence-type", s"${hec}_LICENCE_TYPE")
-  val licenceTimeTrading: FileDetails[LicenceTimeTrading]       =
-    FileDetails[LicenceTimeTrading]("licence-time-trading", s"${hec}_LICENCE_TIME_TRADING")
+  val licenceType: FileDetails[LicenceType] =
+    FileDetails[LicenceType](s"$sdesDirectory/licence-type", s"${hec}_LICENCE_TYPE")
+
+  val licenceTimeTrading: FileDetails[LicenceTimeTrading] =
+    FileDetails[LicenceTimeTrading](s"$sdesDirectory/licence-time-trading", s"${hec}_LICENCE_TIME_TRADING")
+
   val licenceValidityPeriod: FileDetails[LicenceValidityPeriod] =
-    FileDetails[LicenceValidityPeriod]("licence-validity-period", s"${hec}_LICENCE_VALIDITY_PERIOD")
+    FileDetails[LicenceValidityPeriod](s"$sdesDirectory/licence-validity-period", s"${hec}_LICENCE_VALIDITY_PERIOD")
 
   val correctiveAction: FileDetails[CorrectiveAction] =
-    FileDetails[CorrectiveAction]("corrective-action", s"${hec}_CORRECTIVE_ACTION")
+    FileDetails[CorrectiveAction](s"$sdesDirectory/corrective-action", s"${hec}_CORRECTIVE_ACTION")
 
-  val hecData: FileDetails[List[HECTaxCheck]] = FileDetails[List[HECTaxCheck]]("tax-checks", s"$hec")
+  val hecData: FileDetails[List[HECTaxCheck]] =
+    FileDetails[List[HECTaxCheck]](s"$sdesDirectory/tax-checks", hec)
 
   override def lockAndProcessHecData(): Future[Option[Either[models.Error, Unit]]] =
     mongoLockService.withLock(processHecData)
