@@ -23,22 +23,25 @@ import play.api.inject.guice.GuiceableModule
 import play.api.libs.json.Json
 import play.api.test.FakeRequest
 import play.api.test.Helpers._
+import uk.gov.hmrc.auth.core.AuthConnector
 import uk.gov.hmrc.hec.models._
-import uk.gov.hmrc.hec.models.ids.{CRN, CTUTR}
+import uk.gov.hmrc.hec.models.ids.{CRN, CTUTR, GGCredId}
 import uk.gov.hmrc.hec.services.DESService
 import uk.gov.hmrc.hec.services.DESService.{BackendError, DESError, DataNotFoundError, InvalidCRNError}
 import uk.gov.hmrc.http.HeaderCarrier
 
 import scala.concurrent.ExecutionContext.Implicits.global
 
-class DESControllerSpec extends ControllerSpec {
+class DESControllerSpec extends ControllerSpec with AuthSupport {
 
   private val mockDESService = mock[DESService]
 
   override val overrideBindings =
     List[GuiceableModule](
+      bind[AuthConnector].toInstance(mockAuthConnector),
       bind[DESService].toInstance(mockDESService)
     )
+  val ggCredId                  = GGCredId("ggCredId")
 
   private val controller = instanceOf[DESController]
 
@@ -54,19 +57,20 @@ class DESControllerSpec extends ControllerSpec {
 
       val validCrn = "AB123456"
 
+      val request = FakeRequest()
+
       "return a 400 (bad request)" when {
 
         "input CRN is invalid" in {
-          val request = FakeRequest()
-          val result  = controller.getCtutr("invalid-crn")(request)
+          mockAuthWithGGRetrieval(ggCredId.value)
+          val result = controller.getCtutr("invalid-crn")(request)
           status(result)          shouldBe BAD_REQUEST
           contentAsString(result) shouldBe "Invalid CRN"
         }
 
         "DES API says CRN is invalid" in {
+          mockAuthWithGGRetrieval(ggCredId.value)
           mockGetCtutr(CRN(validCrn))(Left(InvalidCRNError("some error")))
-
-          val request = FakeRequest()
 
           val result = controller.getCtutr(validCrn)(request)
           status(result)          shouldBe BAD_REQUEST
@@ -77,6 +81,7 @@ class DESControllerSpec extends ControllerSpec {
       "return an 500 (internal server error)" when {
 
         "there is an error fetching the CTUTR" in {
+          mockAuthWithGGRetrieval(ggCredId.value)
           mockGetCtutr(CRN(validCrn))(Left(BackendError(Error(new Exception("some error")))))
 
           val request = FakeRequest()
@@ -90,6 +95,7 @@ class DESControllerSpec extends ControllerSpec {
       "return an 404 (not found)" when {
 
         "CTUTR is not found" in {
+          mockAuthWithGGRetrieval(ggCredId.value)
           mockGetCtutr(CRN(validCrn))(Left(DataNotFoundError("some error")))
 
           val request = FakeRequest()
@@ -104,6 +110,7 @@ class DESControllerSpec extends ControllerSpec {
 
         "inputs are all valid and service returns success response" in {
           val crn = CRN(validCrn)
+          mockAuthWithGGRetrieval(ggCredId.value)
           mockGetCtutr(crn)(Right(CTUTR("some-utr")))
 
           val request = FakeRequest()
@@ -111,6 +118,14 @@ class DESControllerSpec extends ControllerSpec {
           status(result)        shouldBe OK
           contentAsJson(result) shouldBe Json.obj("ctutr" -> "some-utr")
         }
+      }
+
+      "return 403(forbidden) if not authenticated" in {
+        mockAuthWithForbidden()
+        val request = FakeRequest()
+        val result  = controller.getCtutr(validCrn)(request)
+        status(result) shouldBe FORBIDDEN
+
       }
 
     }
