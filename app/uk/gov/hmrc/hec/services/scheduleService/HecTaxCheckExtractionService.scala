@@ -102,12 +102,11 @@ class HecTaxCheckExtractionServiceImpl @Inject() (
                               true
                             )
         hecTaxCheck      <- taxCheckService.getAllTaxCheckCodesByExtractedStatus(false)
-        _                <- createHecFiles(
+        _                <- createHecFile(
                               HECTaxCheckFileBodyList(hecTaxCheck),
                               maxTaxChecksPerFile,
                               hecData.partialFileName,
-                              hecData.dirName,
-                              List()
+                              hecData.dirName
                             )
         updatedHecTaxChek = hecTaxCheck.map(_.copy(isExtracted = true))
 
@@ -120,23 +119,6 @@ class HecTaxCheckExtractionServiceImpl @Inject() (
   }
 
   private def toFormattedString(i: Int) = f"$i%04d"
-
-  private def createHecFiles(
-    hecTaxCheckList: HECTaxCheckFileBodyList,
-    count: Int,
-    partialFileName: String,
-    dirname: String,
-    acc: List[EitherT[Future, Error, Unit]]
-  ): EitherT[Future, Error, List[Unit]] =
-    if (hecTaxCheckList.list.size === 0) {
-      (createAndStoreFile(
-        HECTaxCheckFileBodyList(List()),
-        toFormattedString(1),
-        partialFileName,
-        dirname,
-        true
-      ) :: acc).sequence[EitherT[Future, Error, *], Unit]
-    } else createHecFile(hecTaxCheckList, count, partialFileName, dirname)
 
   private def createHecFile(
     hecTaxCheckList: HECTaxCheckFileBodyList,
@@ -156,14 +138,14 @@ class HecTaxCheckExtractionServiceImpl @Inject() (
       val hecList          = hecTaxCheckList.take(count)
       val remainingList    = hecTaxCheckList.drop(count)
       val isLastInSequence = remainingList.size === 0
-      //If list is empty or sequence number exceeds 9999, then halt the process
-      if (hecList.size === 0 || seqNumInt > 9999) {
+      //If list is empty or sequence number exceeds 9999,
+      // but seqNumInt == 1, the create the empty file else halt the process
+      if (seqNumInt > 1 && (hecList.size === 0 || seqNumInt > 9999)) {
         logger.info(
           "Hec tax Check file creation process halted:: Either there are no more records to process or the sequence number exceeds 9999. "
         )
         acc
       } else {
-
         loopHecTaxCheckRecords(
           remainingList,
           count,
