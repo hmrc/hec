@@ -22,8 +22,9 @@ import play.api.inject.bind
 import play.api.inject.guice.GuiceableModule
 import play.api.test.FakeRequest
 import play.api.test.Helpers._
+import uk.gov.hmrc.auth.core.AuthConnector
 import uk.gov.hmrc.hec.models._
-import uk.gov.hmrc.hec.models.ids.{CTUTR, SAUTR}
+import uk.gov.hmrc.hec.models.ids.{CTUTR, GGCredId, SAUTR}
 import uk.gov.hmrc.hec.services.IFService
 import uk.gov.hmrc.hec.services.IFService.{BackendError, DataNotFoundError, IFError}
 import uk.gov.hmrc.http.HeaderCarrier
@@ -32,12 +33,13 @@ import java.time.LocalDate
 import java.util.UUID
 import scala.concurrent.ExecutionContext.Implicits.global
 
-class IFControllerSpec extends ControllerSpec {
+class IFControllerSpec extends ControllerSpec with AuthSupport {
 
   val mockIFService = mock[IFService]
 
   override val overrideBindings =
     List[GuiceableModule](
+      bind[AuthConnector].toInstance(mockAuthConnector),
       bind[IFService].toInstance(mockIFService)
     )
 
@@ -56,6 +58,7 @@ class IFControllerSpec extends ControllerSpec {
       .returning(EitherT.fromEither(result))
 
   "IFController" when {
+    val ggCredId = GGCredId("ggCredId")
 
     "handling requests to fetch SA status" must {
 
@@ -65,6 +68,7 @@ class IFControllerSpec extends ControllerSpec {
 
         def testBadRequest(utr: String, taxYear: String, errorStr: String) = {
           val request = FakeRequest()
+          mockAuthWithGGRetrieval(ggCredId.value)
           val result  = controller.getSAStatus(utr, taxYear)(request)
           status(result)          shouldBe BAD_REQUEST
           contentAsString(result) shouldBe errorStr
@@ -95,6 +99,7 @@ class IFControllerSpec extends ControllerSpec {
 
         "there is an error fetching the SA status" in {
           val taxYear = "2020"
+          mockAuthWithGGRetrieval(ggCredId.value)
           mockGetSAStatus(SAUTR(validSautr), TaxYear(2020))(Left(BackendError(Error(new Exception("some error")))))
 
           val request = FakeRequest()
@@ -109,6 +114,7 @@ class IFControllerSpec extends ControllerSpec {
 
         "there is an error fetching the SA status" in {
           val taxYear = "2020"
+          mockAuthWithGGRetrieval(ggCredId.value)
           mockGetSAStatus(SAUTR(validSautr), TaxYear(2020))(Left(DataNotFoundError("some error")))
 
           val request = FakeRequest()
@@ -130,6 +136,7 @@ class IFControllerSpec extends ControllerSpec {
             taxYear = taxYear,
             status = SAStatus.ReturnFound
           )
+          mockAuthWithGGRetrieval(ggCredId.value)
           mockGetSAStatus(utr, taxYear)(Right(response))
 
           val request = FakeRequest()
@@ -151,6 +158,7 @@ class IFControllerSpec extends ControllerSpec {
 
         def testBadRequest(utr: String, startDate: String, endDate: String, errorStr: String) = {
           val request = FakeRequest()
+          mockAuthWithGGRetrieval(ggCredId.value)
           val result  = controller.getCTStatus(utr, startDate, endDate)(request)
           status(result)          shouldBe BAD_REQUEST
           contentAsString(result) shouldBe errorStr
@@ -172,6 +180,7 @@ class IFControllerSpec extends ControllerSpec {
       "return an 500 (internal server error)" when {
 
         "there is an error fetching the CT status" in {
+          mockAuthWithGGRetrieval(ggCredId.value)
           mockGetCTStatus(CTUTR(validCtutr), startDate, endDate)(Left(BackendError(Error(new Exception("some error")))))
           val request = FakeRequest()
 
@@ -184,6 +193,7 @@ class IFControllerSpec extends ControllerSpec {
       "return an 404 (not found)" when {
 
         "CTUTR was not found" in {
+          mockAuthWithGGRetrieval(ggCredId.value)
           mockGetCTStatus(CTUTR(validCtutr), startDate, endDate)(Left(DataNotFoundError("some error")))
           val request = FakeRequest()
 
@@ -203,6 +213,7 @@ class IFControllerSpec extends ControllerSpec {
             endDate = endDate,
             latestAccountingPeriod = None
           )
+          mockAuthWithGGRetrieval(ggCredId.value)
           mockGetCTStatus(utr, startDate, endDate)(Right(response))
 
           val request = FakeRequest()

@@ -19,13 +19,13 @@ package uk.gov.hmrc.hec.controllers
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 import java.util.UUID
-
 import cats.data.Validated._
 import cats.data.{NonEmptyList, Validated, ValidatedNel}
 import cats.implicits._
 import com.google.inject.{Inject, Singleton}
 import play.api.libs.json.Json
 import play.api.mvc.{Action, AnyContent, ControllerComponents}
+import uk.gov.hmrc.hec.controllers.actions.AuthenticateActions
 import uk.gov.hmrc.hec.models.TaxYear
 import uk.gov.hmrc.hec.models.ids.{CTUTR, SAUTR}
 import uk.gov.hmrc.hec.services.IFService
@@ -39,6 +39,7 @@ import scala.concurrent.{ExecutionContext, Future}
 @Singleton
 class IFController @Inject() (
   IFService: IFService,
+  authenticate: AuthenticateActions,
   cc: ControllerComponents
 )(implicit ec: ExecutionContext)
     extends BackendController(cc)
@@ -62,7 +63,7 @@ class IFController @Inject() (
     * @param taxYear Start tax year
     * @return Self-assessment status with UTR and tax year
     */
-  def getSAStatus(utr: String, taxYear: String): Action[AnyContent] = Action.async { implicit request =>
+  def getSAStatus(utr: String, taxYear: String): Action[AnyContent] = authenticate.async { implicit request =>
     val correlationId: UUID = UUID.randomUUID()
     logger.info(messageWithCorrelationId("Getting SA status", correlationId))
 
@@ -95,7 +96,7 @@ class IFController @Inject() (
     utr: String,
     startDate: String,
     endDate: String
-  ): Action[AnyContent] = Action.async { implicit request =>
+  ): Action[AnyContent] = authenticate.async { implicit request =>
     val correlationId: UUID = UUID.randomUUID()
     logger.info(messageWithCorrelationId("Getting CT status", correlationId))
 

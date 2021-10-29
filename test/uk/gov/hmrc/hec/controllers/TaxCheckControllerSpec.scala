@@ -25,10 +25,11 @@ import play.api.mvc.Result
 import play.api.test.FakeRequest
 import play.api.test.Helpers._
 import uk.gov.hmrc.auth.core.AuthConnector
+import uk.gov.hmrc.hec.controllers.actions.AuthenticatedRequest
 import uk.gov.hmrc.hec.models.ApplicantDetails.{CompanyApplicantDetails, IndividualApplicantDetails}
 import uk.gov.hmrc.hec.models.HECTaxCheckData.{CompanyHECTaxCheckData, IndividualHECTaxCheckData}
 import uk.gov.hmrc.hec.models.TaxDetails.{CompanyTaxDetails, IndividualTaxDetails}
-import uk.gov.hmrc.hec.models.ids.{CRN, CTUTR, GGCredId, NINO, SAUTR}
+import uk.gov.hmrc.hec.models.ids._
 import uk.gov.hmrc.hec.models.licence.{LicenceDetails, LicenceTimeTrading, LicenceType, LicenceValidityPeriod}
 import uk.gov.hmrc.hec.models.{CTAccountingPeriod, CTStatus, CTStatusResponse, CompanyHouseName, DateOfBirth, Error, HECTaxCheck, HECTaxCheckCode, HECTaxCheckData, HECTaxCheckMatchRequest, HECTaxCheckMatchResult, HECTaxCheckMatchStatus, HECTaxCheckSource, Name, TaxCheckListItem, TaxSituation, YesNoAnswer}
 import uk.gov.hmrc.hec.services.TaxCheckService
@@ -52,6 +53,7 @@ class TaxCheckControllerSpec extends ControllerSpec with AuthSupport {
   val taxCheckStartDateTime = ZonedDateTime.of(2021, 10, 9, 9, 12, 34, 0, ZoneId.of("Europe/London"))
 
   val controller = instanceOf[TaxCheckController]
+  val ggCredId   = GGCredId("ggCredId")
 
   def mockSaveTaxCheck(taxCheckData: HECTaxCheckData)(result: Either[Error, HECTaxCheck]) =
     (mockTaxCheckService
@@ -76,7 +78,11 @@ class TaxCheckControllerSpec extends ControllerSpec with AuthSupport {
     "handling requests to save a tax check" must {
 
       def performActionWithJsonBody(requestBody: JsValue): Future[Result] = {
-        val request = FakeRequest().withBody(requestBody).withHeaders(CONTENT_TYPE -> JSON)
+        val request: AuthenticatedRequest[JsValue] =
+          new AuthenticatedRequest(
+            ggCredId.value,
+            FakeRequest().withBody(requestBody).withHeaders(CONTENT_TYPE -> JSON)
+          )
         controller.saveTaxCheck(request)
       }
 
@@ -123,16 +129,21 @@ class TaxCheckControllerSpec extends ControllerSpec with AuthSupport {
       )
 
       "return a 415 (unsupported media type)" when {
+        val requestWithNoBody     = new AuthenticatedRequest("AB123", FakeRequest())
+        val requestWithNoJsonBody =
+          new AuthenticatedRequest("AB123", FakeRequest().withBody("hi").withHeaders(CONTENT_TYPE -> TEXT))
 
         "there is no body in the request" in {
-          val result: Future[Result] = controller.saveTaxCheck(FakeRequest()).run()
+
+          val result: Future[Result] = controller.saveTaxCheck(requestWithNoBody).run()
           status(result) shouldBe UNSUPPORTED_MEDIA_TYPE
 
         }
 
         "there is no json body in the request" in {
+
           val result: Future[Result] =
-            controller.saveTaxCheck(FakeRequest().withBody("hi").withHeaders(CONTENT_TYPE -> TEXT)).run()
+            controller.saveTaxCheck(requestWithNoJsonBody).run()
           status(result) shouldBe UNSUPPORTED_MEDIA_TYPE
 
         }
@@ -142,6 +153,7 @@ class TaxCheckControllerSpec extends ControllerSpec with AuthSupport {
       "return a 400 (bad request)" when {
 
         "the JSON in the request cannot be parsed" in {
+          mockAuthWithGGRetrieval(ggCredId.value)
           status(performActionWithJsonBody(JsString("hi"))) shouldBe BAD_REQUEST
 
         }
@@ -151,6 +163,7 @@ class TaxCheckControllerSpec extends ControllerSpec with AuthSupport {
       "return an 500 (internal server error)" when {
 
         "there is an error saving the tax check" in {
+          mockAuthWithGGRetrieval(ggCredId.value)
           mockSaveTaxCheck(taxCheckDataIndividual)(Left(Error(new Exception("Oh no!"))))
 
           val result = performActionWithJsonBody(Json.toJson(taxCheckDataIndividual))
@@ -168,6 +181,7 @@ class TaxCheckControllerSpec extends ControllerSpec with AuthSupport {
             HECTaxCheck(taxCheckDataIndividual, taxCheckCode, expiresAfterDate, TimeUtils.now(), false, None)
 
           mockSaveTaxCheck(taxCheckDataIndividual)(Right(taxCheck))
+          mockAuthWithGGRetrieval(ggCredId.value)
 
           val result = performActionWithJsonBody(Json.toJson(taxCheckDataIndividual))
           status(result)                              shouldBe CREATED
@@ -181,6 +195,7 @@ class TaxCheckControllerSpec extends ControllerSpec with AuthSupport {
             HECTaxCheck(taxCheckDataCompany, taxCheckCode, expiresAfterDate, TimeUtils.now(), false, None)
 
           mockSaveTaxCheck(taxCheckDataCompany)(Right(taxCheck))
+          mockAuthWithGGRetrieval(ggCredId.value)
 
           val result = performActionWithJsonBody(Json.toJson(taxCheckDataCompany))
           status(result)                              shouldBe CREATED
@@ -193,7 +208,7 @@ class TaxCheckControllerSpec extends ControllerSpec with AuthSupport {
 
     "handling requests to match a tax check" must {
 
-      def performActionWithJsonBody(requestBody: JsValue): Future[Result] = {
+      def performAActionWithJsonBody(requestBody: JsValue): Future[Result] = {
         val request = FakeRequest().withBody(requestBody).withHeaders(CONTENT_TYPE -> JSON)
         controller.matchTaxCheck(request)
       }
@@ -229,7 +244,7 @@ class TaxCheckControllerSpec extends ControllerSpec with AuthSupport {
       "return a 400 (bad request)" when {
 
         "the JSON in the request cannot be parsed" in {
-          status(performActionWithJsonBody(JsString("hi"))) shouldBe BAD_REQUEST
+          status(performAActionWithJsonBody(JsString("hi"))) shouldBe BAD_REQUEST
 
         }
 
@@ -240,7 +255,7 @@ class TaxCheckControllerSpec extends ControllerSpec with AuthSupport {
         "there is an error saving the tax check" in {
           mockMatchTaxCheck(individualMatchRequest)(Left(Error(new Exception("Oh no!"))))
 
-          val result = performActionWithJsonBody(Json.toJson(individualMatchRequest))
+          val result = performAActionWithJsonBody(Json.toJson(individualMatchRequest))
           status(result) shouldBe INTERNAL_SERVER_ERROR
         }
 
@@ -260,7 +275,7 @@ class TaxCheckControllerSpec extends ControllerSpec with AuthSupport {
             withClue(s"For match result '$matchResult': ") {
               mockMatchTaxCheck(companyMatchRequest)(Right(matchResult))
 
-              val result = performActionWithJsonBody(Json.toJson(companyMatchRequest))
+              val result = performAActionWithJsonBody(Json.toJson(companyMatchRequest))
               status(result)                                                  shouldBe OK
               contentAsJson(result).validate[HECTaxCheckMatchResult].asEither shouldBe Right(matchResult)
             }

@@ -39,7 +39,7 @@ class TaxCheckController @Inject() (
     extends BackendController(cc)
     with Logging {
 
-  val saveTaxCheck: Action[JsValue] = Action(parse.json).async { implicit request =>
+  val saveTaxCheck: Action[JsValue] = authenticate(parse.json).async { implicit request =>
     Json.fromJson[HECTaxCheckData](request.body) match {
       case JsSuccess(taxCheckData, _) =>
         taxCheckService

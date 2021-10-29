@@ -21,6 +21,7 @@ import cats.implicits._
 import com.google.inject.{Inject, Singleton}
 import play.api.libs.json.Json
 import play.api.mvc.{Action, AnyContent, ControllerComponents}
+import uk.gov.hmrc.hec.controllers.actions.AuthenticateActions
 import uk.gov.hmrc.hec.models.ids.CRN
 import uk.gov.hmrc.hec.services.DESService
 import uk.gov.hmrc.hec.services.DESService.{BackendError, DESError, DataNotFoundError, InvalidCRNError}
@@ -33,6 +34,7 @@ import scala.concurrent.{ExecutionContext, Future}
 @Singleton
 class DESController @Inject() (
   DESService: DESService,
+  authenticate: AuthenticateActions,
   cc: ControllerComponents
 )(implicit ec: ExecutionContext)
     extends BackendController(cc)
@@ -55,7 +57,7 @@ class DESController @Inject() (
     * @param crn Company number
     * @return CTUTR
     */
-  def getCtutr(crn: String): Action[AnyContent] = Action.async { implicit request =>
+  def getCtutr(crn: String): Action[AnyContent] = authenticate.async { implicit request =>
     val crnValidation = CRN.fromString(crn).toValidNel("Invalid CRN")
 
     crnValidation match {
