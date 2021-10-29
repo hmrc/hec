@@ -145,6 +145,14 @@ class IFControllerSpec extends ControllerSpec with AuthSupport {
         }
       }
 
+      "return a 403(forbidden) if user is not authenticated" in {
+        val taxYearStr = "2020"
+        mockAuthWithForbidden()
+        val request    = FakeRequest()
+        val result     = controller.getSAStatus(validSautr, taxYearStr)(request)
+        status(result) shouldBe FORBIDDEN
+      }
+
     }
 
     "handling requests to fetch CT status" must {
@@ -220,6 +228,14 @@ class IFControllerSpec extends ControllerSpec with AuthSupport {
           val result  = controller.getCTStatus(validCtutr, startDateStr, endDateStr)(request)
           status(result) shouldBe OK
         }
+      }
+
+      "return a 403(forbidden) if user is not authenticated" in {
+
+        mockAuthWithForbidden()
+        val request = FakeRequest()
+        val result  = controller.getCTStatus(validCtutr, startDateStr, endDateStr)(request)
+        status(result) shouldBe FORBIDDEN
       }
 
     }

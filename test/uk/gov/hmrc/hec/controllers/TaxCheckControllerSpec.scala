@@ -172,6 +172,14 @@ class TaxCheckControllerSpec extends ControllerSpec with AuthSupport {
 
       }
 
+      "return 403(forbidden) , if not authenticated" in {
+
+        mockAuthWithForbidden()
+
+        val result = performActionWithJsonBody(Json.toJson(taxCheckDataIndividual))
+        status(result) shouldBe FORBIDDEN
+      }
+
       "return a created (201)" when {
 
         "the tax check has been saved for individual" in {
@@ -331,6 +339,13 @@ class TaxCheckControllerSpec extends ControllerSpec with AuthSupport {
           contentAsJson(result) shouldBe JsArray(items.map(Json.toJson[TaxCheckListItem]))
         }
 
+      }
+
+      "return 403(forbidden) , if not authenticated" in {
+
+        mockAuthWithForbidden()
+        val result = controller.getUnexpiredTaxCheckCodes(FakeRequest())
+        status(result) shouldBe FORBIDDEN
       }
     }
 

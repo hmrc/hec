@@ -44,4 +44,9 @@ trait AuthSupport { this: ControllerSpec =>
       Future.successful(Some(Credentials(ggCredId, ggCredId)))
     )
 
+  def mockAuthWithForbidden(): Unit =
+    mockAuth(AuthProviders(GovernmentGateway), v2.Retrievals.credentials)(
+      Future.successful(None)
+    )
+
 }

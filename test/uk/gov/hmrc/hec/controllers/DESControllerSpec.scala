@@ -120,6 +120,14 @@ class DESControllerSpec extends ControllerSpec with AuthSupport {
         }
       }
 
+      "return 403(forbidden) if not authenticated" in {
+        mockAuthWithForbidden()
+        val request = FakeRequest()
+        val result  = controller.getCtutr(validCrn)(request)
+        status(result) shouldBe FORBIDDEN
+
+      }
+
     }
   }
 
