@@ -102,11 +102,12 @@ class HecTaxCheckExtractionServiceImpl @Inject() (
                               true
                             )
         hecTaxCheck      <- taxCheckService.getAllTaxCheckCodesByExtractedStatus(false)
-        _                <- createHecFile(
+        _                <- createHecFiles(
                               HECTaxCheckFileBodyList(hecTaxCheck),
                               maxTaxChecksPerFile,
                               hecData.partialFileName,
-                              hecData.dirName
+                              hecData.dirName,
+                              List()
                             )
         updatedHecTaxChek = hecTaxCheck.map(_.copy(isExtracted = true))
 
@@ -119,6 +120,23 @@ class HecTaxCheckExtractionServiceImpl @Inject() (
   }
 
   private def toFormattedString(i: Int) = f"$i%04d"
+
+  private def createHecFiles(
+    hecTaxCheckList: HECTaxCheckFileBodyList,
+    count: Int,
+    partialFileName: String,
+    dirname: String,
+    acc: List[EitherT[Future, Error, Unit]]
+  ): EitherT[Future, Error, List[Unit]] =
+    if (hecTaxCheckList.list.size === 0) {
+      (createAndStoreFile(
+        HECTaxCheckFileBodyList(List()),
+        toFormattedString(1),
+        partialFileName,
+        dirname,
+        true
+      ) :: acc).sequence[EitherT[Future, Error, *], Unit]
+    } else createHecFile(hecTaxCheckList, count, partialFileName, dirname)
 
   private def createHecFile(
     hecTaxCheckList: HECTaxCheckFileBodyList,

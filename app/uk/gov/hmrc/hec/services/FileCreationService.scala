@@ -226,7 +226,7 @@ class FileCreationServiceImpl @Inject() (timeProvider: TimeProvider) extends Fil
             taxCheckExpiryDate = hecTaxCheck.expiresAfter.format(DATE_FORMATTER),
             onlineApplication = if (c.source === Digital) 'Y' else 'N'
           )
-        case _                            => sys.error("no company data")
+        case _                            => sys.error("Neither company nor individual data found")
       }
     }
 
