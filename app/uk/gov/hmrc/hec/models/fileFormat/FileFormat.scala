@@ -22,5 +22,6 @@ object FileFormat {
 //convert the whole file content into pipe delimited string with appropriate new line
   def toFileContent(fileFormat: FileFormat): String =
     s"${FileHeader.toRowString(fileFormat.header)}\n${fileFormat.body.map(_.toRowString).mkString("\n")}\n${FileTrailer
-      .toRowString(fileFormat.trailer)}".replaceAll("(?m)^[ \t]*\r?\n", "")
+      .toRowString(fileFormat.trailer)}"
+      .replaceAll("(?m)^[ \t]*\r?\n", "") // regex to remove the empty lines from the file generated
 }

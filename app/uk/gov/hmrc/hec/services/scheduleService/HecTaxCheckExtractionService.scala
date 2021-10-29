@@ -138,9 +138,8 @@ class HecTaxCheckExtractionServiceImpl @Inject() (
       val hecList          = hecTaxCheckList.take(count)
       val remainingList    = hecTaxCheckList.drop(count)
       val isLastInSequence = remainingList.size === 0
-      //If list is empty or sequence number exceeds 9999,
-      // but seqNumInt == 1, the create the empty file else halt the process
-      if (seqNumInt > 1 && (hecList.size === 0 || seqNumInt > 9999)) {
+      //If list is empty and seq number is not 1 or seq num > 9999, halt the process
+      if ((hecList.size === 0 && seqNumInt =!= 1) || seqNumInt > 9999) {
         logger.info(
           "Hec tax Check file creation process halted:: Either there are no more records to process or the sequence number exceeds 9999. "
         )
