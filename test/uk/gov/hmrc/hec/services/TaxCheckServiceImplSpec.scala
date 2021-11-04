@@ -17,6 +17,7 @@
 package uk.gov.hmrc.hec.services
 
 import cats.data.EitherT
+import cats.implicits.catsSyntaxOptionId
 import cats.instances.future._
 import com.typesafe.config.ConfigFactory
 import org.scalamock.scalatest.MockFactory
@@ -30,10 +31,11 @@ import uk.gov.hmrc.hec.models.ids._
 import uk.gov.hmrc.hec.models.licence.{LicenceDetails, LicenceTimeTrading, LicenceType, LicenceValidityPeriod}
 import uk.gov.hmrc.hec.models.{CTAccountingPeriod, CTStatus, CTStatusResponse, CompanyHouseName, DateOfBirth, Error, HECTaxCheck, HECTaxCheckCode, HECTaxCheckData, HECTaxCheckMatchRequest, HECTaxCheckMatchResult, HECTaxCheckMatchStatus, HECTaxCheckSource, Name, TaxCheckListItem, TaxSituation, YesNoAnswer}
 import uk.gov.hmrc.hec.repos.HECTaxCheckStore
-import uk.gov.hmrc.hec.util.{TimeProvider, TimeUtils}
+import uk.gov.hmrc.hec.util.{TimeProvider, TimeUtils, UUIDGenerator}
 import uk.gov.hmrc.http.HeaderCarrier
 
 import java.time.{LocalDate, ZoneId, ZonedDateTime}
+import java.util.UUID
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.duration._
 
@@ -43,12 +45,19 @@ class TaxCheckServiceImplSpec extends AnyWordSpec with Matchers with MockFactory
   val mockTaxCheckStore                = mock[HECTaxCheckStore]
   val expiresAfter                     = 5.days
   val mockTimeProvider                 = mock[TimeProvider]
+  val mockUUIDGenerator                = mock[UUIDGenerator]
 
   val config = ConfigFactory.parseString(s"""{
       |hec-tax-check.expires-after = ${expiresAfter.toDays} days
       |}""".stripMargin)
 
-  val service = new TaxCheckServiceImpl(mockTaxCheckCodeGeneratorService, mockTimeProvider, mockTaxCheckStore, config)
+  val service = new TaxCheckServiceImpl(
+    mockTaxCheckCodeGeneratorService,
+    mockTimeProvider,
+    mockUUIDGenerator,
+    mockTaxCheckStore,
+    config
+  )
 
   def mockGenerateTaxCheckCode(taxCheckCode: HECTaxCheckCode) =
     (mockTaxCheckCodeGeneratorService.generateTaxCheckCode _).expects().returning(taxCheckCode)
@@ -81,11 +90,13 @@ class TaxCheckServiceImplSpec extends AnyWordSpec with Matchers with MockFactory
 
   def mockTimeProviderToday(d: LocalDate) = (mockTimeProvider.currentDate _).expects().returning(d)
 
+  def mockGenerateUUID(uuid: UUID) = (mockUUIDGenerator.generateUUID _).expects().returning(uuid)
+
   implicit val hc: HeaderCarrier = HeaderCarrier()
   val taxCheckStartDateTime      = ZonedDateTime.of(2021, 10, 9, 9, 12, 34, 0, ZoneId.of("Europe/London"))
   private val now                = TimeUtils.now()
   private val today              = TimeUtils.today()
-
+  val fileCorrelationId          = UUID.fromString("20354d7a-e4fe-47af-8ff6-187bca92f3f9")
   "TaxCheckServiceImpl" when {
 
     "handling requests to save a tax check" must {
@@ -110,7 +121,8 @@ class TaxCheckServiceImplSpec extends AnyWordSpec with Matchers with MockFactory
 
       val expectedExpiryDate = TimeUtils.today().plusDays(expiresAfter.toDays)
       val taxCheckCode       = HECTaxCheckCode("code")
-      val taxCheck           = HECTaxCheck(taxCheckData, taxCheckCode, expectedExpiryDate, now, false, None)
+      val taxCheck           =
+        HECTaxCheck(taxCheckData, taxCheckCode, expectedExpiryDate, now, false, None, fileCorrelationId.some)
 
       "return an error" when {
 
@@ -119,6 +131,7 @@ class TaxCheckServiceImplSpec extends AnyWordSpec with Matchers with MockFactory
             mockGenerateTaxCheckCode(taxCheckCode)
             mockTimeProviderToday(today)
             mockTimeProviderNow(now)
+            mockGenerateUUID(fileCorrelationId)
             mockStoreTaxCheck(taxCheck)(Left(Error("")))
           }
 
@@ -135,6 +148,7 @@ class TaxCheckServiceImplSpec extends AnyWordSpec with Matchers with MockFactory
             mockGenerateTaxCheckCode(taxCheckCode)
             mockTimeProviderToday(today)
             mockTimeProviderNow(now)
+            mockGenerateUUID(fileCorrelationId)
             mockStoreTaxCheck(taxCheck)(Right(()))
           }
 

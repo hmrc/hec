@@ -21,9 +21,10 @@ import uk.gov.hmrc.hec.models.ids.{CRN, GGCredId}
 import uk.gov.hmrc.hec.models.licence.LicenceType
 import uk.gov.hmrc.hec.models.{DateOfBirth, HECTaxCheckCode, HECTaxCheckSource}
 import uk.gov.hmrc.hec.models.EitherUtils.eitherFormat
-
+import cats.implicits.catsSyntaxOptionId
 import java.time.format.DateTimeFormatter
 import java.time.{LocalDate, ZonedDateTime}
+import java.util.UUID
 
 final case class SaveTaxCheckRequest(
   taxCheckCode: HECTaxCheckCode,
@@ -34,7 +35,8 @@ final case class SaveTaxCheckRequest(
   createDate: ZonedDateTime,
   taxCheckStartDateTime: ZonedDateTime,
   isExtracted: Boolean,
-  source: HECTaxCheckSource
+  source: HECTaxCheckSource,
+  fileCorrelationId: Option[UUID] = UUID.randomUUID().some
 )
 
 object SaveTaxCheckRequest {

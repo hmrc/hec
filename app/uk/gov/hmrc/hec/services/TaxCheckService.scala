@@ -26,7 +26,7 @@ import uk.gov.hmrc.hec.models.HECTaxCheckData.{CompanyHECTaxCheckData, Individua
 import uk.gov.hmrc.hec.models.ids.GGCredId
 import uk.gov.hmrc.hec.models.{Error, HECTaxCheck, HECTaxCheckData, HECTaxCheckMatchRequest, HECTaxCheckMatchResult, HECTaxCheckMatchStatus, TaxCheckListItem}
 import uk.gov.hmrc.hec.repos.HECTaxCheckStore
-import uk.gov.hmrc.hec.util.TimeProvider
+import uk.gov.hmrc.hec.util.{TimeProvider, UUIDGenerator}
 import uk.gov.hmrc.http.HeaderCarrier
 
 import scala.concurrent.duration.FiniteDuration
@@ -59,6 +59,7 @@ trait TaxCheckService {
 class TaxCheckServiceImpl @Inject() (
   taxCheckCodeGeneratorService: TaxCheckCodeGeneratorService,
   timeProvider: TimeProvider,
+  uuidGenerator: UUIDGenerator,
   taxCheckStore: HECTaxCheckStore,
   config: Config
 )(implicit ec: ExecutionContext)
@@ -73,7 +74,8 @@ class TaxCheckServiceImpl @Inject() (
     val taxCheckCode = taxCheckCodeGeneratorService.generateTaxCheckCode()
     val expiryDate   = timeProvider.currentDate.plusDays(taxCheckCodeExpiresAfterDays)
     val createDate   = timeProvider.currentDateTime
-    val taxCheck     = HECTaxCheck(taxCheckData, taxCheckCode, expiryDate, createDate, false, None)
+    val taxCheck     =
+      HECTaxCheck(taxCheckData, taxCheckCode, expiryDate, createDate, false, None, uuidGenerator.generateUUID.some)
 
     taxCheckStore.store(taxCheck).map(_ => taxCheck)
   }

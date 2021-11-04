@@ -14,28 +14,20 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.hec.models
+package uk.gov.hmrc.hec.util
 
-import cats.implicits.catsSyntaxOptionId
-import play.api.libs.json.{Json, OFormat}
+import com.google.inject.{ImplementedBy, Inject}
 
-import java.time.{LocalDate, ZonedDateTime}
 import java.util.UUID
+import javax.inject.Singleton
 
-final case class HECTaxCheck(
-  taxCheckData: HECTaxCheckData,
-  taxCheckCode: HECTaxCheckCode,
-  expiresAfter: LocalDate,
-  createDate: ZonedDateTime,
-  isExtracted: Boolean,
-  correctiveAction: Option[CorrectiveAction],
-  fileCorrelationId: Option[UUID] = UUID.randomUUID().some
-)
-
-object HECTaxCheck {
-
-  implicit val format: OFormat[HECTaxCheck] = Json.format
-
+@ImplementedBy(classOf[UUIDGeneratorImpl])
+trait UUIDGenerator {
+  def generateUUID: UUID
 }
 
-final case class HECTaxCheckFileBodyList(list: List[HECTaxCheck])
+@Singleton
+class UUIDGeneratorImpl extends UUIDGenerator {
+  @Inject()
+  override def generateUUID: UUID = UUID.randomUUID()
+}
