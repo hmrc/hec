@@ -94,8 +94,7 @@ class TaxCheckServiceImplSpec extends AnyWordSpec with Matchers with MockFactory
           now,
           taxCheckStartDateTime,
           false,
-          HECTaxCheckSource.Digital,
-          fileCorrelationId.some
+          HECTaxCheckSource.Digital
         )
 
       "return an error" when {
@@ -108,8 +107,7 @@ class TaxCheckServiceImplSpec extends AnyWordSpec with Matchers with MockFactory
             request.expiresAfter,
             now,
             false,
-            None,
-            fileCorrelationId.some
+            None
           )
 
           inSequence {
@@ -132,8 +130,7 @@ class TaxCheckServiceImplSpec extends AnyWordSpec with Matchers with MockFactory
             request.expiresAfter,
             now,
             false,
-            None,
-            fileCorrelationId.some
+            None
           )
 
           inSequence {
@@ -152,8 +149,7 @@ class TaxCheckServiceImplSpec extends AnyWordSpec with Matchers with MockFactory
             request.expiresAfter,
             now,
             false,
-            None,
-            fileCorrelationId.some
+            None
           )
 
           inSequence {

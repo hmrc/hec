@@ -16,7 +16,6 @@
 
 package uk.gov.hmrc.hec.models
 
-import cats.implicits.catsSyntaxOptionId
 import play.api.libs.json.{Json, OFormat}
 
 import java.time.{LocalDate, ZonedDateTime}
@@ -29,7 +28,7 @@ final case class HECTaxCheck(
   createDate: ZonedDateTime,
   isExtracted: Boolean,
   correctiveAction: Option[CorrectiveAction],
-  fileCorrelationId: Option[UUID] = UUID.randomUUID().some
+  fileCorrelationId: Option[UUID] = None
 )
 
 object HECTaxCheck {

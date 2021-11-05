@@ -21,12 +21,13 @@ import cats.implicits._
 import com.google.inject.{ImplementedBy, Inject, Singleton}
 import com.typesafe.config.Config
 import configs.syntax._
+import java.util.UUID
 import uk.gov.hmrc.hec.models
 import uk.gov.hmrc.hec.models.HECTaxCheckData.{CompanyHECTaxCheckData, IndividualHECTaxCheckData}
 import uk.gov.hmrc.hec.models.ids.GGCredId
 import uk.gov.hmrc.hec.models.{Error, HECTaxCheck, HECTaxCheckData, HECTaxCheckMatchRequest, HECTaxCheckMatchResult, HECTaxCheckMatchStatus, TaxCheckListItem}
 import uk.gov.hmrc.hec.repos.HECTaxCheckStore
-import uk.gov.hmrc.hec.util.{TimeProvider, UUIDGenerator}
+import uk.gov.hmrc.hec.util.TimeProvider
 import uk.gov.hmrc.http.HeaderCarrier
 
 import scala.concurrent.duration.FiniteDuration
@@ -35,7 +36,9 @@ import scala.concurrent.{ExecutionContext, Future}
 @ImplementedBy(classOf[TaxCheckServiceImpl])
 trait TaxCheckService {
 
-  def saveTaxCheck(taxCheckData: HECTaxCheckData)(implicit hc: HeaderCarrier): EitherT[Future, Error, HECTaxCheck]
+  def saveTaxCheck(taxCheckData: HECTaxCheckData, fileCorrelationId: Option[UUID] = None)(implicit
+    hc: HeaderCarrier
+  ): EitherT[Future, Error, HECTaxCheck]
 
   def updateAllHecTaxCheck(list: List[HECTaxCheck])(implicit
     hc: HeaderCarrier
@@ -59,7 +62,6 @@ trait TaxCheckService {
 class TaxCheckServiceImpl @Inject() (
   taxCheckCodeGeneratorService: TaxCheckCodeGeneratorService,
   timeProvider: TimeProvider,
-  uuidGenerator: UUIDGenerator,
   taxCheckStore: HECTaxCheckStore,
   config: Config
 )(implicit ec: ExecutionContext)
@@ -69,13 +71,14 @@ class TaxCheckServiceImpl @Inject() (
     config.get[FiniteDuration]("hec-tax-check.expires-after").value.toDays
 
   def saveTaxCheck(
-    taxCheckData: HECTaxCheckData
+    taxCheckData: HECTaxCheckData,
+    fileCorrelationId: Option[UUID] = None
   )(implicit hc: HeaderCarrier): EitherT[Future, Error, HECTaxCheck] = {
     val taxCheckCode = taxCheckCodeGeneratorService.generateTaxCheckCode()
     val expiryDate   = timeProvider.currentDate.plusDays(taxCheckCodeExpiresAfterDays)
     val createDate   = timeProvider.currentDateTime
     val taxCheck     =
-      HECTaxCheck(taxCheckData, taxCheckCode, expiryDate, createDate, false, None, uuidGenerator.generateUUID.some)
+      HECTaxCheck(taxCheckData, taxCheckCode, expiryDate, createDate, false, None, fileCorrelationId)
 
     taxCheckStore.store(taxCheck).map(_ => taxCheck)
   }

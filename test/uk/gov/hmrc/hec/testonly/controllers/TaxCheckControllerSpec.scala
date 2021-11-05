@@ -18,7 +18,6 @@ package uk.gov.hmrc.hec.testonly.controllers
 
 import cats.data.EitherT
 import cats.instances.future._
-import cats.implicits.catsSyntaxOptionId
 import play.api.inject.bind
 import play.api.inject.guice.GuiceableModule
 import play.api.libs.json.{JsString, JsValue, Json}
@@ -37,9 +36,8 @@ import uk.gov.hmrc.hec.testonly.services.TaxCheckService
 import uk.gov.hmrc.hec.util.TimeUtils
 import uk.gov.hmrc.http.HeaderCarrier
 
-import java.time.{LocalDate, ZoneId, ZonedDateTime}
 import java.time.format.DateTimeFormatter
-import java.util.UUID
+import java.time.{LocalDate, ZoneId, ZonedDateTime}
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
@@ -111,16 +109,12 @@ class TaxCheckControllerSpec extends ControllerSpec {
            |  "createDate" : "${r.createDate}",
            |  "taxCheckStartDateTime": "$getStartDateTime",
            |  "isExtracted": false,
-           |  "source" : "${r.source.toString}",
-           |  "fileCorrelationId" : "${r.fileCorrelationId
-          .map(_.toString)
-          .getOrElse("20354d7a-e4fe-47af-8ff6-187bca92f3f9")}"
+           |  "source" : "${r.source.toString}"
            |}
            |""".stripMargin
       }
 
       val validTaxCheckCode = HECTaxCheckCode("ABCABCABC")
-      val fileCorrelationId = UUID.fromString("20354d7a-e4fe-47af-8ff6-187bca92f3f9")
 
       behave like invalidTaxCheckCodeBehaviour { invalidTaxCheckCode =>
         val dateOfBirth = DateOfBirth(TimeUtils.today())
@@ -133,8 +127,7 @@ class TaxCheckControllerSpec extends ControllerSpec {
           TimeUtils.now(),
           taxCheckStartDateTime,
           false,
-          HECTaxCheckSource.Digital,
-          fileCorrelationId.some
+          HECTaxCheckSource.Digital
         )
         val body        = Json.parse(requestJsonString(request))
 
@@ -180,8 +173,7 @@ class TaxCheckControllerSpec extends ControllerSpec {
             createDate = TimeUtils.now(),
             taxCheckStartDateTime = taxCheckStartDateTime,
             isExtracted = false,
-            HECTaxCheckSource.Digital,
-            fileCorrelationId.some
+            HECTaxCheckSource.Digital
           )
           val body        = Json.parse(requestJsonString(request))
 
@@ -207,8 +199,7 @@ class TaxCheckControllerSpec extends ControllerSpec {
             TimeUtils.now(),
             taxCheckStartDateTime,
             false,
-            HECTaxCheckSource.Digital,
-            fileCorrelationId.some
+            HECTaxCheckSource.Digital
           )
           val body        = Json.parse(requestJsonString(request))
 
@@ -229,8 +220,7 @@ class TaxCheckControllerSpec extends ControllerSpec {
             TimeUtils.now(),
             taxCheckStartDateTime,
             false,
-            HECTaxCheckSource.Digital,
-            fileCorrelationId.some
+            HECTaxCheckSource.Digital
           )
           val body    = Json.parse(requestJsonString(request))
 

@@ -62,7 +62,7 @@ class TaxCheckServiceImpl @Inject() (
         saveTaxCheckRequest.createDate,
         false,
         None,
-        saveTaxCheckRequest.fileCorrelationId
+        None
       )
 
     taxCheckStore.store(taxCheck)

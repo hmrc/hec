@@ -31,7 +31,7 @@ import uk.gov.hmrc.hec.models.ids._
 import uk.gov.hmrc.hec.models.licence.{LicenceDetails, LicenceTimeTrading, LicenceType, LicenceValidityPeriod}
 import uk.gov.hmrc.hec.models.{CTAccountingPeriod, CTStatus, CTStatusResponse, CompanyHouseName, DateOfBirth, Error, HECTaxCheck, HECTaxCheckCode, HECTaxCheckData, HECTaxCheckMatchRequest, HECTaxCheckMatchResult, HECTaxCheckMatchStatus, HECTaxCheckSource, Name, TaxCheckListItem, TaxSituation, YesNoAnswer}
 import uk.gov.hmrc.hec.repos.HECTaxCheckStore
-import uk.gov.hmrc.hec.util.{TimeProvider, TimeUtils, UUIDGenerator}
+import uk.gov.hmrc.hec.util.{TimeProvider, TimeUtils}
 import uk.gov.hmrc.http.HeaderCarrier
 
 import java.time.{LocalDate, ZoneId, ZonedDateTime}
@@ -45,7 +45,6 @@ class TaxCheckServiceImplSpec extends AnyWordSpec with Matchers with MockFactory
   val mockTaxCheckStore                = mock[HECTaxCheckStore]
   val expiresAfter                     = 5.days
   val mockTimeProvider                 = mock[TimeProvider]
-  val mockUUIDGenerator                = mock[UUIDGenerator]
 
   val config = ConfigFactory.parseString(s"""{
       |hec-tax-check.expires-after = ${expiresAfter.toDays} days
@@ -54,7 +53,6 @@ class TaxCheckServiceImplSpec extends AnyWordSpec with Matchers with MockFactory
   val service = new TaxCheckServiceImpl(
     mockTaxCheckCodeGeneratorService,
     mockTimeProvider,
-    mockUUIDGenerator,
     mockTaxCheckStore,
     config
   )
@@ -90,8 +88,6 @@ class TaxCheckServiceImplSpec extends AnyWordSpec with Matchers with MockFactory
 
   def mockTimeProviderToday(d: LocalDate) = (mockTimeProvider.currentDate _).expects().returning(d)
 
-  def mockGenerateUUID(uuid: UUID) = (mockUUIDGenerator.generateUUID _).expects().returning(uuid)
-
   implicit val hc: HeaderCarrier = HeaderCarrier()
   val taxCheckStartDateTime      = ZonedDateTime.of(2021, 10, 9, 9, 12, 34, 0, ZoneId.of("Europe/London"))
   private val now                = TimeUtils.now()
@@ -119,10 +115,10 @@ class TaxCheckServiceImplSpec extends AnyWordSpec with Matchers with MockFactory
         HECTaxCheckSource.Digital
       )
 
-      val expectedExpiryDate = TimeUtils.today().plusDays(expiresAfter.toDays)
-      val taxCheckCode       = HECTaxCheckCode("code")
-      val taxCheck           =
-        HECTaxCheck(taxCheckData, taxCheckCode, expectedExpiryDate, now, false, None, fileCorrelationId.some)
+      val expectedExpiryDate                        = TimeUtils.today().plusDays(expiresAfter.toDays)
+      val taxCheckCode                              = HECTaxCheckCode("code")
+      def taxCheck(fileCorrelationId: Option[UUID]) =
+        HECTaxCheck(taxCheckData, taxCheckCode, expectedExpiryDate, now, false, None, fileCorrelationId)
 
       "return an error" when {
 
@@ -131,11 +127,10 @@ class TaxCheckServiceImplSpec extends AnyWordSpec with Matchers with MockFactory
             mockGenerateTaxCheckCode(taxCheckCode)
             mockTimeProviderToday(today)
             mockTimeProviderNow(now)
-            mockGenerateUUID(fileCorrelationId)
-            mockStoreTaxCheck(taxCheck)(Left(Error("")))
+            mockStoreTaxCheck(taxCheck(fileCorrelationId.some))(Left(Error("")))
           }
 
-          val result = service.saveTaxCheck(taxCheckData).value
+          val result = service.saveTaxCheck(taxCheckData, fileCorrelationId.some).value
           await(result) shouldBe a[Left[_, _]]
         }
 
@@ -143,17 +138,28 @@ class TaxCheckServiceImplSpec extends AnyWordSpec with Matchers with MockFactory
 
       "return successfully" when {
 
-        "the tax check has been saved" in {
+        "the tax check has been saved with file Correlation Id" in {
           inSequence {
             mockGenerateTaxCheckCode(taxCheckCode)
             mockTimeProviderToday(today)
             mockTimeProviderNow(now)
-            mockGenerateUUID(fileCorrelationId)
-            mockStoreTaxCheck(taxCheck)(Right(()))
+            mockStoreTaxCheck(taxCheck(fileCorrelationId.some))(Right(()))
+          }
+
+          val result = service.saveTaxCheck(taxCheckData, fileCorrelationId.some).value
+          await(result) shouldBe Right(taxCheck(fileCorrelationId.some))
+        }
+
+        "the tax check has been saved without file Correlation Id" in {
+          inSequence {
+            mockGenerateTaxCheckCode(taxCheckCode)
+            mockTimeProviderToday(today)
+            mockTimeProviderNow(now)
+            mockStoreTaxCheck(taxCheck(None))(Right(()))
           }
 
           val result = service.saveTaxCheck(taxCheckData).value
-          await(result) shouldBe Right(taxCheck)
+          await(result) shouldBe Right(taxCheck(None))
         }
 
       }
