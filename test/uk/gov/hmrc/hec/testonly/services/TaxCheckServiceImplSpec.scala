@@ -107,6 +107,7 @@ class TaxCheckServiceImplSpec extends AnyWordSpec with Matchers with MockFactory
             request.expiresAfter,
             now,
             false,
+            None,
             None
           )
 
@@ -130,6 +131,7 @@ class TaxCheckServiceImplSpec extends AnyWordSpec with Matchers with MockFactory
             request.expiresAfter,
             now,
             false,
+            None,
             None
           )
 
@@ -149,6 +151,7 @@ class TaxCheckServiceImplSpec extends AnyWordSpec with Matchers with MockFactory
             request.expiresAfter,
             now,
             false,
+            None,
             None
           )
 

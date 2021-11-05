@@ -28,7 +28,7 @@ final case class HECTaxCheck(
   createDate: ZonedDateTime,
   isExtracted: Boolean,
   correctiveAction: Option[CorrectiveAction],
-  fileCorrelationId: Option[UUID] = None
+  fileCorrelationId: Option[UUID]
 )
 
 object HECTaxCheck {

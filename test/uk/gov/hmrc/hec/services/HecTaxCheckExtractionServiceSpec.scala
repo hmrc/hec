@@ -152,7 +152,7 @@ class HecTaxCheckExtractionServiceSpec
     val taxCheckCode1 = HECTaxCheckCode("code1")
     val taxCheckCode2 = HECTaxCheckCode("code12")
     val taxCheckCode3 = HECTaxCheckCode("code13")
-    val taxCheck1     = HECTaxCheck(taxCheckData, taxCheckCode1, TimeUtils.today(), TimeUtils.now(), false, None)
+    val taxCheck1     = HECTaxCheck(taxCheckData, taxCheckCode1, TimeUtils.today(), TimeUtils.now(), false, None, None)
     val taxCheck2     = taxCheck1.copy(taxCheckCode = taxCheckCode2)
     val taxCheck3     = taxCheck1.copy(taxCheckCode = taxCheckCode3, isExtracted = false)
 

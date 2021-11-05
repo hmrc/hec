@@ -21,7 +21,6 @@ import cats.implicits._
 import com.google.inject.{ImplementedBy, Inject, Singleton}
 import com.typesafe.config.Config
 import configs.syntax._
-import java.util.UUID
 import uk.gov.hmrc.hec.models
 import uk.gov.hmrc.hec.models.HECTaxCheckData.{CompanyHECTaxCheckData, IndividualHECTaxCheckData}
 import uk.gov.hmrc.hec.models.ids.GGCredId
@@ -36,7 +35,7 @@ import scala.concurrent.{ExecutionContext, Future}
 @ImplementedBy(classOf[TaxCheckServiceImpl])
 trait TaxCheckService {
 
-  def saveTaxCheck(taxCheckData: HECTaxCheckData, fileCorrelationId: Option[UUID] = None)(implicit
+  def saveTaxCheck(taxCheckData: HECTaxCheckData)(implicit
     hc: HeaderCarrier
   ): EitherT[Future, Error, HECTaxCheck]
 
@@ -71,14 +70,13 @@ class TaxCheckServiceImpl @Inject() (
     config.get[FiniteDuration]("hec-tax-check.expires-after").value.toDays
 
   def saveTaxCheck(
-    taxCheckData: HECTaxCheckData,
-    fileCorrelationId: Option[UUID] = None
+    taxCheckData: HECTaxCheckData
   )(implicit hc: HeaderCarrier): EitherT[Future, Error, HECTaxCheck] = {
     val taxCheckCode = taxCheckCodeGeneratorService.generateTaxCheckCode()
     val expiryDate   = timeProvider.currentDate.plusDays(taxCheckCodeExpiresAfterDays)
     val createDate   = timeProvider.currentDateTime
     val taxCheck     =
-      HECTaxCheck(taxCheckData, taxCheckCode, expiryDate, createDate, false, None, fileCorrelationId)
+      HECTaxCheck(taxCheckData, taxCheckCode, expiryDate, createDate, false, None, None)
 
     taxCheckStore.store(taxCheck).map(_ => taxCheck)
   }

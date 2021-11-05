@@ -174,7 +174,8 @@ class FileCreationServiceSpec extends AnyWordSpec with Matchers with MockFactory
                 LocalDate.of(9999, 2, 10),
                 zonedDateTime,
                 false,
-                correctiveAction
+                correctiveAction,
+                None
               )
 
             "as an Employee" in {
@@ -429,7 +430,8 @@ class FileCreationServiceSpec extends AnyWordSpec with Matchers with MockFactory
                 LocalDate.of(9999, 2, 10),
                 zonedDateTime,
                 false,
-                correctiveAction
+                correctiveAction,
+                None
               )
 
             "ct status api response is return Found" in {

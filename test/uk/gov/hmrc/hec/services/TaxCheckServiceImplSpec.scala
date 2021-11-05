@@ -17,7 +17,6 @@
 package uk.gov.hmrc.hec.services
 
 import cats.data.EitherT
-import cats.implicits.catsSyntaxOptionId
 import cats.instances.future._
 import com.typesafe.config.ConfigFactory
 import org.scalamock.scalatest.MockFactory
@@ -92,7 +91,7 @@ class TaxCheckServiceImplSpec extends AnyWordSpec with Matchers with MockFactory
   val taxCheckStartDateTime      = ZonedDateTime.of(2021, 10, 9, 9, 12, 34, 0, ZoneId.of("Europe/London"))
   private val now                = TimeUtils.now()
   private val today              = TimeUtils.today()
-  val fileCorrelationId          = UUID.fromString("20354d7a-e4fe-47af-8ff6-187bca92f3f9")
+
   "TaxCheckServiceImpl" when {
 
     "handling requests to save a tax check" must {
@@ -127,10 +126,10 @@ class TaxCheckServiceImplSpec extends AnyWordSpec with Matchers with MockFactory
             mockGenerateTaxCheckCode(taxCheckCode)
             mockTimeProviderToday(today)
             mockTimeProviderNow(now)
-            mockStoreTaxCheck(taxCheck(fileCorrelationId.some))(Left(Error("")))
+            mockStoreTaxCheck(taxCheck(None))(Left(Error("")))
           }
 
-          val result = service.saveTaxCheck(taxCheckData, fileCorrelationId.some).value
+          val result = service.saveTaxCheck(taxCheckData).value
           await(result) shouldBe a[Left[_, _]]
         }
 
@@ -143,11 +142,11 @@ class TaxCheckServiceImplSpec extends AnyWordSpec with Matchers with MockFactory
             mockGenerateTaxCheckCode(taxCheckCode)
             mockTimeProviderToday(today)
             mockTimeProviderNow(now)
-            mockStoreTaxCheck(taxCheck(fileCorrelationId.some))(Right(()))
+            mockStoreTaxCheck(taxCheck(None))(Right(()))
           }
 
-          val result = service.saveTaxCheck(taxCheckData, fileCorrelationId.some).value
-          await(result) shouldBe Right(taxCheck(fileCorrelationId.some))
+          val result = service.saveTaxCheck(taxCheckData).value
+          await(result) shouldBe Right(taxCheck(None))
         }
 
         "the tax check has been saved without file Correlation Id" in {
@@ -205,6 +204,7 @@ class TaxCheckServiceImplSpec extends AnyWordSpec with Matchers with MockFactory
           TimeUtils.today().plusMonths(1L),
           now,
           false,
+          None,
           None
         )
 
@@ -233,6 +233,7 @@ class TaxCheckServiceImplSpec extends AnyWordSpec with Matchers with MockFactory
           TimeUtils.today().plusMonths(1L),
           now,
           false,
+          None,
           None
         )
 
@@ -456,9 +457,9 @@ class TaxCheckServiceImplSpec extends AnyWordSpec with Matchers with MockFactory
         val code2 = HECTaxCheckCode("code2")
         val code3 = HECTaxCheckCode("code3")
 
-        val taxCheckToday     = HECTaxCheck(taxCheckData, code1, today, now, false, None)
-        val taxCheckYesterday = HECTaxCheck(taxCheckData, code2, yesterday, now, false, None)
-        val taxCheckTomorrow  = HECTaxCheck(taxCheckData, code3, tomorrow, now, false, None)
+        val taxCheckToday     = HECTaxCheck(taxCheckData, code1, today, now, false, None, None)
+        val taxCheckYesterday = HECTaxCheck(taxCheckData, code2, yesterday, now, false, None, None)
+        val taxCheckTomorrow  = HECTaxCheck(taxCheckData, code3, tomorrow, now, false, None, None)
 
         val todayItem    = TaxCheckListItem(
           taxCheckToday.taxCheckData.licenceDetails.licenceType,
@@ -522,11 +523,11 @@ class TaxCheckServiceImplSpec extends AnyWordSpec with Matchers with MockFactory
       "only return HEC Tac check code with isExtracted false" in {
 
         val hecTaxCheck1 =
-          HECTaxCheck(taxCheckData, HECTaxCheckCode("ABC 123 ABC"), today.plusDays(1), now, false, None)
+          HECTaxCheck(taxCheckData, HECTaxCheckCode("ABC 123 ABC"), today.plusDays(1), now, false, None, None)
         val hecTaxCheck2 =
-          HECTaxCheck(taxCheckData, HECTaxCheckCode("EBC 123 ABC"), today.plusDays(1), now, false, None)
+          HECTaxCheck(taxCheckData, HECTaxCheckCode("EBC 123 ABC"), today.plusDays(1), now, false, None, None)
         val hecTaxCheck3 =
-          HECTaxCheck(taxCheckData, HECTaxCheckCode("MBC 123 ABC"), today.plusDays(1), now, false, None)
+          HECTaxCheck(taxCheckData, HECTaxCheckCode("MBC 123 ABC"), today.plusDays(1), now, false, None, None)
 
         mockGetAllTaxCheckCodesByStatus(false)(Right(List(hecTaxCheck1, hecTaxCheck2, hecTaxCheck3)))
 
