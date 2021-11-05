@@ -36,8 +36,8 @@ import uk.gov.hmrc.hec.testonly.services.TaxCheckService
 import uk.gov.hmrc.hec.util.TimeUtils
 import uk.gov.hmrc.http.HeaderCarrier
 
-import java.time.{LocalDate, ZoneId, ZonedDateTime}
 import java.time.format.DateTimeFormatter
+import java.time.{LocalDate, ZoneId, ZonedDateTime}
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
@@ -286,7 +286,8 @@ class TaxCheckControllerSpec extends ControllerSpec {
             taxCheckStartDateTime,
             HECTaxCheckSource.Digital
           )
-          val taxCheck     = HECTaxCheck(taxCheckData, validTaxCheckCode, TimeUtils.today(), TimeUtils.now(), false, None)
+          val taxCheck     =
+            HECTaxCheck(taxCheckData, validTaxCheckCode, TimeUtils.today(), TimeUtils.now(), false, None, None)
 
           mockGetTaxCheck(validTaxCheckCode)(Right(Some(taxCheck)))
 

@@ -21,7 +21,6 @@ import uk.gov.hmrc.hec.models.ids.{CRN, GGCredId}
 import uk.gov.hmrc.hec.models.licence.LicenceType
 import uk.gov.hmrc.hec.models.{DateOfBirth, HECTaxCheckCode, HECTaxCheckSource}
 import uk.gov.hmrc.hec.models.EitherUtils.eitherFormat
-
 import java.time.format.DateTimeFormatter
 import java.time.{LocalDate, ZonedDateTime}
 

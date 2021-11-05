@@ -55,7 +55,9 @@ class TaxCheckControllerSpec extends ControllerSpec with AuthSupport {
   val controller = instanceOf[TaxCheckController]
   val ggCredId   = GGCredId("ggCredId")
 
-  def mockSaveTaxCheck(taxCheckData: HECTaxCheckData)(result: Either[Error, HECTaxCheck]) =
+  def mockSaveTaxCheck(taxCheckData: HECTaxCheckData)(
+    result: Either[Error, HECTaxCheck]
+  ) =
     (mockTaxCheckService
       .saveTaxCheck(_: HECTaxCheckData)(_: HeaderCarrier))
       .expects(taxCheckData, *)
@@ -186,7 +188,7 @@ class TaxCheckControllerSpec extends ControllerSpec with AuthSupport {
           val taxCheckCode     = HECTaxCheckCode("code")
           val expiresAfterDate = LocalDate.MIN
           val taxCheck         =
-            HECTaxCheck(taxCheckDataIndividual, taxCheckCode, expiresAfterDate, TimeUtils.now(), false, None)
+            HECTaxCheck(taxCheckDataIndividual, taxCheckCode, expiresAfterDate, TimeUtils.now(), false, None, None)
 
           mockSaveTaxCheck(taxCheckDataIndividual)(Right(taxCheck))
           mockAuthWithGGRetrieval(ggCredId.value)
@@ -200,7 +202,7 @@ class TaxCheckControllerSpec extends ControllerSpec with AuthSupport {
           val taxCheckCode     = HECTaxCheckCode("code")
           val expiresAfterDate = LocalDate.MIN
           val taxCheck         =
-            HECTaxCheck(taxCheckDataCompany, taxCheckCode, expiresAfterDate, TimeUtils.now(), false, None)
+            HECTaxCheck(taxCheckDataCompany, taxCheckCode, expiresAfterDate, TimeUtils.now(), false, None, None)
 
           mockSaveTaxCheck(taxCheckDataCompany)(Right(taxCheck))
           mockAuthWithGGRetrieval(ggCredId.value)

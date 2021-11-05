@@ -17,6 +17,7 @@
 package uk.gov.hmrc.hec.testonly.services
 
 import cats.data.EitherT
+import cats.implicits.catsSyntaxOptionId
 import cats.instances.future._
 import org.scalamock.scalatest.MockFactory
 import org.scalatest.matchers.should.Matchers
@@ -34,6 +35,7 @@ import uk.gov.hmrc.hec.util.{TimeProvider, TimeUtils}
 import uk.gov.hmrc.http.HeaderCarrier
 
 import java.time.{LocalDate, ZoneId, ZonedDateTime}
+import java.util.UUID
 import scala.concurrent.ExecutionContext.Implicits.global
 
 class TaxCheckServiceImplSpec extends AnyWordSpec with Matchers with MockFactory {
@@ -71,6 +73,7 @@ class TaxCheckServiceImplSpec extends AnyWordSpec with Matchers with MockFactory
   val mockTimeProvider = mock[TimeProvider]
 
   def mockTimeProviderToday(d: LocalDate) = (mockTimeProvider.currentDate _).expects().returning(d)
+  val fileCorrelationId                   = UUID.fromString("20354d7a-e4fe-47af-8ff6-187bca92f3f9")
 
   implicit val hc: HeaderCarrier = HeaderCarrier()
 
@@ -104,6 +107,7 @@ class TaxCheckServiceImplSpec extends AnyWordSpec with Matchers with MockFactory
             request.expiresAfter,
             now,
             false,
+            None,
             None
           )
 
@@ -127,6 +131,7 @@ class TaxCheckServiceImplSpec extends AnyWordSpec with Matchers with MockFactory
             request.expiresAfter,
             now,
             false,
+            None,
             None
           )
 
@@ -146,6 +151,7 @@ class TaxCheckServiceImplSpec extends AnyWordSpec with Matchers with MockFactory
             request.expiresAfter,
             now,
             false,
+            None,
             None
           )
 
@@ -192,7 +198,8 @@ class TaxCheckServiceImplSpec extends AnyWordSpec with Matchers with MockFactory
             taxCheckStartDateTime,
             HECTaxCheckSource.Digital
           )
-          val taxCheck     = HECTaxCheck(taxCheckData, taxCheckCode, TimeUtils.today(), now, false, None)
+          val taxCheck     =
+            HECTaxCheck(taxCheckData, taxCheckCode, TimeUtils.today(), now, false, None, fileCorrelationId.some)
 
           mockGetTaxCheck(taxCheckCode)(Right(Some(taxCheck)))
 

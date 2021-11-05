@@ -35,7 +35,9 @@ import scala.concurrent.{ExecutionContext, Future}
 @ImplementedBy(classOf[TaxCheckServiceImpl])
 trait TaxCheckService {
 
-  def saveTaxCheck(taxCheckData: HECTaxCheckData)(implicit hc: HeaderCarrier): EitherT[Future, Error, HECTaxCheck]
+  def saveTaxCheck(taxCheckData: HECTaxCheckData)(implicit
+    hc: HeaderCarrier
+  ): EitherT[Future, Error, HECTaxCheck]
 
   def updateAllHecTaxCheck(list: List[HECTaxCheck])(implicit
     hc: HeaderCarrier
@@ -73,7 +75,8 @@ class TaxCheckServiceImpl @Inject() (
     val taxCheckCode = taxCheckCodeGeneratorService.generateTaxCheckCode()
     val expiryDate   = timeProvider.currentDate.plusDays(taxCheckCodeExpiresAfterDays)
     val createDate   = timeProvider.currentDateTime
-    val taxCheck     = HECTaxCheck(taxCheckData, taxCheckCode, expiryDate, createDate, false, None)
+    val taxCheck     =
+      HECTaxCheck(taxCheckData, taxCheckCode, expiryDate, createDate, false, None, None)
 
     taxCheckStore.store(taxCheck).map(_ => taxCheck)
   }
