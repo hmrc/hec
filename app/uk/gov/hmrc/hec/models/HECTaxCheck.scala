@@ -17,7 +17,6 @@
 package uk.gov.hmrc.hec.models
 
 import play.api.libs.json.{Json, OFormat}
-import uk.gov.hmrc.hec.controllers.FileType
 
 import java.time.{LocalDate, ZonedDateTime}
 import java.util.UUID
@@ -38,4 +37,4 @@ object HECTaxCheck {
 
 }
 
-final case class HECTaxCheckFileBodyList(list: List[HECTaxCheck]) extends FileType
+final case class HECTaxCheckFileBodyList(list: List[HECTaxCheck])

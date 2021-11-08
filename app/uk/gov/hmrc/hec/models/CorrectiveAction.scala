@@ -21,11 +21,10 @@ import ai.x.play.json.SingletonEncoder.simpleName
 import ai.x.play.json.implicits.formatSingleton
 import enumeratum.{Enum, EnumEntry}
 import play.api.libs.json.Format
-import uk.gov.hmrc.hec.controllers.FileType
 
 sealed trait CorrectiveAction extends EnumEntry with Product with Serializable
 
-object CorrectiveAction extends Enum[CorrectiveAction] with FileType {
+object CorrectiveAction extends Enum[CorrectiveAction] {
   case object Register extends CorrectiveAction
   case object Dormant extends CorrectiveAction
   case object Other extends CorrectiveAction

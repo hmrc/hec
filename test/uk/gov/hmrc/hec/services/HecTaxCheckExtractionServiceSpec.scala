@@ -309,23 +309,6 @@ class HecTaxCheckExtractionServiceSpec
         await(result) shouldBe Some(Left(models.Error("err")))
       }
 
-      "There is an error in file notify" in {
-        inSequence {
-          mockWithLock(lockObtained = true)
-          mockGeneratUUID(uuid)
-          mockCreateFileContent(LicenceType, "0001", "HEC_LICENCE_TYPE", true)(
-            Right(("00|file1.dat|HEC|SSA|20210909|154556|000001|001", "file1.dat"))
-          )
-          mockStoreFile("00|file1.dat|HEC|SSA|20210909|154556|000001|001", "file1.dat", s"$sdesDirectory/licence-type")(
-            Right(createObjectSummary(s"$sdesDirectory/licence-type", "file1.dat"))
-          )
-          mockFileNotify(createFileNotifyRequest("file1.dat", s"$sdesDirectory/licence-type"))(Left(Error("err")))
-        }
-        val result =
-          hecTaxCheckExtractionService.lockAndProcessHecData()
-        await(result) shouldBe Some(Left(models.Error("err")))
-      }
-
       "There is an error in mongo record update" in {
         inSequence {
           mockWithLock(lockObtained = true)
@@ -375,7 +358,34 @@ class HecTaxCheckExtractionServiceSpec
           mockFileNotify(createFileNotifyRequest("file1.dat", s"$sdesDirectory/corrective-action"))(Right(()))
           mockGetAlltaxCheckByExtractedStatus(false)(Right(hecTaxCheckList.take(2)))
           mockGeneratUUID(uuid)
+          mockCreateFileContent(HECTaxCheckFileBodyList(hecTaxCheckList.take(2)), "0001", "HEC", true)(
+            Right(("00|file1.dat|HEC|SSA|20210909|154556|000001|001", "file1.dat"))
+          )
+          mockStoreFile(
+            "00|file1.dat|HEC|SSA|20210909|154556|000001|001",
+            "file1.dat",
+            s"$sdesDirectory/tax-checks"
+          )(
+            Right(createObjectSummary(s"$sdesDirectory/tax-checks", "file1.dat"))
+          )
           mockUpdateAllHecTaxCheck(updatedHecTaxCheckList.take(2))(Left(models.Error("err")))
+        }
+        val result =
+          hecTaxCheckExtractionService.lockAndProcessHecData()
+        await(result) shouldBe Some(Left(models.Error("err")))
+      }
+
+      "There is an error in file notify" in {
+        inSequence {
+          mockWithLock(lockObtained = true)
+          mockGeneratUUID(uuid)
+          mockCreateFileContent(LicenceType, "0001", "HEC_LICENCE_TYPE", true)(
+            Right(("00|file1.dat|HEC|SSA|20210909|154556|000001|001", "file1.dat"))
+          )
+          mockStoreFile("00|file1.dat|HEC|SSA|20210909|154556|000001|001", "file1.dat", s"$sdesDirectory/licence-type")(
+            Right(createObjectSummary(s"$sdesDirectory/licence-type", "file1.dat"))
+          )
+          mockFileNotify(createFileNotifyRequest("file1.dat", s"$sdesDirectory/licence-type"))(Left(Error("err")))
         }
         val result =
           hecTaxCheckExtractionService.lockAndProcessHecData()
@@ -435,13 +445,13 @@ class HecTaxCheckExtractionServiceSpec
           mockFileNotify(createFileNotifyRequest("file1.dat", s"$sdesDirectory/corrective-action"))(Right(()))
           mockGetAlltaxCheckByExtractedStatus(false)(Right(hecTaxCheckList.take(2)))
           mockGeneratUUID(uuid)
-          mockUpdateAllHecTaxCheck(updatedHecTaxCheckList.take(2))(Right(updatedHecTaxCheckList.take(2)))
-          mockCreateFileContent(HECTaxCheckFileBodyList(updatedHecTaxCheckList.take(2)), "0001", "HEC", true)(
+          mockCreateFileContent(HECTaxCheckFileBodyList(hecTaxCheckList.take(2)), "0001", "HEC", true)(
             Right(("00|file1.dat|HEC|SSA|20210909|154556|000001|001", "file1.dat"))
           )
           mockStoreFile("00|file1.dat|HEC|SSA|20210909|154556|000001|001", "file1.dat", s"$sdesDirectory/tax-checks")(
             Right(createObjectSummary(s"$sdesDirectory/tax-checks", "file1.dat"))
           )
+          mockUpdateAllHecTaxCheck(updatedHecTaxCheckList.take(2))(Right(updatedHecTaxCheckList.take(2)))
           mockFileNotify(createFileNotifyRequest("file1.dat", s"$sdesDirectory/tax-checks"))(Right(()))
         }
         val result =

@@ -20,7 +20,6 @@ import cats.data.EitherT
 import cats.implicits._
 import com.google.inject.{ImplementedBy, Inject}
 import play.api.Configuration
-import uk.gov.hmrc.hec.controllers.FileType
 import uk.gov.hmrc.hec.models
 import uk.gov.hmrc.hec.models.licence.{LicenceTimeTrading, LicenceType, LicenceValidityPeriod}
 import uk.gov.hmrc.hec.models.sdes.{FileAudit, FileChecksum, FileMetaData, SDESFileNotifyRequest}
@@ -91,8 +90,8 @@ class HecTaxCheckExtractionServiceImpl @Inject() (
     val seqNum = "0001"
     val result: EitherT[Future, models.Error, Unit] = {
       for {
-        _                <- createAndStoreFile(LicenceType, seqNum, licenceType.partialFileName, licenceType.dirName, true)
-        _                <-
+        _           <- createAndStoreFile(LicenceType, seqNum, licenceType.partialFileName, licenceType.dirName, true)
+        _           <-
           createAndStoreFile(
             LicenceTimeTrading,
             seqNum,
@@ -100,28 +99,27 @@ class HecTaxCheckExtractionServiceImpl @Inject() (
             licenceTimeTrading.dirName,
             true
           )
-        _                <- createAndStoreFile(
-                              LicenceValidityPeriod,
-                              seqNum,
-                              licenceValidityPeriod.partialFileName,
-                              licenceValidityPeriod.dirName,
-                              true
-                            )
-        _                <- createAndStoreFile(
-                              CorrectiveAction,
-                              seqNum,
-                              correctiveAction.partialFileName,
-                              correctiveAction.dirName,
-                              true
-                            )
-        hecTaxCheck      <- taxCheckService.getAllTaxCheckCodesByExtractedStatus(false)
-        _                <- createHecFile(
-                              HECTaxCheckFileBodyList(hecTaxCheck),
-                              maxTaxChecksPerFile,
-                              hecData.partialFileName,
-                              hecData.dirName
-                            )
-        updatedHecTaxChek = hecTaxCheck.map(_.copy(isExtracted = true))
+        _           <- createAndStoreFile(
+                         LicenceValidityPeriod,
+                         seqNum,
+                         licenceValidityPeriod.partialFileName,
+                         licenceValidityPeriod.dirName,
+                         true
+                       )
+        _           <- createAndStoreFile(
+                         CorrectiveAction,
+                         seqNum,
+                         correctiveAction.partialFileName,
+                         correctiveAction.dirName,
+                         true
+                       )
+        hecTaxCheck <- taxCheckService.getAllTaxCheckCodesByExtractedStatus(false)
+        _           <- createHecFile(
+                         HECTaxCheckFileBodyList(hecTaxCheck),
+                         maxTaxChecksPerFile,
+                         hecData.partialFileName,
+                         hecData.dirName
+                       )
 
       } yield ()
     }
@@ -177,10 +175,12 @@ class HecTaxCheckExtractionServiceImpl @Inject() (
 
   }
 
-  //Combining the process of creating and Storing file
+  //Combining the process of creating , Storing file ,
+  // updating hec tax check records with correlation Id
+  // and notify the SDES about the file
   //useful when we have to create n number of files for large dataset.
-  private def createAndStoreFile(
-    inputType: FileType,
+  private def createAndStoreFile[A](
+    inputType: A,
     seqNum: String,
     partialFileName: String,
     dirName: String,
@@ -188,24 +188,24 @@ class HecTaxCheckExtractionServiceImpl @Inject() (
   )(implicit hc: HeaderCarrier): EitherT[Future, Error, Unit] = {
     val uuid = uuidGenerator.generateUUID
     for {
-      newInputType  <- getNewInputTypeDate(inputType, uuid)
       fileContent   <-
         EitherT.fromEither[Future](
           fileCreationService
-            .createFileContent(newInputType, seqNum, partialFileName, isLastInSequence)
+            .createFileContent(inputType, seqNum, partialFileName, isLastInSequence)
         )
       objectSummary <- fileStoreService.storeFile(fileContent._1, fileContent._2, dirName)
+      _             <- updateHecTaxCheckWithCorrelationId(inputType, uuid)
       _             <- sdesService.fileNotify(createNotifyRequest(objectSummary, fileContent._2, uuid))
 
     } yield ()
   }
 
-  private def getNewInputTypeDate(inputType: FileType, uuid: UUID): EitherT[Future, Error, FileType] =
+  private def updateHecTaxCheckWithCorrelationId[A](inputType: A, uuid: UUID): EitherT[Future, Error, Unit] =
     inputType match {
       case HECTaxCheckFileBodyList(list) =>
-        val updatedHecTaxCodeLIst = list.map(_.copy(fileCorrelationId = uuid.some))
-        taxCheckService.updateAllHecTaxCheck(updatedHecTaxCodeLIst).map(HECTaxCheckFileBodyList(_))
-      case rest                          => EitherT.pure[Future, Error](rest)
+        val updatedHecTaxCodeList = list.map(_.copy(fileCorrelationId = uuid.some))
+        taxCheckService.updateAllHecTaxCheck(updatedHecTaxCodeList).map(_ => ())
+      case _                             => EitherT.pure[Future, Error](())
     }
 
   private def createNotifyRequest(
