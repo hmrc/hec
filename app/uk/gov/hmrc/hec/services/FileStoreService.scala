@@ -25,7 +25,7 @@ import uk.gov.hmrc.hec.services.scheduleService.HECTaxCheckExtractionContext
 import uk.gov.hmrc.hec.util.Logging
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.objectstore.client.play.PlayObjectStoreClient
-import uk.gov.hmrc.objectstore.client.{Path, RetentionPeriod}
+import uk.gov.hmrc.objectstore.client.{ObjectSummaryWithMd5, Path, RetentionPeriod}
 
 import javax.inject.Singleton
 import scala.concurrent.Future
@@ -41,7 +41,7 @@ trait FileStoreService {
   )(implicit
     hc: HeaderCarrier,
     hecTaxCheckExtractionContext: HECTaxCheckExtractionContext
-  ): EitherT[Future, models.Error, Unit]
+  ): EitherT[Future, models.Error, ObjectSummaryWithMd5]
 
 }
 
@@ -57,7 +57,7 @@ class FileStoreServiceImpl @Inject() (client: PlayObjectStoreClient, config: Con
   )(implicit
     hc: HeaderCarrier,
     hecTaxCheckExtractionContext: HECTaxCheckExtractionContext
-  ): EitherT[Future, models.Error, Unit] = {
+  ): EitherT[Future, models.Error, ObjectSummaryWithMd5] = {
     val bytes = StringUtils.getBytesUtf8(fileContent)
     import uk.gov.hmrc.objectstore.client.play.Implicits._
     EitherT(
@@ -68,9 +68,9 @@ class FileStoreServiceImpl @Inject() (client: PlayObjectStoreClient, config: Con
           retentionPeriod = getRetentionPeriod,
           owner = "hec"
         )
-        .map { _ =>
+        .map { objSummary =>
           logger.info(s"Storing contents for file :: $fileName")
-          Right(())
+          Right(objSummary)
         }
         .recover { case e: Exception =>
           logger.error(s"Document save failed with error: ${e.getMessage}")

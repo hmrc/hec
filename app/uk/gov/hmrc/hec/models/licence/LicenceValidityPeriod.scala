@@ -21,12 +21,13 @@ import ai.x.play.json.SingletonEncoder.simpleName
 import ai.x.play.json.implicits.formatSingleton
 import enumeratum.{Enum, EnumEntry}
 import play.api.libs.json.Format
+import uk.gov.hmrc.hec.controllers.FileType
 
 import scala.collection.immutable
 
 sealed trait LicenceValidityPeriod extends EnumEntry with Product with Serializable
 
-object LicenceValidityPeriod extends Enum[LicenceValidityPeriod] {
+object LicenceValidityPeriod extends Enum[LicenceValidityPeriod] with FileType {
 
   case object UpToOneYear extends LicenceValidityPeriod
   case object UpToTwoYears extends LicenceValidityPeriod

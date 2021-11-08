@@ -20,14 +20,18 @@ import cats.data.EitherT
 import cats.implicits._
 import com.google.inject.{ImplementedBy, Inject}
 import play.api.Configuration
+import uk.gov.hmrc.hec.controllers.FileType
 import uk.gov.hmrc.hec.models
 import uk.gov.hmrc.hec.models.licence.{LicenceTimeTrading, LicenceType, LicenceValidityPeriod}
+import uk.gov.hmrc.hec.models.sdes.{FileAudit, FileChecksum, FileMetaData, SDESFileNotifyRequest}
 import uk.gov.hmrc.hec.models.{CorrectiveAction, Error, HECTaxCheck, HECTaxCheckFileBodyList}
+import uk.gov.hmrc.hec.services._
 import uk.gov.hmrc.hec.services.scheduleService.HecTaxCheckExtractionServiceImpl._
-import uk.gov.hmrc.hec.services.{FileCreationService, FileStoreService, MongoLockService, TaxCheckService}
-import uk.gov.hmrc.hec.util.Logging
+import uk.gov.hmrc.hec.util.{Logging, UUIDGenerator}
 import uk.gov.hmrc.http.HeaderCarrier
+import uk.gov.hmrc.objectstore.client.ObjectSummaryWithMd5
 
+import java.util.UUID
 import javax.inject.Singleton
 import scala.annotation.tailrec
 import scala.concurrent.Future
@@ -45,6 +49,8 @@ class HecTaxCheckExtractionServiceImpl @Inject() (
   mongoLockService: MongoLockService,
   fileCreationService: FileCreationService,
   fileStoreService: FileStoreService,
+  sdesService: SDESService,
+  uuidGenerator: UUIDGenerator,
   config: Configuration
 )(implicit
   hecTaxCheckExtractionContext: HECTaxCheckExtractionContext
@@ -53,8 +59,15 @@ class HecTaxCheckExtractionServiceImpl @Inject() (
 
   implicit val hc: HeaderCarrier = HeaderCarrier()
   val maxTaxChecksPerFile: Int   = config.get[Int]("hec-tax-heck-file.default-size")
-  val hec: String                = "HEC"
-  val sdesDirectory: String      = "sdes"
+
+  val informationType: String           = config.get[String]("file-notify-config.information-type")
+  val recipientOrSender: String         = config.get[String]("file-notify-config.recipient-or-sender")
+  val baseLocation: String              = config.get[String]("file-notify-config.location")
+  val algorithm: String                 = config.get[String]("file-notify-config.checkSum.algortihm")
+  val objectStoreLocationPrefix: String = s"$baseLocation/object-store/object/hec/"
+
+  val hec: String           = "HEC"
+  val sdesDirectory: String = "sdes"
 
   val licenceType: FileDetails[LicenceType] =
     FileDetails[LicenceType](s"$sdesDirectory/licence-type", s"${hec}_LICENCE_TYPE")
@@ -110,9 +123,6 @@ class HecTaxCheckExtractionServiceImpl @Inject() (
                             )
         updatedHecTaxChek = hecTaxCheck.map(_.copy(isExtracted = true))
 
-        //i think we don't need to bring the whole list of codes which are updated ,
-        // it may cause performance issue, so now it's returning Unit.
-        _ <- taxCheckService.updateAllHecTaxCheck(updatedHecTaxChek)
       } yield ()
     }
     result.value
@@ -169,20 +179,52 @@ class HecTaxCheckExtractionServiceImpl @Inject() (
 
   //Combining the process of creating and Storing file
   //useful when we have to create n number of files for large dataset.
-  private def createAndStoreFile[A](
-    inputType: A,
+  private def createAndStoreFile(
+    inputType: FileType,
     seqNum: String,
     partialFileName: String,
     dirName: String,
     isLastInSequence: Boolean
-  )(implicit hc: HeaderCarrier): EitherT[Future, Error, Unit] = for {
-    fileContent <-
-      EitherT.fromEither[Future](
-        fileCreationService.createFileContent(inputType, seqNum, partialFileName, isLastInSequence)
-      )
-    _           <- fileStoreService.storeFile(fileContent._1, fileContent._2, dirName)
+  )(implicit hc: HeaderCarrier): EitherT[Future, Error, Unit] = {
+    val uuid = uuidGenerator.generateUUID
+    for {
+      newInputType  <- getNewInputTypeDate(inputType, uuid)
+      fileContent   <-
+        EitherT.fromEither[Future](
+          fileCreationService
+            .createFileContent(newInputType, seqNum, partialFileName, isLastInSequence)
+        )
+      objectSummary <- fileStoreService.storeFile(fileContent._1, fileContent._2, dirName)
+      _             <- sdesService.fileNotify(createNotifyRequest(objectSummary, fileContent._2, uuid))
 
-  } yield ()
+    } yield ()
+  }
+
+  private def getNewInputTypeDate(inputType: FileType, uuid: UUID): EitherT[Future, Error, FileType] =
+    inputType match {
+      case HECTaxCheckFileBodyList(list) =>
+        val updatedHecTaxCodeLIst = list.map(_.copy(fileCorrelationId = uuid.some))
+        taxCheckService.updateAllHecTaxCheck(updatedHecTaxCodeLIst).map(HECTaxCheckFileBodyList(_))
+      case rest                          => EitherT.pure[Future, Error](rest)
+    }
+
+  private def createNotifyRequest(
+    objSummary: ObjectSummaryWithMd5,
+    fileName: String,
+    uuid: UUID
+  ): SDESFileNotifyRequest =
+    SDESFileNotifyRequest(
+      informationType,
+      FileMetaData(
+        recipientOrSender,
+        fileName,
+        s"$objectStoreLocationPrefix${objSummary.location.asUri}",
+        FileChecksum(value = objSummary.contentMd5.value),
+        objSummary.contentLength,
+        List()
+      ),
+      FileAudit(uuid.toString)
+    )
 
 }
 

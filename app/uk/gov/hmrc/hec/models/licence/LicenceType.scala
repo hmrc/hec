@@ -22,12 +22,13 @@ import ai.x.play.json.implicits.formatSingleton
 import cats.Eq
 import enumeratum._
 import play.api.libs.json.Format
+import uk.gov.hmrc.hec.controllers.FileType
 
 import scala.collection.immutable
 
 sealed trait LicenceType extends EnumEntry with Product with Serializable
 
-object LicenceType extends Enum[LicenceType] {
+object LicenceType extends Enum[LicenceType] with FileType {
 
   case object DriverOfTaxisAndPrivateHires extends LicenceType
 

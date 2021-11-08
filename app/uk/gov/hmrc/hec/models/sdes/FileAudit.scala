@@ -14,28 +14,12 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.hec.models
+package uk.gov.hmrc.hec.models.sdes
 
 import play.api.libs.json.{Json, OFormat}
-import uk.gov.hmrc.hec.controllers.FileType
 
-import java.time.{LocalDate, ZonedDateTime}
-import java.util.UUID
+final case class FileAudit(correlationID: String)
 
-final case class HECTaxCheck(
-  taxCheckData: HECTaxCheckData,
-  taxCheckCode: HECTaxCheckCode,
-  expiresAfter: LocalDate,
-  createDate: ZonedDateTime,
-  isExtracted: Boolean,
-  correctiveAction: Option[CorrectiveAction],
-  fileCorrelationId: Option[UUID]
-)
-
-object HECTaxCheck {
-
-  implicit val format: OFormat[HECTaxCheck] = Json.format
-
+object FileAudit {
+  implicit val format: OFormat[FileAudit] = Json.format
 }
-
-final case class HECTaxCheckFileBodyList(list: List[HECTaxCheck]) extends FileType
