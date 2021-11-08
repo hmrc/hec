@@ -3,7 +3,7 @@ import sbt._
 
 object AppDependencies {
 
-  val akkaVersion = "2.6.10"
+  val akkaVersion = "2.6.14"
 
   val compile = Seq(
     "uk.gov.hmrc"             %% "bootstrap-backend-play-28"   % "5.14.0",

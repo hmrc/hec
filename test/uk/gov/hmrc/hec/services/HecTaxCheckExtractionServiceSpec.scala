@@ -19,7 +19,7 @@ package uk.gov.hmrc.hec.services
 import akka.actor.ActorSystem
 import akka.testkit.TestKit
 import cats.data.EitherT
-import cats.instances.future._
+import cats.implicits._
 import com.typesafe.config.{ConfigFactory, ConfigValueFactory}
 import org.scalamock.scalatest.MockFactory
 import org.scalatest.BeforeAndAfterAll
@@ -31,14 +31,18 @@ import uk.gov.hmrc.hec.models
 import uk.gov.hmrc.hec.models.ApplicantDetails.CompanyApplicantDetails
 import uk.gov.hmrc.hec.models.HECTaxCheckData.CompanyHECTaxCheckData
 import uk.gov.hmrc.hec.models.TaxDetails.CompanyTaxDetails
+import uk.gov.hmrc.hec.models._
 import uk.gov.hmrc.hec.models.ids.{CRN, CTUTR, GGCredId}
 import uk.gov.hmrc.hec.models.licence.{LicenceDetails, LicenceTimeTrading, LicenceType, LicenceValidityPeriod}
-import uk.gov.hmrc.hec.models._
+import uk.gov.hmrc.hec.models.sdes._
 import uk.gov.hmrc.hec.services.scheduleService.{HECTaxCheckExtractionContext, HecTaxCheckExtractionServiceImpl}
-import uk.gov.hmrc.hec.util.TimeUtils
+import uk.gov.hmrc.hec.util.{TimeUtils, UUIDGenerator}
 import uk.gov.hmrc.http.HeaderCarrier
+import uk.gov.hmrc.objectstore.client.Path.{Directory, File}
+import uk.gov.hmrc.objectstore.client.{Md5Hash, ObjectSummaryWithMd5}
 
-import java.time.{LocalDate, ZoneId, ZonedDateTime}
+import java.time.{Instant, LocalDate, ZoneId, ZonedDateTime}
+import java.util.UUID
 import scala.concurrent.Future
 
 class HecTaxCheckExtractionServiceSpec
@@ -59,6 +63,8 @@ class HecTaxCheckExtractionServiceSpec
   val mockMongoLockService    = mock[MongoLockService]
   val mockFileCreationService = mock[FileCreationService]
   val mockFileStoreService    = mock[FileStoreService]
+  val mockUUIDGenerator       = mock[UUIDGenerator]
+  val mockSDESService         = mock[SDESService]
 
   val taxCheckStartDateTime = ZonedDateTime.of(2021, 10, 9, 9, 12, 34, 0, ZoneId.of("Europe/London"))
 
@@ -99,11 +105,20 @@ class HecTaxCheckExtractionServiceSpec
       .expects(inputType, seqNum, partialFileName, isLastInSequence)
       .returning(result)
 
-  def mockStoreFile(fileContent: String, fileName: String, dirName: String)(result: Either[models.Error, Unit]) =
+  def mockStoreFile(fileContent: String, fileName: String, dirName: String)(
+    result: Either[models.Error, ObjectSummaryWithMd5]
+  ) =
     (mockFileStoreService
       .storeFile(_: String, _: String, _: String)(_: HeaderCarrier, _: HECTaxCheckExtractionContext))
       .expects(fileContent, fileName, dirName, *, *)
       .returning(EitherT.fromEither[Future](result))
+
+  def mockGeneratUUID(result: UUID) = (mockUUIDGenerator.generateUUID _).expects().returning(result)
+
+  def mockFileNotify(fileNotifyRequest: SDESFileNotifyRequest)(result: Either[models.Error, Unit]) = (mockSDESService
+    .fileNotify(_: SDESFileNotifyRequest)(_: HeaderCarrier))
+    .expects(fileNotifyRequest, *)
+    .returning(EitherT.fromEither[Future](result))
 
   implicit val hecTaxCheckExtractionContext: HECTaxCheckExtractionContext = new HECTaxCheckExtractionContext(system)
 
@@ -112,6 +127,13 @@ class HecTaxCheckExtractionServiceSpec
       """
         | mongo-lock.force-lock-release-after = 30 minutes
         | hec-tax-heck-file.default-size = 2
+        | file-notify-config {
+        |    app-name = "sdes-stub"
+        |    information-type = "ssa"
+        |    recipient-or-sender = "hec"
+        |    location = "http://localhost:8464"
+        |    checkSum.algortihm = "md5"
+        |}
         |""".stripMargin
     )
   )
@@ -121,6 +143,8 @@ class HecTaxCheckExtractionServiceSpec
     mockMongoLockService,
     mockFileCreationService,
     mockFileStoreService,
+    mockSDESService,
+    mockUUIDGenerator,
     config
   )
 
@@ -157,10 +181,36 @@ class HecTaxCheckExtractionServiceSpec
     val taxCheck3     = taxCheck1.copy(taxCheckCode = taxCheckCode3, isExtracted = false)
 
     val hecTaxCheckList        = List(taxCheck1, taxCheck2, taxCheck3)
+    val sdesDirectory          = "sdes"
+    val uuid                   = UUID.randomUUID()
     val updatedHecTaxCheckList =
-      List(taxCheck1.copy(isExtracted = true), taxCheck2.copy(isExtracted = true), taxCheck3.copy(isExtracted = true))
+      List(
+        taxCheck1.copy(fileCorrelationId = uuid.some),
+        taxCheck2.copy(fileCorrelationId = uuid.some),
+        taxCheck3.copy(fileCorrelationId = uuid.some)
+      )
 
-    val sdesDirectory = "sdes"
+    def createObjectSummary(dirName: String, fileName: String) =
+      ObjectSummaryWithMd5(
+        File(Directory(dirName), fileName),
+        2000,
+        Md5Hash("hashValue"),
+        Instant.ofEpochSecond(1636375166)
+      )
+
+    def createFileNotifyRequest(fileName: String, location: String) =
+      SDESFileNotifyRequest(
+        "ssa",
+        FileMetaData(
+          "hec",
+          fileName,
+          s"http://localhost:8464/object-store/object/hec/$location/$fileName",
+          FileChecksum(value = "hashValue"),
+          2000,
+          List()
+        ),
+        FileAudit(uuid.toString)
+      )
 
     "return None" when {
 
@@ -181,12 +231,15 @@ class HecTaxCheckExtractionServiceSpec
       "there is error in fetching data from mongo" in {
         inSequence {
           mockWithLock(lockObtained = true)
+          mockGeneratUUID(uuid)
           mockCreateFileContent(LicenceType, "0001", "HEC_LICENCE_TYPE", true)(
             Right(("00|file1.dat|HEC|SSA|20210909|154556|000001|001", "file1.dat"))
           )
           mockStoreFile("00|file1.dat|HEC|SSA|20210909|154556|000001|001", "file1.dat", s"$sdesDirectory/licence-type")(
-            Right(())
+            Right(createObjectSummary(s"$sdesDirectory/licence-type", "file1.dat"))
           )
+          mockFileNotify(createFileNotifyRequest("file1.dat", s"$sdesDirectory/licence-type"))(Right(()))
+          mockGeneratUUID(uuid)
           mockCreateFileContent(LicenceTimeTrading, "0001", "HEC_LICENCE_TIME_TRADING", true)(
             Right(("00|file1.dat|HEC|SSA|20210909|154556|000001|001", "file1.dat"))
           )
@@ -195,8 +248,10 @@ class HecTaxCheckExtractionServiceSpec
             "file1.dat",
             s"$sdesDirectory/licence-time-trading"
           )(
-            Right(())
+            Right(createObjectSummary(s"$sdesDirectory/licence-time-trading", "file1.dat"))
           )
+          mockFileNotify(createFileNotifyRequest("file1.dat", s"$sdesDirectory/licence-time-trading"))(Right(()))
+          mockGeneratUUID(uuid)
           mockCreateFileContent(LicenceValidityPeriod, "0001", "HEC_LICENCE_VALIDITY_PERIOD", true)(
             Right(("00|file1.dat|HEC|SSA|20210909|154556|000001|001", "file1.dat"))
           )
@@ -205,8 +260,10 @@ class HecTaxCheckExtractionServiceSpec
             "file1.dat",
             s"$sdesDirectory/licence-validity-period"
           )(
-            Right(())
+            Right(createObjectSummary(s"$sdesDirectory/licence-validity-period", "file1.dat"))
           )
+          mockFileNotify(createFileNotifyRequest("file1.dat", s"$sdesDirectory/licence-validity-period"))(Right(()))
+          mockGeneratUUID(uuid)
           mockCreateFileContent(CorrectiveAction, "0001", "HEC_CORRECTIVE_ACTION", true)(
             Right(("00|file1.dat|HEC|SSA|20210909|154556|000001|001", "file1.dat"))
           )
@@ -215,8 +272,9 @@ class HecTaxCheckExtractionServiceSpec
             "file1.dat",
             s"$sdesDirectory/corrective-action"
           )(
-            Right(())
+            Right(createObjectSummary(s"$sdesDirectory/corrective-action", "file1.dat"))
           )
+          mockFileNotify(createFileNotifyRequest("file1.dat", s"$sdesDirectory/corrective-action"))(Right(()))
           mockGetAlltaxCheckByExtractedStatus(false)(Left(models.Error("a")))
         }
         val result =
@@ -227,6 +285,7 @@ class HecTaxCheckExtractionServiceSpec
       "There is an error in file creation" in {
         inSequence {
           mockWithLock(lockObtained = true)
+          mockGeneratUUID(uuid)
           mockCreateFileContent(LicenceType, "0001", "HEC_LICENCE_TYPE", true)(Left(models.Error("err")))
         }
         val result =
@@ -237,6 +296,7 @@ class HecTaxCheckExtractionServiceSpec
       "There is an error in file storage" in {
         inSequence {
           mockWithLock(lockObtained = true)
+          mockGeneratUUID(uuid)
           mockCreateFileContent(LicenceType, "0001", "HEC_LICENCE_TYPE", true)(
             Right(("00|file1.dat|HEC|SSA|20210909|154556|000001|001", "file1.dat"))
           )
@@ -249,15 +309,35 @@ class HecTaxCheckExtractionServiceSpec
         await(result) shouldBe Some(Left(models.Error("err")))
       }
 
-      "There is an error in mongo record update" in {
+      "There is an error in file notify" in {
         inSequence {
           mockWithLock(lockObtained = true)
+          mockGeneratUUID(uuid)
           mockCreateFileContent(LicenceType, "0001", "HEC_LICENCE_TYPE", true)(
             Right(("00|file1.dat|HEC|SSA|20210909|154556|000001|001", "file1.dat"))
           )
           mockStoreFile("00|file1.dat|HEC|SSA|20210909|154556|000001|001", "file1.dat", s"$sdesDirectory/licence-type")(
-            Right(())
+            Right(createObjectSummary(s"$sdesDirectory/licence-type", "file1.dat"))
           )
+          mockFileNotify(createFileNotifyRequest("file1.dat", s"$sdesDirectory/licence-type"))(Left(Error("err")))
+        }
+        val result =
+          hecTaxCheckExtractionService.lockAndProcessHecData()
+        await(result) shouldBe Some(Left(models.Error("err")))
+      }
+
+      "There is an error in mongo record update" in {
+        inSequence {
+          mockWithLock(lockObtained = true)
+          mockGeneratUUID(uuid)
+          mockCreateFileContent(LicenceType, "0001", "HEC_LICENCE_TYPE", true)(
+            Right(("00|file1.dat|HEC|SSA|20210909|154556|000001|001", "file1.dat"))
+          )
+          mockStoreFile("00|file1.dat|HEC|SSA|20210909|154556|000001|001", "file1.dat", s"$sdesDirectory/licence-type")(
+            Right(createObjectSummary(s"$sdesDirectory/licence-type", "file1.dat"))
+          )
+          mockFileNotify(createFileNotifyRequest("file1.dat", s"$sdesDirectory/licence-type"))(Right(()))
+          mockGeneratUUID(uuid)
           mockCreateFileContent(LicenceTimeTrading, "0001", "HEC_LICENCE_TIME_TRADING", true)(
             Right(("00|file1.dat|HEC|SSA|20210909|154556|000001|001", "file1.dat"))
           )
@@ -266,8 +346,10 @@ class HecTaxCheckExtractionServiceSpec
             "file1.dat",
             s"$sdesDirectory/licence-time-trading"
           )(
-            Right(())
+            Right(createObjectSummary(s"$sdesDirectory/licence-time-trading", "file1.dat"))
           )
+          mockFileNotify(createFileNotifyRequest("file1.dat", s"$sdesDirectory/licence-time-trading"))(Right(()))
+          mockGeneratUUID(uuid)
           mockCreateFileContent(LicenceValidityPeriod, "0001", "HEC_LICENCE_VALIDITY_PERIOD", true)(
             Right(("00|file1.dat|HEC|SSA|20210909|154556|000001|001", "file1.dat"))
           )
@@ -276,8 +358,10 @@ class HecTaxCheckExtractionServiceSpec
             "file1.dat",
             s"$sdesDirectory/licence-validity-period"
           )(
-            Right(())
+            Right(createObjectSummary(s"$sdesDirectory/licence-validity-period", "file1.dat"))
           )
+          mockFileNotify(createFileNotifyRequest("file1.dat", s"$sdesDirectory/licence-validity-period"))(Right(()))
+          mockGeneratUUID(uuid)
           mockCreateFileContent(CorrectiveAction, "0001", "HEC_CORRECTIVE_ACTION", true)(
             Right(("00|file1.dat|HEC|SSA|20210909|154556|000001|001", "file1.dat"))
           )
@@ -286,15 +370,11 @@ class HecTaxCheckExtractionServiceSpec
             "file1.dat",
             s"$sdesDirectory/corrective-action"
           )(
-            Right(())
+            Right(createObjectSummary(s"$sdesDirectory/corrective-action", "file1.dat"))
           )
+          mockFileNotify(createFileNotifyRequest("file1.dat", s"$sdesDirectory/corrective-action"))(Right(()))
           mockGetAlltaxCheckByExtractedStatus(false)(Right(hecTaxCheckList.take(2)))
-          mockCreateFileContent(HECTaxCheckFileBodyList(hecTaxCheckList.take(2)), "0001", "HEC", true)(
-            Right(("00|file1.dat|HEC|SSA|20210909|154556|000001|001", "file1.dat"))
-          )
-          mockStoreFile("00|file1.dat|HEC|SSA|20210909|154556|000001|001", "file1.dat", s"$sdesDirectory/tax-checks")(
-            Right(())
-          )
+          mockGeneratUUID(uuid)
           mockUpdateAllHecTaxCheck(updatedHecTaxCheckList.take(2))(Left(models.Error("err")))
         }
         val result =
@@ -306,15 +386,18 @@ class HecTaxCheckExtractionServiceSpec
 
     "lock and process the hec data" when {
 
-      "all fetch , update , file creation and storage passed without error, number of records equal to default process size" in {
+      "all fetch , update , file creation , file storage  and file notify passed without error" in {
         inSequence {
           mockWithLock(lockObtained = true)
+          mockGeneratUUID(uuid)
           mockCreateFileContent(LicenceType, "0001", "HEC_LICENCE_TYPE", true)(
             Right(("00|file1.dat|HEC|SSA|20210909|154556|000001|001", "file1.dat"))
           )
           mockStoreFile("00|file1.dat|HEC|SSA|20210909|154556|000001|001", "file1.dat", s"$sdesDirectory/licence-type")(
-            Right(())
+            Right(createObjectSummary(s"$sdesDirectory/licence-type", "file1.dat"))
           )
+          mockFileNotify(createFileNotifyRequest("file1.dat", s"$sdesDirectory/licence-type"))(Right(()))
+          mockGeneratUUID(uuid)
           mockCreateFileContent(LicenceTimeTrading, "0001", "HEC_LICENCE_TIME_TRADING", true)(
             Right(("00|file1.dat|HEC|SSA|20210909|154556|000001|001", "file1.dat"))
           )
@@ -323,8 +406,10 @@ class HecTaxCheckExtractionServiceSpec
             "file1.dat",
             s"$sdesDirectory/licence-time-trading"
           )(
-            Right(())
+            Right(createObjectSummary(s"$sdesDirectory/licence-time-trading", "file1.dat"))
           )
+          mockFileNotify(createFileNotifyRequest("file1.dat", s"$sdesDirectory/licence-time-trading"))(Right(()))
+          mockGeneratUUID(uuid)
           mockCreateFileContent(LicenceValidityPeriod, "0001", "HEC_LICENCE_VALIDITY_PERIOD", true)(
             Right(("00|file1.dat|HEC|SSA|20210909|154556|000001|001", "file1.dat"))
           )
@@ -333,8 +418,10 @@ class HecTaxCheckExtractionServiceSpec
             "file1.dat",
             s"$sdesDirectory/licence-validity-period"
           )(
-            Right(())
+            Right(createObjectSummary(s"$sdesDirectory/licence-validity-period", "file1.dat"))
           )
+          mockFileNotify(createFileNotifyRequest("file1.dat", s"$sdesDirectory/licence-validity-period"))(Right(()))
+          mockGeneratUUID(uuid)
           mockCreateFileContent(CorrectiveAction, "0001", "HEC_CORRECTIVE_ACTION", true)(
             Right(("00|file1.dat|HEC|SSA|20210909|154556|000001|001", "file1.dat"))
           )
@@ -343,16 +430,19 @@ class HecTaxCheckExtractionServiceSpec
             "file1.dat",
             s"$sdesDirectory/corrective-action"
           )(
-            Right(())
+            Right(createObjectSummary(s"$sdesDirectory/corrective-action", "file1.dat"))
           )
+          mockFileNotify(createFileNotifyRequest("file1.dat", s"$sdesDirectory/corrective-action"))(Right(()))
           mockGetAlltaxCheckByExtractedStatus(false)(Right(hecTaxCheckList.take(2)))
-          mockCreateFileContent(HECTaxCheckFileBodyList(hecTaxCheckList.take(2)), "0001", "HEC", true)(
+          mockGeneratUUID(uuid)
+          mockUpdateAllHecTaxCheck(updatedHecTaxCheckList.take(2))(Right(updatedHecTaxCheckList.take(2)))
+          mockCreateFileContent(HECTaxCheckFileBodyList(updatedHecTaxCheckList.take(2)), "0001", "HEC", true)(
             Right(("00|file1.dat|HEC|SSA|20210909|154556|000001|001", "file1.dat"))
           )
           mockStoreFile("00|file1.dat|HEC|SSA|20210909|154556|000001|001", "file1.dat", s"$sdesDirectory/tax-checks")(
-            Right(())
+            Right(createObjectSummary(s"$sdesDirectory/tax-checks", "file1.dat"))
           )
-          mockUpdateAllHecTaxCheck(updatedHecTaxCheckList.take(2))(Right(updatedHecTaxCheckList))
+          mockFileNotify(createFileNotifyRequest("file1.dat", s"$sdesDirectory/tax-checks"))(Right(()))
         }
         val result =
           hecTaxCheckExtractionService.lockAndProcessHecData()
