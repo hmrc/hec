@@ -37,7 +37,7 @@ class SDESConnectorImpl @Inject() (http: HttpClient, servicesConfig: ServicesCon
   ec: ExecutionContext
 ) extends SDESConnector {
   private val baseUrl: String = servicesConfig.baseUrl("sdes")
-  private val appName: String = config.get[String]("file-notify-config.app-name")
+  private val appName: String = config.get[String]("file-notify-config.file-notify-to")
   private val uri: String     = if (appName.isEmpty) "sdes" else appName
   private val sdesUrl         = s"$baseUrl/$uri/notification/fileready"
 

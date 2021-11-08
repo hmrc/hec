@@ -128,7 +128,7 @@ class HecTaxCheckExtractionServiceSpec
         | mongo-lock.force-lock-release-after = 30 minutes
         | hec-tax-heck-file.default-size = 2
         | file-notify-config {
-        |    app-name = "sdes-stub"
+        |    file-notify-to = "sdes-stub"
         |    information-type = "ssa"
         |    recipient-or-sender = "hec"
         |    location = "http://localhost:8464"

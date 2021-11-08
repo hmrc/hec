@@ -37,7 +37,7 @@ class SDESConnectorSpec extends AnyWordSpec with Matchers with MockFactory with 
                                  |    port     = $port
                                  |  }
                                  |  file-notify-config {
-                                 |    app-name = "sdes-stub"
+                                 |    file-notify-to = "sdes-stub"
                                  |}
                                  |
                                  |""".stripMargin)
