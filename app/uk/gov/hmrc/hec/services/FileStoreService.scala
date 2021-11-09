@@ -43,6 +43,11 @@ trait FileStoreService {
     hecTaxCheckExtractionContext: HECTaxCheckExtractionContext
   ): EitherT[Future, models.Error, ObjectSummaryWithMd5]
 
+  def deleteFile(fileName: String, dirName: String)(implicit
+    hc: HeaderCarrier,
+    hecTaxCheckExtractionContext: HECTaxCheckExtractionContext
+  ): EitherT[Future, models.Error, Unit]
+
 }
 
 @Singleton
@@ -82,4 +87,25 @@ class FileStoreServiceImpl @Inject() (client: PlayObjectStoreClient, config: Con
   private def getRetentionPeriod: RetentionPeriod = RetentionPeriod
     .parse(config.get[String]("object-store.default-retention-period"))
     .getOrElse(RetentionPeriod.OneWeek)
+
+  override def deleteFile(fileName: String, dirName: String)(implicit
+    hc: HeaderCarrier,
+    hecTaxCheckExtractionContext: HECTaxCheckExtractionContext
+  ): EitherT[Future, models.Error, Unit] =
+    EitherT(
+      client
+        .deleteObject(
+          path = Path.Directory(dirName).file(fileName),
+          owner = "hec"
+        )
+        .map { _ =>
+          logger.info(s"Deleting :: $fileName from object store")
+          Right(())
+        }
+        .recover { case e: Exception =>
+          logger.error(s"Document delete failed with error: ${e.getMessage}")
+          Left(models.Error(e))
+        }
+    )
+
 }

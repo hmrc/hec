@@ -79,7 +79,7 @@ class TaxCheckServiceImplSpec extends AnyWordSpec with Matchers with MockFactory
 
   def mockGetAllTaxCheckCodesByStatus(isExtracted: Boolean)(result: Either[Error, List[HECTaxCheck]]) =
     (mockTaxCheckStore
-      .getAllTaxCheckCodesByExtractedStatus(_: Boolean)(_: HeaderCarrier))
+      .getTaxCheckCodeByKey(_: String, _: Boolean)(_: HeaderCarrier))
       .expects(isExtracted, *)
       .returning(EitherT.fromEither(result))
 

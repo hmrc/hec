@@ -8,3 +8,4 @@ GET        /sa-status/:utr/:taxYear             uk.gov.hmrc.hec.controllers.IFCo
 GET        /ct-status/:utr/:startDate/:endDate  uk.gov.hmrc.hec.controllers.IFController.getCTStatus(utr: String, startDate: String, endDate: String)
 
 GET        /ctutr/:crn                          uk.gov.hmrc.hec.controllers.DESController.getCtutr(crn: String)
+POST       /file-transfer/callback              uk.gov.hmrc.hec.controllers.SDESCallbackController.callback

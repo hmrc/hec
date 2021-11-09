@@ -55,6 +55,10 @@ trait TaxCheckService {
     hc: HeaderCarrier
   ): EitherT[Future, Error, List[HECTaxCheck]]
 
+  def getAllTaxCheckCodesByCorrelationId(fileCorrelationId: String)(implicit
+    hc: HeaderCarrier
+  ): EitherT[Future, Error, List[HECTaxCheck]]
+
 }
 
 @Singleton
@@ -65,8 +69,11 @@ class TaxCheckServiceImpl @Inject() (
   config: Config
 )(implicit ec: ExecutionContext)
     extends TaxCheckService {
-
-  val taxCheckCodeExpiresAfterDays: Long =
+  val key: String                            = "hec-tax-check"
+  private val ggCredIdField: String          = s"data.$key.taxCheckData.applicantDetails.ggCredId"
+  private val isExtractedField: String       = s"data.$key.isExtracted"
+  private val fileCorrelationIdField: String = s"data.$key.fileCorrelationId"
+  val taxCheckCodeExpiresAfterDays: Long     =
     config.get[FiniteDuration]("hec-tax-check.expires-after").value.toDays
 
   def saveTaxCheck(
@@ -137,7 +144,7 @@ class TaxCheckServiceImpl @Inject() (
   )(implicit hc: HeaderCarrier): EitherT[Future, Error, List[TaxCheckListItem]] = {
     val today = timeProvider.currentDate
     taxCheckStore
-      .getTaxCheckCodes(ggCredId)
+      .getTaxCheckCodeByKey(ggCredIdField, ggCredId)
       .map(
         _.filterNot(item => item.expiresAfter.isBefore(today))
           .map(TaxCheckListItem.fromHecTaxCheck)
@@ -147,5 +154,10 @@ class TaxCheckServiceImpl @Inject() (
   override def getAllTaxCheckCodesByExtractedStatus(isExtracted: Boolean)(implicit
     hc: HeaderCarrier
   ): EitherT[Future, Error, List[HECTaxCheck]] =
-    taxCheckStore.getAllTaxCheckCodesByExtractedStatus(isExtracted)
+    taxCheckStore.getTaxCheckCodeByKey[Boolean](isExtractedField, isExtracted)
+
+  override def getAllTaxCheckCodesByCorrelationId(fileCorrelationId: String)(implicit
+    hc: HeaderCarrier
+  ): EitherT[Future, Error, List[HECTaxCheck]] =
+    taxCheckStore.getTaxCheckCodeByKey[String](fileCorrelationIdField, fileCorrelationId)
 }

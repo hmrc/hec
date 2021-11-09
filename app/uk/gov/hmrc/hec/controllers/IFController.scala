@@ -16,9 +16,6 @@
 
 package uk.gov.hmrc.hec.controllers
 
-import java.time.LocalDate
-import java.time.format.DateTimeFormatter
-import java.util.UUID
 import cats.data.Validated._
 import cats.data.{NonEmptyList, Validated, ValidatedNel}
 import cats.implicits._
@@ -34,6 +31,9 @@ import uk.gov.hmrc.hec.util.Logging
 import uk.gov.hmrc.hec.util.Logging.LoggerOps
 import uk.gov.hmrc.play.bootstrap.backend.controller.BackendController
 
+import java.time.LocalDate
+import java.time.format.DateTimeFormatter
+import java.util.UUID
 import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton

@@ -24,7 +24,6 @@ import org.mongodb.scala.bson.BsonDocument
 import org.mongodb.scala.model.{Filters, IndexModel, IndexOptions, Indexes}
 import play.api.Configuration
 import play.api.libs.json.{JsError, JsSuccess, JsonValidationError}
-import uk.gov.hmrc.hec.models.ids.GGCredId
 import uk.gov.hmrc.hec.models.{Error, HECTaxCheck, HECTaxCheckCode}
 import uk.gov.hmrc.hec.util.Logging
 import uk.gov.hmrc.http.HeaderCarrier
@@ -42,10 +41,6 @@ trait HECTaxCheckStore {
     hc: HeaderCarrier
   ): EitherT[Future, Error, Option[HECTaxCheck]]
 
-  def getTaxCheckCodes(GGCredId: GGCredId)(implicit
-    hc: HeaderCarrier
-  ): EitherT[Future, Error, List[HECTaxCheck]]
-
   def store(
     taxCheck: HECTaxCheck
   )(implicit hc: HeaderCarrier): EitherT[Future, Error, Unit]
@@ -54,7 +49,7 @@ trait HECTaxCheckStore {
 
   def deleteAll()(implicit hc: HeaderCarrier): EitherT[Future, Error, Unit]
 
-  def getAllTaxCheckCodesByExtractedStatus(status: Boolean)(implicit
+  def getTaxCheckCodeByKey[A](key: String, value: A)(implicit
     hc: HeaderCarrier
   ): EitherT[Future, Error, List[HECTaxCheck]]
 
@@ -77,9 +72,7 @@ class HECTaxCheckStoreImpl @Inject() (
     with HECTaxCheckStore
     with Logging {
 
-  val key: String                      = "hec-tax-check"
-  private val ggCredIdField: String    = s"data.$key.taxCheckData.applicantDetails.ggCredId"
-  private val isExtractedField: String = s"data.$key.isExtracted"
+  val key: String = "hec-tax-check"
 
   //indexes for hecTaxChecks collection
   def mongoIndexes: Seq[IndexModel] = Seq(
@@ -91,6 +84,12 @@ class HECTaxCheckStoreImpl @Inject() (
       IndexOptions()
         .name("isExtractedIndex")
         .partialFilterExpression(BsonDocument("isExtracted" -> false))
+    ),
+    IndexModel(
+      Indexes.ascending("fileCorrelationId"),
+      IndexOptions()
+        .name("fileCorrelationIdIndex")
+        .partialFilterExpression(Filters.exists("fileCorrelationId"))
     )
   )
 
@@ -135,13 +134,10 @@ class HECTaxCheckStoreImpl @Inject() (
     * @param hc header information
     * @return A list of tax check code details
     */
-  def getTaxCheckCodes(ggCredId: GGCredId)(implicit
-    hc: HeaderCarrier
-  ): EitherT[Future, Error, List[HECTaxCheck]] = find[String](ggCredIdField, ggCredId.value)
 
-  def getAllTaxCheckCodesByExtractedStatus(isExtracted: Boolean)(implicit
+  def getTaxCheckCodeByKey[A](key: String, value: A)(implicit
     hc: HeaderCarrier
-  ): EitherT[Future, Error, List[HECTaxCheck]] = find[Boolean](isExtractedField, isExtracted)
+  ): EitherT[Future, Error, List[HECTaxCheck]] = find[A](key, value)
 
   def store(
     taxCheck: HECTaxCheck
