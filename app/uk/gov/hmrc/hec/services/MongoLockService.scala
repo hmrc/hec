@@ -41,7 +41,7 @@ class MongoLockServiceImpl @Inject() (mongoLockRepository: MongoLockRepository, 
   val lockService: LockService = LockService(
     mongoLockRepository,
     lockId = "hecTaxChecks",
-    ttl = config.get[FiniteDuration]("mongo-lock.force-lock-release-after")
+    ttl = config.get[FiniteDuration]("hec-file-extraction-details.force-lock-release-after")
   )
 
   override def withLock[T](data: => Future[T])(implicit

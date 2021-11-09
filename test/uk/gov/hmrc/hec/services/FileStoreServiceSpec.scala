@@ -101,7 +101,7 @@ class FileStoreServiceSpec
       val actual                     =
         client.getObject[Source[ByteString, NotUsed]](expectedPath).futureValue.value
 
-      actual.location shouldBe s"${objectStoreConfig.baseUrl}/object-store/object/${objectStoreConfig.owner}/${expectedPath.asUri}"
+      actual.location.directory.value shouldBe s"${objectStoreConfig.baseUrl}/object-store/object/${objectStoreConfig.owner}/$dirName"
       assertContent(actual.content, Source.single(ByteString(fileContent)))
     }
 

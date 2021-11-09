@@ -3,7 +3,7 @@ import sbt._
 
 object AppDependencies {
 
-  val akkaVersion = "2.6.10"
+  val akkaVersion = "2.6.14"
 
   val compile = Seq(
     "uk.gov.hmrc"             %% "bootstrap-backend-play-28"   % "5.14.0",
@@ -12,7 +12,7 @@ object AppDependencies {
     "ai.x"                    %% "play-json-extensions"        % "0.42.0",
     "org.typelevel"           %% "cats-core"                   % "2.6.1",
     "com.github.kxbmap"       %% "configs"                     % "0.4.4",
-    "uk.gov.hmrc.objectstore" %% "object-store-client-play-28" % "0.35.0",
+    "uk.gov.hmrc.objectstore" %% "object-store-client-play-28" % "0.37.0",
     "com.beachape"            %% "enumeratum"                  % "1.7.0",
     "com.miguno.akka"         %% "akka-mock-scheduler"         % "0.5.1" exclude ("com.typesafe.akka", "akka-actor")
   )

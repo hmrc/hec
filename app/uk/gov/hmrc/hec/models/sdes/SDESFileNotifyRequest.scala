@@ -14,11 +14,15 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.hec.services.scheduleService
+package uk.gov.hmrc.hec.models.sdes
 
-import akka.actor.ActorSystem
-import com.google.inject.Inject
-import play.api.libs.concurrent.CustomExecutionContext
+import play.api.libs.json.{Json, OFormat}
 
-class HECTaxCheckExtractionContext @Inject() (actorSystem: ActorSystem)
-    extends CustomExecutionContext(actorSystem, "hec-file-extraction-details.dispatcher")
+final case class SDESFileNotifyRequest(
+  informationType: String,
+  file: FileMetaData,
+  audit: FileAudit
+)
+object SDESFileNotifyRequest {
+  implicit val format: OFormat[SDESFileNotifyRequest] = Json.format
+}

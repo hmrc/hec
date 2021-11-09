@@ -22,12 +22,15 @@ import com.google.inject.{ImplementedBy, Inject}
 import play.api.Configuration
 import uk.gov.hmrc.hec.models
 import uk.gov.hmrc.hec.models.licence.{LicenceTimeTrading, LicenceType, LicenceValidityPeriod}
+import uk.gov.hmrc.hec.models.sdes.{FileAudit, FileChecksum, FileMetaData, SDESFileNotifyRequest}
 import uk.gov.hmrc.hec.models.{CorrectiveAction, Error, HECTaxCheck, HECTaxCheckFileBodyList}
+import uk.gov.hmrc.hec.services._
 import uk.gov.hmrc.hec.services.scheduleService.HecTaxCheckExtractionServiceImpl._
-import uk.gov.hmrc.hec.services.{FileCreationService, FileStoreService, MongoLockService, TaxCheckService}
-import uk.gov.hmrc.hec.util.Logging
+import uk.gov.hmrc.hec.util.{Logging, UUIDGenerator}
 import uk.gov.hmrc.http.HeaderCarrier
+import uk.gov.hmrc.objectstore.client.ObjectSummaryWithMd5
 
+import java.util.UUID
 import javax.inject.Singleton
 import scala.annotation.tailrec
 import scala.concurrent.Future
@@ -45,6 +48,8 @@ class HecTaxCheckExtractionServiceImpl @Inject() (
   mongoLockService: MongoLockService,
   fileCreationService: FileCreationService,
   fileStoreService: FileStoreService,
+  sdesService: SDESService,
+  uuidGenerator: UUIDGenerator,
   config: Configuration
 )(implicit
   hecTaxCheckExtractionContext: HECTaxCheckExtractionContext
@@ -52,9 +57,17 @@ class HecTaxCheckExtractionServiceImpl @Inject() (
     with Logging {
 
   implicit val hc: HeaderCarrier = HeaderCarrier()
-  val maxTaxChecksPerFile: Int   = config.get[Int]("hec-tax-heck-file.default-size")
-  val hec: String                = "HEC"
-  val sdesDirectory: String      = "sdes"
+  val maxTaxChecksPerFile: Int   = config.get[Int]("hec-file-extraction-details.maximum-rows-per-file")
+
+  val informationType: String           = config.get[String]("hec-file-extraction-details.file-notification-api.information-type")
+  val recipientOrSender: String         =
+    config.get[String]("hec-file-extraction-details.file-notification-api.recipient-or-sender")
+  val fileLocationBaseUrl: String       =
+    config.get[String]("hec-file-extraction-details.file-notification-api.file-location-base-url")
+  val objectStoreLocationPrefix: String = s"$fileLocationBaseUrl/object-store/object/hec/"
+
+  val hec: String           = "HEC"
+  val sdesDirectory: String = "sdes"
 
   val licenceType: FileDetails[LicenceType] =
     FileDetails[LicenceType](s"$sdesDirectory/licence-type", s"${hec}_LICENCE_TYPE")
@@ -78,41 +91,37 @@ class HecTaxCheckExtractionServiceImpl @Inject() (
     val seqNum = "0001"
     val result: EitherT[Future, models.Error, Unit] = {
       for {
-        _                <- createAndStoreFile(LicenceType, seqNum, licenceType.partialFileName, licenceType.dirName, true)
-        _                <-
-          createAndStoreFile(
+        _           <- createAndStoreFileThenNotify(LicenceType, seqNum, licenceType.partialFileName, licenceType.dirName, true)
+        _           <-
+          createAndStoreFileThenNotify(
             LicenceTimeTrading,
             seqNum,
             licenceTimeTrading.partialFileName,
             licenceTimeTrading.dirName,
             true
           )
-        _                <- createAndStoreFile(
-                              LicenceValidityPeriod,
-                              seqNum,
-                              licenceValidityPeriod.partialFileName,
-                              licenceValidityPeriod.dirName,
-                              true
-                            )
-        _                <- createAndStoreFile(
-                              CorrectiveAction,
-                              seqNum,
-                              correctiveAction.partialFileName,
-                              correctiveAction.dirName,
-                              true
-                            )
-        hecTaxCheck      <- taxCheckService.getAllTaxCheckCodesByExtractedStatus(false)
-        _                <- createHecFile(
-                              HECTaxCheckFileBodyList(hecTaxCheck),
-                              maxTaxChecksPerFile,
-                              hecData.partialFileName,
-                              hecData.dirName
-                            )
-        updatedHecTaxChek = hecTaxCheck.map(_.copy(isExtracted = true))
+        _           <- createAndStoreFileThenNotify(
+                         LicenceValidityPeriod,
+                         seqNum,
+                         licenceValidityPeriod.partialFileName,
+                         licenceValidityPeriod.dirName,
+                         true
+                       )
+        _           <- createAndStoreFileThenNotify(
+                         CorrectiveAction,
+                         seqNum,
+                         correctiveAction.partialFileName,
+                         correctiveAction.dirName,
+                         true
+                       )
+        hecTaxCheck <- taxCheckService.getAllTaxCheckCodesByExtractedStatus(false)
+        _           <- createHecFile(
+                         HECTaxCheckFileBodyList(hecTaxCheck),
+                         maxTaxChecksPerFile,
+                         hecData.partialFileName,
+                         hecData.dirName
+                       )
 
-        //i think we don't need to bring the whole list of codes which are updated ,
-        // it may cause performance issue, so now it's returning Unit.
-        _ <- taxCheckService.updateAllHecTaxCheck(updatedHecTaxChek)
       } yield ()
     }
     result.value
@@ -151,7 +160,7 @@ class HecTaxCheckExtractionServiceImpl @Inject() (
           seqNumInt + 1,
           partialFileName,
           dirname,
-          createAndStoreFile(
+          createAndStoreFileThenNotify(
             HECTaxCheckFileBodyList(hecList),
             toFormattedString(seqNumInt),
             partialFileName,
@@ -167,22 +176,56 @@ class HecTaxCheckExtractionServiceImpl @Inject() (
 
   }
 
-  //Combining the process of creating and Storing file
+  //Combining the process of creating , Storing file ,
+  // updating hec tax check records with correlation Id
+  // and notify the SDES about the file
   //useful when we have to create n number of files for large dataset.
-  private def createAndStoreFile[A](
+  private def createAndStoreFileThenNotify[A](
     inputType: A,
     seqNum: String,
     partialFileName: String,
     dirName: String,
     isLastInSequence: Boolean
-  )(implicit hc: HeaderCarrier): EitherT[Future, Error, Unit] = for {
-    fileContent <-
-      EitherT.fromEither[Future](
-        fileCreationService.createFileContent(inputType, seqNum, partialFileName, isLastInSequence)
-      )
-    _           <- fileStoreService.storeFile(fileContent._1, fileContent._2, dirName)
+  )(implicit hc: HeaderCarrier): EitherT[Future, Error, Unit] = {
+    val uuid = uuidGenerator.generateUUID
+    for {
+      fileContent   <-
+        EitherT.fromEither[Future](
+          fileCreationService
+            .createFileContent(inputType, seqNum, partialFileName, isLastInSequence)
+        )
+      objectSummary <- fileStoreService.storeFile(fileContent._1, fileContent._2, dirName)
+      _             <- updateHecTaxCheckWithCorrelationId(inputType, uuid)
+      _             <- sdesService.fileNotify(createNotifyRequest(objectSummary, fileContent._2, uuid))
 
-  } yield ()
+    } yield ()
+  }
+
+  private def updateHecTaxCheckWithCorrelationId[A](inputType: A, uuid: UUID): EitherT[Future, Error, Unit] =
+    inputType match {
+      case HECTaxCheckFileBodyList(list) =>
+        val updatedHecTaxCodeList = list.map(_.copy(fileCorrelationId = uuid.some))
+        taxCheckService.updateAllHecTaxCheck(updatedHecTaxCodeList).map(_ => ())
+      case _                             => EitherT.pure[Future, Error](())
+    }
+
+  private def createNotifyRequest(
+    objSummary: ObjectSummaryWithMd5,
+    fileName: String,
+    uuid: UUID
+  ): SDESFileNotifyRequest =
+    SDESFileNotifyRequest(
+      informationType,
+      FileMetaData(
+        recipientOrSender,
+        fileName,
+        s"$objectStoreLocationPrefix${objSummary.location.asUri}",
+        FileChecksum(value = objSummary.contentMd5.value),
+        objSummary.contentLength,
+        List()
+      ),
+      FileAudit(uuid.toString)
+    )
 
 }
 
