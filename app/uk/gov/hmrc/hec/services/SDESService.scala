@@ -40,7 +40,7 @@ class SDESServiceImpl @Inject() (
     extends SDESService
     with Logging {
 
-  val message: String             = s"Call to notify SDES came back with status::"
+  val message: String             = "Call to notify SDES came back with status::"
   override def fileNotify(fileNotifyRequest: SDESFileNotifyRequest)(implicit
     hc: HeaderCarrier
   ): EitherT[Future, Error, Unit] =
