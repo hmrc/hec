@@ -21,4 +21,4 @@ import com.google.inject.Inject
 import play.api.libs.concurrent.CustomExecutionContext
 
 class HECTaxCheckExtractionContext @Inject() (actorSystem: ActorSystem)
-    extends CustomExecutionContext(actorSystem, "hec-tax-check-dispatcher")
+    extends CustomExecutionContext(actorSystem, "hec-file-extraction-details.dispatcher")

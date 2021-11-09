@@ -50,7 +50,7 @@ class SDESServiceImpl @Inject() (
         response.status match {
           case NO_CONTENT =>
             logger.info(
-              s"File ${fileNotifyRequest.file.name} is notified to SDES with correlationId: ${fileNotifyRequest.audit.correlationID}"
+              s"SDES has been notified of file :: ${fileNotifyRequest.file.name}  with correlationId::${fileNotifyRequest.audit.correlationID}"
             )
             Right(())
           case rest       => Left(Error(s"$message $rest, ${response.body}"))

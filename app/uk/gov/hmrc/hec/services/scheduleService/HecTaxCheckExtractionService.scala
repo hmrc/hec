@@ -57,13 +57,14 @@ class HecTaxCheckExtractionServiceImpl @Inject() (
     with Logging {
 
   implicit val hc: HeaderCarrier = HeaderCarrier()
-  val maxTaxChecksPerFile: Int   = config.get[Int]("hec-tax-heck-file.default-size")
+  val maxTaxChecksPerFile: Int   = config.get[Int]("hec-file-extraction-details.maximum-rows-per-file")
 
-  val informationType: String           = config.get[String]("file-notify-config.information-type")
-  val recipientOrSender: String         = config.get[String]("file-notify-config.recipient-or-sender")
-  val baseLocation: String              = config.get[String]("file-notify-config.location")
-  val algorithm: String                 = config.get[String]("file-notify-config.checkSum.algortihm")
-  val objectStoreLocationPrefix: String = s"$baseLocation/object-store/object/hec/"
+  val informationType: String           = config.get[String]("hec-file-extraction-details.file-notification-api.information-type")
+  val recipientOrSender: String         =
+    config.get[String]("hec-file-extraction-details.file-notification-api.recipient-or-sender")
+  val fileLocationBaseUrl: String       =
+    config.get[String]("hec-file-extraction-details.file-notification-api.file-location-base-url")
+  val objectStoreLocationPrefix: String = s"$fileLocationBaseUrl/object-store/object/hec/"
 
   val hec: String           = "HEC"
   val sdesDirectory: String = "sdes"
@@ -90,23 +91,23 @@ class HecTaxCheckExtractionServiceImpl @Inject() (
     val seqNum = "0001"
     val result: EitherT[Future, models.Error, Unit] = {
       for {
-        _           <- createAndStoreFile(LicenceType, seqNum, licenceType.partialFileName, licenceType.dirName, true)
+        _           <- createAndStoreFileThenNotify(LicenceType, seqNum, licenceType.partialFileName, licenceType.dirName, true)
         _           <-
-          createAndStoreFile(
+          createAndStoreFileThenNotify(
             LicenceTimeTrading,
             seqNum,
             licenceTimeTrading.partialFileName,
             licenceTimeTrading.dirName,
             true
           )
-        _           <- createAndStoreFile(
+        _           <- createAndStoreFileThenNotify(
                          LicenceValidityPeriod,
                          seqNum,
                          licenceValidityPeriod.partialFileName,
                          licenceValidityPeriod.dirName,
                          true
                        )
-        _           <- createAndStoreFile(
+        _           <- createAndStoreFileThenNotify(
                          CorrectiveAction,
                          seqNum,
                          correctiveAction.partialFileName,
@@ -159,7 +160,7 @@ class HecTaxCheckExtractionServiceImpl @Inject() (
           seqNumInt + 1,
           partialFileName,
           dirname,
-          createAndStoreFile(
+          createAndStoreFileThenNotify(
             HECTaxCheckFileBodyList(hecList),
             toFormattedString(seqNumInt),
             partialFileName,
@@ -179,7 +180,7 @@ class HecTaxCheckExtractionServiceImpl @Inject() (
   // updating hec tax check records with correlation Id
   // and notify the SDES about the file
   //useful when we have to create n number of files for large dataset.
-  private def createAndStoreFile[A](
+  private def createAndStoreFileThenNotify[A](
     inputType: A,
     seqNum: String,
     partialFileName: String,

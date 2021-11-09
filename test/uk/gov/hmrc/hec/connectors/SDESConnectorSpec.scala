@@ -36,9 +36,11 @@ class SDESConnectorSpec extends AnyWordSpec with Matchers with MockFactory with 
                                  |    host     = $host
                                  |    port     = $port
                                  |  }
-                                 |  file-notify-config {
-                                 |    file-notify-to = "sdes-stub"
-                                 |}
+                                 |  hec-file-extraction-details {
+                                 |   file-notification-api {
+                                 |       location = "sdes-stub"
+                                 |      }
+                                 |   }
                                  |
                                  |""".stripMargin)
   )
@@ -50,7 +52,7 @@ class SDESConnectorSpec extends AnyWordSpec with Matchers with MockFactory with 
     FileMetaData(
       "hec",
       "file1.dat",
-      s"http://localhost:8464/object-store/object/hec/tax-checks/file1.dat",
+      "http://localhost:8464/object-store/object/hec/tax-checks/file1.dat",
       FileChecksum(value = "hashValue"),
       2000,
       List()

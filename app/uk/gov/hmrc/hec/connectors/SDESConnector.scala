@@ -36,10 +36,10 @@ trait SDESConnector {
 class SDESConnectorImpl @Inject() (http: HttpClient, servicesConfig: ServicesConfig, config: Configuration)(implicit
   ec: ExecutionContext
 ) extends SDESConnector {
-  private val baseUrl: String = servicesConfig.baseUrl("sdes")
-  private val appName: String = config.get[String]("file-notify-config.file-notify-to")
-  private val uri: String     = if (appName.isEmpty) "sdes" else appName
-  private val sdesUrl         = s"$baseUrl/$uri/notification/fileready"
+  private val baseUrl: String     = servicesConfig.baseUrl("sdes")
+  private val apiLocation: String = config.get[String]("hec-file-extraction-details.file-notification-api.location")
+  private val sdesUrl: String     =
+    if (apiLocation.isEmpty) s"$baseUrl/notification/fileready" else s"$baseUrl/$apiLocation/notification/fileready"
 
   override def notify(
     fileNotifyRequest: SDESFileNotifyRequest

@@ -125,14 +125,15 @@ class HecTaxCheckExtractionServiceSpec
   val config: Configuration = Configuration(
     ConfigFactory.parseString(
       """
-        | mongo-lock.force-lock-release-after = 30 minutes
-        | hec-tax-heck-file.default-size = 2
-        | file-notify-config {
-        |    file-notify-to = "sdes-stub"
-        |    information-type = "ssa"
-        |    recipient-or-sender = "hec"
-        |    location = "http://localhost:8464"
-        |    checkSum.algortihm = "md5"
+        | hec-file-extraction-details {
+        |   force-lock-release-after = 5 minutes
+        |   maximum-rows-per-file = 500
+        |   file-notification-api {
+        |       location = "sdes-stub"
+        |       information-type = "ssa"
+        |       recipient-or-sender = "hec"
+        |       file-location-base-url = "http://localhost:8464"
+        |   }
         |}
         |""".stripMargin
     )
