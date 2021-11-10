@@ -55,6 +55,8 @@ class FileStoreServiceImpl @Inject() (client: PlayObjectStoreClient, config: Con
     extends FileStoreService
     with Logging {
 
+  val owner: String = "hec"
+
   override def storeFile(
     fileContent: String,
     fileName: String,
@@ -71,7 +73,7 @@ class FileStoreServiceImpl @Inject() (client: PlayObjectStoreClient, config: Con
           path = Path.Directory(dirName).file(fileName),
           content = StringUtils.newStringUtf8(bytes),
           retentionPeriod = getRetentionPeriod,
-          owner = "hec"
+          owner = owner
         )
         .map { objSummary =>
           logger.info(s"Storing contents for file :: $fileName")
@@ -96,7 +98,7 @@ class FileStoreServiceImpl @Inject() (client: PlayObjectStoreClient, config: Con
       client
         .deleteObject(
           path = Path.Directory(dirName).file(fileName),
-          owner = "hec"
+          owner = owner
         )
         .map { _ =>
           logger.info(s"Deleting :: $fileName from object store")
