@@ -51,11 +51,10 @@ class SDESCallbackController @Inject() (
             s"with correlationId : ${callbackNotification.correlationID} and status : ${callbackNotification.notification}"
         )
         callbackNotification.notification match {
-          case FileReady             => Future.successful(Ok)
-          case FileReceived          => Future.successful(Ok)
-          case FileProcessed         =>
+          case FileReady | FileReceived => Future.successful(Ok)
+          case FileProcessed            =>
             deleteFileAndUpdateTaxChecks(callbackNotification.filename, callbackNotification.correlationID)
-          case FileProcessingFailure =>
+          case FileProcessingFailure    =>
             deleteFileFromObjectStore(callbackNotification.filename)
         }
 

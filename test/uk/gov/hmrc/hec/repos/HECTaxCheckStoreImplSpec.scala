@@ -16,6 +16,7 @@
 
 package uk.gov.hmrc.hec.repos
 
+import cats.implicits.catsSyntaxOptionId
 import com.typesafe.config.ConfigFactory
 import org.scalatest.concurrent.Eventually
 import org.scalatest.matchers.should.Matchers
@@ -34,6 +35,7 @@ import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.mongo.cache.{CacheItem, DataKey}
 
 import java.time.{LocalDate, ZoneId, ZonedDateTime}
+import java.util.UUID
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
@@ -47,9 +49,11 @@ class HECTaxCheckStoreImplSpec extends AnyWordSpec with Matchers with Eventually
     )
   )
 
-  val taxCheckStore                    = new HECTaxCheckStoreImpl(mongoComponent, config)
-  val key1: String                     = "hec-tax-check"
-  private val isExtractedField: String = s"data.$key1.isExtracted"
+  val taxCheckStore: HECTaxCheckStoreImpl = new HECTaxCheckStoreImpl(mongoComponent, config)
+  val key1: String                        = "hec-tax-check"
+  private val isExtractedField: String    = s"data.$key1.isExtracted"
+  private val fileCorrelationId: String   = s"data.$key1.fileCorrelationId"
+  val uuid: UUID                          = UUID.randomUUID()
 
   implicit val hc: HeaderCarrier = HeaderCarrier()
 
@@ -219,6 +223,45 @@ class HECTaxCheckStoreImplSpec extends AnyWordSpec with Matchers with Eventually
       // insert invalid data
       await(taxCheckStore.put(taxCheckCode)(DataKey("hec-tax-check"), invalidData))
       await(taxCheckStore.getTaxCheckCodeByKey(isExtractedField, false).value).isLeft shouldBe true
+    }
+
+    "be able to fetch all tax check codes with the given fileCorrelationId" in {
+
+      val updatedTaxCheckCode1 = taxCheck1.copy(fileCorrelationId = uuid.some)
+      val updatedTaxCheckCode2 = taxCheck2.copy(fileCorrelationId = uuid.some)
+
+      // store some tax check codes in mongo
+      await(
+        taxCheckStore.store(updatedTaxCheckCode1).value
+      )                                                      shouldBe Right(())
+      await(taxCheckStore.store(updatedTaxCheckCode2).value) shouldBe Right(())
+      eventually {
+        await(taxCheckStore.getTaxCheckCodeByKey[String](fileCorrelationId, uuid.toString).value)
+          .map(_.toSet) should be(
+          Right(Set(updatedTaxCheckCode1, updatedTaxCheckCode2))
+        )
+      }
+    }
+
+    "return an error when data can't be parsed when fetching tax check codes based on fileCorrelationId field" in {
+      val taxCheckCode = "code1"
+
+      val invalidData = Json.parse(s"""{
+                                      | "taxCheckData" : {
+                                      | 	"applicantDetails" : {
+                                      | 		"ggCredId" : "ggCredId",
+                                      | 		"crn" : ""
+                                      | 	}
+                                      | },
+                                      | "taxCheckCode" : "$taxCheckCode",
+                                      | "expiresAfter" : "2021-09-24",
+                                      | "isExtracted" : false,
+                                      | "fileCorrelationId" : "${uuid.toString}"
+                                      |}""".stripMargin)
+
+      // insert invalid data
+      await(taxCheckStore.put(taxCheckCode)(DataKey("hec-tax-check"), invalidData))
+      await(taxCheckStore.getTaxCheckCodeByKey[String](fileCorrelationId, uuid.toString).value).isLeft shouldBe true
     }
   }
 
