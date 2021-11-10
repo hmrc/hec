@@ -24,6 +24,7 @@ import org.mongodb.scala.bson.BsonDocument
 import org.mongodb.scala.model.{Filters, IndexModel, IndexOptions, Indexes}
 import play.api.Configuration
 import play.api.libs.json.{JsError, JsSuccess, JsonValidationError}
+import uk.gov.hmrc.hec.models.ids.GGCredId
 import uk.gov.hmrc.hec.models.{Error, HECTaxCheck, HECTaxCheckCode}
 import uk.gov.hmrc.hec.util.Logging
 import uk.gov.hmrc.http.HeaderCarrier
@@ -40,6 +41,10 @@ trait HECTaxCheckStore {
   def get(taxCheckCode: HECTaxCheckCode)(implicit
     hc: HeaderCarrier
   ): EitherT[Future, Error, Option[HECTaxCheck]]
+
+  def getTaxCheckCodes(GGCredId: GGCredId)(implicit
+    hc: HeaderCarrier
+  ): EitherT[Future, Error, List[HECTaxCheck]]
 
   def store(
     taxCheck: HECTaxCheck
@@ -72,7 +77,8 @@ class HECTaxCheckStoreImpl @Inject() (
     with HECTaxCheckStore
     with Logging {
 
-  val key: String = "hec-tax-check"
+  val key: String                   = "hec-tax-check"
+  private val ggCredIdField: String = s"data.$key.taxCheckData.applicantDetails.ggCredId"
 
   //indexes for hecTaxChecks collection
   def mongoIndexes: Seq[IndexModel] = Seq(
@@ -134,6 +140,9 @@ class HECTaxCheckStoreImpl @Inject() (
     * @param hc header information
     * @return A list of tax check code details
     */
+  def getTaxCheckCodes(ggCredId: GGCredId)(implicit
+    hc: HeaderCarrier
+  ): EitherT[Future, Error, List[HECTaxCheck]] = find[String](ggCredIdField, ggCredId.value)
 
   def getTaxCheckCodeByKey[A](key: String, value: A)(implicit
     hc: HeaderCarrier

@@ -69,8 +69,8 @@ class TaxCheckServiceImpl @Inject() (
   config: Config
 )(implicit ec: ExecutionContext)
     extends TaxCheckService {
-  val key: String                            = "hec-tax-check"
-  private val ggCredIdField: String          = s"data.$key.taxCheckData.applicantDetails.ggCredId"
+  val key: String = "hec-tax-check"
+
   private val isExtractedField: String       = s"data.$key.isExtracted"
   private val fileCorrelationIdField: String = s"data.$key.fileCorrelationId"
   val taxCheckCodeExpiresAfterDays: Long     =
@@ -144,7 +144,7 @@ class TaxCheckServiceImpl @Inject() (
   )(implicit hc: HeaderCarrier): EitherT[Future, Error, List[TaxCheckListItem]] = {
     val today = timeProvider.currentDate
     taxCheckStore
-      .getTaxCheckCodeByKey(ggCredIdField, ggCredId)
+      .getTaxCheckCodes(ggCredId)
       .map(
         _.filterNot(item => item.expiresAfter.isBefore(today))
           .map(TaxCheckListItem.fromHecTaxCheck)

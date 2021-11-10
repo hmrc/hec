@@ -45,9 +45,12 @@ class TaxCheckServiceImplSpec extends AnyWordSpec with Matchers with MockFactory
   val expiresAfter                     = 5.days
   val mockTimeProvider                 = mock[TimeProvider]
 
-  val config = ConfigFactory.parseString(s"""{
+  val config       = ConfigFactory.parseString(s"""{
       |hec-tax-check.expires-after = ${expiresAfter.toDays} days
       |}""".stripMargin)
+  val key1: String = "hec-tax-check"
+
+  private val isExtractedField: String = s"data.$key1.isExtracted"
 
   val service = new TaxCheckServiceImpl(
     mockTaxCheckCodeGeneratorService,
@@ -80,7 +83,7 @@ class TaxCheckServiceImplSpec extends AnyWordSpec with Matchers with MockFactory
   def mockGetAllTaxCheckCodesByStatus(isExtracted: Boolean)(result: Either[Error, List[HECTaxCheck]]) =
     (mockTaxCheckStore
       .getTaxCheckCodeByKey(_: String, _: Boolean)(_: HeaderCarrier))
-      .expects(isExtracted, *)
+      .expects(isExtractedField, isExtracted, *)
       .returning(EitherT.fromEither(result))
 
   def mockTimeProviderNow(d: ZonedDateTime) = (mockTimeProvider.currentDateTime _).expects().returning(d)

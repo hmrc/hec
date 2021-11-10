@@ -47,7 +47,9 @@ class HECTaxCheckStoreImplSpec extends AnyWordSpec with Matchers with Eventually
     )
   )
 
-  val taxCheckStore = new HECTaxCheckStoreImpl(mongoComponent, config)
+  val taxCheckStore                    = new HECTaxCheckStoreImpl(mongoComponent, config)
+  val key1: String                     = "hec-tax-check"
+  private val isExtractedField: String = s"data.$key1.isExtracted"
 
   implicit val hc: HeaderCarrier = HeaderCarrier()
 
@@ -193,7 +195,7 @@ class HECTaxCheckStoreImplSpec extends AnyWordSpec with Matchers with Eventually
       await(taxCheckStore.store(taxCheck2).value) shouldBe Right(())
       await(taxCheckStore.store(taxCheck3).value) shouldBe Right(())
       eventually {
-        await(taxCheckStore.getAllTaxCheckCodesByExtractedStatus(false).value).map(_.toSet) should be(
+        await(taxCheckStore.getTaxCheckCodeByKey(isExtractedField, false).value).map(_.toSet) should be(
           Right(Set(taxCheck1, taxCheck2))
         )
       }
@@ -216,7 +218,7 @@ class HECTaxCheckStoreImplSpec extends AnyWordSpec with Matchers with Eventually
 
       // insert invalid data
       await(taxCheckStore.put(taxCheckCode)(DataKey("hec-tax-check"), invalidData))
-      await(taxCheckStore.getAllTaxCheckCodesByExtractedStatus(false).value).isLeft shouldBe true
+      await(taxCheckStore.getTaxCheckCodeByKey(isExtractedField, false).value).isLeft shouldBe true
     }
   }
 
