@@ -58,7 +58,7 @@ trait HECTaxCheckStore {
     hc: HeaderCarrier
   ): EitherT[Future, Error, List[HECTaxCheck]]
 
-  def getAllTaxCheckCodesByCorrelationId(correlationId: String)(implicit
+  def getAllTaxCheckCodesByFileCorrelationId(correlationId: String)(implicit
     hc: HeaderCarrier
   ): EitherT[Future, Error, List[HECTaxCheck]]
 
@@ -154,7 +154,7 @@ class HECTaxCheckStoreImpl @Inject() (
     hc: HeaderCarrier
   ): EitherT[Future, Error, List[HECTaxCheck]] = find[Boolean](isExtractedField, isExtracted)
 
-  def getAllTaxCheckCodesByCorrelationId(correlationId: String)(implicit
+  def getAllTaxCheckCodesByFileCorrelationId(correlationId: String)(implicit
     hc: HeaderCarrier
   ): EitherT[Future, Error, List[HECTaxCheck]] = find[String](fileCorrelationId, correlationId)
 

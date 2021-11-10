@@ -56,7 +56,7 @@ class SDESCallbackControllerSpec extends ControllerSpec {
 
   def mockGetAllTaxCheckCodesByCorrelationId(correlationId: UUID)(result: Either[Error, List[HECTaxCheck]]) =
     (mockTaxCheckService
-      .getAllTaxCheckCodesByCorrelationId(_: String)(_: HeaderCarrier))
+      .getAllTaxCheckCodesByFileCorrelationId(_: String)(_: HeaderCarrier))
       .expects(correlationId.toString, *)
       .returning(EitherT.fromEither(result))
 

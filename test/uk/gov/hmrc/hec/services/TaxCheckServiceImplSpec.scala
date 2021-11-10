@@ -87,7 +87,7 @@ class TaxCheckServiceImplSpec extends AnyWordSpec with Matchers with MockFactory
 
   def mockGetAllTaxCheckCodesByCorrelationId(correlationId: UUID)(result: Either[Error, List[HECTaxCheck]]) =
     (mockTaxCheckStore
-      .getAllTaxCheckCodesByCorrelationId(_: String)(_: HeaderCarrier))
+      .getAllTaxCheckCodesByFileCorrelationId(_: String)(_: HeaderCarrier))
       .expects(correlationId.toString, *)
       .returning(EitherT.fromEither(result))
 
@@ -578,7 +578,7 @@ class TaxCheckServiceImplSpec extends AnyWordSpec with Matchers with MockFactory
           val error = Left(Error("some error"))
           mockGetAllTaxCheckCodesByCorrelationId(uuid)(error)
 
-          val result = service.getAllTaxCheckCodesByCorrelationId(uuid.toString)
+          val result = service.getAllTaxCheckCodesByFileCorrelationId(uuid.toString)
           await(result.value) shouldBe error
         }
       }
@@ -592,7 +592,7 @@ class TaxCheckServiceImplSpec extends AnyWordSpec with Matchers with MockFactory
 
         mockGetAllTaxCheckCodesByCorrelationId(uuid)(Right(List(hecTaxCheck1, hecTaxCheck2)))
 
-        val result = service.getAllTaxCheckCodesByCorrelationId(uuid.toString)
+        val result = service.getAllTaxCheckCodesByFileCorrelationId(uuid.toString)
         await(result.value) shouldBe Right(List(hecTaxCheck1, hecTaxCheck2))
       }
     }

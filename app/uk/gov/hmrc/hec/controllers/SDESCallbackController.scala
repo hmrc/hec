@@ -106,7 +106,7 @@ class SDESCallbackController @Inject() (
     hecTaxCheckExtractionContext: HECTaxCheckExtractionContext
   ) = for {
     hecTaxChecks          <-
-      taxCheckService.getAllTaxCheckCodesByCorrelationId(correlationId)
+      taxCheckService.getAllTaxCheckCodesByFileCorrelationId(correlationId)
     updatedHecTaxCheckList = hecTaxChecks.map(_.copy(fileCorrelationId = None, isExtracted = true))
     _                     <- taxCheckService.updateAllHecTaxCheck(updatedHecTaxCheckList)
   } yield ()

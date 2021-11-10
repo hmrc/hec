@@ -234,7 +234,7 @@ class HECTaxCheckStoreImplSpec extends AnyWordSpec with Matchers with Eventually
       )                                                      shouldBe Right(())
       await(taxCheckStore.store(updatedTaxCheckCode2).value) shouldBe Right(())
       eventually {
-        await(taxCheckStore.getAllTaxCheckCodesByCorrelationId(uuid.toString).value)
+        await(taxCheckStore.getAllTaxCheckCodesByFileCorrelationId(uuid.toString).value)
           .map(_.toSet) should be(
           Right(Set(updatedTaxCheckCode1, updatedTaxCheckCode2))
         )
@@ -259,7 +259,7 @@ class HECTaxCheckStoreImplSpec extends AnyWordSpec with Matchers with Eventually
 
       // insert invalid data
       await(taxCheckStore.put(taxCheckCode)(DataKey("hec-tax-check"), invalidData))
-      await(taxCheckStore.getAllTaxCheckCodesByCorrelationId(uuid.toString).value).isLeft shouldBe true
+      await(taxCheckStore.getAllTaxCheckCodesByFileCorrelationId(uuid.toString).value).isLeft shouldBe true
     }
   }
 
