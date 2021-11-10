@@ -115,14 +115,10 @@ class SDESCallbackController @Inject() (
   //call back from SDES doesn't hold this information
   // So, Identifying the directory name of the file from the map
   //which has  data like partial file name ->  dir name
-  private def getDirName(filename: String) = {
-    val keys: Set[String] = FileMapOps.fileNameDirMap.keySet
-    val result            = keys.filter(pf =>
-      filename.contains(pf)
-    ) //filter map keys, if the file name(from SDES) contains the partial file name from map key
-    FileMapOps.getDirName(
-      result.headOption.getOrElse(sys.error("File doesn't belong to hec"))
-    ) //Once key is found, identify the value, i.e dir name
-  }
+  private def getDirName(filename: String) =
+    FileMapOps.fileNameDirMap
+      .find { case (key, _) => filename.contains(key) }
+      .map(_._2)
+      .getOrElse(sys.error("File doesn't belong to hec"))
 
 }

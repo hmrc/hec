@@ -69,11 +69,8 @@ class TaxCheckServiceImpl @Inject() (
   config: Config
 )(implicit ec: ExecutionContext)
     extends TaxCheckService {
-  val key: String = "hec-tax-check"
-
-  private val isExtractedField: String       = s"data.$key.isExtracted"
-  private val fileCorrelationIdField: String = s"data.$key.fileCorrelationId"
-  val taxCheckCodeExpiresAfterDays: Long     =
+  val key: String                        = "hec-tax-check"
+  val taxCheckCodeExpiresAfterDays: Long =
     config.get[FiniteDuration]("hec-tax-check.expires-after").value.toDays
 
   def saveTaxCheck(
@@ -154,10 +151,10 @@ class TaxCheckServiceImpl @Inject() (
   override def getAllTaxCheckCodesByExtractedStatus(isExtracted: Boolean)(implicit
     hc: HeaderCarrier
   ): EitherT[Future, Error, List[HECTaxCheck]] =
-    taxCheckStore.getTaxCheckCodeByKey[Boolean](isExtractedField, isExtracted)
+    taxCheckStore.getAllTaxCheckCodesByExtractedStatus(isExtracted)
 
   override def getAllTaxCheckCodesByCorrelationId(fileCorrelationId: String)(implicit
     hc: HeaderCarrier
   ): EitherT[Future, Error, List[HECTaxCheck]] =
-    taxCheckStore.getTaxCheckCodeByKey[String](fileCorrelationIdField, fileCorrelationId)
+    taxCheckStore.getAllTaxCheckCodesByCorrelationId(fileCorrelationId)
 }

@@ -54,7 +54,11 @@ trait HECTaxCheckStore {
 
   def deleteAll()(implicit hc: HeaderCarrier): EitherT[Future, Error, Unit]
 
-  def getTaxCheckCodeByKey[A](key: String, value: A)(implicit
+  def getAllTaxCheckCodesByExtractedStatus(status: Boolean)(implicit
+    hc: HeaderCarrier
+  ): EitherT[Future, Error, List[HECTaxCheck]]
+
+  def getAllTaxCheckCodesByCorrelationId(correlationId: String)(implicit
     hc: HeaderCarrier
   ): EitherT[Future, Error, List[HECTaxCheck]]
 
@@ -77,8 +81,10 @@ class HECTaxCheckStoreImpl @Inject() (
     with HECTaxCheckStore
     with Logging {
 
-  val key: String                   = "hec-tax-check"
-  private val ggCredIdField: String = s"data.$key.taxCheckData.applicantDetails.ggCredId"
+  val key: String                       = "hec-tax-check"
+  private val ggCredIdField: String     = s"data.$key.taxCheckData.applicantDetails.ggCredId"
+  private val isExtractedField: String  = s"data.$key.isExtracted"
+  private val fileCorrelationId: String = s"data.$key.fileCorrelationId"
 
   //indexes for hecTaxChecks collection
   def mongoIndexes: Seq[IndexModel] = Seq(
@@ -144,9 +150,13 @@ class HECTaxCheckStoreImpl @Inject() (
     hc: HeaderCarrier
   ): EitherT[Future, Error, List[HECTaxCheck]] = find[String](ggCredIdField, ggCredId.value)
 
-  def getTaxCheckCodeByKey[A](key: String, value: A)(implicit
+  def getAllTaxCheckCodesByExtractedStatus(isExtracted: Boolean)(implicit
     hc: HeaderCarrier
-  ): EitherT[Future, Error, List[HECTaxCheck]] = find[A](key, value)
+  ): EitherT[Future, Error, List[HECTaxCheck]] = find[Boolean](isExtractedField, isExtracted)
+
+  def getAllTaxCheckCodesByCorrelationId(correlationId: String)(implicit
+    hc: HeaderCarrier
+  ): EitherT[Future, Error, List[HECTaxCheck]] = find[String](fileCorrelationId, correlationId)
 
   def store(
     taxCheck: HECTaxCheck

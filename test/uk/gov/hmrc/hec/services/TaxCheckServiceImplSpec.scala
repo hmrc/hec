@@ -51,9 +51,6 @@ class TaxCheckServiceImplSpec extends AnyWordSpec with Matchers with MockFactory
       |}""".stripMargin)
   val key1: String = "hec-tax-check"
 
-  private val isExtractedField: String       = s"data.$key1.isExtracted"
-  private val fileCorrelationIdField: String = s"data.$key1.fileCorrelationId"
-
   val service = new TaxCheckServiceImpl(
     mockTaxCheckCodeGeneratorService,
     mockTimeProvider,
@@ -84,14 +81,14 @@ class TaxCheckServiceImplSpec extends AnyWordSpec with Matchers with MockFactory
 
   def mockGetAllTaxCheckCodesByStatus(isExtracted: Boolean)(result: Either[Error, List[HECTaxCheck]]) =
     (mockTaxCheckStore
-      .getTaxCheckCodeByKey(_: String, _: Boolean)(_: HeaderCarrier))
-      .expects(isExtractedField, isExtracted, *)
+      .getAllTaxCheckCodesByExtractedStatus(_: Boolean)(_: HeaderCarrier))
+      .expects(isExtracted, *)
       .returning(EitherT.fromEither(result))
 
   def mockGetAllTaxCheckCodesByCorrelationId(correlationId: UUID)(result: Either[Error, List[HECTaxCheck]]) =
     (mockTaxCheckStore
-      .getTaxCheckCodeByKey(_: String, _: String)(_: HeaderCarrier))
-      .expects(fileCorrelationIdField, correlationId.toString, *)
+      .getAllTaxCheckCodesByCorrelationId(_: String)(_: HeaderCarrier))
+      .expects(correlationId.toString, *)
       .returning(EitherT.fromEither(result))
 
   def mockTimeProviderNow(d: ZonedDateTime) = (mockTimeProvider.currentDateTime _).expects().returning(d)

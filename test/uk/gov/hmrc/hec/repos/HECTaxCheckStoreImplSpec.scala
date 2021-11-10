@@ -50,10 +50,8 @@ class HECTaxCheckStoreImplSpec extends AnyWordSpec with Matchers with Eventually
   )
 
   val taxCheckStore: HECTaxCheckStoreImpl = new HECTaxCheckStoreImpl(mongoComponent, config)
-  val key1: String                        = "hec-tax-check"
-  private val isExtractedField: String    = s"data.$key1.isExtracted"
-  private val fileCorrelationId: String   = s"data.$key1.fileCorrelationId"
-  val uuid: UUID                          = UUID.randomUUID()
+
+  val uuid: UUID = UUID.randomUUID()
 
   implicit val hc: HeaderCarrier = HeaderCarrier()
 
@@ -199,7 +197,7 @@ class HECTaxCheckStoreImplSpec extends AnyWordSpec with Matchers with Eventually
       await(taxCheckStore.store(taxCheck2).value) shouldBe Right(())
       await(taxCheckStore.store(taxCheck3).value) shouldBe Right(())
       eventually {
-        await(taxCheckStore.getTaxCheckCodeByKey(isExtractedField, false).value).map(_.toSet) should be(
+        await(taxCheckStore.getAllTaxCheckCodesByExtractedStatus(false).value).map(_.toSet) should be(
           Right(Set(taxCheck1, taxCheck2))
         )
       }
@@ -222,7 +220,7 @@ class HECTaxCheckStoreImplSpec extends AnyWordSpec with Matchers with Eventually
 
       // insert invalid data
       await(taxCheckStore.put(taxCheckCode)(DataKey("hec-tax-check"), invalidData))
-      await(taxCheckStore.getTaxCheckCodeByKey(isExtractedField, false).value).isLeft shouldBe true
+      await(taxCheckStore.getAllTaxCheckCodesByExtractedStatus(false).value).isLeft shouldBe true
     }
 
     "be able to fetch all tax check codes with the given fileCorrelationId" in {
@@ -236,7 +234,7 @@ class HECTaxCheckStoreImplSpec extends AnyWordSpec with Matchers with Eventually
       )                                                      shouldBe Right(())
       await(taxCheckStore.store(updatedTaxCheckCode2).value) shouldBe Right(())
       eventually {
-        await(taxCheckStore.getTaxCheckCodeByKey[String](fileCorrelationId, uuid.toString).value)
+        await(taxCheckStore.getAllTaxCheckCodesByCorrelationId(uuid.toString).value)
           .map(_.toSet) should be(
           Right(Set(updatedTaxCheckCode1, updatedTaxCheckCode2))
         )
@@ -261,7 +259,7 @@ class HECTaxCheckStoreImplSpec extends AnyWordSpec with Matchers with Eventually
 
       // insert invalid data
       await(taxCheckStore.put(taxCheckCode)(DataKey("hec-tax-check"), invalidData))
-      await(taxCheckStore.getTaxCheckCodeByKey[String](fileCorrelationId, uuid.toString).value).isLeft shouldBe true
+      await(taxCheckStore.getAllTaxCheckCodesByCorrelationId(uuid.toString).value).isLeft shouldBe true
     }
   }
 
