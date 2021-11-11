@@ -43,12 +43,19 @@ trait FileStoreService {
     hecTaxCheckExtractionContext: HECTaxCheckExtractionContext
   ): EitherT[Future, models.Error, ObjectSummaryWithMd5]
 
+  def deleteFile(fileName: String, dirName: String)(implicit
+    hc: HeaderCarrier,
+    hecTaxCheckExtractionContext: HECTaxCheckExtractionContext
+  ): EitherT[Future, models.Error, Unit]
+
 }
 
 @Singleton
 class FileStoreServiceImpl @Inject() (client: PlayObjectStoreClient, config: Configuration)
     extends FileStoreService
     with Logging {
+
+  val owner: String = "hec"
 
   override def storeFile(
     fileContent: String,
@@ -66,14 +73,14 @@ class FileStoreServiceImpl @Inject() (client: PlayObjectStoreClient, config: Con
           path = Path.Directory(dirName).file(fileName),
           content = StringUtils.newStringUtf8(bytes),
           retentionPeriod = getRetentionPeriod,
-          owner = "hec"
+          owner = owner
         )
         .map { objSummary =>
-          logger.info(s"Storing contents for file :: $fileName")
+          logger.info(s"Saved File :: $fileName in object store")
           Right(objSummary)
         }
         .recover { case e: Exception =>
-          logger.error(s"Document save failed with error: ${e.getMessage}")
+          logger.error(s"Document save failed for file :: $fileName error: ${e.getMessage}")
           Left(models.Error(e))
         }
     )
@@ -82,4 +89,25 @@ class FileStoreServiceImpl @Inject() (client: PlayObjectStoreClient, config: Con
   private def getRetentionPeriod: RetentionPeriod = RetentionPeriod
     .parse(config.get[String]("object-store.default-retention-period"))
     .getOrElse(RetentionPeriod.OneWeek)
+
+  override def deleteFile(fileName: String, dirName: String)(implicit
+    hc: HeaderCarrier,
+    hecTaxCheckExtractionContext: HECTaxCheckExtractionContext
+  ): EitherT[Future, models.Error, Unit] =
+    EitherT(
+      client
+        .deleteObject(
+          path = Path.Directory(dirName).file(fileName),
+          owner = owner
+        )
+        .map { _ =>
+          logger.info(s"Deleted file  :: $fileName from object store")
+          Right(())
+        }
+        .recover { case e: Exception =>
+          logger.error(s"Deletion failed for file:: $fileName with error: ${e.getMessage}")
+          Left(models.Error(e))
+        }
+    )
+
 }

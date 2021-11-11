@@ -105,6 +105,16 @@ class FileStoreServiceSpec
       assertContent(actual.content, Source.single(ByteString(fileContent)))
     }
 
+    "deleteObject must delete the file from object store " in {
+      import uk.gov.hmrc.objectstore.client.play.Implicits._
+      implicit val hc: HeaderCarrier = HeaderCarrier()
+      client.deleteObject(Path.File(s"$dirName/$fileName"), objectStoreConfig.owner).futureValue
+      val getObject                  = client
+        .getObject[Source[ByteString, NotUsed]](Path.File(s"$dirName/$fileName"), objectStoreConfig.owner)
+        .futureValue
+      getObject shouldBe None
+    }
+
   }
 
 }

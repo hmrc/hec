@@ -55,6 +55,10 @@ trait TaxCheckService {
     hc: HeaderCarrier
   ): EitherT[Future, Error, List[HECTaxCheck]]
 
+  def getAllTaxCheckCodesByFileCorrelationId(fileCorrelationId: String)(implicit
+    hc: HeaderCarrier
+  ): EitherT[Future, Error, List[HECTaxCheck]]
+
 }
 
 @Singleton
@@ -65,7 +69,7 @@ class TaxCheckServiceImpl @Inject() (
   config: Config
 )(implicit ec: ExecutionContext)
     extends TaxCheckService {
-
+  val key: String                        = "hec-tax-check"
   val taxCheckCodeExpiresAfterDays: Long =
     config.get[FiniteDuration]("hec-tax-check.expires-after").value.toDays
 
@@ -148,4 +152,9 @@ class TaxCheckServiceImpl @Inject() (
     hc: HeaderCarrier
   ): EitherT[Future, Error, List[HECTaxCheck]] =
     taxCheckStore.getAllTaxCheckCodesByExtractedStatus(isExtracted)
+
+  override def getAllTaxCheckCodesByFileCorrelationId(fileCorrelationId: String)(implicit
+    hc: HeaderCarrier
+  ): EitherT[Future, Error, List[HECTaxCheck]] =
+    taxCheckStore.getAllTaxCheckCodesByFileCorrelationId(fileCorrelationId)
 }

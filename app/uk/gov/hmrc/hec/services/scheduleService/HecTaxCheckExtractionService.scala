@@ -26,7 +26,7 @@ import uk.gov.hmrc.hec.models.sdes.{FileAudit, FileChecksum, FileMetaData, SDESF
 import uk.gov.hmrc.hec.models.{CorrectiveAction, Error, HECTaxCheck, HECTaxCheckFileBodyList}
 import uk.gov.hmrc.hec.services._
 import uk.gov.hmrc.hec.services.scheduleService.HecTaxCheckExtractionServiceImpl._
-import uk.gov.hmrc.hec.util.{Logging, UUIDGenerator}
+import uk.gov.hmrc.hec.util.{FileMapOps, Logging, UUIDGenerator}
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.objectstore.client.ObjectSummaryWithMd5
 
@@ -69,20 +69,18 @@ class HecTaxCheckExtractionServiceImpl @Inject() (
   val hec: String           = "HEC"
   val sdesDirectory: String = "sdes"
 
-  val licenceType: FileDetails[LicenceType] =
-    FileDetails[LicenceType](s"$sdesDirectory/licence-type", s"${hec}_LICENCE_TYPE")
+  val licenceType: FileDetails[LicenceType] = FileMapOps.getFileDetails[LicenceType](s"${hec}_LICENCE_TYPE")
 
   val licenceTimeTrading: FileDetails[LicenceTimeTrading] =
-    FileDetails[LicenceTimeTrading](s"$sdesDirectory/licence-time-trading", s"${hec}_LICENCE_TIME_TRADING")
+    FileMapOps.getFileDetails[LicenceTimeTrading](s"${hec}_LICENCE_TIME_TRADING")
 
   val licenceValidityPeriod: FileDetails[LicenceValidityPeriod] =
-    FileDetails[LicenceValidityPeriod](s"$sdesDirectory/licence-validity-period", s"${hec}_LICENCE_VALIDITY_PERIOD")
+    FileMapOps.getFileDetails[LicenceValidityPeriod](s"${hec}_LICENCE_VALIDITY_PERIOD")
 
   val correctiveAction: FileDetails[CorrectiveAction] =
-    FileDetails[CorrectiveAction](s"$sdesDirectory/corrective-action", s"${hec}_CORRECTIVE_ACTION")
+    FileMapOps.getFileDetails[CorrectiveAction](s"${hec}_CORRECTIVE_ACTION")
 
-  val hecData: FileDetails[List[HECTaxCheck]] =
-    FileDetails[List[HECTaxCheck]](s"$sdesDirectory/tax-checks", hec)
+  val hecData: FileDetails[List[HECTaxCheck]] = FileMapOps.getFileDetails[List[HECTaxCheck]](hec)
 
   override def lockAndProcessHecData(): Future[Option[Either[models.Error, Unit]]] =
     mongoLockService.withLock(processHecData)

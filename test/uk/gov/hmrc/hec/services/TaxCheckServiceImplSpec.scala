@@ -17,6 +17,7 @@
 package uk.gov.hmrc.hec.services
 
 import cats.data.EitherT
+import cats.implicits.catsSyntaxOptionId
 import cats.instances.future._
 import com.typesafe.config.ConfigFactory
 import org.scalamock.scalatest.MockFactory
@@ -45,9 +46,10 @@ class TaxCheckServiceImplSpec extends AnyWordSpec with Matchers with MockFactory
   val expiresAfter                     = 5.days
   val mockTimeProvider                 = mock[TimeProvider]
 
-  val config = ConfigFactory.parseString(s"""{
+  val config       = ConfigFactory.parseString(s"""{
       |hec-tax-check.expires-after = ${expiresAfter.toDays} days
       |}""".stripMargin)
+  val key1: String = "hec-tax-check"
 
   val service = new TaxCheckServiceImpl(
     mockTaxCheckCodeGeneratorService,
@@ -81,6 +83,12 @@ class TaxCheckServiceImplSpec extends AnyWordSpec with Matchers with MockFactory
     (mockTaxCheckStore
       .getAllTaxCheckCodesByExtractedStatus(_: Boolean)(_: HeaderCarrier))
       .expects(isExtracted, *)
+      .returning(EitherT.fromEither(result))
+
+  def mockGetAllTaxCheckCodesByCorrelationId(correlationId: UUID)(result: Either[Error, List[HECTaxCheck]]) =
+    (mockTaxCheckStore
+      .getAllTaxCheckCodesByFileCorrelationId(_: String)(_: HeaderCarrier))
+      .expects(correlationId.toString, *)
       .returning(EitherT.fromEither(result))
 
   def mockTimeProviderNow(d: ZonedDateTime) = (mockTimeProvider.currentDateTime _).expects().returning(d)
@@ -533,6 +541,59 @@ class TaxCheckServiceImplSpec extends AnyWordSpec with Matchers with MockFactory
 
         val result = service.getAllTaxCheckCodesByExtractedStatus(false)
         await(result.value) shouldBe Right(List(hecTaxCheck1, hecTaxCheck2, hecTaxCheck3))
+      }
+    }
+
+    "handling requests to fetch HEC Tac check code for the given fileCorrelarionId" must {
+      val ggCredId = GGCredId("ggCredId")
+      val uuid     = UUID.randomUUID()
+
+      val taxCheckData: HECTaxCheckData = CompanyHECTaxCheckData(
+        CompanyApplicantDetails(ggCredId, CRN(""), CompanyHouseName("Test Tech Ltd")),
+        LicenceDetails(
+          LicenceType.ScrapMetalDealerSite,
+          LicenceTimeTrading.EightYearsOrMore,
+          LicenceValidityPeriod.UpToOneYear
+        ),
+        CompanyTaxDetails(
+          CTUTR("1111111111"),
+          Some(CTUTR("1111111111")),
+          Some(YesNoAnswer.Yes),
+          CTStatusResponse(
+            CTUTR("1111111111"),
+            LocalDate.of(2020, 10, 9),
+            LocalDate.of(2021, 10, 9),
+            Some(CTAccountingPeriod(LocalDate.of(2020, 10, 9), LocalDate.of(2021, 10, 9), CTStatus.ReturnFound))
+          ),
+          None,
+          Some(YesNoAnswer.Yes)
+        ),
+        taxCheckStartDateTime,
+        HECTaxCheckSource.Digital
+      )
+
+      "return an error" when {
+
+        "there is an error fetching the code from the db" in {
+          val error = Left(Error("some error"))
+          mockGetAllTaxCheckCodesByCorrelationId(uuid)(error)
+
+          val result = service.getAllTaxCheckCodesByFileCorrelationId(uuid.toString)
+          await(result.value) shouldBe error
+        }
+      }
+
+      "only return HEC Tac check code with the given CorrelationId" in {
+
+        val hecTaxCheck1 =
+          HECTaxCheck(taxCheckData, HECTaxCheckCode("ABC 123 ABC"), today.plusDays(1), now, false, None, uuid.some)
+        val hecTaxCheck2 =
+          HECTaxCheck(taxCheckData, HECTaxCheckCode("EBC 123 ABC"), today.plusDays(1), now, false, None, uuid.some)
+
+        mockGetAllTaxCheckCodesByCorrelationId(uuid)(Right(List(hecTaxCheck1, hecTaxCheck2)))
+
+        val result = service.getAllTaxCheckCodesByFileCorrelationId(uuid.toString)
+        await(result.value) shouldBe Right(List(hecTaxCheck1, hecTaxCheck2))
       }
     }
 
