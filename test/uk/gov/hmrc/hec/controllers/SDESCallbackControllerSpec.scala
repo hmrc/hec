@@ -194,7 +194,7 @@ class SDESCallbackControllerSpec extends ControllerSpec {
 
         "call back status is FileProcessed and " when {
 
-          "and the file is not the hec tax check file, only delete the file" in {
+          "and the file is an enum file, only delete the file" in {
             mockDeleteFile(fileName1, "sdes/licence-type")(Right(()))
             val notification =
               createCallBackNotification(FileProcessed, fileName1)
