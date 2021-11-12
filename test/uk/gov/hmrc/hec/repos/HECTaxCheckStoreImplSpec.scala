@@ -39,7 +39,7 @@ import java.util.UUID
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
-class HECTaxCheckStoreImplSpec extends AnyWordSpec with Matchers with Eventually with MongoSupport {
+class HECTaxCheckStoreImplSpec extends AnyWordSpec with Matchers with Eventually with MongoSupportSpec {
 
   val config: Configuration = Configuration(
     ConfigFactory.parseString(
