@@ -33,7 +33,8 @@ final case class SaveTaxCheckRequest(
   createDate: ZonedDateTime,
   taxCheckStartDateTime: ZonedDateTime,
   isExtracted: Boolean,
-  source: HECTaxCheckSource
+  source: HECTaxCheckSource,
+  relevantIncomeTaxYear: Int
 )
 
 object SaveTaxCheckRequest {
