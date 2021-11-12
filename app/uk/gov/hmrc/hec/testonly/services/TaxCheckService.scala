@@ -23,9 +23,10 @@ import uk.gov.hmrc.hec.models.HECTaxCheckData.{CompanyHECTaxCheckData, Individua
 import uk.gov.hmrc.hec.models.TaxDetails.{CompanyTaxDetails, IndividualTaxDetails}
 import uk.gov.hmrc.hec.models.ids.{CTUTR, NINO}
 import uk.gov.hmrc.hec.models.licence.{LicenceDetails, LicenceTimeTrading, LicenceValidityPeriod}
-import uk.gov.hmrc.hec.models.{CTAccountingPeriod, CTStatus, CTStatusResponse, CompanyHouseName, Error, HECTaxCheck, HECTaxCheckCode, HECTaxCheckData, Name, TaxSituation, YesNoAnswer}
+import uk.gov.hmrc.hec.models.{CTAccountingPeriod, CTStatus, CTStatusResponse, CompanyHouseName, Error, HECTaxCheck, HECTaxCheckCode, HECTaxCheckData, Name, TaxSituation, TaxYear, YesNoAnswer}
 import uk.gov.hmrc.hec.repos.HECTaxCheckStore
 import uk.gov.hmrc.hec.testonly.models.SaveTaxCheckRequest
+import uk.gov.hmrc.hec.util.TimeProvider
 import uk.gov.hmrc.http.HeaderCarrier
 
 import java.time.LocalDate
@@ -48,7 +49,8 @@ trait TaxCheckService {
 
 @Singleton
 class TaxCheckServiceImpl @Inject() (
-  taxCheckStore: HECTaxCheckStore
+  taxCheckStore: HECTaxCheckStore,
+  timeProvider: TimeProvider
 ) extends TaxCheckService {
 
   def saveTaxCheck(
@@ -122,7 +124,7 @@ class TaxCheckServiceImpl @Inject() (
           TaxSituation.PAYE,
           None,
           None,
-          saveTaxCheckRequest.relevantIncomeTaxYear
+          saveTaxCheckRequest.relevantIncomeTaxYear.getOrElse(getTaxYear(timeProvider.currentDate))
         )
         IndividualHECTaxCheckData(
           individualDetails,
@@ -133,6 +135,14 @@ class TaxCheckServiceImpl @Inject() (
         )
     }
 
+  }
+
+  private def getTaxYear(currentDate: LocalDate): TaxYear = {
+    val currentYear             = currentDate.getYear
+    val currentYearTaxStartDate = LocalDate.of(currentYear, 4, 6)
+    val sixMonthEarlierDate     = currentDate.minusMonths(6L)
+    if (sixMonthEarlierDate.isBefore(currentYearTaxStartDate)) TaxYear(currentYear - 2)
+    else TaxYear(currentYear - 1)
   }
 
 }

@@ -17,6 +17,7 @@
 package uk.gov.hmrc.hec.testonly.controllers
 
 import cats.data.EitherT
+import cats.implicits.catsSyntaxOptionId
 import cats.instances.future._
 import play.api.inject.bind
 import play.api.inject.guice.GuiceableModule
@@ -110,7 +111,7 @@ class TaxCheckControllerSpec extends ControllerSpec {
            |  "taxCheckStartDateTime": "$getStartDateTime",
            |  "isExtracted": false,
            |  "source" : "${r.source.toString}",
-           |  "relevantIncomeTaxYear": ${r.relevantIncomeTaxYear.startYear}
+           |  "relevantIncomeTaxYear": ${r.relevantIncomeTaxYear.map(_.startYear).getOrElse(2021)}
            |}
            |""".stripMargin
       }
@@ -129,7 +130,7 @@ class TaxCheckControllerSpec extends ControllerSpec {
           taxCheckStartDateTime,
           false,
           HECTaxCheckSource.Digital,
-          TaxYear(2021)
+          TaxYear(2021).some
         )
         val body        = Json.parse(requestJsonString(request))
 
@@ -176,7 +177,7 @@ class TaxCheckControllerSpec extends ControllerSpec {
             taxCheckStartDateTime = taxCheckStartDateTime,
             isExtracted = false,
             HECTaxCheckSource.Digital,
-            TaxYear(2021)
+            TaxYear(2021).some
           )
           val body        = Json.parse(requestJsonString(request))
 
@@ -203,7 +204,7 @@ class TaxCheckControllerSpec extends ControllerSpec {
             taxCheckStartDateTime,
             false,
             HECTaxCheckSource.Digital,
-            TaxYear(2021)
+            TaxYear(2021).some
           )
           val body        = Json.parse(requestJsonString(request))
 
@@ -225,7 +226,7 @@ class TaxCheckControllerSpec extends ControllerSpec {
             taxCheckStartDateTime,
             false,
             HECTaxCheckSource.Digital,
-            TaxYear(2021)
+            TaxYear(2021).some
           )
           val body    = Json.parse(requestJsonString(request))
 

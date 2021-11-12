@@ -41,10 +41,11 @@ import scala.concurrent.ExecutionContext.Implicits.global
 class TaxCheckServiceImplSpec extends AnyWordSpec with Matchers with MockFactory {
 
   val mockTaxCheckStore = mock[HECTaxCheckStore]
+  val mockTimeProvider  = mock[TimeProvider]
 
   val taxCheckStartDateTime = ZonedDateTime.of(2021, 10, 9, 9, 12, 34, 0, ZoneId.of("Europe/London"))
 
-  val service = new TaxCheckServiceImpl(mockTaxCheckStore)
+  val service = new TaxCheckServiceImpl(mockTaxCheckStore, mockTimeProvider)
 
   def mockStoreTaxCheck(taxCheck: HECTaxCheck)(result: Either[Error, Unit]) =
     (mockTaxCheckStore
@@ -70,8 +71,6 @@ class TaxCheckServiceImplSpec extends AnyWordSpec with Matchers with MockFactory
       .expects(*)
       .returning(EitherT.fromEither(result))
 
-  val mockTimeProvider = mock[TimeProvider]
-
   def mockTimeProviderToday(d: LocalDate) = (mockTimeProvider.currentDate _).expects().returning(d)
   val fileCorrelationId                   = UUID.fromString("20354d7a-e4fe-47af-8ff6-187bca92f3f9")
 
@@ -95,7 +94,7 @@ class TaxCheckServiceImplSpec extends AnyWordSpec with Matchers with MockFactory
           taxCheckStartDateTime,
           false,
           HECTaxCheckSource.Digital,
-          TaxYear(2021)
+          TaxYear(2021).some
         )
 
       "return an error" when {

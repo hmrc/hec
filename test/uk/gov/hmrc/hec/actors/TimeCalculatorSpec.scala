@@ -20,7 +20,6 @@ import org.scalamock.scalatest.MockFactory
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
 import uk.gov.hmrc.hec.util.TimeProvider
-
 import java.time.{LocalTime, ZoneId}
 import scala.concurrent.duration._
 
