@@ -116,7 +116,8 @@ class TaxCheckServiceImplSpec extends AnyWordSpec with Matchers with MockFactory
           Some(SAUTR("")),
           TaxSituation.SAPAYE,
           Some(YesNoAnswer.Yes),
-          None
+          None,
+          2021
         ),
         taxCheckStartDateTime,
         HECTaxCheckSource.Digital
@@ -203,7 +204,8 @@ class TaxCheckServiceImplSpec extends AnyWordSpec with Matchers with MockFactory
               Some(SAUTR("")),
               TaxSituation.SAPAYE,
               Some(YesNoAnswer.No),
-              None
+              None,
+              2021
             ),
             taxCheckStartDateTime,
             HECTaxCheckSource.Digital

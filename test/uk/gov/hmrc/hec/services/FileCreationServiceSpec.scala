@@ -151,7 +151,8 @@ class FileCreationServiceSpec extends AnyWordSpec with Matchers with MockFactory
                 Some(SAUTR("1234567")),
                 taxSituation,
                 Some(YesNoAnswer.Yes),
-                saStatusResponse
+                saStatusResponse,
+                2022
               )
 
             def createIndividualHecTaxCheck(

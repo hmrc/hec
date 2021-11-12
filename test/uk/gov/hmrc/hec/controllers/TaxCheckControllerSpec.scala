@@ -100,7 +100,8 @@ class TaxCheckControllerSpec extends ControllerSpec with AuthSupport {
           Some(SAUTR("")),
           TaxSituation.PAYE,
           None,
-          None
+          None,
+          2021
         ),
         taxCheckStartDateTime,
         HECTaxCheckSource.Digital

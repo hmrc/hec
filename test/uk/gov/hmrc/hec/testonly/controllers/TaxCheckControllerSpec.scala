@@ -109,7 +109,8 @@ class TaxCheckControllerSpec extends ControllerSpec {
            |  "createDate" : "${r.createDate}",
            |  "taxCheckStartDateTime": "$getStartDateTime",
            |  "isExtracted": false,
-           |  "source" : "${r.source.toString}"
+           |  "source" : "${r.source.toString}",
+           |  "relevantIncomeTaxYear": ${r.relevantIncomeTaxYear}
            |}
            |""".stripMargin
       }
@@ -127,7 +128,8 @@ class TaxCheckControllerSpec extends ControllerSpec {
           TimeUtils.now(),
           taxCheckStartDateTime,
           false,
-          HECTaxCheckSource.Digital
+          HECTaxCheckSource.Digital,
+          2021
         )
         val body        = Json.parse(requestJsonString(request))
 
@@ -173,7 +175,8 @@ class TaxCheckControllerSpec extends ControllerSpec {
             createDate = TimeUtils.now(),
             taxCheckStartDateTime = taxCheckStartDateTime,
             isExtracted = false,
-            HECTaxCheckSource.Digital
+            HECTaxCheckSource.Digital,
+            2021
           )
           val body        = Json.parse(requestJsonString(request))
 
@@ -199,7 +202,8 @@ class TaxCheckControllerSpec extends ControllerSpec {
             TimeUtils.now(),
             taxCheckStartDateTime,
             false,
-            HECTaxCheckSource.Digital
+            HECTaxCheckSource.Digital,
+            2021
           )
           val body        = Json.parse(requestJsonString(request))
 
@@ -220,7 +224,8 @@ class TaxCheckControllerSpec extends ControllerSpec {
             TimeUtils.now(),
             taxCheckStartDateTime,
             false,
-            HECTaxCheckSource.Digital
+            HECTaxCheckSource.Digital,
+            2021
           )
           val body    = Json.parse(requestJsonString(request))
 
@@ -281,7 +286,8 @@ class TaxCheckControllerSpec extends ControllerSpec {
               Some(SAUTR("")),
               TaxSituation.SAPAYE,
               Some(YesNoAnswer.Yes),
-              None
+              None,
+              2021
             ),
             taxCheckStartDateTime,
             HECTaxCheckSource.Digital

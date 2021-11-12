@@ -16,6 +16,7 @@
 
 package uk.gov.hmrc.hec.services
 
+import cats.implicits.catsSyntaxOptionId
 import cats.syntax.eq._
 import com.google.inject.{ImplementedBy, Inject}
 import uk.gov.hmrc.hec.models.CorrectiveAction._
@@ -182,7 +183,7 @@ class FileCreationServiceImpl @Inject() (timeProvider: TimeProvider) extends Fil
             notChargeable = taxSituationMap.NotChargeable,
             PAYE = taxSituationMap.PAYE,
             SA = taxSituationMap.SA,
-            incomeTaxYear = i.taxDetails.saStatusResponse.map(_.taxYear.startYear + 1),
+            incomeTaxYear = i.taxDetails.relevantIncomeTaxYear.some,
             returnReceived = saStatusMap.returnReceived,
             noticeToFile = saStatusMap.noticeToFileIssued,
             taxComplianceDeclaration = saStatusMap.returnReceived,

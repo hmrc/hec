@@ -53,7 +53,8 @@ class HECTaxCheckDataSpec extends AnyWordSpec with Matchers {
             Some(SAUTR("utr")),
             TaxSituation.SA,
             Some(YesNoAnswer.Yes),
-            None
+            None,
+            2021
           ),
           taxCheckStartDateTime,
           HECTaxCheckSource.Digital
@@ -77,7 +78,8 @@ class HECTaxCheckDataSpec extends AnyWordSpec with Matchers {
                                          |    "nino":"nino",
                                          |    "sautr":"utr",
                                          |    "taxSituation":"SA",
-                                         |    "saIncomeDeclared":"Yes"
+                                         |    "saIncomeDeclared":"Yes",
+                                         |    "relevantIncomeTaxYear": 2021
                                          | },
                                          | "taxCheckStartDateTime" : "2021-10-09T09:12:34+01:00[Europe/London]",
                                          | "type":"Individual",

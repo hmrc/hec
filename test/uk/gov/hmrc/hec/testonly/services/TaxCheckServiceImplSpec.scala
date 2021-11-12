@@ -94,7 +94,8 @@ class TaxCheckServiceImplSpec extends AnyWordSpec with Matchers with MockFactory
           now,
           taxCheckStartDateTime,
           false,
-          HECTaxCheckSource.Digital
+          HECTaxCheckSource.Digital,
+          2021
         )
 
       "return an error" when {
@@ -193,7 +194,8 @@ class TaxCheckServiceImplSpec extends AnyWordSpec with Matchers with MockFactory
               Some(SAUTR("")),
               TaxSituation.SAPAYE,
               Some(YesNoAnswer.Yes),
-              None
+              None,
+              2021
             ),
             taxCheckStartDateTime,
             HECTaxCheckSource.Digital
