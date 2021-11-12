@@ -29,7 +29,7 @@ object TaxDetails {
     taxSituation: TaxSituation,
     saIncomeDeclared: Option[YesNoAnswer],
     saStatusResponse: Option[SAStatusResponse],
-    relevantIncomeTaxYear: Int
+    relevantIncomeTaxYear: TaxYear
   ) extends TaxDetails
 
   final case class CompanyTaxDetails(

@@ -29,7 +29,7 @@ import uk.gov.hmrc.hec.models.HECTaxCheckData.{CompanyHECTaxCheckData, Individua
 import uk.gov.hmrc.hec.models.TaxDetails.{CompanyTaxDetails, IndividualTaxDetails}
 import uk.gov.hmrc.hec.models.ids._
 import uk.gov.hmrc.hec.models.licence.{LicenceDetails, LicenceTimeTrading, LicenceType, LicenceValidityPeriod}
-import uk.gov.hmrc.hec.models.{CTAccountingPeriod, CTStatus, CTStatusResponse, CompanyHouseName, DateOfBirth, Error, HECTaxCheck, HECTaxCheckCode, HECTaxCheckData, HECTaxCheckMatchRequest, HECTaxCheckMatchResult, HECTaxCheckMatchStatus, HECTaxCheckSource, Name, TaxCheckListItem, TaxSituation, YesNoAnswer}
+import uk.gov.hmrc.hec.models.{CTAccountingPeriod, CTStatus, CTStatusResponse, CompanyHouseName, DateOfBirth, Error, HECTaxCheck, HECTaxCheckCode, HECTaxCheckData, HECTaxCheckMatchRequest, HECTaxCheckMatchResult, HECTaxCheckMatchStatus, HECTaxCheckSource, Name, TaxCheckListItem, TaxSituation, TaxYear, YesNoAnswer}
 import uk.gov.hmrc.hec.repos.HECTaxCheckStore
 import uk.gov.hmrc.hec.util.{TimeProvider, TimeUtils}
 import uk.gov.hmrc.http.HeaderCarrier
@@ -117,7 +117,7 @@ class TaxCheckServiceImplSpec extends AnyWordSpec with Matchers with MockFactory
           TaxSituation.SAPAYE,
           Some(YesNoAnswer.Yes),
           None,
-          2021
+          TaxYear(2021)
         ),
         taxCheckStartDateTime,
         HECTaxCheckSource.Digital
@@ -205,7 +205,7 @@ class TaxCheckServiceImplSpec extends AnyWordSpec with Matchers with MockFactory
               TaxSituation.SAPAYE,
               Some(YesNoAnswer.No),
               None,
-              2021
+              TaxYear(2021)
             ),
             taxCheckStartDateTime,
             HECTaxCheckSource.Digital

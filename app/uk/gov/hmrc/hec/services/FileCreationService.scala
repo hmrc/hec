@@ -183,7 +183,7 @@ class FileCreationServiceImpl @Inject() (timeProvider: TimeProvider) extends Fil
             notChargeable = taxSituationMap.NotChargeable,
             PAYE = taxSituationMap.PAYE,
             SA = taxSituationMap.SA,
-            incomeTaxYear = i.taxDetails.relevantIncomeTaxYear.some,
+            incomeTaxYear = i.taxDetails.relevantIncomeTaxYear.startYear.some,
             returnReceived = saStatusMap.returnReceived,
             noticeToFile = saStatusMap.noticeToFileIssued,
             taxComplianceDeclaration = saStatusMap.returnReceived,
