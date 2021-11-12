@@ -89,7 +89,7 @@ class TaxCheckControllerSpec extends ControllerSpec with AuthSupport {
       }
 
       val taxCheckDataIndividual: HECTaxCheckData = IndividualHECTaxCheckData(
-        IndividualApplicantDetails(GGCredId(""), Name("", ""), DateOfBirth(LocalDate.now())),
+        IndividualApplicantDetails(Some(GGCredId("")), Name("", ""), DateOfBirth(LocalDate.now())),
         LicenceDetails(
           LicenceType.ScrapMetalDealerSite,
           LicenceTimeTrading.EightYearsOrMore,

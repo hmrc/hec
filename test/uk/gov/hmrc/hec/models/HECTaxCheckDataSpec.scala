@@ -39,7 +39,7 @@ class HECTaxCheckDataSpec extends AnyWordSpec with Matchers {
       val individualTaxCheckData: HECTaxCheckData =
         IndividualHECTaxCheckData(
           IndividualApplicantDetails(
-            GGCredId("ggCredId"),
+            Some(GGCredId("ggCredId")),
             Name("first", "last"),
             DateOfBirth(dateOfBirth)
           ),

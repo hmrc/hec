@@ -105,7 +105,7 @@ class TaxCheckServiceImplSpec extends AnyWordSpec with Matchers with MockFactory
     "handling requests to save a tax check" must {
 
       val taxCheckData = IndividualHECTaxCheckData(
-        IndividualApplicantDetails(GGCredId(""), Name("", ""), DateOfBirth(LocalDate.now())),
+        IndividualApplicantDetails(Some(GGCredId("")), Name("", ""), DateOfBirth(LocalDate.now())),
         LicenceDetails(
           LicenceType.ScrapMetalDealerSite,
           LicenceTimeTrading.EightYearsOrMore,
@@ -196,7 +196,7 @@ class TaxCheckServiceImplSpec extends AnyWordSpec with Matchers with MockFactory
       val storedIndividualTaxCheck =
         HECTaxCheck(
           IndividualHECTaxCheckData(
-            IndividualApplicantDetails(GGCredId(""), Name("", ""), storedDateOfBirth),
+            IndividualApplicantDetails(Some(GGCredId("")), Name("", ""), storedDateOfBirth),
             storedLicenceDetails,
             IndividualTaxDetails(
               NINO(""),

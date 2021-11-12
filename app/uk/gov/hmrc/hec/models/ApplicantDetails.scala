@@ -24,7 +24,7 @@ sealed trait ApplicantDetails extends Product with Serializable
 object ApplicantDetails {
 
   final case class IndividualApplicantDetails(
-    ggCredId: GGCredId,
+    ggCredId: Option[GGCredId],
     name: Name,
     dateOfBirth: DateOfBirth
   ) extends ApplicantDetails
