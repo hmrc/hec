@@ -23,7 +23,7 @@ import uk.gov.hmrc.mongo.test.MongoSupport
 trait MongoSupportSpec extends MongoSupport with BeforeAndAfterEach with BeforeAndAfterAll { this: Suite with Matchers ⇒
 
   abstract override def beforeEach(): Unit =
-    dropDatabase()
+    super.beforeEach()
 
   abstract override def afterAll(): Unit = {
     super.afterAll()
