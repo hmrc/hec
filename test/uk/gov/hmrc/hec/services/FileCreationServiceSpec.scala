@@ -152,7 +152,7 @@ class FileCreationServiceSpec extends AnyWordSpec with Matchers with MockFactory
                 taxSituation,
                 Some(YesNoAnswer.Yes),
                 saStatusResponse,
-                TaxYear(2022)
+                TaxYear(2021)
               )
 
             def createIndividualHecTaxCheck(
