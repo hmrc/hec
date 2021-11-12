@@ -270,7 +270,7 @@ class TaxCheckControllerSpec extends ControllerSpec {
 
         "a tax check was found" in {
           val taxCheckData = IndividualHECTaxCheckData(
-            IndividualApplicantDetails(GGCredId(""), Name("", ""), DateOfBirth(LocalDate.now())),
+            IndividualApplicantDetails(Some(GGCredId("")), Name("", ""), DateOfBirth(LocalDate.now())),
             LicenceDetails(
               LicenceType.ScrapMetalDealerSite,
               LicenceTimeTrading.EightYearsOrMore,

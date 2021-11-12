@@ -115,7 +115,7 @@ class TaxCheckServiceImpl @Inject() (
         )
 
       case Right(dob) =>
-        val individualDetails    = IndividualApplicantDetails(ggCredId, Name("TestFirst", "TestLast"), dob)
+        val individualDetails    = IndividualApplicantDetails(Some(ggCredId), Name("TestFirst", "TestLast"), dob)
         val individualTaxDetails = IndividualTaxDetails(NINO("AB123456C"), None, TaxSituation.PAYE, None, None)
         IndividualHECTaxCheckData(
           individualDetails,

@@ -140,7 +140,7 @@ class FileCreationServiceSpec extends AnyWordSpec with Matchers with MockFactory
 
             val individualApplicantDetails =
               IndividualApplicantDetails(
-                GGCredId("AB123"),
+                Some(GGCredId("AB123")),
                 Name("Karen", "mcFie"),
                 DateOfBirth(LocalDate.of(1922, 12, 1))
               )

@@ -182,7 +182,7 @@ class TaxCheckServiceImplSpec extends AnyWordSpec with Matchers with MockFactory
 
         "a tax check is found" in {
           val taxCheckData = IndividualHECTaxCheckData(
-            IndividualApplicantDetails(GGCredId(""), Name("", ""), DateOfBirth(LocalDate.now())),
+            IndividualApplicantDetails(Some(GGCredId("")), Name("", ""), DateOfBirth(LocalDate.now())),
             LicenceDetails(
               LicenceType.ScrapMetalDealerSite,
               LicenceTimeTrading.EightYearsOrMore,

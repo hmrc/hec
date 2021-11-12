@@ -169,7 +169,7 @@ class FileCreationServiceImpl @Inject() (timeProvider: TimeProvider) extends Fil
           val taxSituationMap = taxSituationMapping(i.taxDetails.taxSituation)
           val saStatusMap     = saStatusMapping(i.taxDetails.saStatusResponse.map(_.status))
           HECTaxCheckFileBody(
-            ggCredID = Some(i.applicantDetails.ggCredId.value),
+            ggCredID = i.applicantDetails.ggCredId.map(_.value),
             nino = Some(i.taxDetails.nino.value),
             firstName = Some(i.applicantDetails.name.firstName),
             lastName = Some(i.applicantDetails.name.lastName),
