@@ -16,14 +16,12 @@
 
 package uk.gov.hmrc.hec.repos
 
+import org.scalatest.BeforeAndAfterAll
 import org.scalatest.matchers.should.Matchers
-import org.scalatest.{BeforeAndAfterAll, BeforeAndAfterEach, Suite}
-import uk.gov.hmrc.mongo.test.MongoSupport
+import org.scalatest.wordspec.AnyWordSpec
+import uk.gov.hmrc.mongo.test.CleanMongoCollectionSupport
 
-trait MongoSupportSpec extends MongoSupport with BeforeAndAfterEach with BeforeAndAfterAll { this: Suite with Matchers ⇒
-
-  abstract override def beforeEach(): Unit =
-    super.beforeEach()
+trait MongoSupportSpec extends AnyWordSpec with Matchers with CleanMongoCollectionSupport with BeforeAndAfterAll {
 
   abstract override def afterAll(): Unit = {
     super.afterAll()
