@@ -26,29 +26,32 @@ import uk.gov.hmrc.play.bootstrap.backend.controller.BackendHeaderCarrierProvide
 import javax.inject.Inject
 import scala.concurrent.{ExecutionContext, Future}
 
-class AuthenticatedRequest[+A](
-  val ggCredId: String,
+final case class AuthenticatedGGRequest[+A](
+  ggCredId: String,
   request: Request[A]
 ) extends WrappedRequest[A](request)
 
-@ImplementedBy(classOf[AuthenticateActionBuilder])
-trait AuthenticateActions extends ActionBuilder[AuthenticatedRequest, AnyContent]
+@ImplementedBy(classOf[GGAuthenticateActionBuilder])
+trait GGAuthenticateAction extends ActionBuilder[AuthenticatedGGRequest, AnyContent]
 
-class AuthenticateActionBuilder @Inject() (
+class GGAuthenticateActionBuilder @Inject() (
   val authConnector: AuthConnector,
   val parser: BodyParsers.Default,
   val executionContext: ExecutionContext
-) extends AuthenticateActions
+) extends GGAuthenticateAction
     with AuthorisedFunctions
     with BackendHeaderCarrierProvider {
 
-  override def invokeBlock[A](request: Request[A], block: AuthenticatedRequest[A] => Future[Result]): Future[Result] = {
+  override def invokeBlock[A](
+    request: Request[A],
+    block: AuthenticatedGGRequest[A] => Future[Result]
+  ): Future[Result] = {
     val forbidden = Results.Forbidden("Forbidden")
     val carrier   = hc(request)
     authorised(AuthProviders(GovernmentGateway))
       .retrieve(v2.Retrievals.credentials) {
         case Some(credentials) =>
-          block(new AuthenticatedRequest[A](credentials.providerId, request))
+          block(new AuthenticatedGGRequest[A](credentials.providerId, request))
         case _                 => Future.successful(forbidden)
       }(carrier, executionContext)
       .recover { case _: NoActiveSession =>

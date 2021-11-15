@@ -18,14 +18,17 @@ package uk.gov.hmrc.hec.controllers
 
 import cats.data.EitherT
 import cats.instances.future._
+import com.github.ghik.silencer.silent
 import play.api.inject.bind
 import play.api.inject.guice.GuiceableModule
 import play.api.libs.json._
 import play.api.mvc.Result
 import play.api.test.FakeRequest
 import play.api.test.Helpers._
-import uk.gov.hmrc.auth.core.AuthConnector
-import uk.gov.hmrc.hec.controllers.actions.AuthenticatedRequest
+import uk.gov.hmrc.auth.core.AuthProvider.{GovernmentGateway, PrivilegedApplication}
+import uk.gov.hmrc.auth.core.{AuthConnector, AuthProviders, InvalidBearerToken}
+import uk.gov.hmrc.auth.core.retrieve.{PAClientId, VerifyPid, v2, GGCredId => AuthGGCredId}
+import uk.gov.hmrc.hec.controllers.actions.AuthenticatedGGOrStrideRequest
 import uk.gov.hmrc.hec.models.ApplicantDetails.{CompanyApplicantDetails, IndividualApplicantDetails}
 import uk.gov.hmrc.hec.models.HECTaxCheckData.{CompanyHECTaxCheckData, IndividualHECTaxCheckData}
 import uk.gov.hmrc.hec.models.TaxDetails.{CompanyTaxDetails, IndividualTaxDetails}
@@ -40,6 +43,7 @@ import java.time.{LocalDate, ZoneId, ZonedDateTime}
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
+@silent("deprecated")
 class TaxCheckControllerSpec extends ControllerSpec with AuthSupport {
 
   val mockTaxCheckService = mock[TaxCheckService]
@@ -79,16 +83,10 @@ class TaxCheckControllerSpec extends ControllerSpec with AuthSupport {
 
     "handling requests to save a tax check" must {
 
-      def performActionWithJsonBody(requestBody: JsValue): Future[Result] = {
-        val request: AuthenticatedRequest[JsValue] =
-          new AuthenticatedRequest(
-            ggCredId.value,
-            FakeRequest().withBody(requestBody).withHeaders(CONTENT_TYPE -> JSON)
-          )
-        controller.saveTaxCheck(request)
-      }
+      def performActionWithJsonBody(requestBody: JsValue): Future[Result] =
+        controller.saveTaxCheck(FakeRequest().withBody(requestBody).withHeaders(CONTENT_TYPE -> JSON))
 
-      val taxCheckDataIndividual: HECTaxCheckData = IndividualHECTaxCheckData(
+      val taxCheckDataIndividual: HECTaxCheckData                         = IndividualHECTaxCheckData(
         IndividualApplicantDetails(Some(GGCredId("")), Name("", ""), DateOfBirth(LocalDate.now())),
         LicenceDetails(
           LicenceType.ScrapMetalDealerSite,
@@ -131,11 +129,9 @@ class TaxCheckControllerSpec extends ControllerSpec with AuthSupport {
       )
 
       "return a 415 (unsupported media type)" when {
-        val requestWithNoBody     = new AuthenticatedRequest("AB123", FakeRequest())
-        val requestWithNoJsonBody =
-          new AuthenticatedRequest("AB123", FakeRequest().withBody("hi").withHeaders(CONTENT_TYPE -> TEXT))
 
         "there is no body in the request" in {
+          val requestWithNoBody = AuthenticatedGGOrStrideRequest(None, FakeRequest())
 
           val result: Future[Result] = controller.saveTaxCheck(requestWithNoBody).run()
           status(result) shouldBe UNSUPPORTED_MEDIA_TYPE
@@ -143,11 +139,15 @@ class TaxCheckControllerSpec extends ControllerSpec with AuthSupport {
         }
 
         "there is no json body in the request" in {
+          val requestWithNoJsonBody =
+            AuthenticatedGGOrStrideRequest(
+              Some("AB123"),
+              FakeRequest().withBody("hi").withHeaders(CONTENT_TYPE -> TEXT)
+            )
 
           val result: Future[Result] =
             controller.saveTaxCheck(requestWithNoJsonBody).run()
           status(result) shouldBe UNSUPPORTED_MEDIA_TYPE
-
         }
 
       }
@@ -155,7 +155,8 @@ class TaxCheckControllerSpec extends ControllerSpec with AuthSupport {
       "return a 400 (bad request)" when {
 
         "the JSON in the request cannot be parsed" in {
-          mockAuthWithGGRetrieval(ggCredId.value)
+          mockGGOrStrideAuth(AuthGGCredId(ggCredId.value))
+
           status(performActionWithJsonBody(JsString("hi"))) shouldBe BAD_REQUEST
 
         }
@@ -165,8 +166,10 @@ class TaxCheckControllerSpec extends ControllerSpec with AuthSupport {
       "return an 500 (internal server error)" when {
 
         "there is an error saving the tax check" in {
-          mockAuthWithGGRetrieval(ggCredId.value)
-          mockSaveTaxCheck(taxCheckDataIndividual)(Left(Error(new Exception("Oh no!"))))
+          inSequence {
+            mockGGOrStrideAuth(PAClientId(""))
+            mockSaveTaxCheck(taxCheckDataIndividual)(Left(Error(new Exception("Oh no!"))))
+          }
 
           val result = performActionWithJsonBody(Json.toJson(taxCheckDataIndividual))
           status(result) shouldBe INTERNAL_SERVER_ERROR
@@ -174,12 +177,24 @@ class TaxCheckControllerSpec extends ControllerSpec with AuthSupport {
 
       }
 
-      "return 403(forbidden) , if not authenticated" in {
+      "return 403(forbidden)" when {
 
-        mockAuthWithForbidden()
+        "there is no authenticated session" in {
+          mockAuth(AuthProviders(GovernmentGateway, PrivilegedApplication), v2.Retrievals.authProviderId)(
+            Future.failed(InvalidBearerToken(""))
+          )
 
-        val result = performActionWithJsonBody(Json.toJson(taxCheckDataIndividual))
-        status(result) shouldBe FORBIDDEN
+          val result = performActionWithJsonBody(Json.toJson(taxCheckDataIndividual))
+          status(result) shouldBe FORBIDDEN
+        }
+
+        "there is no gg cred id or privleged application id found" in {
+          mockGGOrStrideAuth(VerifyPid(""))
+
+          val result = performActionWithJsonBody(Json.toJson(taxCheckDataIndividual))
+          status(result) shouldBe FORBIDDEN
+        }
+
       }
 
       "return a created (201)" when {
@@ -190,8 +205,10 @@ class TaxCheckControllerSpec extends ControllerSpec with AuthSupport {
           val taxCheck         =
             HECTaxCheck(taxCheckDataIndividual, taxCheckCode, expiresAfterDate, TimeUtils.now(), false, None, None)
 
-          mockSaveTaxCheck(taxCheckDataIndividual)(Right(taxCheck))
-          mockAuthWithGGRetrieval(ggCredId.value)
+          inSequence {
+            mockGGOrStrideAuth(AuthGGCredId(ggCredId.value))
+            mockSaveTaxCheck(taxCheckDataIndividual)(Right(taxCheck))
+          }
 
           val result = performActionWithJsonBody(Json.toJson(taxCheckDataIndividual))
           status(result)                              shouldBe CREATED
@@ -204,8 +221,10 @@ class TaxCheckControllerSpec extends ControllerSpec with AuthSupport {
           val taxCheck         =
             HECTaxCheck(taxCheckDataCompany, taxCheckCode, expiresAfterDate, TimeUtils.now(), false, None, None)
 
-          mockSaveTaxCheck(taxCheckDataCompany)(Right(taxCheck))
-          mockAuthWithGGRetrieval(ggCredId.value)
+          inSequence {
+            mockGGOrStrideAuth(PAClientId(""))
+            mockSaveTaxCheck(taxCheckDataCompany)(Right(taxCheck))
+          }
 
           val result = performActionWithJsonBody(Json.toJson(taxCheckDataCompany))
           status(result)                              shouldBe CREATED
@@ -304,7 +323,7 @@ class TaxCheckControllerSpec extends ControllerSpec with AuthSupport {
       "return an 500 (internal server error)" when {
 
         "there is an error saving the tax check" in {
-          mockAuthWithGGRetrieval(ggCredId.value)
+          mockGGAuthWithGGRetrieval(ggCredId.value)
           mockGetValidTaxCheckCodes(ggCredId)(Left(Error(new Exception("Oh no!"))))
 
           val result = controller.getUnexpiredTaxCheckCodes(FakeRequest())
@@ -316,7 +335,7 @@ class TaxCheckControllerSpec extends ControllerSpec with AuthSupport {
       "return a 200 (OK)" when {
 
         "the tax check service returns an empty list of codes" in {
-          mockAuthWithGGRetrieval(ggCredId.value)
+          mockGGAuthWithGGRetrieval(ggCredId.value)
           mockGetValidTaxCheckCodes(ggCredId)(Right(List.empty))
 
           val result = controller.getUnexpiredTaxCheckCodes(FakeRequest())
@@ -325,7 +344,7 @@ class TaxCheckControllerSpec extends ControllerSpec with AuthSupport {
         }
 
         "the tax check service returns a list of codes" in {
-          mockAuthWithGGRetrieval(ggCredId.value)
+          mockGGAuthWithGGRetrieval(ggCredId.value)
           val items = List(
             TaxCheckListItem(
               LicenceType.ScrapMetalDealerSite,
@@ -345,7 +364,7 @@ class TaxCheckControllerSpec extends ControllerSpec with AuthSupport {
 
       "return 403(forbidden) , if not authenticated" in {
 
-        mockAuthWithForbidden()
+        mockGGAuthWithForbidden()
         val result = controller.getUnexpiredTaxCheckCodes(FakeRequest())
         status(result) shouldBe FORBIDDEN
       }
