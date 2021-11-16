@@ -17,6 +17,7 @@
 package uk.gov.hmrc.hec.testonly.controllers
 
 import cats.data.EitherT
+import cats.implicits.catsSyntaxOptionId
 import cats.instances.future._
 import play.api.inject.bind
 import play.api.inject.guice.GuiceableModule
@@ -30,7 +31,7 @@ import uk.gov.hmrc.hec.models.HECTaxCheckData.IndividualHECTaxCheckData
 import uk.gov.hmrc.hec.models.TaxDetails.IndividualTaxDetails
 import uk.gov.hmrc.hec.models.ids.{CRN, GGCredId, NINO, SAUTR}
 import uk.gov.hmrc.hec.models.licence.{LicenceDetails, LicenceTimeTrading, LicenceType, LicenceValidityPeriod}
-import uk.gov.hmrc.hec.models.{DateOfBirth, Error, HECTaxCheck, HECTaxCheckCode, HECTaxCheckSource, Name, TaxSituation, YesNoAnswer}
+import uk.gov.hmrc.hec.models.{DateOfBirth, Error, HECTaxCheck, HECTaxCheckCode, HECTaxCheckSource, Name, TaxSituation, TaxYear, YesNoAnswer}
 import uk.gov.hmrc.hec.testonly.models.SaveTaxCheckRequest
 import uk.gov.hmrc.hec.testonly.services.TaxCheckService
 import uk.gov.hmrc.hec.util.TimeUtils
@@ -109,7 +110,8 @@ class TaxCheckControllerSpec extends ControllerSpec {
            |  "createDate" : "${r.createDate}",
            |  "taxCheckStartDateTime": "$getStartDateTime",
            |  "isExtracted": false,
-           |  "source" : "${r.source.toString}"
+           |  "source" : "${r.source.toString}",
+           |  "relevantIncomeTaxYear": ${r.relevantIncomeTaxYear.map(_.startYear).getOrElse(2021)}
            |}
            |""".stripMargin
       }
@@ -127,7 +129,8 @@ class TaxCheckControllerSpec extends ControllerSpec {
           TimeUtils.now(),
           taxCheckStartDateTime,
           false,
-          HECTaxCheckSource.Digital
+          HECTaxCheckSource.Digital,
+          TaxYear(2021).some
         )
         val body        = Json.parse(requestJsonString(request))
 
@@ -173,7 +176,8 @@ class TaxCheckControllerSpec extends ControllerSpec {
             createDate = TimeUtils.now(),
             taxCheckStartDateTime = taxCheckStartDateTime,
             isExtracted = false,
-            HECTaxCheckSource.Digital
+            HECTaxCheckSource.Digital,
+            TaxYear(2021).some
           )
           val body        = Json.parse(requestJsonString(request))
 
@@ -199,7 +203,8 @@ class TaxCheckControllerSpec extends ControllerSpec {
             TimeUtils.now(),
             taxCheckStartDateTime,
             false,
-            HECTaxCheckSource.Digital
+            HECTaxCheckSource.Digital,
+            TaxYear(2021).some
           )
           val body        = Json.parse(requestJsonString(request))
 
@@ -220,7 +225,8 @@ class TaxCheckControllerSpec extends ControllerSpec {
             TimeUtils.now(),
             taxCheckStartDateTime,
             false,
-            HECTaxCheckSource.Digital
+            HECTaxCheckSource.Digital,
+            TaxYear(2021).some
           )
           val body    = Json.parse(requestJsonString(request))
 
@@ -281,7 +287,8 @@ class TaxCheckControllerSpec extends ControllerSpec {
               Some(SAUTR("")),
               TaxSituation.SAPAYE,
               Some(YesNoAnswer.Yes),
-              None
+              None,
+              TaxYear(2021)
             ),
             taxCheckStartDateTime,
             HECTaxCheckSource.Digital

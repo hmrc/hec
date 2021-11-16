@@ -19,8 +19,9 @@ package uk.gov.hmrc.hec.testonly.models
 import play.api.libs.json.{Json, Reads}
 import uk.gov.hmrc.hec.models.ids.{CRN, GGCredId}
 import uk.gov.hmrc.hec.models.licence.LicenceType
-import uk.gov.hmrc.hec.models.{DateOfBirth, HECTaxCheckCode, HECTaxCheckSource}
+import uk.gov.hmrc.hec.models.{DateOfBirth, HECTaxCheckCode, HECTaxCheckSource, TaxYear}
 import uk.gov.hmrc.hec.models.EitherUtils.eitherFormat
+
 import java.time.format.DateTimeFormatter
 import java.time.{LocalDate, ZonedDateTime}
 
@@ -33,7 +34,8 @@ final case class SaveTaxCheckRequest(
   createDate: ZonedDateTime,
   taxCheckStartDateTime: ZonedDateTime,
   isExtracted: Boolean,
-  source: HECTaxCheckSource
+  source: HECTaxCheckSource,
+  relevantIncomeTaxYear: Option[TaxYear]
 )
 
 object SaveTaxCheckRequest {

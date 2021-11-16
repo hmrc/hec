@@ -28,7 +28,7 @@ import uk.gov.hmrc.hec.models.HECTaxCheckData.IndividualHECTaxCheckData
 import uk.gov.hmrc.hec.models.TaxDetails.IndividualTaxDetails
 import uk.gov.hmrc.hec.models.ids.{CRN, GGCredId, NINO, SAUTR}
 import uk.gov.hmrc.hec.models.licence.{LicenceDetails, LicenceTimeTrading, LicenceType, LicenceValidityPeriod}
-import uk.gov.hmrc.hec.models.{DateOfBirth, Error, HECTaxCheck, HECTaxCheckCode, HECTaxCheckSource, Name, TaxSituation, YesNoAnswer}
+import uk.gov.hmrc.hec.models.{DateOfBirth, Error, HECTaxCheck, HECTaxCheckCode, HECTaxCheckSource, Name, TaxSituation, TaxYear, YesNoAnswer}
 import uk.gov.hmrc.hec.repos.HECTaxCheckStore
 import uk.gov.hmrc.hec.testonly.models.SaveTaxCheckRequest
 import uk.gov.hmrc.hec.util.{TimeProvider, TimeUtils}
@@ -41,10 +41,11 @@ import scala.concurrent.ExecutionContext.Implicits.global
 class TaxCheckServiceImplSpec extends AnyWordSpec with Matchers with MockFactory {
 
   val mockTaxCheckStore = mock[HECTaxCheckStore]
+  val mockTimeProvider  = mock[TimeProvider]
 
   val taxCheckStartDateTime = ZonedDateTime.of(2021, 10, 9, 9, 12, 34, 0, ZoneId.of("Europe/London"))
 
-  val service = new TaxCheckServiceImpl(mockTaxCheckStore)
+  val service = new TaxCheckServiceImpl(mockTaxCheckStore, mockTimeProvider)
 
   def mockStoreTaxCheck(taxCheck: HECTaxCheck)(result: Either[Error, Unit]) =
     (mockTaxCheckStore
@@ -70,8 +71,6 @@ class TaxCheckServiceImplSpec extends AnyWordSpec with Matchers with MockFactory
       .expects(*)
       .returning(EitherT.fromEither(result))
 
-  val mockTimeProvider = mock[TimeProvider]
-
   def mockTimeProviderToday(d: LocalDate) = (mockTimeProvider.currentDate _).expects().returning(d)
   val fileCorrelationId                   = UUID.fromString("20354d7a-e4fe-47af-8ff6-187bca92f3f9")
 
@@ -94,7 +93,8 @@ class TaxCheckServiceImplSpec extends AnyWordSpec with Matchers with MockFactory
           now,
           taxCheckStartDateTime,
           false,
-          HECTaxCheckSource.Digital
+          HECTaxCheckSource.Digital,
+          TaxYear(2021).some
         )
 
       "return an error" when {
@@ -193,7 +193,8 @@ class TaxCheckServiceImplSpec extends AnyWordSpec with Matchers with MockFactory
               Some(SAUTR("")),
               TaxSituation.SAPAYE,
               Some(YesNoAnswer.Yes),
-              None
+              None,
+              TaxYear(2021)
             ),
             taxCheckStartDateTime,
             HECTaxCheckSource.Digital
