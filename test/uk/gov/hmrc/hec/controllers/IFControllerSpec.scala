@@ -68,7 +68,7 @@ class IFControllerSpec extends ControllerSpec with AuthSupport {
 
         def testBadRequest(utr: String, taxYear: String, errorStr: String) = {
           val request = FakeRequest()
-          mockAuthWithGGRetrieval(ggCredId.value)
+          mockGGAuthWithGGRetrieval(ggCredId.value)
           val result  = controller.getSAStatus(utr, taxYear)(request)
           status(result)          shouldBe BAD_REQUEST
           contentAsString(result) shouldBe errorStr
@@ -99,7 +99,7 @@ class IFControllerSpec extends ControllerSpec with AuthSupport {
 
         "there is an error fetching the SA status" in {
           val taxYear = "2020"
-          mockAuthWithGGRetrieval(ggCredId.value)
+          mockGGAuthWithGGRetrieval(ggCredId.value)
           mockGetSAStatus(SAUTR(validSautr), TaxYear(2020))(Left(BackendError(Error(new Exception("some error")))))
 
           val request = FakeRequest()
@@ -114,7 +114,7 @@ class IFControllerSpec extends ControllerSpec with AuthSupport {
 
         "there is an error fetching the SA status" in {
           val taxYear = "2020"
-          mockAuthWithGGRetrieval(ggCredId.value)
+          mockGGAuthWithGGRetrieval(ggCredId.value)
           mockGetSAStatus(SAUTR(validSautr), TaxYear(2020))(Left(DataNotFoundError("some error")))
 
           val request = FakeRequest()
@@ -136,7 +136,7 @@ class IFControllerSpec extends ControllerSpec with AuthSupport {
             taxYear = taxYear,
             status = SAStatus.ReturnFound
           )
-          mockAuthWithGGRetrieval(ggCredId.value)
+          mockGGAuthWithGGRetrieval(ggCredId.value)
           mockGetSAStatus(utr, taxYear)(Right(response))
 
           val request = FakeRequest()
@@ -147,7 +147,7 @@ class IFControllerSpec extends ControllerSpec with AuthSupport {
 
       "return a 403(forbidden) if user is not authenticated" in {
         val taxYearStr = "2020"
-        mockAuthWithForbidden()
+        mockGGAuthWithForbidden()
         val request    = FakeRequest()
         val result     = controller.getSAStatus(validSautr, taxYearStr)(request)
         status(result) shouldBe FORBIDDEN
@@ -166,7 +166,7 @@ class IFControllerSpec extends ControllerSpec with AuthSupport {
 
         def testBadRequest(utr: String, startDate: String, endDate: String, errorStr: String) = {
           val request = FakeRequest()
-          mockAuthWithGGRetrieval(ggCredId.value)
+          mockGGAuthWithGGRetrieval(ggCredId.value)
           val result  = controller.getCTStatus(utr, startDate, endDate)(request)
           status(result)          shouldBe BAD_REQUEST
           contentAsString(result) shouldBe errorStr
@@ -188,7 +188,7 @@ class IFControllerSpec extends ControllerSpec with AuthSupport {
       "return an 500 (internal server error)" when {
 
         "there is an error fetching the CT status" in {
-          mockAuthWithGGRetrieval(ggCredId.value)
+          mockGGAuthWithGGRetrieval(ggCredId.value)
           mockGetCTStatus(CTUTR(validCtutr), startDate, endDate)(Left(BackendError(Error(new Exception("some error")))))
           val request = FakeRequest()
 
@@ -201,7 +201,7 @@ class IFControllerSpec extends ControllerSpec with AuthSupport {
       "return an 404 (not found)" when {
 
         "CTUTR was not found" in {
-          mockAuthWithGGRetrieval(ggCredId.value)
+          mockGGAuthWithGGRetrieval(ggCredId.value)
           mockGetCTStatus(CTUTR(validCtutr), startDate, endDate)(Left(DataNotFoundError("some error")))
           val request = FakeRequest()
 
@@ -221,7 +221,7 @@ class IFControllerSpec extends ControllerSpec with AuthSupport {
             endDate = endDate,
             latestAccountingPeriod = None
           )
-          mockAuthWithGGRetrieval(ggCredId.value)
+          mockGGAuthWithGGRetrieval(ggCredId.value)
           mockGetCTStatus(utr, startDate, endDate)(Right(response))
 
           val request = FakeRequest()
@@ -232,7 +232,7 @@ class IFControllerSpec extends ControllerSpec with AuthSupport {
 
       "return a 403(forbidden) if user is not authenticated" in {
 
-        mockAuthWithForbidden()
+        mockGGAuthWithForbidden()
         val request = FakeRequest()
         val result  = controller.getCTStatus(validCtutr, startDateStr, endDateStr)(request)
         status(result) shouldBe FORBIDDEN

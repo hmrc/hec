@@ -20,7 +20,7 @@ import cats.instances.future._
 import com.google.inject.{Inject, Singleton}
 import play.api.libs.json.{JsError, JsSuccess, JsValue, Json}
 import play.api.mvc.{Action, AnyContent, ControllerComponents}
-import uk.gov.hmrc.hec.controllers.actions.AuthenticateActions
+import uk.gov.hmrc.hec.controllers.actions.{GGAuthenticateAction, GGOrStrideAuthenticateAction}
 import uk.gov.hmrc.hec.models.ids.GGCredId
 import uk.gov.hmrc.hec.models.{HECTaxCheckData, HECTaxCheckMatchRequest}
 import uk.gov.hmrc.hec.services.TaxCheckService
@@ -33,13 +33,14 @@ import scala.concurrent.{ExecutionContext, Future}
 @Singleton
 class TaxCheckController @Inject() (
   taxCheckService: TaxCheckService,
-  authenticate: AuthenticateActions,
+  authenticateGG: GGAuthenticateAction,
+  authenticatedGGOrStride: GGOrStrideAuthenticateAction,
   cc: ControllerComponents
 )(implicit ec: ExecutionContext)
     extends BackendController(cc)
     with Logging {
 
-  val saveTaxCheck: Action[JsValue] = authenticate(parse.json).async { implicit request =>
+  val saveTaxCheck: Action[JsValue] = authenticatedGGOrStride(parse.json).async { implicit request =>
     Json.fromJson[HECTaxCheckData](request.body) match {
       case JsSuccess(taxCheckData, _) =>
         taxCheckService
@@ -79,7 +80,7 @@ class TaxCheckController @Inject() (
     }
   }
 
-  val getUnexpiredTaxCheckCodes: Action[AnyContent] = authenticate.async { implicit request =>
+  val getUnexpiredTaxCheckCodes: Action[AnyContent] = authenticateGG.async { implicit request =>
     taxCheckService
       .getUnexpiredTaxCheckCodes(GGCredId(request.ggCredId))
       .fold(

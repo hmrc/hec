@@ -16,10 +16,11 @@
 
 package uk.gov.hmrc.hec.controllers
 
-import uk.gov.hmrc.auth.core.AuthProvider.GovernmentGateway
+import com.github.ghik.silencer.silent
+import uk.gov.hmrc.auth.core.AuthProvider.{GovernmentGateway, PrivilegedApplication}
 import uk.gov.hmrc.auth.core._
 import uk.gov.hmrc.auth.core.authorise.Predicate
-import uk.gov.hmrc.auth.core.retrieve.{Credentials, Retrieval, v2}
+import uk.gov.hmrc.auth.core.retrieve.{Credentials, LegacyCredentials, Retrieval, v2}
 import uk.gov.hmrc.http.HeaderCarrier
 
 import scala.concurrent.{ExecutionContext, Future}
@@ -39,14 +40,20 @@ trait AuthSupport { this: ControllerSpec =>
       .expects(predicate, retrieval, *, *)
       .returning(result)
 
-  def mockAuthWithGGRetrieval(ggCredId: String): Unit =
+  def mockGGAuthWithGGRetrieval(ggCredId: String): Unit =
     mockAuth(AuthProviders(GovernmentGateway), v2.Retrievals.credentials)(
       Future.successful(Some(Credentials(ggCredId, ggCredId)))
     )
 
-  def mockAuthWithForbidden(): Unit =
+  def mockGGAuthWithForbidden(): Unit =
     mockAuth(AuthProviders(GovernmentGateway), v2.Retrievals.credentials)(
       Future.successful(None)
+    )
+
+  @silent("deprecated")
+  def mockGGOrStrideAuth(authProviderId: LegacyCredentials): Unit =
+    mockAuth(AuthProviders(GovernmentGateway, PrivilegedApplication), v2.Retrievals.authProviderId)(
+      Future.successful(authProviderId)
     )
 
 }

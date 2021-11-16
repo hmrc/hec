@@ -62,14 +62,14 @@ class DESControllerSpec extends ControllerSpec with AuthSupport {
       "return a 400 (bad request)" when {
 
         "input CRN is invalid" in {
-          mockAuthWithGGRetrieval(ggCredId.value)
+          mockGGAuthWithGGRetrieval(ggCredId.value)
           val result = controller.getCtutr("invalid-crn")(request)
           status(result)          shouldBe BAD_REQUEST
           contentAsString(result) shouldBe "Invalid CRN"
         }
 
         "DES API says CRN is invalid" in {
-          mockAuthWithGGRetrieval(ggCredId.value)
+          mockGGAuthWithGGRetrieval(ggCredId.value)
           mockGetCtutr(CRN(validCrn))(Left(InvalidCRNError("some error")))
 
           val result = controller.getCtutr(validCrn)(request)
@@ -81,7 +81,7 @@ class DESControllerSpec extends ControllerSpec with AuthSupport {
       "return an 500 (internal server error)" when {
 
         "there is an error fetching the CTUTR" in {
-          mockAuthWithGGRetrieval(ggCredId.value)
+          mockGGAuthWithGGRetrieval(ggCredId.value)
           mockGetCtutr(CRN(validCrn))(Left(BackendError(Error(new Exception("some error")))))
 
           val request = FakeRequest()
@@ -95,7 +95,7 @@ class DESControllerSpec extends ControllerSpec with AuthSupport {
       "return an 404 (not found)" when {
 
         "CTUTR is not found" in {
-          mockAuthWithGGRetrieval(ggCredId.value)
+          mockGGAuthWithGGRetrieval(ggCredId.value)
           mockGetCtutr(CRN(validCrn))(Left(DataNotFoundError("some error")))
 
           val request = FakeRequest()
@@ -110,7 +110,7 @@ class DESControllerSpec extends ControllerSpec with AuthSupport {
 
         "inputs are all valid and service returns success response" in {
           val crn = CRN(validCrn)
-          mockAuthWithGGRetrieval(ggCredId.value)
+          mockGGAuthWithGGRetrieval(ggCredId.value)
           mockGetCtutr(crn)(Right(CTUTR("some-utr")))
 
           val request = FakeRequest()
@@ -121,7 +121,7 @@ class DESControllerSpec extends ControllerSpec with AuthSupport {
       }
 
       "return 403(forbidden) if not authenticated" in {
-        mockAuthWithForbidden()
+        mockGGAuthWithForbidden()
         val request = FakeRequest()
         val result  = controller.getCtutr(validCrn)(request)
         status(result) shouldBe FORBIDDEN
