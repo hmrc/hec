@@ -113,6 +113,7 @@ class HecTaxCheckExtractionServiceImpl @Inject() (
                          true
                        )
         hecTaxCheck <- taxCheckService.getAllTaxCheckCodesByExtractedStatus(false)
+        _            = logger.info(s"Found ${hecTaxCheck.size} tax checks to send")
         _           <- createHecFile(
                          HECTaxCheckFileBodyList(hecTaxCheck),
                          maxTaxChecksPerFile,
