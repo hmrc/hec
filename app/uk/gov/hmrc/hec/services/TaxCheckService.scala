@@ -51,7 +51,7 @@ trait TaxCheckService {
     hc: HeaderCarrier
   ): EitherT[Future, Error, List[TaxCheckListItem]]
 
-  def getAllTaxCheckCodesByExtractedStatus(isExtracted: Boolean)(implicit
+  def getAllTaxCheckCodesByExtractedStatus(isExtracted: Boolean, skip: Int, limit: Int, sortBy: String)(implicit
     hc: HeaderCarrier
   ): EitherT[Future, Error, List[HECTaxCheck]]
 
@@ -148,10 +148,10 @@ class TaxCheckServiceImpl @Inject() (
       )
   }
 
-  override def getAllTaxCheckCodesByExtractedStatus(isExtracted: Boolean)(implicit
-    hc: HeaderCarrier
+  override def getAllTaxCheckCodesByExtractedStatus(isExtracted: Boolean, skip: Int, limit: Int, sortBy: String)(
+    implicit hc: HeaderCarrier
   ): EitherT[Future, Error, List[HECTaxCheck]] =
-    taxCheckStore.getAllTaxCheckCodesByExtractedStatus(isExtracted)
+    taxCheckStore.getAllTaxCheckCodesByExtractedStatus(isExtracted, skip, limit, sortBy)
 
   override def getAllTaxCheckCodesByFileCorrelationId(fileCorrelationId: String)(implicit
     hc: HeaderCarrier
