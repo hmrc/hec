@@ -32,7 +32,6 @@ import uk.gov.hmrc.objectstore.client.ObjectSummaryWithMd5
 
 import java.util.UUID
 import javax.inject.Singleton
-import scala.annotation.tailrec
 import scala.concurrent.Future
 
 @ImplementedBy(classOf[HecTaxCheckExtractionServiceImpl])
@@ -130,7 +129,7 @@ class HecTaxCheckExtractionServiceImpl @Inject() (
     partialFileName: String,
     dirname: String
   ): EitherT[Future, Error, List[Unit]] = {
-    @tailrec
+
     @SuppressWarnings(Array("org.wartremover.warts.All"))
     def loop(
       seqNumInt: Int,
@@ -141,7 +140,7 @@ class HecTaxCheckExtractionServiceImpl @Inject() (
       dirname: String,
       acc: List[EitherT[Future, Error, Unit]]
     ): List[EitherT[Future, Error, Unit]] = {
-      val fetchHECRecordsInBatchAndProcess: EitherT[Future, Error, Unit] = for {
+      val fetchHECRecordsInBatchAndProcess: List[EitherT[Future, Error, Unit]] = List(for {
         hecTaxCheckList          <- taxCheckService.getAllTaxCheckCodesByExtractedStatus(false, skip, limit, sortBy)
         _                         =
           logger.info(
@@ -151,24 +150,25 @@ class HecTaxCheckExtractionServiceImpl @Inject() (
           taxCheckService.getAllTaxCheckCodesByExtractedStatus(false, skip + limit, limit, sortBy)
         _                         = if ((hecTaxCheckList.size === 0 && seqNumInt =!= 1) || seqNumInt > 9999) acc
                                     else {
-                                      createAndStoreFileThenNotify(
-                                        inputType = HECTaxCheckFileBodyList(hecTaxCheckList),
-                                        seqNum = toFormattedString(seqNumInt),
-                                        partialFileName = partialFileName,
-                                        dirName = dirname,
-                                        isLastInSequence = hecTaxCheckListNextBatch.size === 0
+                                      loop(
+                                        seqNumInt + 1,
+                                        skip + limit,
+                                        limit,
+                                        sortBy,
+                                        partialFileName,
+                                        dirname,
+                                        createAndStoreFileThenNotify(
+                                          inputType = HECTaxCheckFileBodyList(hecTaxCheckList),
+                                          seqNum = toFormattedString(seqNumInt),
+                                          partialFileName = partialFileName,
+                                          dirName = dirname,
+                                          isLastInSequence = hecTaxCheckListNextBatch.size === 0
+                                        ) :: acc
                                       )
+
                                     }
-      } yield ()
-      loop(
-        seqNumInt + 1,
-        skip + limit,
-        limit,
-        sortBy,
-        partialFileName,
-        dirname,
-        fetchHECRecordsInBatchAndProcess :: acc
-      )
+      } yield ())
+      fetchHECRecordsInBatchAndProcess
     }
     //using _id for sorting and not lastUpdatedDate, because file creation job requires to fetch data , process and then update the DB.
     //During db update the lastUpdatedDate gets changed and so as the whole sorting , the sequence of data fetched for the first time will  not be  same for the next.
