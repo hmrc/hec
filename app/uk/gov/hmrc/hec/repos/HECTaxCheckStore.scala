@@ -28,7 +28,7 @@ import uk.gov.hmrc.hec.models.ids.GGCredId
 import uk.gov.hmrc.hec.models.{Error, HECTaxCheck, HECTaxCheckCode}
 import uk.gov.hmrc.hec.util.Logging
 import uk.gov.hmrc.http.HeaderCarrier
-import uk.gov.hmrc.mongo.cache.{CacheIdType, DataKey, MongoCacheRepository}
+import uk.gov.hmrc.mongo.cache.{CacheIdType, CacheItem, DataKey, MongoCacheRepository}
 import uk.gov.hmrc.mongo.{CurrentTimestampSupport, MongoComponent, MongoUtils}
 import uk.gov.hmrc.play.http.logging.Mdc.preservingMdc
 
@@ -199,28 +199,7 @@ class HECTaxCheckStoreImpl @Inject() (
         collection
           .find(Filters.equal[T](fieldName, value))
           .toFuture()
-          .map { caches =>
-            val jsons = caches
-              .map(_.data)
-              .toList
-              .map(json => (json \ key).validate[HECTaxCheck])
-
-            val (valid, invalid) =
-              jsons.foldLeft((List.empty[HECTaxCheck], Seq.empty[JsonValidationError])) { (acc, json) =>
-                val (taxChecks, errors) = acc
-                json match {
-                  case JsSuccess(value, _)       => (value +: taxChecks, errors)
-                  case JsError(validationErrors) => (taxChecks, errors ++ validationErrors.flatMap(_._2))
-                }
-              }
-
-            val errorStr = invalid.map(_.message).mkString("; ")
-            if (invalid.nonEmpty) {
-              logger.warn(s"${invalid.size} results failed json parsing - $errorStr")
-            }
-
-            Either.cond(invalid.isEmpty, valid, Error(Left(errorStr)))
-          }
+          .map(processCacheValues)
       }
     )
 
@@ -239,28 +218,31 @@ class HECTaxCheckStoreImpl @Inject() (
           .skip(skipN)
           .limit(limitN)
           .toFuture()
-          .map { caches =>
-            val jsons = caches
-              .map(_.data)
-              .toList
-              .map(json => (json \ key).validate[HECTaxCheck])
-
-            val (valid, invalid) =
-              jsons.foldLeft((List.empty[HECTaxCheck], Seq.empty[JsonValidationError])) { (acc, json) =>
-                val (taxChecks, errors) = acc
-                json match {
-                  case JsSuccess(value, _)       => (value +: taxChecks, errors)
-                  case JsError(validationErrors) => (taxChecks, errors ++ validationErrors.flatMap(_._2))
-                }
-              }
-
-            val errorStr = invalid.map(_.message).mkString("; ")
-            if (invalid.nonEmpty) {
-              logger.warn(s"${invalid.size} results failed json parsing - $errorStr")
-            }
-
-            Either.cond(invalid.isEmpty, valid, Error(Left(errorStr)))
-          }
+          .map(processCacheValues)
       }
     )
+
+  private def processCacheValues(caches: Seq[CacheItem]): Either[Error, List[HECTaxCheck]] = {
+    val jsons = caches
+      .map(_.data)
+      .toList
+      .map(json => (json \ key).validate[HECTaxCheck])
+
+    val (valid, invalid) =
+      jsons.foldLeft((List.empty[HECTaxCheck], Seq.empty[JsonValidationError])) { (acc, json) =>
+        val (taxChecks, errors) = acc
+        json match {
+          case JsSuccess(value, _)       => (value +: taxChecks, errors)
+          case JsError(validationErrors) => (taxChecks, errors ++ validationErrors.flatMap(_._2))
+        }
+      }
+
+    val errorStr = invalid.map(_.message).mkString("; ")
+    if (invalid.nonEmpty) {
+      logger.warn(s"${invalid.size} results failed json parsing - $errorStr")
+    }
+
+    Either.cond(invalid.isEmpty, valid, Error(Left(errorStr)))
+
+  }
 }
