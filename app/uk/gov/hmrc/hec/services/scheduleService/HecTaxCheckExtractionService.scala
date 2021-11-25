@@ -137,11 +137,12 @@ class HecTaxCheckExtractionServiceImpl @Inject() (
       limit: Int,
       sortBy: String,
       partialFileName: String,
-      dirname: String
+      dirname: String,
+      currentBatch: EitherT[Future, Error, List[HECTaxCheck]]
     ): EitherT[Future, Error, Unit] = {
 
       val fetchNextBatchHECTaxCheckData = for {
-        hecTaxCheckList          <- taxCheckService.getAllTaxCheckCodesByExtractedStatus(false, skip, limit, sortBy)
+        hecTaxCheckList          <- currentBatch
         _                         =
           logger.info(
             s" Processing file no :: $seqNumInt, with records:: ${hecTaxCheckList.size}}"
@@ -162,13 +163,19 @@ class HecTaxCheckExtractionServiceImpl @Inject() (
 
       fetchNextBatchHECTaxCheckData.flatMap { hecTaxCheckList =>
         if (hecTaxCheckList.size === 0) EitherT.pure[Future, Error](())
-        else loop(seqNumInt + 1, skip + limit, limit, sortBy, partialFileName, dirname)
+        else loop(seqNumInt + 1, skip + limit, limit, sortBy, partialFileName, dirname, fetchNextBatchHECTaxCheckData)
       }
     }
-    //using _id for sorting and not lastUpdatedDate, because file creation job requires to fetch data , process and then update the DB.
-    //During db update the lastUpdatedDate gets changed and so as the whole sorting , the sequence of data fetched for the first time will  not be  same for the next.
-    //hence skip and limit functions may miss some tax check codes to be picked
-    loop(1, 0, limit, "_id", partialFileName, dirname)
+
+    loop(
+      1,
+      0,
+      limit,
+      "_id",
+      partialFileName,
+      dirname,
+      taxCheckService.getAllTaxCheckCodesByExtractedStatus(false, 0, limit, "_id")
+    )
   }
 
   //Combining the process of creating , Storing file ,
