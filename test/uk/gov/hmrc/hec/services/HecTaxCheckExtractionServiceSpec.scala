@@ -365,7 +365,6 @@ class HecTaxCheckExtractionServiceSpec
           mockCreateFileContent(HECTaxCheckFileBodyList(hecTaxCheckList.take(2)), "0001", "HEC", true)(
             Right(("00|file1.dat|HEC|SSA|20210909|154556|000001|001", "file1.dat"))
           )
-          mockGetAlltaxCheckByExtractedStatus(false, 2, 2, "_id")(Right(List()))
           mockStoreFile(
             "00|file1.dat|HEC|SSA|20210909|154556|000001|001",
             "file1.dat",
@@ -454,7 +453,6 @@ class HecTaxCheckExtractionServiceSpec
           mockCreateFileContent(HECTaxCheckFileBodyList(hecTaxCheckList.take(2)), "0001", "HEC", true)(
             Right(("00|file1.dat|HEC|SSA|20210909|154556|000001|001", "file1.dat"))
           )
-          mockGetAlltaxCheckByExtractedStatus(false, 2, 2, "_id")(Right(List()))
           mockStoreFile("00|file1.dat|HEC|SSA|20210909|154556|000001|001", "file1.dat", s"$sdesDirectory/tax-checks")(
             Right(createObjectSummary(s"$sdesDirectory/tax-checks", "file1.dat"))
           )

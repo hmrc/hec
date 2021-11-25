@@ -128,19 +128,19 @@ class HecTaxCheckExtractionServiceImpl @Inject() (
     limit: Int,
     partialFileName: String,
     dirname: String
-  ): EitherT[Future, Error, List[Unit]] = {
+  ): EitherT[Future, Error, Unit] = {
 
     @SuppressWarnings(Array("org.wartremover.warts.All"))
-    def loop(
+    def loop1(
       seqNumInt: Int,
       skip: Int,
       limit: Int,
       sortBy: String,
       partialFileName: String,
-      dirname: String,
-      acc: List[EitherT[Future, Error, Unit]]
-    ): List[EitherT[Future, Error, Unit]] = {
-      val fetchHECRecordsInBatchAndProcess: List[EitherT[Future, Error, Unit]] = List(for {
+      dirname: String
+    ): EitherT[Future, Error, Unit] = {
+
+      val fetchNextBatchHECTaxCheckData = for {
         hecTaxCheckList          <- taxCheckService.getAllTaxCheckCodesByExtractedStatus(false, skip, limit, sortBy)
         _                         =
           logger.info(
@@ -148,32 +148,27 @@ class HecTaxCheckExtractionServiceImpl @Inject() (
           )
         hecTaxCheckListNextBatch <-
           taxCheckService.getAllTaxCheckCodesByExtractedStatus(false, skip + limit, limit, sortBy)
-        _                         = if ((hecTaxCheckList.size === 0 && seqNumInt =!= 1) || seqNumInt > 9999) acc
+        _                        <- if ((hecTaxCheckList.size === 0 && seqNumInt =!= 1) || seqNumInt > 9999) EitherT.pure[Future, Error](())
                                     else {
-                                      loop(
-                                        seqNumInt + 1,
-                                        skip + limit,
-                                        limit,
-                                        sortBy,
+                                      createAndStoreFileThenNotify(
+                                        HECTaxCheckFileBodyList(hecTaxCheckList),
+                                        toFormattedString(seqNumInt),
                                         partialFileName,
                                         dirname,
-                                        createAndStoreFileThenNotify(
-                                          inputType = HECTaxCheckFileBodyList(hecTaxCheckList),
-                                          seqNum = toFormattedString(seqNumInt),
-                                          partialFileName = partialFileName,
-                                          dirName = dirname,
-                                          isLastInSequence = hecTaxCheckListNextBatch.size === 0
-                                        ) :: acc
+                                        hecTaxCheckListNextBatch.size === 0
                                       )
-
                                     }
-      } yield ())
-      fetchHECRecordsInBatchAndProcess
+      } yield hecTaxCheckListNextBatch
+
+      fetchNextBatchHECTaxCheckData.flatMap { hecTaxCheckList =>
+        if (hecTaxCheckList.size === 0) EitherT.pure[Future, Error](())
+        else loop1(seqNumInt + 1, skip + limit, limit, sortBy, partialFileName, dirname)
+      }
     }
     //using _id for sorting and not lastUpdatedDate, because file creation job requires to fetch data , process and then update the DB.
     //During db update the lastUpdatedDate gets changed and so as the whole sorting , the sequence of data fetched for the first time will  not be  same for the next.
     //hence skip and limit functions may miss some tax check codes to be picked
-    loop(1, 0, limit, "_id", partialFileName, dirname, List()).sequence[EitherT[Future, Error, *], Unit]
+    loop1(1, 0, limit, "_id", partialFileName, dirname)
   }
 
   //Combining the process of creating , Storing file ,
