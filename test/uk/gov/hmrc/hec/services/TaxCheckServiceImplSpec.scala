@@ -79,10 +79,12 @@ class TaxCheckServiceImplSpec extends AnyWordSpec with Matchers with MockFactory
       .expects(ggCredId, *)
       .returning(EitherT.fromEither(result))
 
-  def mockGetAllTaxCheckCodesByStatus(isExtracted: Boolean)(result: Either[Error, List[HECTaxCheck]]) =
+  def mockGetAllTaxCheckCodesByStatus(isExtracted: Boolean, skip: Int, limit: Int, sortBy: String)(
+    result: Either[Error, List[HECTaxCheck]]
+  ) =
     (mockTaxCheckStore
-      .getAllTaxCheckCodesByExtractedStatus(_: Boolean)(_: HeaderCarrier))
-      .expects(isExtracted, *)
+      .getAllTaxCheckCodesByExtractedStatus(_: Boolean, _: Int, _: Int, _: String)(_: HeaderCarrier))
+      .expects(isExtracted, skip, limit, sortBy, *)
       .returning(EitherT.fromEither(result))
 
   def mockGetAllTaxCheckCodesByCorrelationId(correlationId: UUID)(result: Either[Error, List[HECTaxCheck]]) =
@@ -523,9 +525,9 @@ class TaxCheckServiceImplSpec extends AnyWordSpec with Matchers with MockFactory
 
         "there is an error fetching the code from the db" in {
           val error = Left(Error("some error"))
-          mockGetAllTaxCheckCodesByStatus(false)(error)
+          mockGetAllTaxCheckCodesByStatus(false, 0, 2, "_id")(error)
 
-          val result = service.getAllTaxCheckCodesByExtractedStatus(false)
+          val result = service.getAllTaxCheckCodesByExtractedStatus(false, 0, 2, "_id")
           await(result.value) shouldBe error
         }
       }
@@ -539,9 +541,9 @@ class TaxCheckServiceImplSpec extends AnyWordSpec with Matchers with MockFactory
         val hecTaxCheck3 =
           HECTaxCheck(taxCheckData, HECTaxCheckCode("MBC 123 ABC"), today.plusDays(1), now, false, None, None)
 
-        mockGetAllTaxCheckCodesByStatus(false)(Right(List(hecTaxCheck1, hecTaxCheck2, hecTaxCheck3)))
+        mockGetAllTaxCheckCodesByStatus(false, 0, 3, "_id")(Right(List(hecTaxCheck1, hecTaxCheck2, hecTaxCheck3)))
 
-        val result = service.getAllTaxCheckCodesByExtractedStatus(false)
+        val result = service.getAllTaxCheckCodesByExtractedStatus(false, 0, 3, "_id")
         await(result.value) shouldBe Right(List(hecTaxCheck1, hecTaxCheck2, hecTaxCheck3))
       }
     }

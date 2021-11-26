@@ -32,7 +32,6 @@ import uk.gov.hmrc.objectstore.client.ObjectSummaryWithMd5
 
 import java.util.UUID
 import javax.inject.Singleton
-import scala.annotation.tailrec
 import scala.concurrent.Future
 
 @ImplementedBy(classOf[HecTaxCheckExtractionServiceImpl])
@@ -89,8 +88,8 @@ class HecTaxCheckExtractionServiceImpl @Inject() (
     val seqNum = "0001"
     val result: EitherT[Future, models.Error, Unit] = {
       for {
-        _           <- createAndStoreFileThenNotify(LicenceType, seqNum, licenceType.partialFileName, licenceType.dirName, true)
-        _           <-
+        _ <- createAndStoreFileThenNotify(LicenceType, seqNum, licenceType.partialFileName, licenceType.dirName, true)
+        _ <-
           createAndStoreFileThenNotify(
             LicenceTimeTrading,
             seqNum,
@@ -98,28 +97,25 @@ class HecTaxCheckExtractionServiceImpl @Inject() (
             licenceTimeTrading.dirName,
             true
           )
-        _           <- createAndStoreFileThenNotify(
-                         LicenceValidityPeriod,
-                         seqNum,
-                         licenceValidityPeriod.partialFileName,
-                         licenceValidityPeriod.dirName,
-                         true
-                       )
-        _           <- createAndStoreFileThenNotify(
-                         CorrectiveAction,
-                         seqNum,
-                         correctiveAction.partialFileName,
-                         correctiveAction.dirName,
-                         true
-                       )
-        hecTaxCheck <- taxCheckService.getAllTaxCheckCodesByExtractedStatus(false)
-        _            = logger.info(s"Found ${hecTaxCheck.size} tax checks to send")
-        _           <- createHecFile(
-                         HECTaxCheckFileBodyList(hecTaxCheck),
-                         maxTaxChecksPerFile,
-                         hecData.partialFileName,
-                         hecData.dirName
-                       )
+        _ <- createAndStoreFileThenNotify(
+               LicenceValidityPeriod,
+               seqNum,
+               licenceValidityPeriod.partialFileName,
+               licenceValidityPeriod.dirName,
+               true
+             )
+        _ <- createAndStoreFileThenNotify(
+               CorrectiveAction,
+               seqNum,
+               correctiveAction.partialFileName,
+               correctiveAction.dirName,
+               true
+             )
+        _ <- createHecFile(
+               maxTaxChecksPerFile,
+               hecData.partialFileName,
+               hecData.dirName
+             )
 
       } yield ()
     }
@@ -129,50 +125,57 @@ class HecTaxCheckExtractionServiceImpl @Inject() (
   private def toFormattedString(i: Int) = f"$i%04d"
 
   private def createHecFile(
-    hecTaxCheckList: HECTaxCheckFileBodyList,
-    count: Int,
+    limit: Int,
     partialFileName: String,
     dirname: String
-  ): EitherT[Future, Error, List[Unit]] = {
-    @tailrec
-    def loopHecTaxCheckRecords(
-      hecTaxCheckList: List[HECTaxCheck],
-      count: Int,
+  ): EitherT[Future, Error, Unit] = {
+
+    @SuppressWarnings(Array("org.wartremover.warts.All"))
+    def loop(
       seqNumInt: Int,
+      skip: Int,
+      limit: Int,
+      sortBy: String,
       partialFileName: String,
       dirname: String,
-      acc: List[EitherT[Future, Error, Unit]]
-    ): List[EitherT[Future, Error, Unit]] = {
-      val hecList          = hecTaxCheckList.take(count)
-      val remainingList    = hecTaxCheckList.drop(count)
-      val isLastInSequence = remainingList.size === 0
-      //If list is empty and seq number is not 1 or seq num > 9999, halt the process
-      if ((hecList.size === 0 && seqNumInt =!= 1) || seqNumInt > 9999) {
-        logger.info(
-          "Hec tax Check file creation process halted:: Either there are no more records to process or the sequence number exceeds 9999. "
-        )
-        acc
-      } else {
-        loopHecTaxCheckRecords(
-          remainingList,
-          count,
-          seqNumInt + 1,
-          partialFileName,
-          dirname,
-          createAndStoreFileThenNotify(
-            HECTaxCheckFileBodyList(hecList),
-            toFormattedString(seqNumInt),
-            partialFileName,
-            dirname,
-            isLastInSequence
-          ) :: acc
-        )
+      currentBatch: EitherT[Future, Error, List[HECTaxCheck]]
+    ): EitherT[Future, Error, Unit] = {
+
+      val fetchNextBatchHECTaxCheckData = for {
+        hecTaxCheckList          <- currentBatch
+        _                         =
+          logger.info(
+            s" Processing file no :: $seqNumInt, with records:: ${hecTaxCheckList.size}}"
+          )
+        hecTaxCheckListNextBatch <-
+          taxCheckService.getAllTaxCheckCodesByExtractedStatus(false, skip + limit, limit, sortBy)
+        _                        <- if ((hecTaxCheckList.size === 0 && seqNumInt =!= 1) || seqNumInt > 9999) EitherT.pure[Future, Error](())
+                                    else {
+                                      createAndStoreFileThenNotify(
+                                        HECTaxCheckFileBodyList(hecTaxCheckList),
+                                        toFormattedString(seqNumInt),
+                                        partialFileName,
+                                        dirname,
+                                        hecTaxCheckListNextBatch.size === 0
+                                      )
+                                    }
+      } yield hecTaxCheckListNextBatch
+
+      fetchNextBatchHECTaxCheckData.flatMap { hecTaxCheckList =>
+        if (hecTaxCheckList.size === 0) EitherT.pure[Future, Error](())
+        else loop(seqNumInt + 1, skip + limit, limit, sortBy, partialFileName, dirname, fetchNextBatchHECTaxCheckData)
       }
     }
 
-    loopHecTaxCheckRecords(hecTaxCheckList.list, count, 1, partialFileName, dirname, List())
-      .sequence[EitherT[Future, Error, *], Unit]
-
+    loop(
+      1,
+      0,
+      limit,
+      "_id",
+      partialFileName,
+      dirname,
+      taxCheckService.getAllTaxCheckCodesByExtractedStatus(false, 0, limit, "_id")
+    )
   }
 
   //Combining the process of creating , Storing file ,

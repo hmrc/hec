@@ -21,14 +21,14 @@ import cats.instances.either._
 import cats.syntax.either._
 import com.google.inject.{ImplementedBy, Inject, Singleton}
 import org.mongodb.scala.bson.BsonDocument
-import org.mongodb.scala.model.{Filters, IndexModel, IndexOptions, Indexes}
+import org.mongodb.scala.model.{Filters, IndexModel, IndexOptions, Indexes, Sorts}
 import play.api.Configuration
 import play.api.libs.json.{JsError, JsSuccess, JsonValidationError}
 import uk.gov.hmrc.hec.models.ids.GGCredId
 import uk.gov.hmrc.hec.models.{Error, HECTaxCheck, HECTaxCheckCode}
 import uk.gov.hmrc.hec.util.Logging
 import uk.gov.hmrc.http.HeaderCarrier
-import uk.gov.hmrc.mongo.cache.{CacheIdType, DataKey, MongoCacheRepository}
+import uk.gov.hmrc.mongo.cache.{CacheIdType, CacheItem, DataKey, MongoCacheRepository}
 import uk.gov.hmrc.mongo.{CurrentTimestampSupport, MongoComponent, MongoUtils}
 import uk.gov.hmrc.play.http.logging.Mdc.preservingMdc
 
@@ -54,7 +54,7 @@ trait HECTaxCheckStore {
 
   def deleteAll()(implicit hc: HeaderCarrier): EitherT[Future, Error, Unit]
 
-  def getAllTaxCheckCodesByExtractedStatus(status: Boolean)(implicit
+  def getAllTaxCheckCodesByExtractedStatus(status: Boolean, skip: Int, limit: Int, sortBy: String)(implicit
     hc: HeaderCarrier
   ): EitherT[Future, Error, List[HECTaxCheck]]
 
@@ -150,9 +150,10 @@ class HECTaxCheckStoreImpl @Inject() (
     hc: HeaderCarrier
   ): EitherT[Future, Error, List[HECTaxCheck]] = find[String](ggCredIdField, ggCredId.value)
 
-  def getAllTaxCheckCodesByExtractedStatus(isExtracted: Boolean)(implicit
+  def getAllTaxCheckCodesByExtractedStatus(isExtracted: Boolean, skip: Int, limit: Int, sortBy: String)(implicit
     hc: HeaderCarrier
-  ): EitherT[Future, Error, List[HECTaxCheck]] = find[Boolean](isExtractedField, isExtracted)
+  ): EitherT[Future, Error, List[HECTaxCheck]] =
+    findByLimit[Boolean](isExtractedField, isExtracted, skip, limit, sortBy)
 
   def getAllTaxCheckCodesByFileCorrelationId(correlationId: String)(implicit
     hc: HeaderCarrier
@@ -198,28 +199,50 @@ class HECTaxCheckStoreImpl @Inject() (
         collection
           .find(Filters.equal[T](fieldName, value))
           .toFuture()
-          .map { caches =>
-            val jsons = caches
-              .map(_.data)
-              .toList
-              .map(json => (json \ key).validate[HECTaxCheck])
-
-            val (valid, invalid) =
-              jsons.foldLeft((List.empty[HECTaxCheck], Seq.empty[JsonValidationError])) { (acc, json) =>
-                val (taxChecks, errors) = acc
-                json match {
-                  case JsSuccess(value, _)       => (value +: taxChecks, errors)
-                  case JsError(validationErrors) => (taxChecks, errors ++ validationErrors.flatMap(_._2))
-                }
-              }
-
-            val errorStr = invalid.map(_.message).mkString("; ")
-            if (invalid.nonEmpty) {
-              logger.warn(s"${invalid.size} results failed json parsing - $errorStr")
-            }
-
-            Either.cond(invalid.isEmpty, valid, Error(Left(errorStr)))
-          }
+          .map(processCacheValues)
       }
     )
+
+  private def findByLimit[T](
+    fieldName: String,
+    value: T,
+    skipN: Int,
+    limitN: Int,
+    sortByFieldName: String
+  ): EitherT[Future, Error, List[HECTaxCheck]] =
+    EitherT(
+      preservingMdc {
+        collection
+          .find(Filters.equal[T](fieldName, value))
+          .sort(Sorts.ascending(sortByFieldName))
+          .skip(skipN)
+          .limit(limitN)
+          .toFuture()
+          .map(processCacheValues)
+      }
+    )
+
+  private def processCacheValues(caches: Seq[CacheItem]): Either[Error, List[HECTaxCheck]] = {
+    val jsons = caches
+      .map(_.data)
+      .toList
+      .map(json => (json \ key).validate[HECTaxCheck])
+
+    val (valid, invalid) =
+      jsons.foldLeft((List.empty[HECTaxCheck], Seq.empty[JsonValidationError])) { (acc, json) =>
+        val (taxChecks, errors) = acc
+        json match {
+          case JsSuccess(value, _)       => (value +: taxChecks, errors)
+          case JsError(validationErrors) => (taxChecks, errors ++ validationErrors.flatMap(_._2))
+        }
+      }
+
+    val errorStr = invalid.map(_.message).mkString("; ")
+    if (invalid.nonEmpty) {
+      logger.warn(s"${invalid.size} results failed json parsing - $errorStr")
+    }
+
+    Either.cond(invalid.isEmpty, valid, Error(Left(errorStr)))
+
+  }
 }

@@ -73,10 +73,12 @@ class HecTaxCheckExtractionServiceSpec
     TestKit.shutdownActorSystem(system)
   }
 
-  def mockGetAlltaxCheckByExtractedStatus(isExtracted: Boolean)(result: Either[models.Error, List[HECTaxCheck]]) =
+  def mockGetAlltaxCheckByExtractedStatus(isExtracted: Boolean, skip: Int, limit: Int, sortBy: String)(
+    result: Either[models.Error, List[HECTaxCheck]]
+  ) =
     (mockTaxCheckService
-      .getAllTaxCheckCodesByExtractedStatus(_: Boolean)(_: HeaderCarrier))
-      .expects(isExtracted, *)
+      .getAllTaxCheckCodesByExtractedStatus(_: Boolean, _: Int, _: Int, _: String)(_: HeaderCarrier))
+      .expects(isExtracted, skip, limit, sortBy, *)
       .returning(EitherT.fromEither[Future](result))
 
   @SuppressWarnings(Array("org.wartremover.warts.All"))
@@ -127,7 +129,7 @@ class HecTaxCheckExtractionServiceSpec
       """
         | hec-file-extraction-details {
         |   force-lock-release-after = 5 minutes
-        |   maximum-rows-per-file = 500
+        |   maximum-rows-per-file = 2
         |   file-notification-api {
         |       location = "sdes-stub"
         |       information-type = "ssa"
@@ -276,7 +278,7 @@ class HecTaxCheckExtractionServiceSpec
             Right(createObjectSummary(s"$sdesDirectory/corrective-action", "file1.dat"))
           )
           mockFileNotify(createFileNotifyRequest("file1.dat", s"$sdesDirectory/corrective-action"))(Right(()))
-          mockGetAlltaxCheckByExtractedStatus(false)(Left(models.Error("a")))
+          mockGetAlltaxCheckByExtractedStatus(false, 0, 2, "_id")(Left(models.Error("a")))
         }
         val result =
           hecTaxCheckExtractionService.lockAndProcessHecData()
@@ -357,7 +359,8 @@ class HecTaxCheckExtractionServiceSpec
             Right(createObjectSummary(s"$sdesDirectory/corrective-action", "file1.dat"))
           )
           mockFileNotify(createFileNotifyRequest("file1.dat", s"$sdesDirectory/corrective-action"))(Right(()))
-          mockGetAlltaxCheckByExtractedStatus(false)(Right(hecTaxCheckList.take(2)))
+          mockGetAlltaxCheckByExtractedStatus(false, 0, 2, "_id")(Right(hecTaxCheckList.take(2)))
+          mockGetAlltaxCheckByExtractedStatus(false, 2, 2, "_id")(Right(List()))
           mockGeneratUUID(uuid)
           mockCreateFileContent(HECTaxCheckFileBodyList(hecTaxCheckList.take(2)), "0001", "HEC", true)(
             Right(("00|file1.dat|HEC|SSA|20210909|154556|000001|001", "file1.dat"))
@@ -444,9 +447,20 @@ class HecTaxCheckExtractionServiceSpec
             Right(createObjectSummary(s"$sdesDirectory/corrective-action", "file1.dat"))
           )
           mockFileNotify(createFileNotifyRequest("file1.dat", s"$sdesDirectory/corrective-action"))(Right(()))
-          mockGetAlltaxCheckByExtractedStatus(false)(Right(hecTaxCheckList.take(2)))
+          mockGetAlltaxCheckByExtractedStatus(false, 0, 2, "_id")(Right(hecTaxCheckList.take(2)))
+          mockGetAlltaxCheckByExtractedStatus(false, 2, 2, "_id")(Right(hecTaxCheckList.take(2)))
           mockGeneratUUID(uuid)
-          mockCreateFileContent(HECTaxCheckFileBodyList(hecTaxCheckList.take(2)), "0001", "HEC", true)(
+          mockCreateFileContent(HECTaxCheckFileBodyList(hecTaxCheckList.take(2)), "0001", "HEC", false)(
+            Right(("00|file1.dat|HEC|SSA|20210909|154556|000001|001", "file1.dat"))
+          )
+          mockStoreFile("00|file1.dat|HEC|SSA|20210909|154556|000001|001", "file1.dat", s"$sdesDirectory/tax-checks")(
+            Right(createObjectSummary(s"$sdesDirectory/tax-checks", "file1.dat"))
+          )
+          mockUpdateAllHecTaxCheck(updatedHecTaxCheckList.take(2))(Right(updatedHecTaxCheckList.take(2)))
+          mockFileNotify(createFileNotifyRequest("file1.dat", s"$sdesDirectory/tax-checks"))(Right(()))
+          mockGetAlltaxCheckByExtractedStatus(false, 4, 2, "_id")(Right(List()))
+          mockGeneratUUID(uuid)
+          mockCreateFileContent(HECTaxCheckFileBodyList(hecTaxCheckList.take(2)), "0002", "HEC", true)(
             Right(("00|file1.dat|HEC|SSA|20210909|154556|000001|001", "file1.dat"))
           )
           mockStoreFile("00|file1.dat|HEC|SSA|20210909|154556|000001|001", "file1.dat", s"$sdesDirectory/tax-checks")(

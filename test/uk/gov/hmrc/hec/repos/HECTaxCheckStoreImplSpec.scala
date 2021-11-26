@@ -86,9 +86,11 @@ class HECTaxCheckStoreImplSpec extends AnyWordSpec with Matchers with Eventually
     val taxCheckCode1 = HECTaxCheckCode("code1")
     val taxCheckCode2 = HECTaxCheckCode("code12")
     val taxCheckCode3 = HECTaxCheckCode("code13")
+    val taxCheckCode4 = HECTaxCheckCode("code14")
     val taxCheck1     = HECTaxCheck(taxCheckData, taxCheckCode1, TimeUtils.today(), TimeUtils.now(), false, None, None)
     val taxCheck2     = taxCheck1.copy(taxCheckCode = taxCheckCode2)
     val taxCheck3     = taxCheck1.copy(taxCheckCode = taxCheckCode3, isExtracted = true)
+    val taxCheck4     = taxCheck1.copy(taxCheckCode = taxCheckCode4, isExtracted = false)
 
     "be able to insert tax checks into mongo, read it back and delete it" in {
 
@@ -190,17 +192,34 @@ class HECTaxCheckStoreImplSpec extends AnyWordSpec with Matchers with Eventually
       await(taxCheckStore.getTaxCheckCodes(GGCredId(ggCredId)).value).isLeft shouldBe true
     }
 
-    "be able to fetch all tax check codes with isExtracted false" in {
+    "be able to fetch all tax check codes with isExtracted false" when {
 
-      // store some tax check codes in mongo
-      await(taxCheckStore.store(taxCheck1).value) shouldBe Right(())
-      await(taxCheckStore.store(taxCheck2).value) shouldBe Right(())
-      await(taxCheckStore.store(taxCheck3).value) shouldBe Right(())
-      eventually {
-        await(taxCheckStore.getAllTaxCheckCodesByExtractedStatus(false).value).map(_.toSet) should be(
-          Right(Set(taxCheck1, taxCheck2))
-        )
+      "skip = 0, limit = 2" in {
+        // store some tax check codes in mongo
+        await(taxCheckStore.store(taxCheck1).value) shouldBe Right(())
+        await(taxCheckStore.store(taxCheck2).value) shouldBe Right(())
+        await(taxCheckStore.store(taxCheck3).value) shouldBe Right(())
+        await(taxCheckStore.store(taxCheck4).value) shouldBe Right(())
+        eventually {
+          await(taxCheckStore.getAllTaxCheckCodesByExtractedStatus(false, 0, 2, "_id").value).map(_.toSet) should be(
+            Right(Set(taxCheck1, taxCheck2))
+          )
+        }
       }
+
+      "skip = 2, limit = 2" in {
+        // store some tax check codes in mongo
+        await(taxCheckStore.store(taxCheck1).value) shouldBe Right(())
+        await(taxCheckStore.store(taxCheck2).value) shouldBe Right(())
+        await(taxCheckStore.store(taxCheck3).value) shouldBe Right(())
+        await(taxCheckStore.store(taxCheck4).value) shouldBe Right(())
+        eventually {
+          await(taxCheckStore.getAllTaxCheckCodesByExtractedStatus(false, 2, 2, "_id").value).map(_.toSet) should be(
+            Right(Set(taxCheck4)) //since only one record is there after skipping 2 records
+          )
+        }
+      }
+
     }
 
     "return an error when data can't be parsed when fetching tax check codes based on isExtracted field" in {
@@ -220,7 +239,7 @@ class HECTaxCheckStoreImplSpec extends AnyWordSpec with Matchers with Eventually
 
       // insert invalid data
       await(taxCheckStore.put(taxCheckCode)(DataKey("hec-tax-check"), invalidData))
-      await(taxCheckStore.getAllTaxCheckCodesByExtractedStatus(false).value).isLeft shouldBe true
+      await(taxCheckStore.getAllTaxCheckCodesByExtractedStatus(false, 0, 3, "_id").value).isLeft shouldBe true
     }
 
     "be able to fetch all tax check codes with the given fileCorrelationId" in {
