@@ -22,13 +22,13 @@ object FileMapOps {
   val hec: String           = "HEC"
   val sdesDirectory: String = "sdes"
 
-  //
+  // Map with key as partial file name and fir as values
   val fileNameDirMap: Map[String, String] = Map(
     s"${hec}_LICENCE_TYPE"            -> s"$sdesDirectory/licence-type",
     s"${hec}_LICENCE_TIME_TRADING"    -> s"$sdesDirectory/licence-time-trading",
     s"${hec}_LICENCE_VALIDITY_PERIOD" -> s"$sdesDirectory/licence-validity-period",
     s"${hec}_CORRECTIVE_ACTION"       -> s"$sdesDirectory/corrective-action",
-    hec                               -> s"$sdesDirectory/tax-checks"
+    s"${hec}_APPLICATION"             -> s"$sdesDirectory/tax-checks"
   )
 
   def getFileDetails[A](partialFileName: String): FileDetails[A] = {

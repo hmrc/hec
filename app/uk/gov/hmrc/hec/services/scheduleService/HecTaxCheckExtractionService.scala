@@ -79,7 +79,7 @@ class HecTaxCheckExtractionServiceImpl @Inject() (
   val correctiveAction: FileDetails[CorrectiveAction] =
     FileMapOps.getFileDetails[CorrectiveAction](s"${hec}_CORRECTIVE_ACTION")
 
-  val hecData: FileDetails[List[HECTaxCheck]] = FileMapOps.getFileDetails[List[HECTaxCheck]](hec)
+  val hecData: FileDetails[List[HECTaxCheck]] = FileMapOps.getFileDetails[List[HECTaxCheck]](s"${hec}_APPLICATION")
 
   override def lockAndProcessHecData(): Future[Option[Either[models.Error, Unit]]] =
     mongoLockService.withLock(processHecData)

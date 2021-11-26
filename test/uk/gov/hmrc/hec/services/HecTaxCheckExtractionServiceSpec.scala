@@ -362,7 +362,7 @@ class HecTaxCheckExtractionServiceSpec
           mockGetAlltaxCheckByExtractedStatus(false, 0, 2, "_id")(Right(hecTaxCheckList.take(2)))
           mockGetAlltaxCheckByExtractedStatus(false, 2, 2, "_id")(Right(List()))
           mockGeneratUUID(uuid)
-          mockCreateFileContent(HECTaxCheckFileBodyList(hecTaxCheckList.take(2)), "0001", "HEC", true)(
+          mockCreateFileContent(HECTaxCheckFileBodyList(hecTaxCheckList.take(2)), "0001", "HEC_APPLICATION", true)(
             Right(("00|file1.dat|HEC|SSA|20210909|154556|000001|001", "file1.dat"))
           )
           mockStoreFile(
@@ -450,7 +450,7 @@ class HecTaxCheckExtractionServiceSpec
           mockGetAlltaxCheckByExtractedStatus(false, 0, 2, "_id")(Right(hecTaxCheckList.take(2)))
           mockGetAlltaxCheckByExtractedStatus(false, 2, 2, "_id")(Right(hecTaxCheckList.take(2)))
           mockGeneratUUID(uuid)
-          mockCreateFileContent(HECTaxCheckFileBodyList(hecTaxCheckList.take(2)), "0001", "HEC", false)(
+          mockCreateFileContent(HECTaxCheckFileBodyList(hecTaxCheckList.take(2)), "0001", "HEC_APPLICATION", false)(
             Right(("00|file1.dat|HEC|SSA|20210909|154556|000001|001", "file1.dat"))
           )
           mockStoreFile("00|file1.dat|HEC|SSA|20210909|154556|000001|001", "file1.dat", s"$sdesDirectory/tax-checks")(
@@ -460,7 +460,7 @@ class HecTaxCheckExtractionServiceSpec
           mockFileNotify(createFileNotifyRequest("file1.dat", s"$sdesDirectory/tax-checks"))(Right(()))
           mockGetAlltaxCheckByExtractedStatus(false, 4, 2, "_id")(Right(List()))
           mockGeneratUUID(uuid)
-          mockCreateFileContent(HECTaxCheckFileBodyList(hecTaxCheckList.take(2)), "0002", "HEC", true)(
+          mockCreateFileContent(HECTaxCheckFileBodyList(hecTaxCheckList.take(2)), "0002", "HEC_APPLICATION", true)(
             Right(("00|file1.dat|HEC|SSA|20210909|154556|000001|001", "file1.dat"))
           )
           mockStoreFile("00|file1.dat|HEC|SSA|20210909|154556|000001|001", "file1.dat", s"$sdesDirectory/tax-checks")(
