@@ -22,7 +22,7 @@ object FileMapOps {
   val hec: String           = "HEC"
   val sdesDirectory: String = "sdes"
 
-  // Map with key as partial file name and fir as values
+  // Map with key as partial file name and value as object store directory name
   val fileNameDirMap: Map[String, String] = Map(
     s"${hec}_LICENCE_TYPE"            -> s"$sdesDirectory/licence-type",
     s"${hec}_LICENCE_TIME_TRADING"    -> s"$sdesDirectory/licence-time-trading",
