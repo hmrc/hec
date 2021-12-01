@@ -56,7 +56,8 @@ class HECTaxCheckDataSpec extends AnyWordSpec with Matchers {
             TaxSituation.SA,
             Some(YesNoAnswer.Yes),
             None,
-            TaxYear(2021)
+            TaxYear(2021),
+            None
           ),
           taxCheckStartDateTime,
           HECTaxCheckSource.Digital
@@ -109,7 +110,8 @@ class HECTaxCheckDataSpec extends AnyWordSpec with Matchers {
               )
             ),
             recentlyStaredTrading = None,
-            Some(YesNoAnswer.Yes)
+            Some(YesNoAnswer.Yes),
+            None
           ),
           taxCheckStartDateTime,
           HECTaxCheckSource.Stride

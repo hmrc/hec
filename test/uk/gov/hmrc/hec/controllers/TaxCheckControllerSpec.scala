@@ -100,7 +100,8 @@ class TaxCheckControllerSpec extends ControllerSpec with AuthSupport {
           TaxSituation.PAYE,
           None,
           None,
-          TaxYear(2021)
+          TaxYear(2021),
+          None
         ),
         taxCheckStartDateTime,
         HECTaxCheckSource.Digital
@@ -124,7 +125,8 @@ class TaxCheckControllerSpec extends ControllerSpec with AuthSupport {
             Some(CTAccountingPeriod(LocalDate.of(2020, 10, 9).some, LocalDate.of(2021, 10, 9), CTStatus.ReturnFound))
           ),
           None,
-          Some(YesNoAnswer.Yes)
+          Some(YesNoAnswer.Yes),
+          None
         ),
         taxCheckStartDateTime,
         HECTaxCheckSource.Digital
@@ -205,7 +207,7 @@ class TaxCheckControllerSpec extends ControllerSpec with AuthSupport {
           val taxCheckCode     = HECTaxCheckCode("code")
           val expiresAfterDate = LocalDate.MIN
           val taxCheck         =
-            HECTaxCheck(taxCheckDataIndividual, taxCheckCode, expiresAfterDate, TimeUtils.now(), false, None, None)
+            HECTaxCheck(taxCheckDataIndividual, taxCheckCode, expiresAfterDate, TimeUtils.now(), false, None)
 
           inSequence {
             mockGGOrStrideAuth(AuthGGCredId(ggCredId.value))
@@ -221,7 +223,7 @@ class TaxCheckControllerSpec extends ControllerSpec with AuthSupport {
           val taxCheckCode     = HECTaxCheckCode("code")
           val expiresAfterDate = LocalDate.MIN
           val taxCheck         =
-            HECTaxCheck(taxCheckDataCompany, taxCheckCode, expiresAfterDate, TimeUtils.now(), false, None, None)
+            HECTaxCheck(taxCheckDataCompany, taxCheckCode, expiresAfterDate, TimeUtils.now(), false, None)
 
           inSequence {
             mockGGOrStrideAuth(PAClientId(""))

@@ -102,16 +102,17 @@ class SDESCallbackControllerSpec extends ControllerSpec {
       Some(YesNoAnswer.Yes),
       CTStatusResponse(CTUTR("1111111111"), LocalDate.of(2020, 10, 9), LocalDate.of(2021, 10, 9), None),
       None,
-      Some(YesNoAnswer.Yes)
+      Some(YesNoAnswer.Yes),
+      None
     ),
     taxCheckStartDateTime,
     HECTaxCheckSource.Digital
   )
 
   val hecTaxCheck1 =
-    HECTaxCheck(taxCheckData, HECTaxCheckCode("ABC 123 ABC"), today.plusDays(1), now, false, None, uuid.some)
+    HECTaxCheck(taxCheckData, HECTaxCheckCode("ABC 123 ABC"), today.plusDays(1), now, false, uuid.some)
   val hecTaxCheck2 =
-    HECTaxCheck(taxCheckData, HECTaxCheckCode("EBC 123 ABC"), today.plusDays(1), now, false, None, uuid.some)
+    HECTaxCheck(taxCheckData, HECTaxCheckCode("EBC 123 ABC"), today.plusDays(1), now, false, uuid.some)
 
   val fileName1 = "HEC_SSA_0001_20210908_HEC_LICENCE_TYPE.dat"
   val fileName2 = "HEC_SSA_0001_20210908_HEC_APPLICATION.dat"

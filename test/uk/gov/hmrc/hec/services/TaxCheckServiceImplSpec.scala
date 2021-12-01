@@ -119,7 +119,8 @@ class TaxCheckServiceImplSpec extends AnyWordSpec with Matchers with MockFactory
           TaxSituation.SAPAYE,
           Some(YesNoAnswer.Yes),
           None,
-          TaxYear(2021)
+          TaxYear(2021),
+          None
         ),
         taxCheckStartDateTime,
         HECTaxCheckSource.Digital
@@ -128,7 +129,7 @@ class TaxCheckServiceImplSpec extends AnyWordSpec with Matchers with MockFactory
       val expectedExpiryDate                        = TimeUtils.today().plusDays(expiresAfter.toDays)
       val taxCheckCode                              = HECTaxCheckCode("code")
       def taxCheck(fileCorrelationId: Option[UUID]) =
-        HECTaxCheck(taxCheckData, taxCheckCode, expectedExpiryDate, now, false, None, fileCorrelationId)
+        HECTaxCheck(taxCheckData, taxCheckCode, expectedExpiryDate, now, false, fileCorrelationId)
 
       "return an error" when {
 
@@ -207,7 +208,8 @@ class TaxCheckServiceImplSpec extends AnyWordSpec with Matchers with MockFactory
               TaxSituation.SAPAYE,
               Some(YesNoAnswer.No),
               None,
-              TaxYear(2021)
+              TaxYear(2021),
+              None
             ),
             taxCheckStartDateTime,
             HECTaxCheckSource.Digital
@@ -216,7 +218,6 @@ class TaxCheckServiceImplSpec extends AnyWordSpec with Matchers with MockFactory
           TimeUtils.today().plusMonths(1L),
           now,
           false,
-          None,
           None
         )
 
@@ -238,7 +239,8 @@ class TaxCheckServiceImplSpec extends AnyWordSpec with Matchers with MockFactory
                 )
               ),
               None,
-              Some(YesNoAnswer.Yes)
+              Some(YesNoAnswer.Yes),
+              None
             ),
             taxCheckStartDateTime,
             HECTaxCheckSource.Digital
@@ -247,7 +249,6 @@ class TaxCheckServiceImplSpec extends AnyWordSpec with Matchers with MockFactory
           TimeUtils.today().plusMonths(1L),
           now,
           false,
-          None,
           None
         )
 
@@ -446,7 +447,8 @@ class TaxCheckServiceImplSpec extends AnyWordSpec with Matchers with MockFactory
             Some(CTAccountingPeriod(LocalDate.of(2020, 10, 9).some, LocalDate.of(2021, 10, 9), CTStatus.ReturnFound))
           ),
           None,
-          Some(YesNoAnswer.Yes)
+          Some(YesNoAnswer.Yes),
+          None
         ),
         taxCheckStartDateTime,
         HECTaxCheckSource.Digital
@@ -471,9 +473,9 @@ class TaxCheckServiceImplSpec extends AnyWordSpec with Matchers with MockFactory
         val code2 = HECTaxCheckCode("code2")
         val code3 = HECTaxCheckCode("code3")
 
-        val taxCheckToday     = HECTaxCheck(taxCheckData, code1, today, now, false, None, None)
-        val taxCheckYesterday = HECTaxCheck(taxCheckData, code2, yesterday, now, false, None, None)
-        val taxCheckTomorrow  = HECTaxCheck(taxCheckData, code3, tomorrow, now, false, None, None)
+        val taxCheckToday     = HECTaxCheck(taxCheckData, code1, today, now, false, None)
+        val taxCheckYesterday = HECTaxCheck(taxCheckData, code2, yesterday, now, false, None)
+        val taxCheckTomorrow  = HECTaxCheck(taxCheckData, code3, tomorrow, now, false, None)
 
         val todayItem    = TaxCheckListItem(
           taxCheckToday.taxCheckData.licenceDetails.licenceType,
@@ -517,7 +519,8 @@ class TaxCheckServiceImplSpec extends AnyWordSpec with Matchers with MockFactory
             Some(CTAccountingPeriod(LocalDate.of(2020, 10, 9).some, LocalDate.of(2021, 10, 9), CTStatus.ReturnFound))
           ),
           None,
-          Some(YesNoAnswer.Yes)
+          Some(YesNoAnswer.Yes),
+          None
         ),
         taxCheckStartDateTime,
         HECTaxCheckSource.Digital
@@ -537,11 +540,11 @@ class TaxCheckServiceImplSpec extends AnyWordSpec with Matchers with MockFactory
       "only return HEC Tac check code with isExtracted false" in {
 
         val hecTaxCheck1 =
-          HECTaxCheck(taxCheckData, HECTaxCheckCode("ABC 123 ABC"), today.plusDays(1), now, false, None, None)
+          HECTaxCheck(taxCheckData, HECTaxCheckCode("ABC 123 ABC"), today.plusDays(1), now, false, None)
         val hecTaxCheck2 =
-          HECTaxCheck(taxCheckData, HECTaxCheckCode("EBC 123 ABC"), today.plusDays(1), now, false, None, None)
+          HECTaxCheck(taxCheckData, HECTaxCheckCode("EBC 123 ABC"), today.plusDays(1), now, false, None)
         val hecTaxCheck3 =
-          HECTaxCheck(taxCheckData, HECTaxCheckCode("MBC 123 ABC"), today.plusDays(1), now, false, None, None)
+          HECTaxCheck(taxCheckData, HECTaxCheckCode("MBC 123 ABC"), today.plusDays(1), now, false, None)
 
         mockGetAllTaxCheckCodesByStatus(false, 0, 3, "_id")(Right(List(hecTaxCheck1, hecTaxCheck2, hecTaxCheck3)))
 
@@ -572,7 +575,8 @@ class TaxCheckServiceImplSpec extends AnyWordSpec with Matchers with MockFactory
             Some(CTAccountingPeriod(LocalDate.of(2020, 10, 9).some, LocalDate.of(2021, 10, 9), CTStatus.ReturnFound))
           ),
           None,
-          Some(YesNoAnswer.Yes)
+          Some(YesNoAnswer.Yes),
+          None
         ),
         taxCheckStartDateTime,
         HECTaxCheckSource.Digital
@@ -592,9 +596,9 @@ class TaxCheckServiceImplSpec extends AnyWordSpec with Matchers with MockFactory
       "only return HEC Tac check code with the given CorrelationId" in {
 
         val hecTaxCheck1 =
-          HECTaxCheck(taxCheckData, HECTaxCheckCode("ABC 123 ABC"), today.plusDays(1), now, false, None, uuid.some)
+          HECTaxCheck(taxCheckData, HECTaxCheckCode("ABC 123 ABC"), today.plusDays(1), now, false, uuid.some)
         val hecTaxCheck2 =
-          HECTaxCheck(taxCheckData, HECTaxCheckCode("EBC 123 ABC"), today.plusDays(1), now, false, None, uuid.some)
+          HECTaxCheck(taxCheckData, HECTaxCheckCode("EBC 123 ABC"), today.plusDays(1), now, false, uuid.some)
 
         mockGetAllTaxCheckCodesByCorrelationId(uuid)(Right(List(hecTaxCheck1, hecTaxCheck2)))
 

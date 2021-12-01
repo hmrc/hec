@@ -29,7 +29,8 @@ object TaxDetails {
     taxSituation: TaxSituation,
     saIncomeDeclared: Option[YesNoAnswer],
     saStatusResponse: Option[SAStatusResponse],
-    relevantIncomeTaxYear: TaxYear
+    relevantIncomeTaxYear: TaxYear,
+    correctiveAction: Option[CorrectiveAction]
   ) extends TaxDetails
 
   final case class CompanyTaxDetails(
@@ -38,7 +39,8 @@ object TaxDetails {
     ctIncomeDeclared: Option[YesNoAnswer],
     ctStatus: CTStatusResponse,
     recentlyStaredTrading: Option[YesNoAnswer],
-    chargeableForCT: Option[YesNoAnswer]
+    chargeableForCT: Option[YesNoAnswer],
+    correctiveAction: Option[CorrectiveAction]
   ) extends TaxDetails
 
   implicit val individualTaxDetailsFormat: OFormat[IndividualTaxDetails] = Json.format

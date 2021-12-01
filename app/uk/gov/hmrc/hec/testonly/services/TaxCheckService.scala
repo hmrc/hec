@@ -64,7 +64,6 @@ class TaxCheckServiceImpl @Inject() (
         saveTaxCheckRequest.expiresAfter,
         saveTaxCheckRequest.createDate,
         false,
-        None,
         None
       )
 
@@ -107,7 +106,8 @@ class TaxCheckServiceImpl @Inject() (
             Some(CTAccountingPeriod(LocalDate.of(2020, 10, 9).some, LocalDate.of(2021, 10, 9), CTStatus.ReturnFound))
           ),
           None,
-          Some(YesNoAnswer.Yes)
+          Some(YesNoAnswer.Yes),
+          saveTaxCheckRequest.correctiveAction
         )
         CompanyHECTaxCheckData(
           companyDetails,
@@ -125,7 +125,8 @@ class TaxCheckServiceImpl @Inject() (
           TaxSituation.PAYE,
           None,
           None,
-          saveTaxCheckRequest.relevantIncomeTaxYear.getOrElse(getTaxYear(timeProvider.currentDate))
+          saveTaxCheckRequest.relevantIncomeTaxYear.getOrElse(getTaxYear(timeProvider.currentDate)),
+          saveTaxCheckRequest.correctiveAction
         )
         IndividualHECTaxCheckData(
           individualDetails,

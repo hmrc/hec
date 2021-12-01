@@ -130,7 +130,8 @@ class TaxCheckControllerSpec extends ControllerSpec {
           taxCheckStartDateTime,
           false,
           HECTaxCheckSource.Digital,
-          TaxYear(2021).some
+          TaxYear(2021).some,
+          None
         )
         val body        = Json.parse(requestJsonString(request))
 
@@ -177,7 +178,8 @@ class TaxCheckControllerSpec extends ControllerSpec {
             taxCheckStartDateTime = taxCheckStartDateTime,
             isExtracted = false,
             HECTaxCheckSource.Digital,
-            TaxYear(2021).some
+            TaxYear(2021).some,
+            None
           )
           val body        = Json.parse(requestJsonString(request))
 
@@ -204,7 +206,8 @@ class TaxCheckControllerSpec extends ControllerSpec {
             taxCheckStartDateTime,
             false,
             HECTaxCheckSource.Digital,
-            TaxYear(2021).some
+            TaxYear(2021).some,
+            None
           )
           val body        = Json.parse(requestJsonString(request))
 
@@ -226,7 +229,8 @@ class TaxCheckControllerSpec extends ControllerSpec {
             taxCheckStartDateTime,
             false,
             HECTaxCheckSource.Digital,
-            TaxYear(2021).some
+            TaxYear(2021).some,
+            None
           )
           val body    = Json.parse(requestJsonString(request))
 
@@ -288,13 +292,14 @@ class TaxCheckControllerSpec extends ControllerSpec {
               TaxSituation.SAPAYE,
               Some(YesNoAnswer.Yes),
               None,
-              TaxYear(2021)
+              TaxYear(2021),
+              None
             ),
             taxCheckStartDateTime,
             HECTaxCheckSource.Digital
           )
           val taxCheck     =
-            HECTaxCheck(taxCheckData, validTaxCheckCode, TimeUtils.today(), TimeUtils.now(), false, None, None)
+            HECTaxCheck(taxCheckData, validTaxCheckCode, TimeUtils.today(), TimeUtils.now(), false, None)
 
           mockGetTaxCheck(validTaxCheckCode)(Right(Some(taxCheck)))
 

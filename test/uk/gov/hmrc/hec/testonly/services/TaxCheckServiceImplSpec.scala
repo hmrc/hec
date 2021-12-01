@@ -94,7 +94,8 @@ class TaxCheckServiceImplSpec extends AnyWordSpec with Matchers with MockFactory
           taxCheckStartDateTime,
           false,
           HECTaxCheckSource.Digital,
-          TaxYear(2021).some
+          TaxYear(2021).some,
+          None
         )
 
       "return an error" when {
@@ -107,7 +108,6 @@ class TaxCheckServiceImplSpec extends AnyWordSpec with Matchers with MockFactory
             request.expiresAfter,
             now,
             false,
-            None,
             None
           )
 
@@ -131,7 +131,6 @@ class TaxCheckServiceImplSpec extends AnyWordSpec with Matchers with MockFactory
             request.expiresAfter,
             now,
             false,
-            None,
             None
           )
 
@@ -151,7 +150,6 @@ class TaxCheckServiceImplSpec extends AnyWordSpec with Matchers with MockFactory
             request.expiresAfter,
             now,
             false,
-            None,
             None
           )
 
@@ -194,13 +192,14 @@ class TaxCheckServiceImplSpec extends AnyWordSpec with Matchers with MockFactory
               TaxSituation.SAPAYE,
               Some(YesNoAnswer.Yes),
               None,
-              TaxYear(2021)
+              TaxYear(2021),
+              None
             ),
             taxCheckStartDateTime,
             HECTaxCheckSource.Digital
           )
           val taxCheck     =
-            HECTaxCheck(taxCheckData, taxCheckCode, TimeUtils.today(), now, false, None, fileCorrelationId.some)
+            HECTaxCheck(taxCheckData, taxCheckCode, TimeUtils.today(), now, false, fileCorrelationId.some)
 
           mockGetTaxCheck(taxCheckCode)(Right(Some(taxCheck)))
 
