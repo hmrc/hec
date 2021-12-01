@@ -16,6 +16,7 @@
 
 package uk.gov.hmrc.hec.services
 
+import cats.implicits.catsSyntaxOptionId
 import org.scalamock.scalatest.MockFactory
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
@@ -386,7 +387,7 @@ class FileCreationServiceSpec extends AnyWordSpec with Matchers with MockFactory
             val endDate   = LocalDate.of(2021, 10, 9)
 
             val companyDetails =
-              CompanyApplicantDetails(GGCredId("AB123"), CRN("1123456"), CompanyHouseName("Test Tech Ltd"))
+              CompanyApplicantDetails(GGCredId("AB123").some, CRN("1123456"), CompanyHouseName("Test Tech Ltd"))
 
             def getCTStatusResponse(status: CTStatus) = CTStatusResponse(
               CTUTR("1111111111"),

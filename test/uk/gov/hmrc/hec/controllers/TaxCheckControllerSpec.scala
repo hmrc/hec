@@ -17,6 +17,7 @@
 package uk.gov.hmrc.hec.controllers
 
 import cats.data.EitherT
+import cats.implicits.catsSyntaxOptionId
 import cats.instances.future._
 import com.github.ghik.silencer.silent
 import play.api.inject.bind
@@ -106,7 +107,7 @@ class TaxCheckControllerSpec extends ControllerSpec with AuthSupport {
       )
 
       val taxCheckDataCompany: HECTaxCheckData = CompanyHECTaxCheckData(
-        CompanyApplicantDetails(GGCredId(""), CRN("12345678"), CompanyHouseName("Test Tech Ltd")),
+        CompanyApplicantDetails(GGCredId("").some, CRN("12345678"), CompanyHouseName("Test Tech Ltd")),
         LicenceDetails(
           LicenceType.ScrapMetalDealerSite,
           LicenceTimeTrading.EightYearsOrMore,

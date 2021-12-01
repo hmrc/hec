@@ -154,7 +154,7 @@ class HecTaxCheckExtractionServiceSpec
   "HecTaxCheckExtractionServiceSpec" must {
 
     val taxCheckData  = CompanyHECTaxCheckData(
-      CompanyApplicantDetails(GGCredId(""), CRN(""), CompanyHouseName("Test Tech Ltd")),
+      CompanyApplicantDetails(GGCredId("").some, CRN(""), CompanyHouseName("Test Tech Ltd")),
       LicenceDetails(
         LicenceType.ScrapMetalDealerSite,
         LicenceTimeTrading.EightYearsOrMore,

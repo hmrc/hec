@@ -223,7 +223,7 @@ class TaxCheckServiceImplSpec extends AnyWordSpec with Matchers with MockFactory
       val storedCompanyTaxCheck =
         HECTaxCheck(
           CompanyHECTaxCheckData(
-            CompanyApplicantDetails(GGCredId(""), storedCRN, CompanyHouseName("Test Tech Ltd")),
+            CompanyApplicantDetails(GGCredId("").some, storedCRN, CompanyHouseName("Test Tech Ltd")),
             storedLicenceDetails,
             CompanyTaxDetails(
               CTUTR("1111111111"),
@@ -427,7 +427,7 @@ class TaxCheckServiceImplSpec extends AnyWordSpec with Matchers with MockFactory
       val today    = LocalDate.of(2020, 1, 10)
 
       val taxCheckData = CompanyHECTaxCheckData(
-        CompanyApplicantDetails(ggCredId, CRN(""), CompanyHouseName("Test Tech Ltd")),
+        CompanyApplicantDetails(ggCredId.some, CRN(""), CompanyHouseName("Test Tech Ltd")),
         LicenceDetails(
           LicenceType.ScrapMetalDealerSite,
           LicenceTimeTrading.EightYearsOrMore,
@@ -498,7 +498,7 @@ class TaxCheckServiceImplSpec extends AnyWordSpec with Matchers with MockFactory
       val ggCredId = GGCredId("ggCredId")
 
       val taxCheckData: HECTaxCheckData = CompanyHECTaxCheckData(
-        CompanyApplicantDetails(ggCredId, CRN(""), CompanyHouseName("Test Tech Ltd")),
+        CompanyApplicantDetails(ggCredId.some, CRN(""), CompanyHouseName("Test Tech Ltd")),
         LicenceDetails(
           LicenceType.ScrapMetalDealerSite,
           LicenceTimeTrading.EightYearsOrMore,
@@ -553,7 +553,7 @@ class TaxCheckServiceImplSpec extends AnyWordSpec with Matchers with MockFactory
       val uuid     = UUID.randomUUID()
 
       val taxCheckData: HECTaxCheckData = CompanyHECTaxCheckData(
-        CompanyApplicantDetails(ggCredId, CRN(""), CompanyHouseName("Test Tech Ltd")),
+        CompanyApplicantDetails(ggCredId.some, CRN(""), CompanyHouseName("Test Tech Ltd")),
         LicenceDetails(
           LicenceType.ScrapMetalDealerSite,
           LicenceTimeTrading.EightYearsOrMore,

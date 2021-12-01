@@ -16,6 +16,8 @@
 
 package uk.gov.hmrc.hec.models
 
+import cats.implicits.catsSyntaxOptionId
+
 import java.time.{LocalDate, ZoneId, ZonedDateTime}
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
@@ -88,7 +90,7 @@ class HECTaxCheckDataSpec extends AnyWordSpec with Matchers {
 
       val companyTaxCheckData: HECTaxCheckData =
         CompanyHECTaxCheckData(
-          CompanyApplicantDetails(GGCredId("ggCredId"), CRN("12345678"), CompanyHouseName("Test Tech Ltd")),
+          CompanyApplicantDetails(GGCredId("ggCredId").some, CRN("12345678"), CompanyHouseName("Test Tech Ltd")),
           LicenceDetails(
             LicenceType.ScrapMetalMobileCollector,
             LicenceTimeTrading.EightYearsOrMore,

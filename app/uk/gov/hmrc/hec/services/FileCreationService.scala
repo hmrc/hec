@@ -201,7 +201,7 @@ class FileCreationServiceImpl @Inject() (timeProvider: TimeProvider) extends Fil
           val ctStatus         = accountingPeriod.map(_.ctStatus)
           val ctStatusMap      = ctStatusMapping(ctStatus)
           HECTaxCheckFileBody(
-            ggCredID = Some(c.applicantDetails.ggCredId.value),
+            ggCredID = c.applicantDetails.ggCredId.map(_.value),
             CTUTR = Some(c.taxDetails.desCTUTR.value),
             crn = Some(c.applicantDetails.crn.value),
             companyName = Some(c.applicantDetails.companyName.name),
