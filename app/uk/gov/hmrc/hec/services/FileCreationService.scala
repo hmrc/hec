@@ -211,7 +211,7 @@ class FileCreationServiceImpl @Inject() (timeProvider: TimeProvider) extends Fil
             entityType = 'C',
             notChargeable = getNotChargeableInfo(c.taxDetails.chargeableForCT),
             hasAccountingPeriod = ctStatusMap.accountingPeriod,
-            accountingPeriodStartDate = accountingPeriod.map(_.startDate.format(DATE_FORMATTER)),
+            accountingPeriodStartDate = accountingPeriod.flatMap(_.startDate.map(_.format(DATE_FORMATTER))),
             accountingPeriodEndDate = accountingPeriod.map(_.endDate.format(DATE_FORMATTER)),
             recentlyStartedTrading = yesNoAnswerMap(c.taxDetails.recentlyStaredTrading),
             returnReceived = ctStatusMap.returnReceived,

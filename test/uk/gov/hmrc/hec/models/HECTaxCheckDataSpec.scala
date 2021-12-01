@@ -104,8 +104,9 @@ class HECTaxCheckDataSpec extends AnyWordSpec with Matchers {
               ctutr = CTUTR("1111111111"),
               startDate = LocalDate.of(2020, 10, 9),
               endDate = LocalDate.of(2021, 10, 9),
-              latestAccountingPeriod =
-                Some(CTAccountingPeriod(LocalDate.of(2020, 10, 9), LocalDate.of(2021, 10, 9), CTStatus.ReturnFound))
+              latestAccountingPeriod = Some(
+                CTAccountingPeriod(LocalDate.of(2020, 10, 9).some, LocalDate.of(2021, 10, 9), CTStatus.ReturnFound)
+              )
             ),
             recentlyStaredTrading = None,
             Some(YesNoAnswer.Yes)

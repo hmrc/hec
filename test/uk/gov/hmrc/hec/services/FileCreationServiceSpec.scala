@@ -393,7 +393,7 @@ class FileCreationServiceSpec extends AnyWordSpec with Matchers with MockFactory
               CTUTR("1111111111"),
               startDate,
               endDate,
-              Some(CTAccountingPeriod(startDate, endDate, status))
+              Some(CTAccountingPeriod(startDate.some, endDate, status))
             )
 
             def createTaxDetails(

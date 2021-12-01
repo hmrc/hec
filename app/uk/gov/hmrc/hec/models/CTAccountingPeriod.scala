@@ -21,7 +21,7 @@ import play.api.libs.json.{Json, OFormat}
 import java.time.LocalDate
 
 final case class CTAccountingPeriod(
-  startDate: LocalDate,
+  startDate: Option[LocalDate],
   endDate: LocalDate,
   ctStatus: CTStatus
 )

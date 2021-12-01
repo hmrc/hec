@@ -74,7 +74,7 @@ class HECTaxCheckStoreImplSpec extends AnyWordSpec with Matchers with Eventually
           CTUTR("1111111111"),
           LocalDate.of(2020, 10, 9),
           LocalDate.of(2021, 10, 9),
-          Some(CTAccountingPeriod(LocalDate.of(2020, 10, 9), LocalDate.of(2021, 10, 9), CTStatus.ReturnFound))
+          Some(CTAccountingPeriod(LocalDate.of(2020, 10, 9).some, LocalDate.of(2021, 10, 9), CTStatus.ReturnFound))
         ),
         None,
         Some(YesNoAnswer.Yes)
