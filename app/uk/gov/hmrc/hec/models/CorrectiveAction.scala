@@ -25,8 +25,8 @@ import play.api.libs.json.Format
 sealed trait CorrectiveAction extends EnumEntry with Product with Serializable
 
 object CorrectiveAction extends Enum[CorrectiveAction] {
-  case object Register extends CorrectiveAction
-  case object Dormant extends CorrectiveAction
+  case object RegisterNewSAAccount extends CorrectiveAction
+  case object DormantAccountReactivated extends CorrectiveAction
   case object Other extends CorrectiveAction
 
   val values = findValues
