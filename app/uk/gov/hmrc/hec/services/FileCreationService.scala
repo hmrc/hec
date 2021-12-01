@@ -91,7 +91,7 @@ class FileCreationServiceImpl @Inject() (timeProvider: TimeProvider) extends Fil
     }
 
   def correctiveActionEKV(correctiveAction: CorrectiveAction): (String, String) = correctiveAction match {
-    case RegisterNewSaAccount      => ("00", "Register new SA account")
+    case RegisterNewSAAccount      => ("00", "Register new SA account")
     case DormantAccountReactivated => ("01", "Dormant account reactivated")
     case Other                     => ("02", "Other corrective action")
 

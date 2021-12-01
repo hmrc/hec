@@ -20,7 +20,6 @@ import org.scalamock.scalatest.MockFactory
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
 import uk.gov.hmrc.hec.models.ApplicantDetails.{CompanyApplicantDetails, IndividualApplicantDetails}
-import uk.gov.hmrc.hec.models.CorrectiveAction.RegisterNewSaAccount
 import uk.gov.hmrc.hec.models.HECTaxCheckData.{CompanyHECTaxCheckData, IndividualHECTaxCheckData}
 import uk.gov.hmrc.hec.models.HECTaxCheckSource.Digital
 import uk.gov.hmrc.hec.models.TaxDetails.{CompanyTaxDetails, IndividualTaxDetails}
@@ -187,7 +186,7 @@ class FileCreationServiceSpec extends AnyWordSpec with Matchers with MockFactory
                   LicenceValidityPeriod.UpToFiveYears,
                   TaxSituation.PAYE,
                   Some(SAStatusResponse(SAUTR("1234567"), TaxYear(2021), SAStatus.ReturnFound)),
-                  Some(CorrectiveAction.RegisterNewSaAccount)
+                  Some(CorrectiveAction.RegisterNewSAAccount)
                 ),
                 createIndividualHecTaxCheck(
                   DriverOfTaxisAndPrivateHires,
@@ -195,7 +194,7 @@ class FileCreationServiceSpec extends AnyWordSpec with Matchers with MockFactory
                   LicenceValidityPeriod.UpToFiveYears,
                   TaxSituation.PAYE,
                   Some(SAStatusResponse(SAUTR("1234567"), TaxYear(2021), SAStatus.NoticeToFileIssued)),
-                  Some(CorrectiveAction.RegisterNewSaAccount)
+                  Some(CorrectiveAction.RegisterNewSAAccount)
                 ),
                 createIndividualHecTaxCheck(
                   DriverOfTaxisAndPrivateHires,
@@ -203,7 +202,7 @@ class FileCreationServiceSpec extends AnyWordSpec with Matchers with MockFactory
                   LicenceValidityPeriod.UpToFiveYears,
                   TaxSituation.PAYE,
                   Some(SAStatusResponse(SAUTR("1234567"), TaxYear(2021), SAStatus.NoReturnFound)),
-                  Some(CorrectiveAction.RegisterNewSaAccount)
+                  Some(CorrectiveAction.RegisterNewSAAccount)
                 )
               )
 
@@ -236,7 +235,7 @@ class FileCreationServiceSpec extends AnyWordSpec with Matchers with MockFactory
                   LicenceValidityPeriod.UpToOneYear,
                   TaxSituation.SA,
                   Some(SAStatusResponse(SAUTR("1234567"), TaxYear(2021), SAStatus.ReturnFound)),
-                  Some(CorrectiveAction.RegisterNewSaAccount)
+                  Some(CorrectiveAction.RegisterNewSAAccount)
                 ),
                 createIndividualHecTaxCheck(
                   ScrapMetalMobileCollector,
@@ -244,7 +243,7 @@ class FileCreationServiceSpec extends AnyWordSpec with Matchers with MockFactory
                   LicenceValidityPeriod.UpToTwoYears,
                   TaxSituation.SA,
                   Some(SAStatusResponse(SAUTR("1234567"), TaxYear(2021), SAStatus.NoticeToFileIssued)),
-                  Some(CorrectiveAction.RegisterNewSaAccount)
+                  Some(CorrectiveAction.RegisterNewSAAccount)
                 ),
                 createIndividualHecTaxCheck(
                   ScrapMetalDealerSite,
@@ -252,7 +251,7 @@ class FileCreationServiceSpec extends AnyWordSpec with Matchers with MockFactory
                   LicenceValidityPeriod.UpToThreeYears,
                   TaxSituation.SA,
                   Some(SAStatusResponse(SAUTR("1234567"), TaxYear(2021), SAStatus.NoReturnFound)),
-                  Some(CorrectiveAction.RegisterNewSaAccount)
+                  Some(CorrectiveAction.RegisterNewSAAccount)
                 )
               )
 
@@ -286,7 +285,7 @@ class FileCreationServiceSpec extends AnyWordSpec with Matchers with MockFactory
                   LicenceValidityPeriod.UpToOneYear,
                   TaxSituation.SAPAYE,
                   Some(SAStatusResponse(SAUTR("1234567"), TaxYear(2021), SAStatus.ReturnFound)),
-                  Some(CorrectiveAction.RegisterNewSaAccount)
+                  Some(CorrectiveAction.RegisterNewSAAccount)
                 ),
                 createIndividualHecTaxCheck(
                   ScrapMetalMobileCollector,
@@ -294,7 +293,7 @@ class FileCreationServiceSpec extends AnyWordSpec with Matchers with MockFactory
                   LicenceValidityPeriod.UpToTwoYears,
                   TaxSituation.SAPAYE,
                   Some(SAStatusResponse(SAUTR("1234567"), TaxYear(2021), SAStatus.NoticeToFileIssued)),
-                  Some(CorrectiveAction.RegisterNewSaAccount)
+                  Some(CorrectiveAction.RegisterNewSAAccount)
                 ),
                 createIndividualHecTaxCheck(
                   ScrapMetalDealerSite,
@@ -302,7 +301,7 @@ class FileCreationServiceSpec extends AnyWordSpec with Matchers with MockFactory
                   LicenceValidityPeriod.UpToThreeYears,
                   TaxSituation.SAPAYE,
                   Some(SAStatusResponse(SAUTR("1234567"), TaxYear(2021), SAStatus.NoReturnFound)),
-                  Some(CorrectiveAction.RegisterNewSaAccount)
+                  Some(CorrectiveAction.RegisterNewSAAccount)
                 )
               )
 
@@ -336,7 +335,7 @@ class FileCreationServiceSpec extends AnyWordSpec with Matchers with MockFactory
                   LicenceValidityPeriod.UpToOneYear,
                   TaxSituation.NotChargeable,
                   Some(SAStatusResponse(SAUTR("1234567"), TaxYear(2021), SAStatus.ReturnFound)),
-                  Some(CorrectiveAction.RegisterNewSaAccount)
+                  Some(CorrectiveAction.RegisterNewSAAccount)
                 ),
                 createIndividualHecTaxCheck(
                   ScrapMetalMobileCollector,
@@ -344,7 +343,7 @@ class FileCreationServiceSpec extends AnyWordSpec with Matchers with MockFactory
                   LicenceValidityPeriod.UpToTwoYears,
                   TaxSituation.NotChargeable,
                   Some(SAStatusResponse(SAUTR("1234567"), TaxYear(2021), SAStatus.NoticeToFileIssued)),
-                  Some(CorrectiveAction.RegisterNewSaAccount)
+                  Some(CorrectiveAction.RegisterNewSAAccount)
                 ),
                 createIndividualHecTaxCheck(
                   ScrapMetalDealerSite,
@@ -352,7 +351,7 @@ class FileCreationServiceSpec extends AnyWordSpec with Matchers with MockFactory
                   LicenceValidityPeriod.UpToThreeYears,
                   TaxSituation.NotChargeable,
                   Some(SAStatusResponse(SAUTR("1234567"), TaxYear(2021), SAStatus.NoReturnFound)),
-                  Some(CorrectiveAction.RegisterNewSaAccount)
+                  Some(CorrectiveAction.RegisterNewSAAccount)
                 )
               )
 
@@ -445,7 +444,7 @@ class FileCreationServiceSpec extends AnyWordSpec with Matchers with MockFactory
                   Some(YesNoAnswer.Yes),
                   None,
                   Some(YesNoAnswer.Yes),
-                  Some(RegisterNewSaAccount)
+                  Some(CorrectiveAction.RegisterNewSAAccount)
                 )
               )
 
@@ -479,7 +478,7 @@ class FileCreationServiceSpec extends AnyWordSpec with Matchers with MockFactory
                   ctIncomeDeclared = Some(YesNoAnswer.Yes),
                   recentlyStaredTrading = None,
                   chargeableForCT = Some(YesNoAnswer.Yes),
-                  correctiveAction = Some(RegisterNewSaAccount)
+                  correctiveAction = Some(CorrectiveAction.RegisterNewSAAccount)
                 )
               )
 
@@ -513,7 +512,7 @@ class FileCreationServiceSpec extends AnyWordSpec with Matchers with MockFactory
                   ctIncomeDeclared = None,
                   recentlyStaredTrading = None,
                   chargeableForCT = None,
-                  correctiveAction = Some(RegisterNewSaAccount)
+                  correctiveAction = Some(CorrectiveAction.RegisterNewSAAccount)
                 )
               )
 
@@ -547,7 +546,7 @@ class FileCreationServiceSpec extends AnyWordSpec with Matchers with MockFactory
                   ctIncomeDeclared = None,
                   recentlyStaredTrading = Some(YesNoAnswer.Yes),
                   chargeableForCT = None,
-                  correctiveAction = Some(RegisterNewSaAccount)
+                  correctiveAction = Some(CorrectiveAction.RegisterNewSAAccount)
                 )
               )
 
