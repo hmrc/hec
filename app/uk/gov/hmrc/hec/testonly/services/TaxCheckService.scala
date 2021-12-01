@@ -17,6 +17,7 @@
 package uk.gov.hmrc.hec.testonly.services
 
 import cats.data.EitherT
+import cats.implicits.catsSyntaxOptionId
 import com.google.inject.{ImplementedBy, Inject, Singleton}
 import uk.gov.hmrc.hec.models.ApplicantDetails.{CompanyApplicantDetails, IndividualApplicantDetails}
 import uk.gov.hmrc.hec.models.HECTaxCheckData.{CompanyHECTaxCheckData, IndividualHECTaxCheckData}
@@ -94,7 +95,7 @@ class TaxCheckServiceImpl @Inject() (
 
     saveTaxCheckRequest.verifier match {
       case Left(crn) =>
-        val companyDetails    = CompanyApplicantDetails(ggCredId, crn, CompanyHouseName("Test Tech Ltd"))
+        val companyDetails    = CompanyApplicantDetails(ggCredId.some, crn, CompanyHouseName("Test Tech Ltd"))
         val companyTaxDetails = CompanyTaxDetails(
           CTUTR("1111111111"),
           Some(CTUTR("1111111111")),
@@ -103,7 +104,7 @@ class TaxCheckServiceImpl @Inject() (
             CTUTR("1111111111"),
             LocalDate.of(2020, 10, 9),
             LocalDate.of(2021, 10, 9),
-            Some(CTAccountingPeriod(LocalDate.of(2020, 10, 9), LocalDate.of(2021, 10, 9), CTStatus.ReturnFound))
+            Some(CTAccountingPeriod(LocalDate.of(2020, 10, 9).some, LocalDate.of(2021, 10, 9), CTStatus.ReturnFound))
           ),
           None,
           Some(YesNoAnswer.Yes)

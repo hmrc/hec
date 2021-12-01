@@ -30,7 +30,7 @@ object ApplicantDetails {
   ) extends ApplicantDetails
 
   final case class CompanyApplicantDetails(
-    ggCredId: GGCredId,
+    ggCredId: Option[GGCredId],
     crn: CRN,
     companyName: CompanyHouseName
   ) extends ApplicantDetails

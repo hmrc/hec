@@ -18,8 +18,8 @@ package uk.gov.hmrc.hec.services
 
 import java.time.LocalDate
 import java.util.UUID
-
 import cats.data.EitherT
+import cats.implicits.catsSyntaxOptionId
 import cats.instances.future._
 import org.scalamock.scalatest.MockFactory
 import org.scalatest.OptionValues._
@@ -365,7 +365,7 @@ class IFServiceImplSpec extends AnyWordSpec with Matchers with MockFactory {
               toDate,
               Some(
                 CTAccountingPeriod(
-                  LocalDate.of(2020, 10, 15),
+                  LocalDate.of(2020, 10, 15).some,
                   LocalDate.of(2021, 10, 20),
                   expectedCtStatus
                 )

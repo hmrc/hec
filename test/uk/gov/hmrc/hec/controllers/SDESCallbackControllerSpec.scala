@@ -90,7 +90,7 @@ class SDESCallbackControllerSpec extends ControllerSpec {
   val ggCredId                      = GGCredId("ggCredId")
   val taxCheckStartDateTime         = ZonedDateTime.of(2021, 10, 9, 9, 12, 34, 0, ZoneId.of("Europe/London"))
   val taxCheckData: HECTaxCheckData = CompanyHECTaxCheckData(
-    CompanyApplicantDetails(ggCredId, CRN(""), CompanyHouseName("Test Tech Ltd")),
+    CompanyApplicantDetails(ggCredId.some, CRN(""), CompanyHouseName("Test Tech Ltd")),
     LicenceDetails(
       LicenceType.ScrapMetalDealerSite,
       LicenceTimeTrading.EightYearsOrMore,

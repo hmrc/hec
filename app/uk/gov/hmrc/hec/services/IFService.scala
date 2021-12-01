@@ -136,7 +136,7 @@ class IFServiceImpl @Inject() (
           .getOrElse(List.empty[RawAccountingPeriod])
           .traverse[Either[BackendError, *], CTAccountingPeriod](a =>
             toCtStatus(a)
-              .map(status => CTAccountingPeriod(a.accountingPeriodStartDate, a.accountingPeriodEndDate, status))
+              .map(status => CTAccountingPeriod(a.accountingPeriodStartDate.some, a.accountingPeriodEndDate, status))
           )
           .filterOrElse(
             _.nonEmpty,

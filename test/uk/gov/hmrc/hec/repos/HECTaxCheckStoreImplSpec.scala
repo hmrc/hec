@@ -60,7 +60,7 @@ class HECTaxCheckStoreImplSpec extends AnyWordSpec with Matchers with Eventually
     val taxCheckStartDateTime = ZonedDateTime.of(2021, 10, 9, 9, 12, 34, 0, ZoneId.of("Europe/London"))
 
     val taxCheckData = CompanyHECTaxCheckData(
-      CompanyApplicantDetails(GGCredId(""), CRN(""), CompanyHouseName("Test Tech Ltd")),
+      CompanyApplicantDetails(GGCredId("").some, CRN(""), CompanyHouseName("Test Tech Ltd")),
       LicenceDetails(
         LicenceType.ScrapMetalDealerSite,
         LicenceTimeTrading.EightYearsOrMore,
@@ -74,7 +74,7 @@ class HECTaxCheckStoreImplSpec extends AnyWordSpec with Matchers with Eventually
           CTUTR("1111111111"),
           LocalDate.of(2020, 10, 9),
           LocalDate.of(2021, 10, 9),
-          Some(CTAccountingPeriod(LocalDate.of(2020, 10, 9), LocalDate.of(2021, 10, 9), CTStatus.ReturnFound))
+          Some(CTAccountingPeriod(LocalDate.of(2020, 10, 9).some, LocalDate.of(2021, 10, 9), CTStatus.ReturnFound))
         ),
         None,
         Some(YesNoAnswer.Yes)
@@ -161,7 +161,7 @@ class HECTaxCheckStoreImplSpec extends AnyWordSpec with Matchers with Eventually
     }
 
     "be able to fetch all tax check codes using the GGCredId" in {
-      val ggCredId = taxCheckData.applicantDetails.ggCredId
+      val ggCredId = taxCheckData.applicantDetails.ggCredId.getOrElse(sys.error("ggCredId not found in DB"))
 
       // store some tax check codes in mongo
       await(taxCheckStore.store(taxCheck1).value) shouldBe Right(())
