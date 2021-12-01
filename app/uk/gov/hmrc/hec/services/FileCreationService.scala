@@ -187,6 +187,7 @@ class FileCreationServiceImpl @Inject() (timeProvider: TimeProvider) extends Fil
             returnReceived = saStatusMap.returnReceived,
             noticeToFile = saStatusMap.noticeToFileIssued,
             taxComplianceDeclaration = saStatusMap.returnReceived,
+            correctiveAction = i.taxDetails.correctiveAction.map(ca => correctiveActionEKV(ca)._1),
             customerDeclaration = 'Y',
             taxCheckStartDateTime =
               i.taxCheckStartDateTime.withZoneSameInstant(ZoneId.of("GMT")).format(DATE_TIME_FORMATTER),
@@ -217,7 +218,7 @@ class FileCreationServiceImpl @Inject() (timeProvider: TimeProvider) extends Fil
             returnReceived = ctStatusMap.returnReceived,
             noticeToFile = ctStatusMap.noticeToFileIssued,
             taxComplianceDeclaration = yesNoAnswerMap(c.taxDetails.ctIncomeDeclared),
-            correctiveAction = hecTaxCheck.correctiveAction.map(ca => correctiveActionEKV(ca)._1),
+            correctiveAction = c.taxDetails.correctiveAction.map(ca => correctiveActionEKV(ca)._1),
             customerDeclaration = 'Y',
             taxCheckStartDateTime =
               c.taxCheckStartDateTime.withZoneSameInstant(ZoneId.of("GMT")).format(DATE_TIME_FORMATTER),

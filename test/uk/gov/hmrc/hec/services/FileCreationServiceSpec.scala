@@ -145,14 +145,19 @@ class FileCreationServiceSpec extends AnyWordSpec with Matchers with MockFactory
                 DateOfBirth(LocalDate.of(1922, 12, 1))
               )
 
-            def createTaxDetails(taxSituation: TaxSituation, saStatusResponse: Option[SAStatusResponse]) =
+            def createTaxDetails(
+              taxSituation: TaxSituation,
+              saStatusResponse: Option[SAStatusResponse],
+              correctiveAction: Option[CorrectiveAction]
+            ) =
               IndividualTaxDetails(
                 NINO("AB123456C"),
                 Some(SAUTR("1234567")),
                 taxSituation,
                 Some(YesNoAnswer.Yes),
                 saStatusResponse,
-                TaxYear(2021)
+                TaxYear(2021),
+                correctiveAction
               )
 
             def createIndividualHecTaxCheck(
@@ -167,7 +172,7 @@ class FileCreationServiceSpec extends AnyWordSpec with Matchers with MockFactory
                 IndividualHECTaxCheckData(
                   individualApplicantDetails,
                   LicenceDetails(licenceType, licenceTimeTrading, licenceValidityPeriod),
-                  createTaxDetails(taxSituation, saStatusResponse),
+                  createTaxDetails(taxSituation, saStatusResponse, correctiveAction),
                   zonedDateTime,
                   Digital
                 ),
@@ -175,7 +180,6 @@ class FileCreationServiceSpec extends AnyWordSpec with Matchers with MockFactory
                 LocalDate.of(9999, 2, 10),
                 zonedDateTime,
                 false,
-                correctiveAction,
                 None
               )
 
@@ -219,11 +223,12 @@ class FileCreationServiceSpec extends AnyWordSpec with Matchers with MockFactory
                   partialFileName,
                   true
                 )
-              val expected                                = s"""|00|HEC_SSA_0001_20211010_$partialFileName.dat|HEC|SSA|20211010|113605|000001|001
-                                                                |01|AB123|AB123456C|Karen|mcFie|19221201|1234567||||00|04|02|I||Y|N|2022|||||Y||Y||Y|20210909090900|20210909090900|XNFFGBDD6|99990210|Y
-                                                                |01|AB123|AB123456C|Karen|mcFie|19221201|1234567||||00|04|01|I||Y|N|2022|||||N|Y|N||Y|20210909090900|20210909090900|XNFFGBDD6|99990210|Y
-                                                                |01|AB123|AB123456C|Karen|mcFie|19221201|1234567||||00|04|01|I||Y|N|2022|||||N|N|N||Y|20210909090900|20210909090900|XNFFGBDD6|99990210|Y
-                                                                |99|HEC_SSA_0001_20211010_$partialFileName.dat|5|Y""".stripMargin
+
+              val expected = s"""|00|HEC_SSA_0001_20211010_$partialFileName.dat|HEC|SSA|20211010|113605|000001|001
+              |01|AB123|AB123456C|Karen|mcFie|19221201|1234567||||00|04|02|I||Y|N|2022|||||Y||Y|00|Y|20210909090900|20210909090900|XNFFGBDD6|99990210|Y
+              |01|AB123|AB123456C|Karen|mcFie|19221201|1234567||||00|04|01|I||Y|N|2022|||||N|Y|N|00|Y|20210909090900|20210909090900|XNFFGBDD6|99990210|Y
+              |01|AB123|AB123456C|Karen|mcFie|19221201|1234567||||00|04|01|I||Y|N|2022|||||N|N|N|00|Y|20210909090900|20210909090900|XNFFGBDD6|99990210|Y
+              |99|HEC_SSA_0001_20211010_$partialFileName.dat|5|Y""".stripMargin
 
               result shouldBe Right((expected, s"HEC_SSA_0001_20211010_$partialFileName.dat"))
             }
@@ -269,11 +274,12 @@ class FileCreationServiceSpec extends AnyWordSpec with Matchers with MockFactory
                   partialFileName,
                   true
                 )
-              val expected                                = s"""|00|HEC_SSA_0001_20211010_$partialFileName.dat|HEC|SSA|20211010|113605|000001|001
-                                                                |01|AB123|AB123456C|Karen|mcFie|19221201|1234567||||01|00|02|I||N|Y|2022|||||Y||Y||Y|20210909090900|20210909090900|XNFFGBDD6|99990210|Y
-                                                                |01|AB123|AB123456C|Karen|mcFie|19221201|1234567||||02|01|01|I||N|Y|2022|||||N|Y|N||Y|20210909090900|20210909090900|XNFFGBDD6|99990210|Y
-                                                                |01|AB123|AB123456C|Karen|mcFie|19221201|1234567||||03|02|01|I||N|Y|2022|||||N|N|N||Y|20210909090900|20210909090900|XNFFGBDD6|99990210|Y
-                                                                |99|HEC_SSA_0001_20211010_$partialFileName.dat|5|Y""".stripMargin
+
+              val expected = s"""|00|HEC_SSA_0001_20211010_$partialFileName.dat|HEC|SSA|20211010|113605|000001|001
+              |01|AB123|AB123456C|Karen|mcFie|19221201|1234567||||01|00|02|I||N|Y|2022|||||Y||Y|00|Y|20210909090900|20210909090900|XNFFGBDD6|99990210|Y
+              |01|AB123|AB123456C|Karen|mcFie|19221201|1234567||||02|01|01|I||N|Y|2022|||||N|Y|N|00|Y|20210909090900|20210909090900|XNFFGBDD6|99990210|Y
+              |01|AB123|AB123456C|Karen|mcFie|19221201|1234567||||03|02|01|I||N|Y|2022|||||N|N|N|00|Y|20210909090900|20210909090900|XNFFGBDD6|99990210|Y
+              |99|HEC_SSA_0001_20211010_$partialFileName.dat|5|Y""".stripMargin
 
               result shouldBe Right((expected, s"HEC_SSA_0001_20211010_$partialFileName.dat"))
             }
@@ -319,11 +325,12 @@ class FileCreationServiceSpec extends AnyWordSpec with Matchers with MockFactory
                   partialFileName,
                   true
                 )
-              val expected                                = s"""|00|HEC_SSA_0001_20211010_$partialFileName.dat|HEC|SSA|20211010|113605|000001|001
-                                                                |01|AB123|AB123456C|Karen|mcFie|19221201|1234567||||01|00|02|I||Y|Y|2022|||||Y||Y||Y|20210909090900|20210909090900|XNFFGBDD6|99990210|Y
-                                                                |01|AB123|AB123456C|Karen|mcFie|19221201|1234567||||02|01|01|I||Y|Y|2022|||||N|Y|N||Y|20210909090900|20210909090900|XNFFGBDD6|99990210|Y
-                                                                |01|AB123|AB123456C|Karen|mcFie|19221201|1234567||||03|02|01|I||Y|Y|2022|||||N|N|N||Y|20210909090900|20210909090900|XNFFGBDD6|99990210|Y
-                                                                |99|HEC_SSA_0001_20211010_$partialFileName.dat|5|Y""".stripMargin
+
+              val expected = s"""|00|HEC_SSA_0001_20211010_$partialFileName.dat|HEC|SSA|20211010|113605|000001|001
+              |01|AB123|AB123456C|Karen|mcFie|19221201|1234567||||01|00|02|I||Y|Y|2022|||||Y||Y|00|Y|20210909090900|20210909090900|XNFFGBDD6|99990210|Y
+              |01|AB123|AB123456C|Karen|mcFie|19221201|1234567||||02|01|01|I||Y|Y|2022|||||N|Y|N|00|Y|20210909090900|20210909090900|XNFFGBDD6|99990210|Y
+              |01|AB123|AB123456C|Karen|mcFie|19221201|1234567||||03|02|01|I||Y|Y|2022|||||N|N|N|00|Y|20210909090900|20210909090900|XNFFGBDD6|99990210|Y
+              |99|HEC_SSA_0001_20211010_$partialFileName.dat|5|Y""".stripMargin
 
               result shouldBe Right((expected, s"HEC_SSA_0001_20211010_$partialFileName.dat"))
             }
@@ -369,11 +376,12 @@ class FileCreationServiceSpec extends AnyWordSpec with Matchers with MockFactory
                   partialFileName,
                   true
                 )
-              val expected                                = s"""|00|HEC_SSA_0001_20211010_$partialFileName.dat|HEC|SSA|20211010|113605|000001|001
-                                                                |01|AB123|AB123456C|Karen|mcFie|19221201|1234567||||01|00|02|I|Y|||2022|||||Y||Y||Y|20210909090900|20210909090900|XNFFGBDD6|99990210|Y
-                                                                |01|AB123|AB123456C|Karen|mcFie|19221201|1234567||||02|01|01|I|Y|||2022|||||N|Y|N||Y|20210909090900|20210909090900|XNFFGBDD6|99990210|Y
-                                                                |01|AB123|AB123456C|Karen|mcFie|19221201|1234567||||03|02|01|I|Y|||2022|||||N|N|N||Y|20210909090900|20210909090900|XNFFGBDD6|99990210|Y
-                                                                |99|HEC_SSA_0001_20211010_$partialFileName.dat|5|Y""".stripMargin
+
+              val expected = s"""|00|HEC_SSA_0001_20211010_$partialFileName.dat|HEC|SSA|20211010|113605|000001|001
+              |01|AB123|AB123456C|Karen|mcFie|19221201|1234567||||01|00|02|I|Y|||2022|||||Y||Y|00|Y|20210909090900|20210909090900|XNFFGBDD6|99990210|Y
+              |01|AB123|AB123456C|Karen|mcFie|19221201|1234567||||02|01|01|I|Y|||2022|||||N|Y|N|00|Y|20210909090900|20210909090900|XNFFGBDD6|99990210|Y
+              |01|AB123|AB123456C|Karen|mcFie|19221201|1234567||||03|02|01|I|Y|||2022|||||N|N|N|00|Y|20210909090900|20210909090900|XNFFGBDD6|99990210|Y
+              |99|HEC_SSA_0001_20211010_$partialFileName.dat|5|Y""".stripMargin
 
               result shouldBe Right((expected, s"HEC_SSA_0001_20211010_$partialFileName.dat"))
             }
@@ -399,14 +407,16 @@ class FileCreationServiceSpec extends AnyWordSpec with Matchers with MockFactory
               ctStatusResponse: CTStatusResponse,
               ctIncomeDeclared: Option[YesNoAnswer],
               recentlyStaredTrading: Option[YesNoAnswer],
-              chargeableForCT: Option[YesNoAnswer]
+              chargeableForCT: Option[YesNoAnswer],
+              correctiveAction: Option[CorrectiveAction]
             ) = CompanyTaxDetails(
               CTUTR("1111111111"),
               Some(CTUTR("1111111111")),
               ctIncomeDeclared,
               ctStatusResponse,
               recentlyStaredTrading,
-              chargeableForCT
+              chargeableForCT,
+              correctiveAction
             )
 
             def createCompanyHecTaxCheck(
@@ -423,7 +433,13 @@ class FileCreationServiceSpec extends AnyWordSpec with Matchers with MockFactory
                 CompanyHECTaxCheckData(
                   companyDetails,
                   LicenceDetails(licenceType, licenceTimeTrading, licenceValidityPeriod),
-                  createTaxDetails(ctStatusResponse, ctIncomeDeclared, recentlyStaredTrading, chargeableForCT),
+                  createTaxDetails(
+                    ctStatusResponse,
+                    ctIncomeDeclared,
+                    recentlyStaredTrading,
+                    chargeableForCT,
+                    correctiveAction
+                  ),
                   zonedDateTime,
                   Digital
                 ),
@@ -431,7 +447,6 @@ class FileCreationServiceSpec extends AnyWordSpec with Matchers with MockFactory
                 LocalDate.of(9999, 2, 10),
                 zonedDateTime,
                 false,
-                correctiveAction,
                 None
               )
 

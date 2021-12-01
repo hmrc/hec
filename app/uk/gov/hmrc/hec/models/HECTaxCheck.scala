@@ -27,7 +27,6 @@ final case class HECTaxCheck(
   expiresAfter: LocalDate,
   createDate: ZonedDateTime,
   isExtracted: Boolean,
-  correctiveAction: Option[CorrectiveAction],
   fileCorrelationId: Option[UUID]
 )
 
