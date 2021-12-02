@@ -112,7 +112,8 @@ purposes.
 
 ### `POST /hec/match-tax-check`
 Check the details given in the request to see if they match an existing tax check in the database. A
-`200` (OK) response if returned if a match result can be given.
+`200` (OK) response is returned if a match result can be given. The example request body shows an example
+for an individual and the example response body includes an example for a company. 
 
 Example request body:
 ```json
@@ -139,6 +140,7 @@ Example response body:
    "status": "NoMatch"
 }
 ```
+The req
 
 ### `GET /hec/unexpired-tax-checks`
 Requires an active GG session. Gets summary data of all tax checks associated with the GG account associated 
@@ -225,6 +227,7 @@ Example request body:
 }
 ```
 
+## Test-Only Endpoints
 ### `POST       /hec/test-only/tax-check`              
 Unauthenticated test-only endpoint to save a tax check. A `201` (CREATED) response is 
 given if the tax check has been sucessfully saved.
@@ -300,6 +303,9 @@ This service will periodically send tax check data to consuming downstream syste
       ready to pick up.
    2. Find all tax checks which haven't been sent yet (`isExtracted = false`) and generate tax check data file,
       store in object store and notify downstream systems that the file is ready to pick up.      
+
+The maximum number of tax checks per tax check file can be set in config. If there are more tax checks than the 
+configured maximum the tax checks will be split into separate files. 
 
 Once the downstream system has been notified that the files are ready to pick up we expect a callbacks to be made 
 to this service informing us of the progress of the consumption process. If the process has finished (successfully or 
