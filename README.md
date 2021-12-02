@@ -307,7 +307,7 @@ This service will periodically send tax check data to consuming downstream syste
 The maximum number of tax checks per tax check file can be set in config. If there are more tax checks than the 
 configured maximum the tax checks will be split into separate files. 
 
-Once the downstream system has been notified that the files are ready to pick up we expect a callbacks to be made 
+Once the downstream system has been notified that the files are ready to pick up we expect callbacks to be made 
 to this service informing us of the progress of the consumption process. If the process has finished (successfully or 
 unsuccessfully) we delete the corresponding files from `object-store` and mark the relevant tax checks as sent 
 (`isExtracted = true`).  
