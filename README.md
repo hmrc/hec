@@ -140,7 +140,6 @@ Example response body:
    "status": "NoMatch"
 }
 ```
-The req
 
 ### `GET /hec/unexpired-tax-checks`
 Requires an active GG session. Gets summary data of all tax checks associated with the GG account associated 
