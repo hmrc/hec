@@ -144,7 +144,7 @@ Example response body:
 ### `GET /hec/unexpired-tax-checks`
 Requires an active GG session. Gets summary data of all tax checks associated with the GG account associated 
 with the GG session. Returns `200` (OK) if successful. If not tax checks are found, a `200` is still returned -
-the response will just contain an empty array.
+the response will just contain an empty array. 
 
 Example response body:
 ```json
