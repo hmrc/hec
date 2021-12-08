@@ -19,11 +19,11 @@ package uk.gov.hmrc.hec.connectors
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 import java.util.UUID
-
 import cats.data.EitherT
 import com.google.inject.{ImplementedBy, Inject, Singleton}
 import uk.gov.hmrc.hec.models.ids.{CTUTR, SAUTR}
-import uk.gov.hmrc.hec.models.{Error, TaxYear}
+import uk.gov.hmrc.hec.models.Error
+import uk.gov.hmrc.hec.models.hecTaxCheck.TaxYear
 import uk.gov.hmrc.http.HttpReads.Implicits._
 import uk.gov.hmrc.http.{HeaderCarrier, HttpClient, HttpReads, HttpResponse}
 import uk.gov.hmrc.play.bootstrap.config.ServicesConfig

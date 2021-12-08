@@ -14,14 +14,19 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.hec.models
+package uk.gov.hmrc.hec.models.hecTaxCheck
 
-import play.api.libs.json.{Json, OFormat}
+import ai.x.play.json.Jsonx
+import ai.x.play.json.SingletonEncoder.simpleName
+import ai.x.play.json.implicits.formatSingleton
+import play.api.libs.json.Format
 
-final case class Name(firstName: String, lastName: String)
+sealed trait EntityType extends Product with Serializable
 
-object Name {
+object EntityType {
+  case object Individual extends EntityType
+  case object Company extends EntityType
 
-  implicit val format: OFormat[Name] = Json.format
-
+  @SuppressWarnings(Array("org.wartremover.warts.Throw", "org.wartremover.warts.Equals"))
+  implicit val format: Format[EntityType] = Jsonx.formatSealed[EntityType]
 }

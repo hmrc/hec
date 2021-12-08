@@ -25,8 +25,8 @@ import uk.gov.hmrc.hec.models.hecTaxCheck.TaxDetails.{CompanyTaxDetails, Individ
 import uk.gov.hmrc.hec.models.ids.{CTUTR, NINO}
 import uk.gov.hmrc.hec.models.licence.{LicenceTimeTrading, LicenceValidityPeriod}
 import uk.gov.hmrc.hec.models.hecTaxCheck.HECTaxCheckData.{CompanyHECTaxCheckData, IndividualHECTaxCheckData}
-import uk.gov.hmrc.hec.models.hecTaxCheck.{CTAccountingPeriod, CTStatus, CTStatusResponse, HECTaxCheck, HECTaxCheckCode, HECTaxCheckData, LicenceDetails}
-import uk.gov.hmrc.hec.models.{CompanyHouseName, Error, Name, TaxSituation, TaxYear, YesNoAnswer}
+import uk.gov.hmrc.hec.models.hecTaxCheck.{CTAccountingPeriod, CTStatus, CTStatusResponse, CompanyHouseName, HECTaxCheck, HECTaxCheckCode, HECTaxCheckData, LicenceDetails, Name, TaxSituation, TaxYear, YesNoAnswer}
+import uk.gov.hmrc.hec.models.Error
 import uk.gov.hmrc.hec.repos.HECTaxCheckStore
 import uk.gov.hmrc.hec.testonly.models.SaveTaxCheckRequest
 import uk.gov.hmrc.hec.util.TimeProvider

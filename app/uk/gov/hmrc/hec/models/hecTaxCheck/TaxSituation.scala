@@ -16,16 +16,23 @@
 
 package uk.gov.hmrc.hec.models.hecTaxCheck
 
-import play.api.libs.json.{Json, OFormat}
+import ai.x.play.json.Jsonx
+import ai.x.play.json.SingletonEncoder.simpleName
+import ai.x.play.json.implicits.formatSingleton
+import play.api.libs.json.Format
 
-import java.time.ZonedDateTime
+sealed trait TaxSituation extends Product with Serializable
 
-final case class HECTaxCheckMatchResult(
-  matchRequest: HECTaxCheckMatchRequest,
-  dateTimeChecked: ZonedDateTime,
-  status: HECTaxCheckMatchStatus
-)
+object TaxSituation {
 
-object HECTaxCheckMatchResult {
-  implicit val format: OFormat[HECTaxCheckMatchResult] = Json.format
+  case object PAYE extends TaxSituation
+
+  case object SA extends TaxSituation
+
+  case object SAPAYE extends TaxSituation
+
+  case object NotChargeable extends TaxSituation
+
+  @SuppressWarnings(Array("org.wartremover.warts.Throw", "org.wartremover.warts.Equals"))
+  implicit val format: Format[TaxSituation] = Jsonx.formatSealed[TaxSituation]
 }

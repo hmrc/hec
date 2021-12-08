@@ -14,19 +14,22 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.hec.models
+package uk.gov.hmrc.hec.models.taxCheckMatch
 
-import ai.x.play.json.Jsonx
-import ai.x.play.json.SingletonEncoder.simpleName
-import ai.x.play.json.implicits.formatSingleton
-import play.api.libs.json.Format
+import play.api.libs.json.{Json, OFormat}
+import uk.gov.hmrc.hec.models.hecTaxCheck.{DateOfBirth, HECTaxCheckCode}
+import uk.gov.hmrc.hec.models.ids.CRN
+import uk.gov.hmrc.hec.models.licence.LicenceType
+import uk.gov.hmrc.hec.util.EitherUtils.eitherFormat
 
-sealed trait EntityType extends Product with Serializable
+final case class HECTaxCheckMatchRequest(
+  taxCheckCode: HECTaxCheckCode,
+  licenceType: LicenceType,
+  verifier: Either[CRN, DateOfBirth]
+)
 
-object EntityType {
-  case object Individual extends EntityType
-  case object Company extends EntityType
+object HECTaxCheckMatchRequest {
 
-  @SuppressWarnings(Array("org.wartremover.warts.Throw", "org.wartremover.warts.Equals"))
-  implicit val format: Format[EntityType] = Jsonx.formatSealed[EntityType]
+  implicit val format: OFormat[HECTaxCheckMatchRequest] = Json.format
+
 }

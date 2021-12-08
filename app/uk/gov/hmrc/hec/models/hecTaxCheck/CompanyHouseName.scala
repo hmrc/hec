@@ -16,20 +16,10 @@
 
 package uk.gov.hmrc.hec.models.hecTaxCheck
 
-import play.api.libs.json.{Json, OFormat}
-import uk.gov.hmrc.hec.models.DateOfBirth
-import uk.gov.hmrc.hec.models.ids.CRN
-import uk.gov.hmrc.hec.models.licence.LicenceType
-import uk.gov.hmrc.hec.util.EitherUtils.eitherFormat
+import play.api.libs.json.{Format, Json}
 
-final case class HECTaxCheckMatchRequest(
-  taxCheckCode: HECTaxCheckCode,
-  licenceType: LicenceType,
-  verifier: Either[CRN, DateOfBirth]
-)
+final case class CompanyHouseName(name: String)
 
-object HECTaxCheckMatchRequest {
-
-  implicit val format: OFormat[HECTaxCheckMatchRequest] = Json.format
-
+object CompanyHouseName {
+  implicit val format: Format[CompanyHouseName] = Json.valueFormat
 }

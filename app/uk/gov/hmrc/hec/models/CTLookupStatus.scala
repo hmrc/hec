@@ -16,10 +16,12 @@
 
 package uk.gov.hmrc.hec.models
 
-import play.api.libs.json.{Format, Json}
+sealed trait CTLookupStatus extends Product with Serializable
 
-final case class CompanyHouseName(name: String)
+object CTLookupStatus {
 
-object CompanyHouseName {
-  implicit val format: Format[CompanyHouseName] = Json.valueFormat
+  case object Successful extends CTLookupStatus
+
+  case object NoLiveRecords extends CTLookupStatus
+
 }

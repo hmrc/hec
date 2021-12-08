@@ -14,25 +14,18 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.hec.models
+package uk.gov.hmrc.hec.models.taxCheckMatch
 
-import cats.Eq
-import play.api.libs.functional.syntax.toInvariantFunctorOps
-import play.api.libs.json.Format
+import play.api.libs.json.{Json, OFormat}
 
-import java.time.LocalDate
-import java.time.format.DateTimeFormatter
+import java.time.ZonedDateTime
 
-final case class DateOfBirth(value: LocalDate) extends AnyVal
+final case class HECTaxCheckMatchResult(
+  matchRequest: HECTaxCheckMatchRequest,
+  dateTimeChecked: ZonedDateTime,
+  status: HECTaxCheckMatchStatus
+)
 
-object DateOfBirth {
-
-  private val dateFormatter = DateTimeFormatter.BASIC_ISO_DATE
-
-  implicit val format: Format[DateOfBirth] =
-    implicitly[Format[String]]
-      .inmap(s => DateOfBirth(LocalDate.parse(s, dateFormatter)), d => dateFormatter.format(d.value))
-
-  implicit val eq: Eq[DateOfBirth] = Eq.fromUniversalEquals
-
+object HECTaxCheckMatchResult {
+  implicit val format: OFormat[HECTaxCheckMatchResult] = Json.format
 }

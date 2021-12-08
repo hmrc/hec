@@ -18,7 +18,6 @@ package uk.gov.hmrc.hec.models.hecTaxCheck
 
 import play.api.libs.json.{Json, OFormat}
 import uk.gov.hmrc.hec.models.ids.{CRN, GGCredId}
-import uk.gov.hmrc.hec.models.{CompanyHouseName, DateOfBirth, Name}
 
 sealed trait ApplicantDetails extends Product with Serializable
 

@@ -29,8 +29,8 @@ import play.api.libs.json.Json
 import play.api.test.Helpers._
 import uk.gov.hmrc.hec.connectors.IFConnector
 import uk.gov.hmrc.hec.models.ids.{CTUTR, SAUTR}
-import uk.gov.hmrc.hec.models.hecTaxCheck.{CTAccountingPeriod, CTStatus, CTStatusResponse, SAStatus, SAStatusResponse}
-import uk.gov.hmrc.hec.models.{Error, TaxYear}
+import uk.gov.hmrc.hec.models.hecTaxCheck.{CTAccountingPeriod, CTStatus, CTStatusResponse, SAStatus, SAStatusResponse, TaxYear}
+import uk.gov.hmrc.hec.models.Error
 import uk.gov.hmrc.hec.services.IFService.{BackendError, DataNotFoundError}
 import uk.gov.hmrc.http.{HeaderCarrier, HttpResponse}
 

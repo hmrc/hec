@@ -29,12 +29,12 @@ import uk.gov.hmrc.hec.models
 import uk.gov.hmrc.hec.models.hecTaxCheck.ApplicantDetails.CompanyApplicantDetails
 import uk.gov.hmrc.hec.models.hecTaxCheck.HECTaxCheckData.CompanyHECTaxCheckData
 import uk.gov.hmrc.hec.models.hecTaxCheck.TaxDetails.CompanyTaxDetails
+import uk.gov.hmrc.hec.models.hecTaxCheck._
 import uk.gov.hmrc.hec.models.ids.{CRN, CTUTR, GGCredId}
 import uk.gov.hmrc.hec.models.licence.{LicenceTimeTrading, LicenceType, LicenceValidityPeriod}
 import uk.gov.hmrc.hec.models.sdes.NotificationStatus._
 import uk.gov.hmrc.hec.models.sdes.{CallBackNotification, NotificationStatus}
-import uk.gov.hmrc.hec.models.hecTaxCheck.{CTStatusResponse, HECTaxCheck, HECTaxCheckCode, HECTaxCheckData, HECTaxCheckSource, LicenceDetails}
-import uk.gov.hmrc.hec.models.{CompanyHouseName, Error, YesNoAnswer, hecTaxCheck}
+import uk.gov.hmrc.hec.models.{Error, hecTaxCheck}
 import uk.gov.hmrc.hec.services.scheduleService.HECTaxCheckExtractionContext
 import uk.gov.hmrc.hec.services.{FileStoreService, TaxCheckService}
 import uk.gov.hmrc.hec.util.TimeUtils

@@ -19,6 +19,7 @@ package uk.gov.hmrc.hec.models
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
 import play.api.libs.json.{JsString, JsSuccess, Json}
+import uk.gov.hmrc.hec.models.hecTaxCheck.DateOfBirth
 
 import java.time.LocalDate
 

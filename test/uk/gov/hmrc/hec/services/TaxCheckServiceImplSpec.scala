@@ -28,10 +28,11 @@ import uk.gov.hmrc.hec.models
 import uk.gov.hmrc.hec.models.hecTaxCheck.ApplicantDetails.{CompanyApplicantDetails, IndividualApplicantDetails}
 import uk.gov.hmrc.hec.models.hecTaxCheck.HECTaxCheckData.{CompanyHECTaxCheckData, IndividualHECTaxCheckData}
 import uk.gov.hmrc.hec.models.hecTaxCheck.TaxDetails.{CompanyTaxDetails, IndividualTaxDetails}
+import uk.gov.hmrc.hec.models.hecTaxCheck._
 import uk.gov.hmrc.hec.models.ids._
 import uk.gov.hmrc.hec.models.licence.{LicenceTimeTrading, LicenceType, LicenceValidityPeriod}
-import uk.gov.hmrc.hec.models.hecTaxCheck.{CTAccountingPeriod, CTStatus, CTStatusResponse, HECTaxCheck, HECTaxCheckCode, HECTaxCheckData, HECTaxCheckMatchRequest, HECTaxCheckMatchResult, HECTaxCheckMatchStatus, HECTaxCheckSource, LicenceDetails}
-import uk.gov.hmrc.hec.models.{CompanyHouseName, DateOfBirth, Error, Name, TaxCheckListItem, TaxSituation, TaxYear, YesNoAnswer, hecTaxCheck}
+import uk.gov.hmrc.hec.models.taxCheckMatch.{HECTaxCheckMatchRequest, HECTaxCheckMatchResult, HECTaxCheckMatchStatus}
+import uk.gov.hmrc.hec.models.{Error, TaxCheckListItem, hecTaxCheck, taxCheckMatch}
 import uk.gov.hmrc.hec.repos.HECTaxCheckStore
 import uk.gov.hmrc.hec.util.{TimeProvider, TimeUtils}
 import uk.gov.hmrc.http.HeaderCarrier
@@ -260,7 +261,7 @@ class TaxCheckServiceImplSpec extends AnyWordSpec with Matchers with MockFactory
         Right(storedDateOfBirth)
       )
 
-      val matchingCompanyMatchRequest = HECTaxCheckMatchRequest(
+      val matchingCompanyMatchRequest = taxCheckMatch.HECTaxCheckMatchRequest(
         taxCheckCode,
         storedLicenceType,
         Left(storedCRN)

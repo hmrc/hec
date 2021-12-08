@@ -14,25 +14,25 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.hec.models
+package uk.gov.hmrc.hec.models.hecTaxCheck
 
-import ai.x.play.json.Jsonx
-import ai.x.play.json.SingletonEncoder.simpleName
-import ai.x.play.json.implicits.formatSingleton
+import cats.Eq
+import play.api.libs.functional.syntax.toInvariantFunctorOps
 import play.api.libs.json.Format
 
-sealed trait TaxSituation extends Product with Serializable
+import java.time.LocalDate
+import java.time.format.DateTimeFormatter
 
-object TaxSituation {
+final case class DateOfBirth(value: LocalDate) extends AnyVal
 
-  case object PAYE extends TaxSituation
+object DateOfBirth {
 
-  case object SA extends TaxSituation
+  private val dateFormatter = DateTimeFormatter.BASIC_ISO_DATE
 
-  case object SAPAYE extends TaxSituation
+  implicit val format: Format[DateOfBirth] =
+    implicitly[Format[String]]
+      .inmap(s => DateOfBirth(LocalDate.parse(s, dateFormatter)), d => dateFormatter.format(d.value))
 
-  case object NotChargeable extends TaxSituation
+  implicit val eq: Eq[DateOfBirth] = Eq.fromUniversalEquals
 
-  @SuppressWarnings(Array("org.wartremover.warts.Throw", "org.wartremover.warts.Equals"))
-  implicit val format: Format[TaxSituation] = Jsonx.formatSealed[TaxSituation]
 }

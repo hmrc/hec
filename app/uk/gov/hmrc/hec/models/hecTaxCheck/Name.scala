@@ -16,12 +16,12 @@
 
 package uk.gov.hmrc.hec.models.hecTaxCheck
 
-sealed trait CTLookupStatus extends Product with Serializable
+import play.api.libs.json.{Json, OFormat}
 
-object CTLookupStatus {
+final case class Name(firstName: String, lastName: String)
 
-  case object Successful extends CTLookupStatus
+object Name {
 
-  case object NoLiveRecords extends CTLookupStatus
+  implicit val format: OFormat[Name] = Json.format
 
 }

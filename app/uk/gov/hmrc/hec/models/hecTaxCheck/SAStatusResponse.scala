@@ -17,7 +17,6 @@
 package uk.gov.hmrc.hec.models.hecTaxCheck
 
 import play.api.libs.json.{Json, OFormat}
-import uk.gov.hmrc.hec.models.TaxYear
 import uk.gov.hmrc.hec.models.ids.SAUTR
 
 final case class SAStatusResponse(

@@ -14,27 +14,24 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.hec.models
+package uk.gov.hmrc.hec.models.hecTaxCheck
 
 import ai.x.play.json.Jsonx
 import ai.x.play.json.SingletonEncoder.simpleName
 import ai.x.play.json.implicits.formatSingleton
-import cats.Eq
+import enumeratum.{Enum, EnumEntry}
 import play.api.libs.json.Format
 
-sealed trait YesNoAnswer extends Product with Serializable
+sealed trait CorrectiveAction extends EnumEntry with Product with Serializable
 
-object YesNoAnswer {
+object CorrectiveAction extends Enum[CorrectiveAction] {
+  case object RegisterNewSAAccount extends CorrectiveAction
+  case object DormantAccountReactivated extends CorrectiveAction
+  case object Other extends CorrectiveAction
 
-  case object Yes extends YesNoAnswer
-
-  case object No extends YesNoAnswer
-
-  implicit val eq: Eq[YesNoAnswer] = Eq.fromUniversalEquals
+  val values = findValues
 
   @SuppressWarnings(Array("org.wartremover.warts.Throw", "org.wartremover.warts.Equals"))
-  implicit val format: Format[YesNoAnswer] = Jsonx.formatSealed[YesNoAnswer]
-
-  val values: List[YesNoAnswer] = List(Yes, No)
+  implicit val format: Format[CorrectiveAction] = Jsonx.formatSealed[CorrectiveAction]
 
 }

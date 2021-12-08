@@ -18,13 +18,12 @@ package uk.gov.hmrc.hec.connectors
 
 import java.time.LocalDate
 import java.util.UUID
-
 import com.typesafe.config.ConfigFactory
 import org.scalamock.scalatest.MockFactory
 import org.scalatest.matchers.should._
 import org.scalatest.wordspec._
 import play.api.Configuration
-import uk.gov.hmrc.hec.models.TaxYear
+import uk.gov.hmrc.hec.models.hecTaxCheck.TaxYear
 import uk.gov.hmrc.hec.models.ids.{CTUTR, SAUTR}
 import uk.gov.hmrc.http.{HeaderCarrier, HttpResponse}
 import uk.gov.hmrc.play.bootstrap.config.ServicesConfig

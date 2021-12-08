@@ -23,7 +23,7 @@ import com.google.inject.{Inject, Singleton}
 import play.api.libs.json.Json
 import play.api.mvc.{Action, AnyContent, ControllerComponents}
 import uk.gov.hmrc.hec.controllers.actions.GGAuthenticateAction
-import uk.gov.hmrc.hec.models.TaxYear
+import uk.gov.hmrc.hec.models.hecTaxCheck.TaxYear
 import uk.gov.hmrc.hec.models.ids.{CTUTR, SAUTR}
 import uk.gov.hmrc.hec.services.IFService
 import uk.gov.hmrc.hec.services.IFService.{BackendError, DataNotFoundError, IFError}

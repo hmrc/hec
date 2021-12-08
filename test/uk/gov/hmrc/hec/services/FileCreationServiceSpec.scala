@@ -27,8 +27,8 @@ import uk.gov.hmrc.hec.models.hecTaxCheck.TaxDetails.{CompanyTaxDetails, Individ
 import uk.gov.hmrc.hec.models.ids.{CRN, CTUTR, GGCredId, NINO, SAUTR}
 import uk.gov.hmrc.hec.models.licence.LicenceType.{DriverOfTaxisAndPrivateHires, OperatorOfPrivateHireVehicles, ScrapMetalDealerSite, ScrapMetalMobileCollector}
 import uk.gov.hmrc.hec.models.licence.{LicenceTimeTrading, LicenceType, LicenceValidityPeriod}
-import uk.gov.hmrc.hec.models.hecTaxCheck.{CTAccountingPeriod, CTStatus, CTStatusResponse, HECTaxCheck, HECTaxCheckCode, HECTaxCheckFileBodyList, LicenceDetails, SAStatus, SAStatusResponse}
-import uk.gov.hmrc.hec.models.{CompanyHouseName, CorrectiveAction, DateOfBirth, Error, Name, TaxSituation, TaxYear, YesNoAnswer, hecTaxCheck}
+import uk.gov.hmrc.hec.models.hecTaxCheck.{CTAccountingPeriod, CTStatus, CTStatusResponse, CompanyHouseName, CorrectiveAction, DateOfBirth, HECTaxCheck, HECTaxCheckCode, HECTaxCheckFileBodyList, LicenceDetails, Name, SAStatus, SAStatusResponse, TaxSituation, TaxYear, YesNoAnswer}
+import uk.gov.hmrc.hec.models.{Error, hecTaxCheck}
 import uk.gov.hmrc.hec.util.TimeProvider
 
 import java.time.{LocalDate, LocalTime, ZoneId, ZonedDateTime}

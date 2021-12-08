@@ -27,17 +27,18 @@ import play.api.mvc.Result
 import play.api.test.FakeRequest
 import play.api.test.Helpers._
 import uk.gov.hmrc.auth.core.AuthProvider.{GovernmentGateway, PrivilegedApplication}
-import uk.gov.hmrc.auth.core.{AuthConnector, AuthProviders, InvalidBearerToken}
 import uk.gov.hmrc.auth.core.retrieve.{PAClientId, VerifyPid, v2, GGCredId => AuthGGCredId}
+import uk.gov.hmrc.auth.core.{AuthConnector, AuthProviders, InvalidBearerToken}
 import uk.gov.hmrc.hec.controllers.actions.AuthenticatedGGOrStrideRequest
 import uk.gov.hmrc.hec.models
 import uk.gov.hmrc.hec.models.hecTaxCheck.ApplicantDetails.{CompanyApplicantDetails, IndividualApplicantDetails}
 import uk.gov.hmrc.hec.models.hecTaxCheck.HECTaxCheckData.{CompanyHECTaxCheckData, IndividualHECTaxCheckData}
 import uk.gov.hmrc.hec.models.hecTaxCheck.TaxDetails.{CompanyTaxDetails, IndividualTaxDetails}
+import uk.gov.hmrc.hec.models.hecTaxCheck._
 import uk.gov.hmrc.hec.models.ids._
 import uk.gov.hmrc.hec.models.licence.{LicenceTimeTrading, LicenceType, LicenceValidityPeriod}
-import uk.gov.hmrc.hec.models.hecTaxCheck.{CTAccountingPeriod, CTStatus, CTStatusResponse, HECTaxCheck, HECTaxCheckCode, HECTaxCheckData, HECTaxCheckMatchRequest, HECTaxCheckMatchResult, HECTaxCheckMatchStatus, HECTaxCheckSource, LicenceDetails}
-import uk.gov.hmrc.hec.models.{CompanyHouseName, DateOfBirth, Error, Name, TaxCheckListItem, TaxSituation, TaxYear, YesNoAnswer, hecTaxCheck}
+import uk.gov.hmrc.hec.models.taxCheckMatch.{HECTaxCheckMatchRequest, HECTaxCheckMatchResult, HECTaxCheckMatchStatus}
+import uk.gov.hmrc.hec.models.{Error, TaxCheckListItem, hecTaxCheck, taxCheckMatch}
 import uk.gov.hmrc.hec.services.TaxCheckService
 import uk.gov.hmrc.hec.util.TimeUtils
 import uk.gov.hmrc.http.HeaderCarrier
@@ -256,10 +257,10 @@ class TaxCheckControllerSpec extends ControllerSpec with AuthSupport {
       val crn          = CRN("crn")
 
       val individualMatchRequest: HECTaxCheckMatchRequest =
-        HECTaxCheckMatchRequest(taxCheckCode, licenceType, Right(dateOfBirth))
+        taxCheckMatch.HECTaxCheckMatchRequest(taxCheckCode, licenceType, Right(dateOfBirth))
 
       val companyMatchRequest: HECTaxCheckMatchRequest =
-        HECTaxCheckMatchRequest(taxCheckCode, licenceType, Left(crn))
+        taxCheckMatch.HECTaxCheckMatchRequest(taxCheckCode, licenceType, Left(crn))
 
       "return a 415 (unsupported media type)" when {
 
