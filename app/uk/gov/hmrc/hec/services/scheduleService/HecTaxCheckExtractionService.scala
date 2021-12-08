@@ -21,7 +21,7 @@ import cats.implicits._
 import com.google.inject.{ImplementedBy, Inject}
 import play.api.Configuration
 import uk.gov.hmrc.hec.models
-import uk.gov.hmrc.hec.models.licence.{LicenceTimeTrading, LicenceType, LicenceValidityPeriod}
+import uk.gov.hmrc.hec.models.hecTaxCheck.licence.{LicenceTimeTrading, LicenceType, LicenceValidityPeriod}
 import uk.gov.hmrc.hec.models.sdes.{FileAudit, FileChecksum, FileMetaData, SDESFileNotifyRequest}
 import uk.gov.hmrc.hec.models.hecTaxCheck.{CorrectiveAction, HECTaxCheck, HECTaxCheckFileBodyList}
 import uk.gov.hmrc.hec.models.Error

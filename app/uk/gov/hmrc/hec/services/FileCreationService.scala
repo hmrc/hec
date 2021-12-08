@@ -25,13 +25,15 @@ import uk.gov.hmrc.hec.models.fileFormat._
 import uk.gov.hmrc.hec.models.hecTaxCheck.CorrectiveAction._
 import uk.gov.hmrc.hec.models.hecTaxCheck.HECTaxCheckData.{CompanyHECTaxCheckData, IndividualHECTaxCheckData}
 import uk.gov.hmrc.hec.models.hecTaxCheck.HECTaxCheckSource.Digital
-import uk.gov.hmrc.hec.models.hecTaxCheck.SAStatus._
 import uk.gov.hmrc.hec.models.hecTaxCheck.TaxSituation._
 import uk.gov.hmrc.hec.models.hecTaxCheck._
-import uk.gov.hmrc.hec.models.licence.LicenceTimeTrading.{EightYearsOrMore, FourToEightYears, TwoToFourYears, ZeroToTwoYears}
-import uk.gov.hmrc.hec.models.licence.LicenceType.{DriverOfTaxisAndPrivateHires, OperatorOfPrivateHireVehicles, ScrapMetalDealerSite, ScrapMetalMobileCollector}
-import uk.gov.hmrc.hec.models.licence.LicenceValidityPeriod.{UpToFiveYears, UpToFourYears, UpToOneYear, UpToThreeYears, UpToTwoYears}
-import uk.gov.hmrc.hec.models.licence.{LicenceTimeTrading, LicenceType, LicenceValidityPeriod}
+import uk.gov.hmrc.hec.models.hecTaxCheck.company.CTStatus
+import uk.gov.hmrc.hec.models.hecTaxCheck.individual.SAStatus
+import uk.gov.hmrc.hec.models.hecTaxCheck.individual.SAStatus._
+import uk.gov.hmrc.hec.models.hecTaxCheck.licence.LicenceTimeTrading.{EightYearsOrMore, FourToEightYears, TwoToFourYears, ZeroToTwoYears}
+import uk.gov.hmrc.hec.models.hecTaxCheck.licence.LicenceType.{DriverOfTaxisAndPrivateHires, OperatorOfPrivateHireVehicles, ScrapMetalDealerSite, ScrapMetalMobileCollector}
+import uk.gov.hmrc.hec.models.hecTaxCheck.licence.LicenceValidityPeriod.{UpToFiveYears, UpToFourYears, UpToOneYear, UpToThreeYears, UpToTwoYears}
+import uk.gov.hmrc.hec.models.hecTaxCheck.licence.{LicenceTimeTrading, LicenceType, LicenceValidityPeriod}
 import uk.gov.hmrc.hec.util.TimeProvider
 
 import java.time.ZoneId

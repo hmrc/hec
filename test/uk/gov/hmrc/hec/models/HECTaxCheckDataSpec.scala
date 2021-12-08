@@ -24,8 +24,10 @@ import uk.gov.hmrc.hec.models.hecTaxCheck.ApplicantDetails.{CompanyApplicantDeta
 import uk.gov.hmrc.hec.models.hecTaxCheck.HECTaxCheckData.{CompanyHECTaxCheckData, IndividualHECTaxCheckData}
 import uk.gov.hmrc.hec.models.hecTaxCheck.TaxDetails.{CompanyTaxDetails, IndividualTaxDetails}
 import uk.gov.hmrc.hec.models.hecTaxCheck._
+import uk.gov.hmrc.hec.models.hecTaxCheck.company.{CTAccountingPeriod, CTStatus, CTStatusResponse, CompanyHouseName}
+import uk.gov.hmrc.hec.models.hecTaxCheck.individual.{DateOfBirth, Name}
+import uk.gov.hmrc.hec.models.hecTaxCheck.licence.{LicenceDetails, LicenceTimeTrading, LicenceType, LicenceValidityPeriod}
 import uk.gov.hmrc.hec.models.ids._
-import uk.gov.hmrc.hec.models.licence.{LicenceTimeTrading, LicenceType, LicenceValidityPeriod}
 
 import java.time.{LocalDate, ZoneId, ZonedDateTime}
 
@@ -93,7 +95,7 @@ class HECTaxCheckDataSpec extends AnyWordSpec with Matchers {
       val companyTaxCheckData: HECTaxCheckData =
         CompanyHECTaxCheckData(
           CompanyApplicantDetails(GGCredId("ggCredId").some, CRN("12345678"), CompanyHouseName("Test Tech Ltd")),
-          hecTaxCheck.LicenceDetails(
+          LicenceDetails(
             LicenceType.ScrapMetalMobileCollector,
             LicenceTimeTrading.EightYearsOrMore,
             LicenceValidityPeriod.UpToThreeYears

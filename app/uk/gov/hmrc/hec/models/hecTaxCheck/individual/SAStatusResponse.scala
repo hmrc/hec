@@ -14,9 +14,10 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.hec.models.hecTaxCheck
+package uk.gov.hmrc.hec.models.hecTaxCheck.individual
 
 import play.api.libs.json.{Json, OFormat}
+import uk.gov.hmrc.hec.models.hecTaxCheck.TaxYear
 import uk.gov.hmrc.hec.models.ids.SAUTR
 
 final case class SAStatusResponse(

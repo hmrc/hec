@@ -23,9 +23,11 @@ import play.api.inject.guice.GuiceableModule
 import play.api.test.FakeRequest
 import play.api.test.Helpers._
 import uk.gov.hmrc.auth.core.AuthConnector
-import uk.gov.hmrc.hec.models.{hecTaxCheck, _}
+import uk.gov.hmrc.hec.models._
+import uk.gov.hmrc.hec.models.hecTaxCheck.TaxYear
+import uk.gov.hmrc.hec.models.hecTaxCheck.company.CTStatusResponse
+import uk.gov.hmrc.hec.models.hecTaxCheck.individual.{SAStatus, SAStatusResponse}
 import uk.gov.hmrc.hec.models.ids.{CTUTR, GGCredId, SAUTR}
-import uk.gov.hmrc.hec.models.hecTaxCheck.{CTStatusResponse, SAStatus, SAStatusResponse, TaxYear}
 import uk.gov.hmrc.hec.services.IFService
 import uk.gov.hmrc.hec.services.IFService.{BackendError, DataNotFoundError, IFError}
 import uk.gov.hmrc.http.HeaderCarrier
@@ -132,7 +134,7 @@ class IFControllerSpec extends ControllerSpec with AuthSupport {
           val utr        = SAUTR(validSautr)
           val taxYearStr = "2020"
           val taxYear    = TaxYear(taxYearStr.toInt)
-          val response   = hecTaxCheck.SAStatusResponse(
+          val response   = SAStatusResponse(
             sautr = utr,
             taxYear = taxYear,
             status = SAStatus.ReturnFound

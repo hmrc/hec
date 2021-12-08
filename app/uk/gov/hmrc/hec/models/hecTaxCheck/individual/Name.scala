@@ -14,12 +14,14 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.hec.models.hecTaxCheck
+package uk.gov.hmrc.hec.models.hecTaxCheck.individual
 
-import play.api.libs.json.{Format, Json}
+import play.api.libs.json.{Json, OFormat}
 
-final case class CompanyHouseName(name: String)
+final case class Name(firstName: String, lastName: String)
 
-object CompanyHouseName {
-  implicit val format: Format[CompanyHouseName] = Json.valueFormat
+object Name {
+
+  implicit val format: OFormat[Name] = Json.format
+
 }

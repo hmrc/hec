@@ -19,6 +19,7 @@ package uk.gov.hmrc.hec.models.hecTaxCheck
 import play.api.libs.json._
 import uk.gov.hmrc.hec.models.hecTaxCheck.ApplicantDetails.{CompanyApplicantDetails, IndividualApplicantDetails}
 import uk.gov.hmrc.hec.models.hecTaxCheck.TaxDetails.{CompanyTaxDetails, IndividualTaxDetails}
+import uk.gov.hmrc.hec.models.hecTaxCheck.licence.LicenceDetails
 
 import java.time.ZonedDateTime
 

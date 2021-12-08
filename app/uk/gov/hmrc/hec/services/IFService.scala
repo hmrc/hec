@@ -16,22 +16,24 @@
 
 package uk.gov.hmrc.hec.services
 
-import java.time.LocalDate
-import java.util.UUID
 import cats.data.EitherT
 import cats.implicits._
 import com.google.inject.{ImplementedBy, Inject, Singleton}
 import play.api.http.Status.{NOT_FOUND, OK}
 import play.api.libs.json.{Json, Reads}
 import uk.gov.hmrc.hec.connectors.IFConnector
+import uk.gov.hmrc.hec.models.hecTaxCheck.TaxYear
+import uk.gov.hmrc.hec.models.hecTaxCheck.company.{CTAccountingPeriod, CTStatus, CTStatusResponse}
+import uk.gov.hmrc.hec.models.hecTaxCheck.individual.{SAStatus, SAStatusResponse}
 import uk.gov.hmrc.hec.models.ids.{CTUTR, SAUTR}
-import uk.gov.hmrc.hec.models.hecTaxCheck.{CTAccountingPeriod, CTStatus, CTStatusResponse, SAStatus, SAStatusResponse, TaxYear}
-import uk.gov.hmrc.hec.models.{CTLookupStatus, Error, hecTaxCheck}
+import uk.gov.hmrc.hec.models.{CTLookupStatus, Error}
 import uk.gov.hmrc.hec.services.IFService.{BackendError, DataNotFoundError, IFError}
 import uk.gov.hmrc.hec.services.IFServiceImpl.{RawAccountingPeriod, RawCTSuccessResponse, RawFailureResponse, RawSASuccessResponse}
 import uk.gov.hmrc.hec.util.HttpResponseOps._
 import uk.gov.hmrc.http.{HeaderCarrier, HttpResponse}
 
+import java.time.LocalDate
+import java.util.UUID
 import scala.concurrent.{ExecutionContext, Future}
 
 @ImplementedBy(classOf[IFServiceImpl])
@@ -91,7 +93,7 @@ class IFServiceImpl @Inject() (
             .parseJSON[RawSASuccessResponse]
             .leftMap(e => BackendError(Error(e)))
             .flatMap(
-              toSaStatus(_).map(hecTaxCheck.SAStatusResponse(utr, taxYear, _))
+              toSaStatus(_).map(SAStatusResponse(utr, taxYear, _))
             )
         } else {
           handleErrorPath(httpResponse, utrType = "SA")
@@ -137,9 +139,7 @@ class IFServiceImpl @Inject() (
           .getOrElse(List.empty[RawAccountingPeriod])
           .traverse[Either[BackendError, *], CTAccountingPeriod](a =>
             toCtStatus(a)
-              .map(status =>
-                hecTaxCheck.CTAccountingPeriod(a.accountingPeriodStartDate.some, a.accountingPeriodEndDate, status)
-              )
+              .map(status => CTAccountingPeriod(a.accountingPeriodStartDate.some, a.accountingPeriodEndDate, status))
           )
           .filterOrElse(
             _.nonEmpty,

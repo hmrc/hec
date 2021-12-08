@@ -14,18 +14,12 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.hec.models.hecTaxCheck
+package uk.gov.hmrc.hec.models.hecTaxCheck.company
 
-import play.api.libs.json.{Json, OFormat}
+import play.api.libs.json.{Format, Json}
 
-import java.time.LocalDate
+final case class CompanyHouseName(name: String)
 
-final case class CTAccountingPeriod(
-  startDate: Option[LocalDate],
-  endDate: LocalDate,
-  ctStatus: CTStatus
-)
-
-object CTAccountingPeriod {
-  implicit val format: OFormat[CTAccountingPeriod] = Json.format
+object CompanyHouseName {
+  implicit val format: Format[CompanyHouseName] = Json.valueFormat
 }

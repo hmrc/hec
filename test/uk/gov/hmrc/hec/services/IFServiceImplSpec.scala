@@ -16,8 +16,6 @@
 
 package uk.gov.hmrc.hec.services
 
-import java.time.LocalDate
-import java.util.UUID
 import cats.data.EitherT
 import cats.implicits.catsSyntaxOptionId
 import cats.instances.future._
@@ -28,12 +26,16 @@ import org.scalatest.wordspec.AnyWordSpec
 import play.api.libs.json.Json
 import play.api.test.Helpers._
 import uk.gov.hmrc.hec.connectors.IFConnector
-import uk.gov.hmrc.hec.models.ids.{CTUTR, SAUTR}
-import uk.gov.hmrc.hec.models.hecTaxCheck.{CTAccountingPeriod, CTStatus, CTStatusResponse, SAStatus, SAStatusResponse, TaxYear}
 import uk.gov.hmrc.hec.models.Error
+import uk.gov.hmrc.hec.models.hecTaxCheck.TaxYear
+import uk.gov.hmrc.hec.models.hecTaxCheck.company.{CTAccountingPeriod, CTStatus, CTStatusResponse}
+import uk.gov.hmrc.hec.models.hecTaxCheck.individual.{SAStatus, SAStatusResponse}
+import uk.gov.hmrc.hec.models.ids.{CTUTR, SAUTR}
 import uk.gov.hmrc.hec.services.IFService.{BackendError, DataNotFoundError}
 import uk.gov.hmrc.http.{HeaderCarrier, HttpResponse}
 
+import java.time.LocalDate
+import java.util.UUID
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 import scala.reflect.ClassTag

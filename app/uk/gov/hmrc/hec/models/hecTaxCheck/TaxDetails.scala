@@ -17,6 +17,8 @@
 package uk.gov.hmrc.hec.models.hecTaxCheck
 
 import play.api.libs.json.{Json, OFormat}
+import uk.gov.hmrc.hec.models.hecTaxCheck.company.CTStatusResponse
+import uk.gov.hmrc.hec.models.hecTaxCheck.individual.SAStatusResponse
 import uk.gov.hmrc.hec.models.ids.{CTUTR, NINO, SAUTR}
 
 sealed trait TaxDetails extends Product with Serializable

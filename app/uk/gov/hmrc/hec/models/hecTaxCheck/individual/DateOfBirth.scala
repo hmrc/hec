@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.hec.models.hecTaxCheck
+package uk.gov.hmrc.hec.models.hecTaxCheck.individual
 
 import cats.Eq
 import play.api.libs.functional.syntax.toInvariantFunctorOps

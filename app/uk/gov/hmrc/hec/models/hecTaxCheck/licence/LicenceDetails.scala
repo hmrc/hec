@@ -14,24 +14,18 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.hec.models.hecTaxCheck
+package uk.gov.hmrc.hec.models.hecTaxCheck.licence
 
-import ai.x.play.json.Jsonx
-import ai.x.play.json.SingletonEncoder.simpleName
-import ai.x.play.json.implicits.formatSingleton
-import play.api.libs.json.Format
+import play.api.libs.json.{Json, OFormat}
 
-sealed trait SAStatus extends Product with Serializable
+final case class LicenceDetails(
+  licenceType: LicenceType,
+  licenceTimeTrading: LicenceTimeTrading,
+  licenceValidityPeriod: LicenceValidityPeriod
+)
 
-object SAStatus {
+object LicenceDetails {
 
-  case object ReturnFound extends SAStatus
-
-  case object NoticeToFileIssued extends SAStatus
-
-  case object NoReturnFound extends SAStatus
-
-  @SuppressWarnings(Array("org.wartremover.warts.All"))
-  implicit val format: Format[SAStatus] = Jsonx.formatSealed[SAStatus]
+  implicit val format: OFormat[LicenceDetails] = Json.format
 
 }
