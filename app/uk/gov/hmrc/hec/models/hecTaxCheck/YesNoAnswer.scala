@@ -14,25 +14,27 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.hec.models
+package uk.gov.hmrc.hec.models.hecTaxCheck
 
+import ai.x.play.json.Jsonx
+import ai.x.play.json.SingletonEncoder.simpleName
+import ai.x.play.json.implicits.formatSingleton
 import cats.Eq
-import play.api.libs.functional.syntax.toInvariantFunctorOps
 import play.api.libs.json.Format
 
-import java.time.LocalDate
-import java.time.format.DateTimeFormatter
+sealed trait YesNoAnswer extends Product with Serializable
 
-final case class DateOfBirth(value: LocalDate) extends AnyVal
+object YesNoAnswer {
 
-object DateOfBirth {
+  case object Yes extends YesNoAnswer
 
-  private val dateFormatter = DateTimeFormatter.BASIC_ISO_DATE
+  case object No extends YesNoAnswer
 
-  implicit val format: Format[DateOfBirth] =
-    implicitly[Format[String]]
-      .inmap(s => DateOfBirth(LocalDate.parse(s, dateFormatter)), d => dateFormatter.format(d.value))
+  implicit val eq: Eq[YesNoAnswer] = Eq.fromUniversalEquals
 
-  implicit val eq: Eq[DateOfBirth] = Eq.fromUniversalEquals
+  @SuppressWarnings(Array("org.wartremover.warts.Throw", "org.wartremover.warts.Equals"))
+  implicit val format: Format[YesNoAnswer] = Jsonx.formatSealed[YesNoAnswer]
+
+  val values: List[YesNoAnswer] = List(Yes, No)
 
 }

@@ -24,12 +24,17 @@ import org.scalamock.scalatest.MockFactory
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
 import play.api.test.Helpers._
-import uk.gov.hmrc.hec.models.ApplicantDetails.{CompanyApplicantDetails, IndividualApplicantDetails}
-import uk.gov.hmrc.hec.models.HECTaxCheckData.{CompanyHECTaxCheckData, IndividualHECTaxCheckData}
-import uk.gov.hmrc.hec.models.TaxDetails.{CompanyTaxDetails, IndividualTaxDetails}
+import uk.gov.hmrc.hec.models
+import uk.gov.hmrc.hec.models.hecTaxCheck.ApplicantDetails.{CompanyApplicantDetails, IndividualApplicantDetails}
+import uk.gov.hmrc.hec.models.hecTaxCheck.HECTaxCheckData.{CompanyHECTaxCheckData, IndividualHECTaxCheckData}
+import uk.gov.hmrc.hec.models.hecTaxCheck.TaxDetails.{CompanyTaxDetails, IndividualTaxDetails}
+import uk.gov.hmrc.hec.models.hecTaxCheck.company.{CTAccountingPeriod, CTStatus, CTStatusResponse, CompanyHouseName}
+import uk.gov.hmrc.hec.models.hecTaxCheck.individual.{DateOfBirth, Name}
+import uk.gov.hmrc.hec.models.hecTaxCheck.licence.{LicenceDetails, LicenceTimeTrading, LicenceType, LicenceValidityPeriod}
+import uk.gov.hmrc.hec.models.hecTaxCheck._
 import uk.gov.hmrc.hec.models.ids._
-import uk.gov.hmrc.hec.models.licence.{LicenceDetails, LicenceTimeTrading, LicenceType, LicenceValidityPeriod}
-import uk.gov.hmrc.hec.models.{CTAccountingPeriod, CTStatus, CTStatusResponse, CompanyHouseName, DateOfBirth, Error, HECTaxCheck, HECTaxCheckCode, HECTaxCheckData, HECTaxCheckMatchRequest, HECTaxCheckMatchResult, HECTaxCheckMatchStatus, HECTaxCheckSource, Name, TaxCheckListItem, TaxSituation, TaxYear, YesNoAnswer}
+import uk.gov.hmrc.hec.models.taxCheckMatch.{HECTaxCheckMatchRequest, HECTaxCheckMatchResult, HECTaxCheckMatchStatus}
+import uk.gov.hmrc.hec.models.{Error, TaxCheckListItem, hecTaxCheck, taxCheckMatch}
 import uk.gov.hmrc.hec.repos.HECTaxCheckStore
 import uk.gov.hmrc.hec.util.{TimeProvider, TimeUtils}
 import uk.gov.hmrc.http.HeaderCarrier
@@ -129,7 +134,7 @@ class TaxCheckServiceImplSpec extends AnyWordSpec with Matchers with MockFactory
       val expectedExpiryDate                        = TimeUtils.today().plusDays(expiresAfter.toDays)
       val taxCheckCode                              = HECTaxCheckCode("code")
       def taxCheck(fileCorrelationId: Option[UUID]) =
-        HECTaxCheck(taxCheckData, taxCheckCode, expectedExpiryDate, now, false, fileCorrelationId)
+        models.hecTaxCheck.HECTaxCheck(taxCheckData, taxCheckCode, expectedExpiryDate, now, false, fileCorrelationId)
 
       "return an error" when {
 
@@ -198,7 +203,7 @@ class TaxCheckServiceImplSpec extends AnyWordSpec with Matchers with MockFactory
         )
 
       val storedIndividualTaxCheck =
-        HECTaxCheck(
+        hecTaxCheck.HECTaxCheck(
           IndividualHECTaxCheckData(
             IndividualApplicantDetails(Some(GGCredId("")), Name("", ""), storedDateOfBirth),
             storedLicenceDetails,
@@ -222,7 +227,7 @@ class TaxCheckServiceImplSpec extends AnyWordSpec with Matchers with MockFactory
         )
 
       val storedCompanyTaxCheck =
-        HECTaxCheck(
+        hecTaxCheck.HECTaxCheck(
           CompanyHECTaxCheckData(
             CompanyApplicantDetails(GGCredId("").some, storedCRN, CompanyHouseName("Test Tech Ltd")),
             storedLicenceDetails,
@@ -258,7 +263,7 @@ class TaxCheckServiceImplSpec extends AnyWordSpec with Matchers with MockFactory
         Right(storedDateOfBirth)
       )
 
-      val matchingCompanyMatchRequest = HECTaxCheckMatchRequest(
+      val matchingCompanyMatchRequest = taxCheckMatch.HECTaxCheckMatchRequest(
         taxCheckCode,
         storedLicenceType,
         Left(storedCRN)
@@ -431,7 +436,7 @@ class TaxCheckServiceImplSpec extends AnyWordSpec with Matchers with MockFactory
 
       val taxCheckData = CompanyHECTaxCheckData(
         CompanyApplicantDetails(ggCredId.some, CRN(""), CompanyHouseName("Test Tech Ltd")),
-        LicenceDetails(
+        licence.LicenceDetails(
           LicenceType.ScrapMetalDealerSite,
           LicenceTimeTrading.EightYearsOrMore,
           LicenceValidityPeriod.UpToOneYear
@@ -473,9 +478,9 @@ class TaxCheckServiceImplSpec extends AnyWordSpec with Matchers with MockFactory
         val code2 = HECTaxCheckCode("code2")
         val code3 = HECTaxCheckCode("code3")
 
-        val taxCheckToday     = HECTaxCheck(taxCheckData, code1, today, now, false, None)
-        val taxCheckYesterday = HECTaxCheck(taxCheckData, code2, yesterday, now, false, None)
-        val taxCheckTomorrow  = HECTaxCheck(taxCheckData, code3, tomorrow, now, false, None)
+        val taxCheckToday     = hecTaxCheck.HECTaxCheck(taxCheckData, code1, today, now, false, None)
+        val taxCheckYesterday = hecTaxCheck.HECTaxCheck(taxCheckData, code2, yesterday, now, false, None)
+        val taxCheckTomorrow  = hecTaxCheck.HECTaxCheck(taxCheckData, code3, tomorrow, now, false, None)
 
         val todayItem    = TaxCheckListItem(
           taxCheckToday.taxCheckData.licenceDetails.licenceType,
@@ -503,7 +508,7 @@ class TaxCheckServiceImplSpec extends AnyWordSpec with Matchers with MockFactory
 
       val taxCheckData: HECTaxCheckData = CompanyHECTaxCheckData(
         CompanyApplicantDetails(ggCredId.some, CRN(""), CompanyHouseName("Test Tech Ltd")),
-        LicenceDetails(
+        licence.LicenceDetails(
           LicenceType.ScrapMetalDealerSite,
           LicenceTimeTrading.EightYearsOrMore,
           LicenceValidityPeriod.UpToOneYear
@@ -540,11 +545,11 @@ class TaxCheckServiceImplSpec extends AnyWordSpec with Matchers with MockFactory
       "only return HEC Tac check code with isExtracted false" in {
 
         val hecTaxCheck1 =
-          HECTaxCheck(taxCheckData, HECTaxCheckCode("ABC 123 ABC"), today.plusDays(1), now, false, None)
+          hecTaxCheck.HECTaxCheck(taxCheckData, HECTaxCheckCode("ABC 123 ABC"), today.plusDays(1), now, false, None)
         val hecTaxCheck2 =
-          HECTaxCheck(taxCheckData, HECTaxCheckCode("EBC 123 ABC"), today.plusDays(1), now, false, None)
+          hecTaxCheck.HECTaxCheck(taxCheckData, HECTaxCheckCode("EBC 123 ABC"), today.plusDays(1), now, false, None)
         val hecTaxCheck3 =
-          HECTaxCheck(taxCheckData, HECTaxCheckCode("MBC 123 ABC"), today.plusDays(1), now, false, None)
+          hecTaxCheck.HECTaxCheck(taxCheckData, HECTaxCheckCode("MBC 123 ABC"), today.plusDays(1), now, false, None)
 
         mockGetAllTaxCheckCodesByStatus(false, 0, 3, "_id")(Right(List(hecTaxCheck1, hecTaxCheck2, hecTaxCheck3)))
 
@@ -559,7 +564,7 @@ class TaxCheckServiceImplSpec extends AnyWordSpec with Matchers with MockFactory
 
       val taxCheckData: HECTaxCheckData = CompanyHECTaxCheckData(
         CompanyApplicantDetails(ggCredId.some, CRN(""), CompanyHouseName("Test Tech Ltd")),
-        LicenceDetails(
+        licence.LicenceDetails(
           LicenceType.ScrapMetalDealerSite,
           LicenceTimeTrading.EightYearsOrMore,
           LicenceValidityPeriod.UpToOneYear
@@ -596,9 +601,23 @@ class TaxCheckServiceImplSpec extends AnyWordSpec with Matchers with MockFactory
       "only return HEC Tac check code with the given CorrelationId" in {
 
         val hecTaxCheck1 =
-          HECTaxCheck(taxCheckData, HECTaxCheckCode("ABC 123 ABC"), today.plusDays(1), now, false, uuid.some)
+          hecTaxCheck.HECTaxCheck(
+            taxCheckData,
+            HECTaxCheckCode("ABC 123 ABC"),
+            today.plusDays(1),
+            now,
+            false,
+            uuid.some
+          )
         val hecTaxCheck2 =
-          HECTaxCheck(taxCheckData, HECTaxCheckCode("EBC 123 ABC"), today.plusDays(1), now, false, uuid.some)
+          hecTaxCheck.HECTaxCheck(
+            taxCheckData,
+            HECTaxCheckCode("EBC 123 ABC"),
+            today.plusDays(1),
+            now,
+            false,
+            uuid.some
+          )
 
         mockGetAllTaxCheckCodesByCorrelationId(uuid)(Right(List(hecTaxCheck1, hecTaxCheck2)))
 

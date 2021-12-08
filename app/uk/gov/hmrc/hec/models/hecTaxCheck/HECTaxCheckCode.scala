@@ -14,20 +14,22 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.hec.models
+package uk.gov.hmrc.hec.models.hecTaxCheck
 
-import java.time.LocalDate
+import play.api.libs.json.{Format, Json}
 
-import play.api.libs.json.{Json, OFormat}
-import uk.gov.hmrc.hec.models.ids.CTUTR
+final case class HECTaxCheckCode(value: String) extends AnyVal
 
-final case class CTStatusResponse(
-  ctutr: CTUTR,
-  startDate: LocalDate,
-  endDate: LocalDate,
-  latestAccountingPeriod: Option[CTAccountingPeriod]
-)
+object HECTaxCheckCode {
 
-object CTStatusResponse {
-  implicit val format: OFormat[CTStatusResponse] = Json.format
+  implicit val format: Format[HECTaxCheckCode] = Json.valueFormat
+
+  val validCharacters: List[Char] = {
+    val allowedLetters = ('A' to 'Z').toList.diff(List('I', 'O', 'S', 'U', 'V', 'W'))
+    val allowedDigits  = ('0' to '9').toList.diff(List('0', '1', '5'))
+    allowedLetters ::: allowedDigits
+  }
+
+  val validLength: Int = 9
+
 }

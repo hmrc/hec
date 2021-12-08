@@ -14,24 +14,18 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.hec.models
+package uk.gov.hmrc.hec.models.hecTaxCheck.individual
 
-import ai.x.play.json.Jsonx
-import ai.x.play.json.SingletonEncoder.simpleName
-import ai.x.play.json.implicits.formatSingleton
-import play.api.libs.json.Format
+import play.api.libs.json.{Json, OFormat}
+import uk.gov.hmrc.hec.models.hecTaxCheck.TaxYear
+import uk.gov.hmrc.hec.models.ids.SAUTR
 
-sealed trait CTStatus extends Product with Serializable
+final case class SAStatusResponse(
+  sautr: SAUTR,
+  taxYear: TaxYear,
+  status: SAStatus
+)
 
-object CTStatus {
-
-  case object ReturnFound extends CTStatus
-
-  case object NoticeToFileIssued extends CTStatus
-
-  case object NoReturnFound extends CTStatus
-
-  @SuppressWarnings(Array("org.wartremover.warts.All"))
-  implicit val format: Format[CTStatus] = Jsonx.formatSealed[CTStatus]
-
+object SAStatusResponse {
+  implicit val format: OFormat[SAStatusResponse] = Json.format
 }

@@ -17,7 +17,8 @@
 package uk.gov.hmrc.hec.models
 
 import play.api.libs.json.{Json, OFormat}
-import uk.gov.hmrc.hec.models.licence.LicenceType
+import uk.gov.hmrc.hec.models.hecTaxCheck.licence.LicenceType
+import uk.gov.hmrc.hec.models.hecTaxCheck.{HECTaxCheck, HECTaxCheckCode}
 
 import java.time.{LocalDate, ZonedDateTime}
 

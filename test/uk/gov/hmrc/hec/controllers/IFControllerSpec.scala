@@ -24,6 +24,9 @@ import play.api.test.FakeRequest
 import play.api.test.Helpers._
 import uk.gov.hmrc.auth.core.AuthConnector
 import uk.gov.hmrc.hec.models._
+import uk.gov.hmrc.hec.models.hecTaxCheck.TaxYear
+import uk.gov.hmrc.hec.models.hecTaxCheck.company.CTStatusResponse
+import uk.gov.hmrc.hec.models.hecTaxCheck.individual.{SAStatus, SAStatusResponse}
 import uk.gov.hmrc.hec.models.ids.{CTUTR, GGCredId, SAUTR}
 import uk.gov.hmrc.hec.services.IFService
 import uk.gov.hmrc.hec.services.IFService.{BackendError, DataNotFoundError, IFError}

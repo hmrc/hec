@@ -14,20 +14,16 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.hec.models
+package uk.gov.hmrc.hec.services.scheduleService
 
-import cats.instances.int._
-import cats.syntax.eq._
-import play.api.libs.json.{Format, Json}
+import akka.actor.{ActorSystem, Scheduler}
+import com.google.inject.{ImplementedBy, Inject}
 
-final case class TaxYear(startYear: Int) extends AnyVal
+@ImplementedBy(classOf[SchedulerProviderImpl])
+trait SchedulerProvider {
+  val scheduler: Scheduler
+}
 
-object TaxYear {
-  implicit val format: Format[TaxYear] = Json.valueFormat
-
-  def fromString(startYearStr: String): Option[TaxYear] =
-    try if (startYearStr.length === 4) Some(TaxYear(startYearStr.toInt)) else None
-    catch {
-      case _: Exception => None
-    }
+class SchedulerProviderImpl @Inject() (val system: ActorSystem) extends SchedulerProvider {
+  val scheduler = system.scheduler
 }

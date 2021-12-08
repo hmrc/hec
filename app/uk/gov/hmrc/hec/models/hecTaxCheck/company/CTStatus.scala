@@ -14,34 +14,24 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.hec.models.licence
+package uk.gov.hmrc.hec.models.hecTaxCheck.company
 
 import ai.x.play.json.Jsonx
 import ai.x.play.json.SingletonEncoder.simpleName
 import ai.x.play.json.implicits.formatSingleton
-import cats.Eq
-import enumeratum._
 import play.api.libs.json.Format
 
-import scala.collection.immutable
+sealed trait CTStatus extends Product with Serializable
 
-sealed trait LicenceType extends EnumEntry with Product with Serializable
+object CTStatus {
 
-object LicenceType extends Enum[LicenceType] {
+  case object ReturnFound extends CTStatus
 
-  case object DriverOfTaxisAndPrivateHires extends LicenceType
+  case object NoticeToFileIssued extends CTStatus
 
-  case object OperatorOfPrivateHireVehicles extends LicenceType
+  case object NoReturnFound extends CTStatus
 
-  case object ScrapMetalMobileCollector extends LicenceType
-
-  case object ScrapMetalDealerSite extends LicenceType
-
-  val values: immutable.IndexedSeq[LicenceType] = findValues
-
-  @SuppressWarnings(Array("org.wartremover.warts.Throw", "org.wartremover.warts.Equals"))
-  implicit val format: Format[LicenceType] = Jsonx.formatSealed[LicenceType]
-
-  implicit val eq: Eq[LicenceType] = Eq.fromUniversalEquals
+  @SuppressWarnings(Array("org.wartremover.warts.All"))
+  implicit val format: Format[CTStatus] = Jsonx.formatSealed[CTStatus]
 
 }

@@ -14,14 +14,18 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.hec.models
+package uk.gov.hmrc.hec.models.hecTaxCheck.licence
 
 import play.api.libs.json.{Json, OFormat}
 
-final case class Name(firstName: String, lastName: String)
+final case class LicenceDetails(
+  licenceType: LicenceType,
+  licenceTimeTrading: LicenceTimeTrading,
+  licenceValidityPeriod: LicenceValidityPeriod
+)
 
-object Name {
+object LicenceDetails {
 
-  implicit val format: OFormat[Name] = Json.format
+  implicit val format: OFormat[LicenceDetails] = Json.format
 
 }

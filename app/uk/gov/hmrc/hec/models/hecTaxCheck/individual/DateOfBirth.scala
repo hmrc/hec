@@ -14,18 +14,25 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.hec.models
+package uk.gov.hmrc.hec.models.hecTaxCheck.individual
 
-import play.api.libs.json.{Json, OFormat}
+import cats.Eq
+import play.api.libs.functional.syntax.toInvariantFunctorOps
+import play.api.libs.json.Format
 
 import java.time.LocalDate
+import java.time.format.DateTimeFormatter
 
-final case class CTAccountingPeriod(
-  startDate: Option[LocalDate],
-  endDate: LocalDate,
-  ctStatus: CTStatus
-)
+final case class DateOfBirth(value: LocalDate) extends AnyVal
 
-object CTAccountingPeriod {
-  implicit val format: OFormat[CTAccountingPeriod] = Json.format
+object DateOfBirth {
+
+  private val dateFormatter = DateTimeFormatter.BASIC_ISO_DATE
+
+  implicit val format: Format[DateOfBirth] =
+    implicitly[Format[String]]
+      .inmap(s => DateOfBirth(LocalDate.parse(s, dateFormatter)), d => dateFormatter.format(d.value))
+
+  implicit val eq: Eq[DateOfBirth] = Eq.fromUniversalEquals
+
 }

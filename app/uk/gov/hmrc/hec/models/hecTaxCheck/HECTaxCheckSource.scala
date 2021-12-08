@@ -14,24 +14,25 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.hec.models
+package uk.gov.hmrc.hec.models.hecTaxCheck
 
 import ai.x.play.json.Jsonx
 import ai.x.play.json.SingletonEncoder.simpleName
 import ai.x.play.json.implicits.formatSingleton
-import enumeratum.{Enum, EnumEntry}
+import cats.Eq
 import play.api.libs.json.Format
 
-sealed trait CorrectiveAction extends EnumEntry with Product with Serializable
+sealed trait HECTaxCheckSource extends Product with Serializable
 
-object CorrectiveAction extends Enum[CorrectiveAction] {
-  case object RegisterNewSAAccount extends CorrectiveAction
-  case object DormantAccountReactivated extends CorrectiveAction
-  case object Other extends CorrectiveAction
+object HECTaxCheckSource {
 
-  val values = findValues
+  case object Digital extends HECTaxCheckSource
+
+  case object Stride extends HECTaxCheckSource
 
   @SuppressWarnings(Array("org.wartremover.warts.Throw", "org.wartremover.warts.Equals"))
-  implicit val format: Format[CorrectiveAction] = Jsonx.formatSealed[CorrectiveAction]
+  implicit val format: Format[HECTaxCheckSource] = Jsonx.formatSealed[HECTaxCheckSource]
+
+  implicit val eq: Eq[HECTaxCheckSource] = Eq.fromUniversalEquals
 
 }

@@ -23,12 +23,15 @@ import org.scalamock.scalatest.MockFactory
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
 import play.api.test.Helpers._
-import uk.gov.hmrc.hec.models.ApplicantDetails.IndividualApplicantDetails
-import uk.gov.hmrc.hec.models.HECTaxCheckData.IndividualHECTaxCheckData
-import uk.gov.hmrc.hec.models.TaxDetails.IndividualTaxDetails
+import uk.gov.hmrc.hec.models
+import uk.gov.hmrc.hec.models.Error
+import uk.gov.hmrc.hec.models.hecTaxCheck.ApplicantDetails.IndividualApplicantDetails
+import uk.gov.hmrc.hec.models.hecTaxCheck.HECTaxCheckData.IndividualHECTaxCheckData
+import uk.gov.hmrc.hec.models.hecTaxCheck.TaxDetails.IndividualTaxDetails
+import uk.gov.hmrc.hec.models.hecTaxCheck._
+import uk.gov.hmrc.hec.models.hecTaxCheck.individual.{DateOfBirth, Name}
 import uk.gov.hmrc.hec.models.ids.{CRN, GGCredId, NINO, SAUTR}
-import uk.gov.hmrc.hec.models.licence.{LicenceDetails, LicenceTimeTrading, LicenceType, LicenceValidityPeriod}
-import uk.gov.hmrc.hec.models.{DateOfBirth, Error, HECTaxCheck, HECTaxCheckCode, HECTaxCheckSource, Name, TaxSituation, TaxYear, YesNoAnswer}
+import uk.gov.hmrc.hec.models.hecTaxCheck.licence.{LicenceDetails, LicenceTimeTrading, LicenceType, LicenceValidityPeriod}
 import uk.gov.hmrc.hec.repos.HECTaxCheckStore
 import uk.gov.hmrc.hec.testonly.models.SaveTaxCheckRequest
 import uk.gov.hmrc.hec.util.{TimeProvider, TimeUtils}
@@ -102,7 +105,7 @@ class TaxCheckServiceImplSpec extends AnyWordSpec with Matchers with MockFactory
 
         "there is an error saving the tax check" in {
           val request  = saveTaxCheckRequest(Left(CRN("crn")))
-          val taxCheck = HECTaxCheck(
+          val taxCheck = models.hecTaxCheck.HECTaxCheck(
             service.taxCheckData(request),
             request.taxCheckCode,
             request.expiresAfter,
@@ -125,7 +128,7 @@ class TaxCheckServiceImplSpec extends AnyWordSpec with Matchers with MockFactory
 
         "the tax check has been saved for an individual" in {
           val request  = saveTaxCheckRequest(Right(DateOfBirth(TimeUtils.today())))
-          val taxCheck = HECTaxCheck(
+          val taxCheck = models.hecTaxCheck.HECTaxCheck(
             service.taxCheckData(request),
             request.taxCheckCode,
             request.expiresAfter,
@@ -144,7 +147,7 @@ class TaxCheckServiceImplSpec extends AnyWordSpec with Matchers with MockFactory
 
         "the tax check has been saved for a company" in {
           val request  = saveTaxCheckRequest(Left(CRN("crn")))
-          val taxCheck = HECTaxCheck(
+          val taxCheck = models.hecTaxCheck.HECTaxCheck(
             service.taxCheckData(request),
             request.taxCheckCode,
             request.expiresAfter,
@@ -199,7 +202,8 @@ class TaxCheckServiceImplSpec extends AnyWordSpec with Matchers with MockFactory
             HECTaxCheckSource.Digital
           )
           val taxCheck     =
-            HECTaxCheck(taxCheckData, taxCheckCode, TimeUtils.today(), now, false, fileCorrelationId.some)
+            models.hecTaxCheck
+              .HECTaxCheck(taxCheckData, taxCheckCode, TimeUtils.today(), now, false, fileCorrelationId.some)
 
           mockGetTaxCheck(taxCheckCode)(Right(Some(taxCheck)))
 

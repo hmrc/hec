@@ -14,21 +14,20 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.hec.models
+package uk.gov.hmrc.hec.models.hecTaxCheck
 
-import play.api.libs.json.{Json, OFormat}
-import uk.gov.hmrc.hec.models.ids.CRN
-import uk.gov.hmrc.hec.models.licence.LicenceType
-import uk.gov.hmrc.hec.models.EitherUtils.eitherFormat
+import cats.instances.int._
+import cats.syntax.eq._
+import play.api.libs.json.{Format, Json}
 
-final case class HECTaxCheckMatchRequest(
-  taxCheckCode: HECTaxCheckCode,
-  licenceType: LicenceType,
-  verifier: Either[CRN, DateOfBirth]
-)
+final case class TaxYear(startYear: Int) extends AnyVal
 
-object HECTaxCheckMatchRequest {
+object TaxYear {
+  implicit val format: Format[TaxYear] = Json.valueFormat
 
-  implicit val format: OFormat[HECTaxCheckMatchRequest] = Json.format
-
+  def fromString(startYearStr: String): Option[TaxYear] =
+    try if (startYearStr.length === 4) Some(TaxYear(startYearStr.toInt)) else None
+    catch {
+      case _: Exception => None
+    }
 }

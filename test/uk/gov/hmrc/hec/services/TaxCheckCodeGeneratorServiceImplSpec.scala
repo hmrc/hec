@@ -18,7 +18,7 @@ package uk.gov.hmrc.hec.services
 
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
-import uk.gov.hmrc.hec.models.HECTaxCheckCode
+import uk.gov.hmrc.hec.models.hecTaxCheck.HECTaxCheckCode
 
 class TaxCheckCodeGeneratorServiceImplSpec extends AnyWordSpec with Matchers {
 

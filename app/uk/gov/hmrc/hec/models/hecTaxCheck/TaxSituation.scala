@@ -14,25 +14,25 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.hec.models
+package uk.gov.hmrc.hec.models.hecTaxCheck
 
 import ai.x.play.json.Jsonx
 import ai.x.play.json.SingletonEncoder.simpleName
 import ai.x.play.json.implicits.formatSingleton
-import cats.Eq
 import play.api.libs.json.Format
 
-sealed trait HECTaxCheckSource extends Product with Serializable
+sealed trait TaxSituation extends Product with Serializable
 
-object HECTaxCheckSource {
+object TaxSituation {
 
-  case object Digital extends HECTaxCheckSource
+  case object PAYE extends TaxSituation
 
-  case object Stride extends HECTaxCheckSource
+  case object SA extends TaxSituation
+
+  case object SAPAYE extends TaxSituation
+
+  case object NotChargeable extends TaxSituation
 
   @SuppressWarnings(Array("org.wartremover.warts.Throw", "org.wartremover.warts.Equals"))
-  implicit val format: Format[HECTaxCheckSource] = Jsonx.formatSealed[HECTaxCheckSource]
-
-  implicit val eq: Eq[HECTaxCheckSource] = Eq.fromUniversalEquals
-
+  implicit val format: Format[TaxSituation] = Jsonx.formatSealed[TaxSituation]
 }

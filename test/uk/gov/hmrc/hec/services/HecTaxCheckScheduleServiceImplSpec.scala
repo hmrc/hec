@@ -28,12 +28,12 @@ import org.scalatest.wordspec.AnyWordSpecLike
 import play.api.Configuration
 import uk.gov.hmrc.hec.actors.TimeCalculator
 import uk.gov.hmrc.hec.models
-import uk.gov.hmrc.hec.models.{Error, SchedulerProvider}
+import uk.gov.hmrc.hec.models.Error
 import uk.gov.hmrc.hec.services.HecTaxCheckScheduleServiceImplSpec.TestHecTaxCheckScheduleService.{RunJobRequest, RunJobResponse}
 import uk.gov.hmrc.hec.services.HecTaxCheckScheduleServiceImplSpec.TestScheduler.JobScheduledOnce
 import uk.gov.hmrc.hec.services.HecTaxCheckScheduleServiceImplSpec.TestTimeCalculator.{TimeUntilRequest, TimeUntilResponse}
 import uk.gov.hmrc.hec.services.HecTaxCheckScheduleServiceImplSpec.{TestHecTaxCheckScheduleService, TestScheduler, TestSchedulerProvider, TestTimeCalculator}
-import uk.gov.hmrc.hec.services.scheduleService.{HECTaxCheckExtractionContext, HECTaxCheckScheduleService, HecTaxCheckExtractionService}
+import uk.gov.hmrc.hec.services.scheduleService.{HECTaxCheckExtractionContext, HECTaxCheckScheduleService, HecTaxCheckExtractionService, SchedulerProvider}
 import uk.gov.hmrc.http.HeaderCarrier
 
 import java.time.format.DateTimeFormatter

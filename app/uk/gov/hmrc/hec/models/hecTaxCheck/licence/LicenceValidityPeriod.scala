@@ -14,25 +14,29 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.hec.models
+package uk.gov.hmrc.hec.models.hecTaxCheck.licence
 
 import ai.x.play.json.Jsonx
 import ai.x.play.json.SingletonEncoder.simpleName
 import ai.x.play.json.implicits.formatSingleton
+import enumeratum.{Enum, EnumEntry}
 import play.api.libs.json.Format
 
-sealed trait TaxSituation extends Product with Serializable
+import scala.collection.immutable
 
-object TaxSituation {
+sealed trait LicenceValidityPeriod extends EnumEntry with Product with Serializable
 
-  case object PAYE extends TaxSituation
+object LicenceValidityPeriod extends Enum[LicenceValidityPeriod] {
 
-  case object SA extends TaxSituation
+  case object UpToOneYear extends LicenceValidityPeriod
+  case object UpToTwoYears extends LicenceValidityPeriod
+  case object UpToThreeYears extends LicenceValidityPeriod
+  case object UpToFourYears extends LicenceValidityPeriod
+  case object UpToFiveYears extends LicenceValidityPeriod
 
-  case object SAPAYE extends TaxSituation
-
-  case object NotChargeable extends TaxSituation
+  val values: immutable.IndexedSeq[LicenceValidityPeriod] = findValues
 
   @SuppressWarnings(Array("org.wartremover.warts.Throw", "org.wartremover.warts.Equals"))
-  implicit val format: Format[TaxSituation] = Jsonx.formatSealed[TaxSituation]
+  implicit val format: Format[LicenceValidityPeriod] = Jsonx.formatSealed[LicenceValidityPeriod]
+
 }

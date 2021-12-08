@@ -14,27 +14,19 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.hec.models
+package uk.gov.hmrc.hec.models.hecTaxCheck
 
 import ai.x.play.json.Jsonx
 import ai.x.play.json.SingletonEncoder.simpleName
 import ai.x.play.json.implicits.formatSingleton
-import cats.Eq
 import play.api.libs.json.Format
 
-sealed trait YesNoAnswer extends Product with Serializable
+sealed trait EntityType extends Product with Serializable
 
-object YesNoAnswer {
-
-  case object Yes extends YesNoAnswer
-
-  case object No extends YesNoAnswer
-
-  implicit val eq: Eq[YesNoAnswer] = Eq.fromUniversalEquals
+object EntityType {
+  case object Individual extends EntityType
+  case object Company extends EntityType
 
   @SuppressWarnings(Array("org.wartremover.warts.Throw", "org.wartremover.warts.Equals"))
-  implicit val format: Format[YesNoAnswer] = Jsonx.formatSealed[YesNoAnswer]
-
-  val values: List[YesNoAnswer] = List(Yes, No)
-
+  implicit val format: Format[EntityType] = Jsonx.formatSealed[EntityType]
 }

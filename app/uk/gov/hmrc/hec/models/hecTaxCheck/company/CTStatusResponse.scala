@@ -14,16 +14,20 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.hec.models
+package uk.gov.hmrc.hec.models.hecTaxCheck.company
 
-import akka.actor.{ActorSystem, Scheduler}
-import com.google.inject.{ImplementedBy, Inject}
+import play.api.libs.json.{Json, OFormat}
+import uk.gov.hmrc.hec.models.ids.CTUTR
 
-@ImplementedBy(classOf[SchedulerProviderImpl])
-trait SchedulerProvider {
-  val scheduler: Scheduler
-}
+import java.time.LocalDate
 
-class SchedulerProviderImpl @Inject() (val system: ActorSystem) extends SchedulerProvider {
-  val scheduler = system.scheduler
+final case class CTStatusResponse(
+  ctutr: CTUTR,
+  startDate: LocalDate,
+  endDate: LocalDate,
+  latestAccountingPeriod: Option[CTAccountingPeriod]
+)
+
+object CTStatusResponse {
+  implicit val format: OFormat[CTStatusResponse] = Json.format
 }

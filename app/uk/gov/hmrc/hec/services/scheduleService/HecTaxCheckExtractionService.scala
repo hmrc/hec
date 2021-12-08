@@ -21,9 +21,10 @@ import cats.implicits._
 import com.google.inject.{ImplementedBy, Inject}
 import play.api.Configuration
 import uk.gov.hmrc.hec.models
-import uk.gov.hmrc.hec.models.licence.{LicenceTimeTrading, LicenceType, LicenceValidityPeriod}
+import uk.gov.hmrc.hec.models.hecTaxCheck.licence.{LicenceTimeTrading, LicenceType, LicenceValidityPeriod}
 import uk.gov.hmrc.hec.models.sdes.{FileAudit, FileChecksum, FileMetaData, SDESFileNotifyRequest}
-import uk.gov.hmrc.hec.models.{CorrectiveAction, Error, HECTaxCheck, HECTaxCheckFileBodyList}
+import uk.gov.hmrc.hec.models.hecTaxCheck.{CorrectiveAction, HECTaxCheck, HECTaxCheckFileBodyList}
+import uk.gov.hmrc.hec.models.Error
 import uk.gov.hmrc.hec.services._
 import uk.gov.hmrc.hec.services.scheduleService.HecTaxCheckExtractionServiceImpl._
 import uk.gov.hmrc.hec.util.{FileMapOps, Logging, UUIDGenerator}
