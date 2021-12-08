@@ -20,7 +20,7 @@ import play.api.libs.json.{Json, OFormat}
 import uk.gov.hmrc.hec.models.DateOfBirth
 import uk.gov.hmrc.hec.models.ids.CRN
 import uk.gov.hmrc.hec.models.licence.LicenceType
-import uk.gov.hmrc.hec.models.EitherUtils.eitherFormat
+import uk.gov.hmrc.hec.util.EitherUtils.eitherFormat
 
 final case class HECTaxCheckMatchRequest(
   taxCheckCode: HECTaxCheckCode,

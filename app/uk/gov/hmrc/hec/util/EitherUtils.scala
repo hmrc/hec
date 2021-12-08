@@ -14,9 +14,9 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.hec.models
+package uk.gov.hmrc.hec.util
 
-import play.api.libs.json.{Format, JsObject, JsResult, JsValue, Json}
+import play.api.libs.json._
 
 import java.util.Locale
 import scala.reflect.ClassTag
