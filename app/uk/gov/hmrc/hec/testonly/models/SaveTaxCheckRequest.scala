@@ -19,8 +19,9 @@ package uk.gov.hmrc.hec.testonly.models
 import play.api.libs.json.{Json, Reads}
 import uk.gov.hmrc.hec.models.ids.{CRN, GGCredId}
 import uk.gov.hmrc.hec.models.licence.LicenceType
-import uk.gov.hmrc.hec.models.{CorrectiveAction, DateOfBirth, HECTaxCheckCode, HECTaxCheckSource, TaxYear}
+import uk.gov.hmrc.hec.models.{CorrectiveAction, DateOfBirth, TaxYear}
 import uk.gov.hmrc.hec.models.EitherUtils.eitherFormat
+import uk.gov.hmrc.hec.models.hecTaxCheck.{HECTaxCheckCode, HECTaxCheckSource}
 
 import java.time.format.DateTimeFormatter
 import java.time.{LocalDate, ZonedDateTime}

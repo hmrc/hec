@@ -20,14 +20,15 @@ import cats.implicits.catsSyntaxOptionId
 import org.scalamock.scalatest.MockFactory
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
-import uk.gov.hmrc.hec.models.ApplicantDetails.{CompanyApplicantDetails, IndividualApplicantDetails}
-import uk.gov.hmrc.hec.models.HECTaxCheckData.{CompanyHECTaxCheckData, IndividualHECTaxCheckData}
-import uk.gov.hmrc.hec.models.HECTaxCheckSource.Digital
-import uk.gov.hmrc.hec.models.TaxDetails.{CompanyTaxDetails, IndividualTaxDetails}
+import uk.gov.hmrc.hec.models.hecTaxCheck.ApplicantDetails.{CompanyApplicantDetails, IndividualApplicantDetails}
+import uk.gov.hmrc.hec.models.hecTaxCheck.HECTaxCheckData.{CompanyHECTaxCheckData, IndividualHECTaxCheckData}
+import uk.gov.hmrc.hec.models.hecTaxCheck.HECTaxCheckSource.Digital
+import uk.gov.hmrc.hec.models.hecTaxCheck.TaxDetails.{CompanyTaxDetails, IndividualTaxDetails}
 import uk.gov.hmrc.hec.models.ids.{CRN, CTUTR, GGCredId, NINO, SAUTR}
 import uk.gov.hmrc.hec.models.licence.LicenceType.{DriverOfTaxisAndPrivateHires, OperatorOfPrivateHireVehicles, ScrapMetalDealerSite, ScrapMetalMobileCollector}
-import uk.gov.hmrc.hec.models.licence.{LicenceDetails, LicenceTimeTrading, LicenceType, LicenceValidityPeriod}
-import uk.gov.hmrc.hec.models.{CTAccountingPeriod, CTStatus, CTStatusResponse, CompanyHouseName, CorrectiveAction, DateOfBirth, Error, HECTaxCheck, HECTaxCheckCode, HECTaxCheckFileBodyList, Name, SAStatus, SAStatusResponse, TaxSituation, TaxYear, YesNoAnswer}
+import uk.gov.hmrc.hec.models.licence.{LicenceTimeTrading, LicenceType, LicenceValidityPeriod}
+import uk.gov.hmrc.hec.models.hecTaxCheck.{CTAccountingPeriod, CTStatus, CTStatusResponse, HECTaxCheck, HECTaxCheckCode, HECTaxCheckFileBodyList, LicenceDetails, SAStatus, SAStatusResponse}
+import uk.gov.hmrc.hec.models.{CompanyHouseName, CorrectiveAction, DateOfBirth, Error, Name, TaxSituation, TaxYear, YesNoAnswer, hecTaxCheck}
 import uk.gov.hmrc.hec.util.TimeProvider
 
 import java.time.{LocalDate, LocalTime, ZoneId, ZonedDateTime}
@@ -190,7 +191,7 @@ class FileCreationServiceSpec extends AnyWordSpec with Matchers with MockFactory
                   LicenceTimeTrading.FourToEightYears,
                   LicenceValidityPeriod.UpToFiveYears,
                   TaxSituation.PAYE,
-                  Some(SAStatusResponse(SAUTR("1234567"), TaxYear(2021), SAStatus.ReturnFound)),
+                  Some(hecTaxCheck.SAStatusResponse(SAUTR("1234567"), TaxYear(2021), SAStatus.ReturnFound)),
                   Some(CorrectiveAction.RegisterNewSAAccount)
                 ),
                 createIndividualHecTaxCheck(
@@ -198,7 +199,7 @@ class FileCreationServiceSpec extends AnyWordSpec with Matchers with MockFactory
                   LicenceTimeTrading.TwoToFourYears,
                   LicenceValidityPeriod.UpToFiveYears,
                   TaxSituation.PAYE,
-                  Some(SAStatusResponse(SAUTR("1234567"), TaxYear(2021), SAStatus.NoticeToFileIssued)),
+                  Some(hecTaxCheck.SAStatusResponse(SAUTR("1234567"), TaxYear(2021), SAStatus.NoticeToFileIssued)),
                   Some(CorrectiveAction.RegisterNewSAAccount)
                 ),
                 createIndividualHecTaxCheck(
@@ -206,7 +207,7 @@ class FileCreationServiceSpec extends AnyWordSpec with Matchers with MockFactory
                   LicenceTimeTrading.TwoToFourYears,
                   LicenceValidityPeriod.UpToFiveYears,
                   TaxSituation.PAYE,
-                  Some(SAStatusResponse(SAUTR("1234567"), TaxYear(2021), SAStatus.NoReturnFound)),
+                  Some(hecTaxCheck.SAStatusResponse(SAUTR("1234567"), TaxYear(2021), SAStatus.NoReturnFound)),
                   Some(CorrectiveAction.RegisterNewSAAccount)
                 )
               )
@@ -240,7 +241,7 @@ class FileCreationServiceSpec extends AnyWordSpec with Matchers with MockFactory
                   LicenceTimeTrading.FourToEightYears,
                   LicenceValidityPeriod.UpToOneYear,
                   TaxSituation.SA,
-                  Some(SAStatusResponse(SAUTR("1234567"), TaxYear(2021), SAStatus.ReturnFound)),
+                  Some(hecTaxCheck.SAStatusResponse(SAUTR("1234567"), TaxYear(2021), SAStatus.ReturnFound)),
                   Some(CorrectiveAction.RegisterNewSAAccount)
                 ),
                 createIndividualHecTaxCheck(
@@ -248,7 +249,7 @@ class FileCreationServiceSpec extends AnyWordSpec with Matchers with MockFactory
                   LicenceTimeTrading.TwoToFourYears,
                   LicenceValidityPeriod.UpToTwoYears,
                   TaxSituation.SA,
-                  Some(SAStatusResponse(SAUTR("1234567"), TaxYear(2021), SAStatus.NoticeToFileIssued)),
+                  Some(hecTaxCheck.SAStatusResponse(SAUTR("1234567"), TaxYear(2021), SAStatus.NoticeToFileIssued)),
                   Some(CorrectiveAction.RegisterNewSAAccount)
                 ),
                 createIndividualHecTaxCheck(
@@ -256,7 +257,7 @@ class FileCreationServiceSpec extends AnyWordSpec with Matchers with MockFactory
                   LicenceTimeTrading.TwoToFourYears,
                   LicenceValidityPeriod.UpToThreeYears,
                   TaxSituation.SA,
-                  Some(SAStatusResponse(SAUTR("1234567"), TaxYear(2021), SAStatus.NoReturnFound)),
+                  Some(hecTaxCheck.SAStatusResponse(SAUTR("1234567"), TaxYear(2021), SAStatus.NoReturnFound)),
                   Some(CorrectiveAction.RegisterNewSAAccount)
                 )
               )
@@ -291,7 +292,7 @@ class FileCreationServiceSpec extends AnyWordSpec with Matchers with MockFactory
                   LicenceTimeTrading.FourToEightYears,
                   LicenceValidityPeriod.UpToOneYear,
                   TaxSituation.SAPAYE,
-                  Some(SAStatusResponse(SAUTR("1234567"), TaxYear(2021), SAStatus.ReturnFound)),
+                  Some(hecTaxCheck.SAStatusResponse(SAUTR("1234567"), TaxYear(2021), SAStatus.ReturnFound)),
                   Some(CorrectiveAction.RegisterNewSAAccount)
                 ),
                 createIndividualHecTaxCheck(
@@ -299,7 +300,7 @@ class FileCreationServiceSpec extends AnyWordSpec with Matchers with MockFactory
                   LicenceTimeTrading.TwoToFourYears,
                   LicenceValidityPeriod.UpToTwoYears,
                   TaxSituation.SAPAYE,
-                  Some(SAStatusResponse(SAUTR("1234567"), TaxYear(2021), SAStatus.NoticeToFileIssued)),
+                  Some(hecTaxCheck.SAStatusResponse(SAUTR("1234567"), TaxYear(2021), SAStatus.NoticeToFileIssued)),
                   Some(CorrectiveAction.RegisterNewSAAccount)
                 ),
                 createIndividualHecTaxCheck(
@@ -307,7 +308,7 @@ class FileCreationServiceSpec extends AnyWordSpec with Matchers with MockFactory
                   LicenceTimeTrading.TwoToFourYears,
                   LicenceValidityPeriod.UpToThreeYears,
                   TaxSituation.SAPAYE,
-                  Some(SAStatusResponse(SAUTR("1234567"), TaxYear(2021), SAStatus.NoReturnFound)),
+                  Some(hecTaxCheck.SAStatusResponse(SAUTR("1234567"), TaxYear(2021), SAStatus.NoReturnFound)),
                   Some(CorrectiveAction.RegisterNewSAAccount)
                 )
               )
@@ -342,7 +343,7 @@ class FileCreationServiceSpec extends AnyWordSpec with Matchers with MockFactory
                   LicenceTimeTrading.FourToEightYears,
                   LicenceValidityPeriod.UpToOneYear,
                   TaxSituation.NotChargeable,
-                  Some(SAStatusResponse(SAUTR("1234567"), TaxYear(2021), SAStatus.ReturnFound)),
+                  Some(hecTaxCheck.SAStatusResponse(SAUTR("1234567"), TaxYear(2021), SAStatus.ReturnFound)),
                   Some(CorrectiveAction.RegisterNewSAAccount)
                 ),
                 createIndividualHecTaxCheck(
@@ -350,7 +351,7 @@ class FileCreationServiceSpec extends AnyWordSpec with Matchers with MockFactory
                   LicenceTimeTrading.TwoToFourYears,
                   LicenceValidityPeriod.UpToTwoYears,
                   TaxSituation.NotChargeable,
-                  Some(SAStatusResponse(SAUTR("1234567"), TaxYear(2021), SAStatus.NoticeToFileIssued)),
+                  Some(hecTaxCheck.SAStatusResponse(SAUTR("1234567"), TaxYear(2021), SAStatus.NoticeToFileIssued)),
                   Some(CorrectiveAction.RegisterNewSAAccount)
                 ),
                 createIndividualHecTaxCheck(
@@ -358,7 +359,7 @@ class FileCreationServiceSpec extends AnyWordSpec with Matchers with MockFactory
                   LicenceTimeTrading.TwoToFourYears,
                   LicenceValidityPeriod.UpToThreeYears,
                   TaxSituation.NotChargeable,
-                  Some(SAStatusResponse(SAUTR("1234567"), TaxYear(2021), SAStatus.NoReturnFound)),
+                  Some(hecTaxCheck.SAStatusResponse(SAUTR("1234567"), TaxYear(2021), SAStatus.NoReturnFound)),
                   Some(CorrectiveAction.RegisterNewSAAccount)
                 )
               )
@@ -429,10 +430,10 @@ class FileCreationServiceSpec extends AnyWordSpec with Matchers with MockFactory
               chargeableForCT: Option[YesNoAnswer],
               correctiveAction: Option[CorrectiveAction]
             ) =
-              HECTaxCheck(
+              hecTaxCheck.HECTaxCheck(
                 CompanyHECTaxCheckData(
                   companyDetails,
-                  LicenceDetails(licenceType, licenceTimeTrading, licenceValidityPeriod),
+                  hecTaxCheck.LicenceDetails(licenceType, licenceTimeTrading, licenceValidityPeriod),
                   createTaxDetails(
                     ctStatusResponse,
                     ctIncomeDeclared,

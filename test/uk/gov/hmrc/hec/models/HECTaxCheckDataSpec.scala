@@ -22,11 +22,12 @@ import java.time.{LocalDate, ZoneId, ZonedDateTime}
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
 import play.api.libs.json.Json
-import uk.gov.hmrc.hec.models.ApplicantDetails.{CompanyApplicantDetails, IndividualApplicantDetails}
-import uk.gov.hmrc.hec.models.HECTaxCheckData.{CompanyHECTaxCheckData, IndividualHECTaxCheckData}
-import uk.gov.hmrc.hec.models.TaxDetails.{CompanyTaxDetails, IndividualTaxDetails}
+import uk.gov.hmrc.hec.models.hecTaxCheck.ApplicantDetails.{CompanyApplicantDetails, IndividualApplicantDetails}
+import uk.gov.hmrc.hec.models.hecTaxCheck.HECTaxCheckData.{CompanyHECTaxCheckData, IndividualHECTaxCheckData}
+import uk.gov.hmrc.hec.models.hecTaxCheck.TaxDetails.{CompanyTaxDetails, IndividualTaxDetails}
 import uk.gov.hmrc.hec.models.ids.{CRN, CTUTR, GGCredId, NINO, SAUTR}
-import uk.gov.hmrc.hec.models.licence.{LicenceDetails, LicenceTimeTrading, LicenceType, LicenceValidityPeriod}
+import uk.gov.hmrc.hec.models.licence.{LicenceTimeTrading, LicenceType, LicenceValidityPeriod}
+import uk.gov.hmrc.hec.models.hecTaxCheck.{CTAccountingPeriod, CTStatus, CTStatusResponse, HECTaxCheckData, HECTaxCheckSource, LicenceDetails}
 
 class HECTaxCheckDataSpec extends AnyWordSpec with Matchers {
 
@@ -92,7 +93,7 @@ class HECTaxCheckDataSpec extends AnyWordSpec with Matchers {
       val companyTaxCheckData: HECTaxCheckData =
         CompanyHECTaxCheckData(
           CompanyApplicantDetails(GGCredId("ggCredId").some, CRN("12345678"), CompanyHouseName("Test Tech Ltd")),
-          LicenceDetails(
+          hecTaxCheck.LicenceDetails(
             LicenceType.ScrapMetalMobileCollector,
             LicenceTimeTrading.EightYearsOrMore,
             LicenceValidityPeriod.UpToThreeYears

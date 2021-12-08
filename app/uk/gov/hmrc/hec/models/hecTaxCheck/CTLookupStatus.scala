@@ -14,18 +14,14 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.hec.models
+package uk.gov.hmrc.hec.models.hecTaxCheck
 
-import play.api.libs.json.{Json, OFormat}
+sealed trait CTLookupStatus extends Product with Serializable
 
-import java.time.LocalDate
+object CTLookupStatus {
 
-final case class CTAccountingPeriod(
-  startDate: Option[LocalDate],
-  endDate: LocalDate,
-  ctStatus: CTStatus
-)
+  case object Successful extends CTLookupStatus
 
-object CTAccountingPeriod {
-  implicit val format: OFormat[CTAccountingPeriod] = Json.format
+  case object NoLiveRecords extends CTLookupStatus
+
 }

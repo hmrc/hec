@@ -19,12 +19,14 @@ package uk.gov.hmrc.hec.testonly.services
 import cats.data.EitherT
 import cats.implicits.catsSyntaxOptionId
 import com.google.inject.{ImplementedBy, Inject, Singleton}
-import uk.gov.hmrc.hec.models.ApplicantDetails.{CompanyApplicantDetails, IndividualApplicantDetails}
-import uk.gov.hmrc.hec.models.HECTaxCheckData.{CompanyHECTaxCheckData, IndividualHECTaxCheckData}
-import uk.gov.hmrc.hec.models.TaxDetails.{CompanyTaxDetails, IndividualTaxDetails}
+import uk.gov.hmrc.hec.models
+import uk.gov.hmrc.hec.models.hecTaxCheck.ApplicantDetails.{CompanyApplicantDetails, IndividualApplicantDetails}
+import uk.gov.hmrc.hec.models.hecTaxCheck.TaxDetails.{CompanyTaxDetails, IndividualTaxDetails}
 import uk.gov.hmrc.hec.models.ids.{CTUTR, NINO}
-import uk.gov.hmrc.hec.models.licence.{LicenceDetails, LicenceTimeTrading, LicenceValidityPeriod}
-import uk.gov.hmrc.hec.models.{CTAccountingPeriod, CTStatus, CTStatusResponse, CompanyHouseName, Error, HECTaxCheck, HECTaxCheckCode, HECTaxCheckData, Name, TaxSituation, TaxYear, YesNoAnswer}
+import uk.gov.hmrc.hec.models.licence.{LicenceTimeTrading, LicenceValidityPeriod}
+import uk.gov.hmrc.hec.models.hecTaxCheck.HECTaxCheckData.{CompanyHECTaxCheckData, IndividualHECTaxCheckData}
+import uk.gov.hmrc.hec.models.hecTaxCheck.{CTAccountingPeriod, CTStatus, CTStatusResponse, HECTaxCheck, HECTaxCheckCode, HECTaxCheckData, LicenceDetails}
+import uk.gov.hmrc.hec.models.{CompanyHouseName, Error, Name, TaxSituation, TaxYear, YesNoAnswer}
 import uk.gov.hmrc.hec.repos.HECTaxCheckStore
 import uk.gov.hmrc.hec.testonly.models.SaveTaxCheckRequest
 import uk.gov.hmrc.hec.util.TimeProvider
@@ -58,7 +60,7 @@ class TaxCheckServiceImpl @Inject() (
     saveTaxCheckRequest: SaveTaxCheckRequest
   )(implicit hc: HeaderCarrier): EitherT[Future, Error, Unit] = {
     val taxCheck =
-      HECTaxCheck(
+      models.hecTaxCheck.HECTaxCheck(
         taxCheckData(saveTaxCheckRequest),
         saveTaxCheckRequest.taxCheckCode,
         saveTaxCheckRequest.expiresAfter,

@@ -26,14 +26,15 @@ import play.api.mvc.Result
 import play.api.test.FakeRequest
 import play.api.test.Helpers._
 import uk.gov.hmrc.hec.models
-import uk.gov.hmrc.hec.models.ApplicantDetails.CompanyApplicantDetails
-import uk.gov.hmrc.hec.models.HECTaxCheckData.CompanyHECTaxCheckData
-import uk.gov.hmrc.hec.models.TaxDetails.CompanyTaxDetails
+import uk.gov.hmrc.hec.models.hecTaxCheck.ApplicantDetails.CompanyApplicantDetails
+import uk.gov.hmrc.hec.models.hecTaxCheck.HECTaxCheckData.CompanyHECTaxCheckData
+import uk.gov.hmrc.hec.models.hecTaxCheck.TaxDetails.CompanyTaxDetails
 import uk.gov.hmrc.hec.models.ids.{CRN, CTUTR, GGCredId}
-import uk.gov.hmrc.hec.models.licence.{LicenceDetails, LicenceTimeTrading, LicenceType, LicenceValidityPeriod}
+import uk.gov.hmrc.hec.models.licence.{LicenceTimeTrading, LicenceType, LicenceValidityPeriod}
 import uk.gov.hmrc.hec.models.sdes.NotificationStatus._
 import uk.gov.hmrc.hec.models.sdes.{CallBackNotification, NotificationStatus}
-import uk.gov.hmrc.hec.models.{CTStatusResponse, CompanyHouseName, Error, HECTaxCheck, HECTaxCheckCode, HECTaxCheckData, HECTaxCheckSource, YesNoAnswer}
+import uk.gov.hmrc.hec.models.hecTaxCheck.{CTStatusResponse, HECTaxCheck, HECTaxCheckCode, HECTaxCheckData, HECTaxCheckSource, LicenceDetails}
+import uk.gov.hmrc.hec.models.{CompanyHouseName, Error, YesNoAnswer, hecTaxCheck}
 import uk.gov.hmrc.hec.services.scheduleService.HECTaxCheckExtractionContext
 import uk.gov.hmrc.hec.services.{FileStoreService, TaxCheckService}
 import uk.gov.hmrc.hec.util.TimeUtils
@@ -110,9 +111,9 @@ class SDESCallbackControllerSpec extends ControllerSpec {
   )
 
   val hecTaxCheck1 =
-    HECTaxCheck(taxCheckData, HECTaxCheckCode("ABC 123 ABC"), today.plusDays(1), now, false, uuid.some)
+    hecTaxCheck.HECTaxCheck(taxCheckData, HECTaxCheckCode("ABC 123 ABC"), today.plusDays(1), now, false, uuid.some)
   val hecTaxCheck2 =
-    HECTaxCheck(taxCheckData, HECTaxCheckCode("EBC 123 ABC"), today.plusDays(1), now, false, uuid.some)
+    hecTaxCheck.HECTaxCheck(taxCheckData, HECTaxCheckCode("EBC 123 ABC"), today.plusDays(1), now, false, uuid.some)
 
   val fileName1 = "HEC_SSA_0001_20210908_HEC_LICENCE_TYPE.dat"
   val fileName2 = "HEC_SSA_0001_20210908_HEC_APPLICATION.dat"

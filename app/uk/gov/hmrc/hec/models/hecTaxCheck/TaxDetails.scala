@@ -14,10 +14,11 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.hec.models
+package uk.gov.hmrc.hec.models.hecTaxCheck
 
 import play.api.libs.json.{Json, OFormat}
 import uk.gov.hmrc.hec.models.ids.{CTUTR, NINO, SAUTR}
+import uk.gov.hmrc.hec.models._
 
 sealed trait TaxDetails extends Product with Serializable
 

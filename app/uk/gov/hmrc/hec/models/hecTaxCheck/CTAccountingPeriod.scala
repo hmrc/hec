@@ -14,21 +14,18 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.hec.models
+package uk.gov.hmrc.hec.models.hecTaxCheck
 
 import play.api.libs.json.{Json, OFormat}
-import uk.gov.hmrc.hec.models.ids.CRN
-import uk.gov.hmrc.hec.models.licence.LicenceType
-import uk.gov.hmrc.hec.models.EitherUtils.eitherFormat
 
-final case class HECTaxCheckMatchRequest(
-  taxCheckCode: HECTaxCheckCode,
-  licenceType: LicenceType,
-  verifier: Either[CRN, DateOfBirth]
+import java.time.LocalDate
+
+final case class CTAccountingPeriod(
+  startDate: Option[LocalDate],
+  endDate: LocalDate,
+  ctStatus: CTStatus
 )
 
-object HECTaxCheckMatchRequest {
-
-  implicit val format: OFormat[HECTaxCheckMatchRequest] = Json.format
-
+object CTAccountingPeriod {
+  implicit val format: OFormat[CTAccountingPeriod] = Json.format
 }

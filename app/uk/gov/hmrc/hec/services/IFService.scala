@@ -25,7 +25,8 @@ import play.api.http.Status.{NOT_FOUND, OK}
 import play.api.libs.json.{Json, Reads}
 import uk.gov.hmrc.hec.connectors.IFConnector
 import uk.gov.hmrc.hec.models.ids.{CTUTR, SAUTR}
-import uk.gov.hmrc.hec.models.{CTAccountingPeriod, CTLookupStatus, CTStatus, CTStatusResponse, Error, SAStatus, SAStatusResponse, TaxYear}
+import uk.gov.hmrc.hec.models.hecTaxCheck.{CTAccountingPeriod, CTLookupStatus, CTStatus, CTStatusResponse, SAStatus, SAStatusResponse}
+import uk.gov.hmrc.hec.models.{Error, TaxYear, hecTaxCheck}
 import uk.gov.hmrc.hec.services.IFService.{BackendError, DataNotFoundError, IFError}
 import uk.gov.hmrc.hec.services.IFServiceImpl.{RawAccountingPeriod, RawCTSuccessResponse, RawFailureResponse, RawSASuccessResponse}
 import uk.gov.hmrc.hec.util.HttpResponseOps._
@@ -90,7 +91,7 @@ class IFServiceImpl @Inject() (
             .parseJSON[RawSASuccessResponse]
             .leftMap(e => BackendError(Error(e)))
             .flatMap(
-              toSaStatus(_).map(SAStatusResponse(utr, taxYear, _))
+              toSaStatus(_).map(hecTaxCheck.SAStatusResponse(utr, taxYear, _))
             )
         } else {
           handleErrorPath(httpResponse, utrType = "SA")
@@ -136,7 +137,9 @@ class IFServiceImpl @Inject() (
           .getOrElse(List.empty[RawAccountingPeriod])
           .traverse[Either[BackendError, *], CTAccountingPeriod](a =>
             toCtStatus(a)
-              .map(status => CTAccountingPeriod(a.accountingPeriodStartDate.some, a.accountingPeriodEndDate, status))
+              .map(status =>
+                hecTaxCheck.CTAccountingPeriod(a.accountingPeriodStartDate.some, a.accountingPeriodEndDate, status)
+              )
           )
           .filterOrElse(
             _.nonEmpty,

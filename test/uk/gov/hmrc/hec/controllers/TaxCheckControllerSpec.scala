@@ -30,12 +30,14 @@ import uk.gov.hmrc.auth.core.AuthProvider.{GovernmentGateway, PrivilegedApplicat
 import uk.gov.hmrc.auth.core.{AuthConnector, AuthProviders, InvalidBearerToken}
 import uk.gov.hmrc.auth.core.retrieve.{PAClientId, VerifyPid, v2, GGCredId => AuthGGCredId}
 import uk.gov.hmrc.hec.controllers.actions.AuthenticatedGGOrStrideRequest
-import uk.gov.hmrc.hec.models.ApplicantDetails.{CompanyApplicantDetails, IndividualApplicantDetails}
-import uk.gov.hmrc.hec.models.HECTaxCheckData.{CompanyHECTaxCheckData, IndividualHECTaxCheckData}
-import uk.gov.hmrc.hec.models.TaxDetails.{CompanyTaxDetails, IndividualTaxDetails}
+import uk.gov.hmrc.hec.models
+import uk.gov.hmrc.hec.models.hecTaxCheck.ApplicantDetails.{CompanyApplicantDetails, IndividualApplicantDetails}
+import uk.gov.hmrc.hec.models.hecTaxCheck.HECTaxCheckData.{CompanyHECTaxCheckData, IndividualHECTaxCheckData}
+import uk.gov.hmrc.hec.models.hecTaxCheck.TaxDetails.{CompanyTaxDetails, IndividualTaxDetails}
 import uk.gov.hmrc.hec.models.ids._
-import uk.gov.hmrc.hec.models.licence.{LicenceDetails, LicenceTimeTrading, LicenceType, LicenceValidityPeriod}
-import uk.gov.hmrc.hec.models.{CTAccountingPeriod, CTStatus, CTStatusResponse, CompanyHouseName, DateOfBirth, Error, HECTaxCheck, HECTaxCheckCode, HECTaxCheckData, HECTaxCheckMatchRequest, HECTaxCheckMatchResult, HECTaxCheckMatchStatus, HECTaxCheckSource, Name, TaxCheckListItem, TaxSituation, TaxYear, YesNoAnswer}
+import uk.gov.hmrc.hec.models.licence.{LicenceTimeTrading, LicenceType, LicenceValidityPeriod}
+import uk.gov.hmrc.hec.models.hecTaxCheck.{CTAccountingPeriod, CTStatus, CTStatusResponse, HECTaxCheck, HECTaxCheckCode, HECTaxCheckData, HECTaxCheckMatchRequest, HECTaxCheckMatchResult, HECTaxCheckMatchStatus, HECTaxCheckSource, LicenceDetails}
+import uk.gov.hmrc.hec.models.{CompanyHouseName, DateOfBirth, Error, Name, TaxCheckListItem, TaxSituation, TaxYear, YesNoAnswer, hecTaxCheck}
 import uk.gov.hmrc.hec.services.TaxCheckService
 import uk.gov.hmrc.hec.util.TimeUtils
 import uk.gov.hmrc.http.HeaderCarrier
@@ -109,7 +111,7 @@ class TaxCheckControllerSpec extends ControllerSpec with AuthSupport {
 
       val taxCheckDataCompany: HECTaxCheckData = CompanyHECTaxCheckData(
         CompanyApplicantDetails(GGCredId("").some, CRN("12345678"), CompanyHouseName("Test Tech Ltd")),
-        LicenceDetails(
+        hecTaxCheck.LicenceDetails(
           LicenceType.ScrapMetalDealerSite,
           LicenceTimeTrading.EightYearsOrMore,
           LicenceValidityPeriod.UpToOneYear
@@ -207,7 +209,8 @@ class TaxCheckControllerSpec extends ControllerSpec with AuthSupport {
           val taxCheckCode     = HECTaxCheckCode("code")
           val expiresAfterDate = LocalDate.MIN
           val taxCheck         =
-            HECTaxCheck(taxCheckDataIndividual, taxCheckCode, expiresAfterDate, TimeUtils.now(), false, None)
+            models.hecTaxCheck
+              .HECTaxCheck(taxCheckDataIndividual, taxCheckCode, expiresAfterDate, TimeUtils.now(), false, None)
 
           inSequence {
             mockGGOrStrideAuth(AuthGGCredId(ggCredId.value))
@@ -223,7 +226,8 @@ class TaxCheckControllerSpec extends ControllerSpec with AuthSupport {
           val taxCheckCode     = HECTaxCheckCode("code")
           val expiresAfterDate = LocalDate.MIN
           val taxCheck         =
-            HECTaxCheck(taxCheckDataCompany, taxCheckCode, expiresAfterDate, TimeUtils.now(), false, None)
+            models.hecTaxCheck
+              .HECTaxCheck(taxCheckDataCompany, taxCheckCode, expiresAfterDate, TimeUtils.now(), false, None)
 
           inSequence {
             mockGGOrStrideAuth(PAClientId(""))

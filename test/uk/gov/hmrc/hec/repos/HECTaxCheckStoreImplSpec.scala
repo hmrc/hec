@@ -24,12 +24,13 @@ import org.scalatest.wordspec.AnyWordSpec
 import play.api.Configuration
 import play.api.libs.json.{JsNumber, JsObject, Json}
 import play.api.test.Helpers._
-import uk.gov.hmrc.hec.models.ApplicantDetails.CompanyApplicantDetails
-import uk.gov.hmrc.hec.models.HECTaxCheckData.CompanyHECTaxCheckData
-import uk.gov.hmrc.hec.models.TaxDetails.CompanyTaxDetails
+import uk.gov.hmrc.hec.models.hecTaxCheck.ApplicantDetails.CompanyApplicantDetails
+import uk.gov.hmrc.hec.models.hecTaxCheck.HECTaxCheckData.CompanyHECTaxCheckData
+import uk.gov.hmrc.hec.models.hecTaxCheck.TaxDetails.CompanyTaxDetails
 import uk.gov.hmrc.hec.models.ids.{CRN, CTUTR, GGCredId}
-import uk.gov.hmrc.hec.models.licence.{LicenceDetails, LicenceTimeTrading, LicenceType, LicenceValidityPeriod}
-import uk.gov.hmrc.hec.models.{CTAccountingPeriod, CTStatus, CTStatusResponse, CompanyHouseName, HECTaxCheck, HECTaxCheckCode, HECTaxCheckSource, YesNoAnswer}
+import uk.gov.hmrc.hec.models.licence.{LicenceTimeTrading, LicenceType, LicenceValidityPeriod}
+import uk.gov.hmrc.hec.models.hecTaxCheck.{CTAccountingPeriod, CTStatus, CTStatusResponse, HECTaxCheck, HECTaxCheckCode, HECTaxCheckSource, LicenceDetails}
+import uk.gov.hmrc.hec.models.{CompanyHouseName, YesNoAnswer}
 import uk.gov.hmrc.hec.util.TimeUtils
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.mongo.cache.{CacheItem, DataKey}

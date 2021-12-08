@@ -26,12 +26,14 @@ import play.api.mvc.Result
 import play.api.test.FakeRequest
 import play.api.test.Helpers._
 import uk.gov.hmrc.hec.controllers.ControllerSpec
-import uk.gov.hmrc.hec.models.ApplicantDetails.IndividualApplicantDetails
-import uk.gov.hmrc.hec.models.HECTaxCheckData.IndividualHECTaxCheckData
-import uk.gov.hmrc.hec.models.TaxDetails.IndividualTaxDetails
+import uk.gov.hmrc.hec.models
+import uk.gov.hmrc.hec.models.hecTaxCheck.ApplicantDetails.IndividualApplicantDetails
+import uk.gov.hmrc.hec.models.hecTaxCheck.HECTaxCheckData.IndividualHECTaxCheckData
+import uk.gov.hmrc.hec.models.hecTaxCheck.TaxDetails.IndividualTaxDetails
 import uk.gov.hmrc.hec.models.ids.{CRN, GGCredId, NINO, SAUTR}
-import uk.gov.hmrc.hec.models.licence.{LicenceDetails, LicenceTimeTrading, LicenceType, LicenceValidityPeriod}
-import uk.gov.hmrc.hec.models.{DateOfBirth, Error, HECTaxCheck, HECTaxCheckCode, HECTaxCheckSource, Name, TaxSituation, TaxYear, YesNoAnswer}
+import uk.gov.hmrc.hec.models.licence.{LicenceTimeTrading, LicenceType, LicenceValidityPeriod}
+import uk.gov.hmrc.hec.models.hecTaxCheck.{HECTaxCheck, HECTaxCheckCode, HECTaxCheckSource, LicenceDetails}
+import uk.gov.hmrc.hec.models.{DateOfBirth, Error, Name, TaxSituation, TaxYear, YesNoAnswer}
 import uk.gov.hmrc.hec.testonly.models.SaveTaxCheckRequest
 import uk.gov.hmrc.hec.testonly.services.TaxCheckService
 import uk.gov.hmrc.hec.util.TimeUtils
@@ -299,7 +301,8 @@ class TaxCheckControllerSpec extends ControllerSpec {
             HECTaxCheckSource.Digital
           )
           val taxCheck     =
-            HECTaxCheck(taxCheckData, validTaxCheckCode, TimeUtils.today(), TimeUtils.now(), false, None)
+            models.hecTaxCheck
+              .HECTaxCheck(taxCheckData, validTaxCheckCode, TimeUtils.today(), TimeUtils.now(), false, None)
 
           mockGetTaxCheck(validTaxCheckCode)(Right(Some(taxCheck)))
 

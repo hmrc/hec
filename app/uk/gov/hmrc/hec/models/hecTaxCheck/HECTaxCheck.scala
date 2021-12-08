@@ -14,22 +14,26 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.hec.models
+package uk.gov.hmrc.hec.models.hecTaxCheck
 
-import play.api.libs.json.{Format, Json}
+import play.api.libs.json.{Json, OFormat}
 
-final case class HECTaxCheckCode(value: String) extends AnyVal
+import java.time.{LocalDate, ZonedDateTime}
+import java.util.UUID
 
-object HECTaxCheckCode {
+final case class HECTaxCheck(
+  taxCheckData: HECTaxCheckData,
+  taxCheckCode: HECTaxCheckCode,
+  expiresAfter: LocalDate,
+  createDate: ZonedDateTime,
+  isExtracted: Boolean,
+  fileCorrelationId: Option[UUID]
+)
 
-  implicit val format: Format[HECTaxCheckCode] = Json.valueFormat
+object HECTaxCheck {
 
-  val validCharacters: List[Char] = {
-    val allowedLetters = ('A' to 'Z').toList.diff(List('I', 'O', 'S', 'U', 'V', 'W'))
-    val allowedDigits  = ('0' to '9').toList.diff(List('0', '1', '5'))
-    allowedLetters ::: allowedDigits
-  }
-
-  val validLength: Int = 9
+  implicit val format: OFormat[HECTaxCheck] = Json.format
 
 }
+
+final case class HECTaxCheckFileBodyList(list: List[HECTaxCheck])

@@ -14,20 +14,18 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.hec.models
-
-import java.time.LocalDate
+package uk.gov.hmrc.hec.models.hecTaxCheck
 
 import play.api.libs.json.{Json, OFormat}
-import uk.gov.hmrc.hec.models.ids.CTUTR
 
-final case class CTStatusResponse(
-  ctutr: CTUTR,
-  startDate: LocalDate,
-  endDate: LocalDate,
-  latestAccountingPeriod: Option[CTAccountingPeriod]
+import java.time.ZonedDateTime
+
+final case class HECTaxCheckMatchResult(
+  matchRequest: HECTaxCheckMatchRequest,
+  dateTimeChecked: ZonedDateTime,
+  status: HECTaxCheckMatchStatus
 )
 
-object CTStatusResponse {
-  implicit val format: OFormat[CTStatusResponse] = Json.format
+object HECTaxCheckMatchResult {
+  implicit val format: OFormat[HECTaxCheckMatchResult] = Json.format
 }

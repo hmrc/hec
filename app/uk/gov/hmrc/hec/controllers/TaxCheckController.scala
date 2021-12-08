@@ -22,7 +22,7 @@ import play.api.libs.json.{JsError, JsSuccess, JsValue, Json}
 import play.api.mvc.{Action, AnyContent, ControllerComponents}
 import uk.gov.hmrc.hec.controllers.actions.{GGAuthenticateAction, GGOrStrideAuthenticateAction}
 import uk.gov.hmrc.hec.models.ids.GGCredId
-import uk.gov.hmrc.hec.models.{HECTaxCheckData, HECTaxCheckMatchRequest}
+import uk.gov.hmrc.hec.models.hecTaxCheck.{HECTaxCheckData, HECTaxCheckMatchRequest}
 import uk.gov.hmrc.hec.services.TaxCheckService
 import uk.gov.hmrc.hec.util.Logging
 import uk.gov.hmrc.hec.util.Logging.LoggerOps

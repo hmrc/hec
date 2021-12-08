@@ -14,24 +14,22 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.hec.models
+package uk.gov.hmrc.hec.models.hecTaxCheck
 
-import ai.x.play.json.Jsonx
-import ai.x.play.json.SingletonEncoder.simpleName
-import ai.x.play.json.implicits.formatSingleton
-import play.api.libs.json.Format
+import play.api.libs.json.{Format, Json}
 
-sealed trait CTStatus extends Product with Serializable
+final case class HECTaxCheckCode(value: String) extends AnyVal
 
-object CTStatus {
+object HECTaxCheckCode {
 
-  case object ReturnFound extends CTStatus
+  implicit val format: Format[HECTaxCheckCode] = Json.valueFormat
 
-  case object NoticeToFileIssued extends CTStatus
+  val validCharacters: List[Char] = {
+    val allowedLetters = ('A' to 'Z').toList.diff(List('I', 'O', 'S', 'U', 'V', 'W'))
+    val allowedDigits  = ('0' to '9').toList.diff(List('0', '1', '5'))
+    allowedLetters ::: allowedDigits
+  }
 
-  case object NoReturnFound extends CTStatus
-
-  @SuppressWarnings(Array("org.wartremover.warts.All"))
-  implicit val format: Format[CTStatus] = Jsonx.formatSealed[CTStatus]
+  val validLength: Int = 9
 
 }

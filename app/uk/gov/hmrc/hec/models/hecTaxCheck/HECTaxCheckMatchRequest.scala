@@ -14,26 +14,22 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.hec.models
+package uk.gov.hmrc.hec.models.hecTaxCheck
 
 import play.api.libs.json.{Json, OFormat}
+import uk.gov.hmrc.hec.models.DateOfBirth
+import uk.gov.hmrc.hec.models.ids.CRN
+import uk.gov.hmrc.hec.models.licence.LicenceType
+import uk.gov.hmrc.hec.models.EitherUtils.eitherFormat
 
-import java.time.{LocalDate, ZonedDateTime}
-import java.util.UUID
-
-final case class HECTaxCheck(
-  taxCheckData: HECTaxCheckData,
+final case class HECTaxCheckMatchRequest(
   taxCheckCode: HECTaxCheckCode,
-  expiresAfter: LocalDate,
-  createDate: ZonedDateTime,
-  isExtracted: Boolean,
-  fileCorrelationId: Option[UUID]
+  licenceType: LicenceType,
+  verifier: Either[CRN, DateOfBirth]
 )
 
-object HECTaxCheck {
+object HECTaxCheckMatchRequest {
 
-  implicit val format: OFormat[HECTaxCheck] = Json.format
+  implicit val format: OFormat[HECTaxCheckMatchRequest] = Json.format
 
 }
-
-final case class HECTaxCheckFileBodyList(list: List[HECTaxCheck])

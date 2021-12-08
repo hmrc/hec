@@ -14,18 +14,20 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.hec.models.licence
+package uk.gov.hmrc.hec.models.hecTaxCheck
 
 import play.api.libs.json.{Json, OFormat}
+import uk.gov.hmrc.hec.models.ids.CTUTR
 
-final case class LicenceDetails(
-  licenceType: LicenceType,
-  licenceTimeTrading: LicenceTimeTrading,
-  licenceValidityPeriod: LicenceValidityPeriod
+import java.time.LocalDate
+
+final case class CTStatusResponse(
+  ctutr: CTUTR,
+  startDate: LocalDate,
+  endDate: LocalDate,
+  latestAccountingPeriod: Option[CTAccountingPeriod]
 )
 
-object LicenceDetails {
-
-  implicit val format: OFormat[LicenceDetails] = Json.format
-
+object CTStatusResponse {
+  implicit val format: OFormat[CTStatusResponse] = Json.format
 }

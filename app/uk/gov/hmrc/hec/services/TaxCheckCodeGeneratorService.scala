@@ -17,7 +17,7 @@
 package uk.gov.hmrc.hec.services
 
 import com.google.inject.{ImplementedBy, Singleton}
-import uk.gov.hmrc.hec.models.HECTaxCheckCode
+import uk.gov.hmrc.hec.models.hecTaxCheck.HECTaxCheckCode
 
 import scala.util.Random
 

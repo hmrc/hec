@@ -22,9 +22,10 @@ import com.google.inject.{ImplementedBy, Inject, Singleton}
 import com.typesafe.config.Config
 import configs.syntax._
 import uk.gov.hmrc.hec.models
-import uk.gov.hmrc.hec.models.HECTaxCheckData.{CompanyHECTaxCheckData, IndividualHECTaxCheckData}
 import uk.gov.hmrc.hec.models.ids.GGCredId
-import uk.gov.hmrc.hec.models.{Error, HECTaxCheck, HECTaxCheckData, HECTaxCheckMatchRequest, HECTaxCheckMatchResult, HECTaxCheckMatchStatus, TaxCheckListItem}
+import uk.gov.hmrc.hec.models.hecTaxCheck.HECTaxCheckData.{CompanyHECTaxCheckData, IndividualHECTaxCheckData}
+import uk.gov.hmrc.hec.models.hecTaxCheck.{HECTaxCheck, HECTaxCheckData, HECTaxCheckMatchRequest, HECTaxCheckMatchResult, HECTaxCheckMatchStatus}
+import uk.gov.hmrc.hec.models.{Error, TaxCheckListItem}
 import uk.gov.hmrc.hec.repos.HECTaxCheckStore
 import uk.gov.hmrc.hec.util.TimeProvider
 import uk.gov.hmrc.http.HeaderCarrier
@@ -80,7 +81,7 @@ class TaxCheckServiceImpl @Inject() (
     val expiryDate   = timeProvider.currentDate.plusDays(taxCheckCodeExpiresAfterDays)
     val createDate   = timeProvider.currentDateTime
     val taxCheck     =
-      HECTaxCheck(taxCheckData, taxCheckCode, expiryDate, createDate, false, None)
+      models.hecTaxCheck.HECTaxCheck(taxCheckData, taxCheckCode, expiryDate, createDate, false, None)
 
     taxCheckStore.store(taxCheck).map(_ => taxCheck)
   }

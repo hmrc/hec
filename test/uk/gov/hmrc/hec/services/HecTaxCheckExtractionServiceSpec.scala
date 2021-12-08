@@ -28,13 +28,14 @@ import org.scalatest.wordspec.AnyWordSpecLike
 import play.api.Configuration
 import play.api.test.Helpers._
 import uk.gov.hmrc.hec.models
-import uk.gov.hmrc.hec.models.ApplicantDetails.CompanyApplicantDetails
-import uk.gov.hmrc.hec.models.HECTaxCheckData.CompanyHECTaxCheckData
-import uk.gov.hmrc.hec.models.TaxDetails.CompanyTaxDetails
-import uk.gov.hmrc.hec.models._
+import uk.gov.hmrc.hec.models.hecTaxCheck.ApplicantDetails.CompanyApplicantDetails
+import uk.gov.hmrc.hec.models.hecTaxCheck.HECTaxCheckData.CompanyHECTaxCheckData
+import uk.gov.hmrc.hec.models.hecTaxCheck.TaxDetails.CompanyTaxDetails
+import uk.gov.hmrc.hec.models.{hecTaxCheck, _}
 import uk.gov.hmrc.hec.models.ids.{CRN, CTUTR, GGCredId}
-import uk.gov.hmrc.hec.models.licence.{LicenceDetails, LicenceTimeTrading, LicenceType, LicenceValidityPeriod}
+import uk.gov.hmrc.hec.models.licence.{LicenceTimeTrading, LicenceType, LicenceValidityPeriod}
 import uk.gov.hmrc.hec.models.sdes._
+import uk.gov.hmrc.hec.models.hecTaxCheck.{CTAccountingPeriod, CTStatus, CTStatusResponse, HECTaxCheck, HECTaxCheckCode, HECTaxCheckFileBodyList, HECTaxCheckSource, LicenceDetails}
 import uk.gov.hmrc.hec.services.scheduleService.{HECTaxCheckExtractionContext, HecTaxCheckExtractionServiceImpl}
 import uk.gov.hmrc.hec.util.{TimeUtils, UUIDGenerator}
 import uk.gov.hmrc.http.HeaderCarrier
@@ -180,7 +181,8 @@ class HecTaxCheckExtractionServiceSpec
     val taxCheckCode1 = HECTaxCheckCode("code1")
     val taxCheckCode2 = HECTaxCheckCode("code12")
     val taxCheckCode3 = HECTaxCheckCode("code13")
-    val taxCheck1     = HECTaxCheck(taxCheckData, taxCheckCode1, TimeUtils.today(), TimeUtils.now(), false, None)
+    val taxCheck1     =
+      hecTaxCheck.HECTaxCheck(taxCheckData, taxCheckCode1, TimeUtils.today(), TimeUtils.now(), false, None)
     val taxCheck2     = taxCheck1.copy(taxCheckCode = taxCheckCode2)
     val taxCheck3     = taxCheck1.copy(taxCheckCode = taxCheckCode3, isExtracted = false)
 
