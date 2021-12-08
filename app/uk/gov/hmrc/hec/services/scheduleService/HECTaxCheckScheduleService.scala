@@ -20,7 +20,6 @@ import com.google.inject.{Inject, Singleton}
 import play.api.Configuration
 import uk.gov.hmrc.hec.actors.TimeCalculator
 import uk.gov.hmrc.hec.models
-import uk.gov.hmrc.hec.models.SchedulerProvider
 import uk.gov.hmrc.hec.util.Logging
 
 import java.time.{LocalTime, ZoneId}

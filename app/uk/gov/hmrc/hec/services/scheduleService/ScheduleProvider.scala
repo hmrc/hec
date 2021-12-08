@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.hec.models
+package uk.gov.hmrc.hec.services.scheduleService
 
 import akka.actor.{ActorSystem, Scheduler}
 import com.google.inject.{ImplementedBy, Inject}
