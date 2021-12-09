@@ -29,6 +29,7 @@ import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpecLike
 import org.scalatest.{BeforeAndAfterAll, OptionValues}
 import play.api.Configuration
+import play.api.test.Helpers._
 import uk.gov.hmrc.hec.services.scheduleService.HECTaxCheckExtractionContext
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.objectstore.client.config.ObjectStoreClientConfig
@@ -96,10 +97,10 @@ class FileStoreServiceSpec
     "storeFile must store the file in object store " in {
       import uk.gov.hmrc.objectstore.client.play.Implicits._
       implicit val hc: HeaderCarrier = HeaderCarrier()
-      fileStoreService.storeFile(fileContent, fileName, dirName)
+      await(fileStoreService.storeFile(fileContent, fileName, dirName).value)
       val expectedPath               = Path.File(s"$dirName/$fileName")
       val actual                     =
-        client.getObject[Source[ByteString, NotUsed]](expectedPath).futureValue.value
+        await(client.getObject[Source[ByteString, NotUsed]](expectedPath)).getOrElse(sys.error("content is not there"))
 
       actual.location.directory.value shouldBe s"${objectStoreConfig.baseUrl}/object-store/object/${objectStoreConfig.owner}/$dirName"
       assertContent(actual.content, Source.single(ByteString(fileContent)))
