@@ -45,9 +45,9 @@ class TaxCheckController @Inject() (
     extends BackendController(cc)
     with Logging {
 
-  val internalAuthPermission: Boolean = config.get[Boolean]("internal-auth.enabled")
+  val internalAuthEnabled: Boolean = config.get[Boolean]("internal-auth.enabled")
 
-  val permission: Predicate.Permission = Predicate.Permission(
+  val internalAuthPermission: Predicate.Permission = Predicate.Permission(
     resource = Resource(
       resourceType = ResourceType("hec"),
       resourceLocation = ResourceLocation("hec/match-tax-check")
@@ -77,7 +77,7 @@ class TaxCheckController @Inject() (
   }
 
   val matchTaxCheck: Action[JsValue] =
-    (if (internalAuthPermission) auth.authorizedAction(predicate = permission)(parse.json)
+    (if (internalAuthEnabled) auth.authorizedAction(predicate = internalAuthPermission)(parse.json)
      else Action(parse.json)).async { implicit request =>
       Json.fromJson[HECTaxCheckMatchRequest](request.body) match {
         case JsSuccess(matchRequest, _) =>
