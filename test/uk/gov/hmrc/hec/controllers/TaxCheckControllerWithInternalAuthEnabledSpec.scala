@@ -89,7 +89,7 @@ class TaxCheckControllerWithInternalAuthEnabledSpec extends ControllerSpec with 
     )
   )
 
-  val expectedResource: Resource = Resource(ResourceType("hec"), ResourceLocation("match-tax-check"))
+  val expectedResource: Resource = Resource(ResourceType("hec"), ResourceLocation("hec/match-tax-check"))
 
   val expectedPredicate: Permission =
     Permission(expectedResource, IAAction("READ"))
@@ -107,7 +107,6 @@ class TaxCheckControllerWithInternalAuthEnabledSpec extends ControllerSpec with 
       .stubAuth(_: Option[Predicate], _: Retrieval[_]))
       .expects(Some(predicate), EmptyRetrieval)
       .returning(result)
-  //.returning(result.fold(s => Future.failed(InternalError(s)), _ => Future.successful(())))
 
   def mockMatchTaxCheck(matchRequest: HECTaxCheckMatchRequest)(result: Either[Error, HECTaxCheckMatchResult]) =
     (mockTaxCheckService

@@ -45,14 +45,12 @@ class TaxCheckController @Inject() (
     extends BackendController(cc)
     with Logging {
 
-  val internalAuthEnabled: Boolean = config.get[Boolean]("internal-auth.enabled")
+  val internalAuthPermission: Boolean = config.get[Boolean]("internal-auth.enabled")
 
   val permission: Predicate.Permission = Predicate.Permission(
     resource = Resource(
       resourceType = ResourceType("hec"),
-      //while creating token for internal auth, resource allocation = /hec/match-tax-check was giving error stating no forward slash allowed.
-      //so token was created with value match-tax-check hence using the same here.
-      resourceLocation = ResourceLocation("match-tax-check")
+      resourceLocation = ResourceLocation("hec/match-tax-check")
     ),
     action = IAAction("READ")
   )
@@ -79,7 +77,7 @@ class TaxCheckController @Inject() (
   }
 
   val matchTaxCheck: Action[JsValue] =
-    (if (internalAuthEnabled) auth.authorizedAction(predicate = permission)(parse.json)
+    (if (internalAuthPermission) auth.authorizedAction(predicate = permission)(parse.json)
      else Action(parse.json)).async { implicit request =>
       Json.fromJson[HECTaxCheckMatchRequest](request.body) match {
         case JsSuccess(matchRequest, _) =>
