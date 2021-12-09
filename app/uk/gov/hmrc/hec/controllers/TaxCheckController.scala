@@ -50,6 +50,8 @@ class TaxCheckController @Inject() (
   val permission: Predicate.Permission = Predicate.Permission(
     resource = Resource(
       resourceType = ResourceType("hec"),
+      //while creating token for internal auth, resource allocation = /hec/match-tax-check was giving error stating no forward slash allowed.
+      //so token was created with value match-tax-check hence using the same here.
       resourceLocation = ResourceLocation("match-tax-check")
     ),
     action = IAAction("READ")
