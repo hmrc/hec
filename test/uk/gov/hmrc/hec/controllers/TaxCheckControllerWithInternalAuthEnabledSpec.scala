@@ -22,6 +22,7 @@ import cats.instances.future._
 import com.github.ghik.silencer.silent
 import com.typesafe.config.ConfigFactory
 import play.api.Configuration
+import play.api.http.Status
 import play.api.inject.bind
 import play.api.inject.guice.GuiceableModule
 import play.api.libs.json._
@@ -45,7 +46,7 @@ import uk.gov.hmrc.hec.models.taxCheckMatch.{HECTaxCheckMatchRequest, HECTaxChec
 import uk.gov.hmrc.hec.models.{Error, TaxCheckListItem, taxCheckMatch}
 import uk.gov.hmrc.hec.services.TaxCheckService
 import uk.gov.hmrc.hec.util.TimeUtils
-import uk.gov.hmrc.http.HeaderCarrier
+import uk.gov.hmrc.http.{HeaderCarrier, UpstreamErrorResponse}
 import uk.gov.hmrc.internalauth.client.Predicate.Permission
 import uk.gov.hmrc.internalauth.client.Retrieval.EmptyRetrieval
 import uk.gov.hmrc.internalauth.client.{BackendAuthComponents, IAAction, Predicate, Resource, ResourceLocation, ResourceType, Retrieval}
@@ -288,6 +289,11 @@ class TaxCheckControllerWithInternalAuthEnabledSpec extends ControllerSpec with 
         controller.matchTaxCheck(request)
       }
 
+      def performAActionWithJsonBody(requestBody: JsValue): Future[Result] = {
+        val request = FakeRequest().withBody(requestBody)
+        controller.matchTaxCheck(request)
+      }
+
       val taxCheckCode = HECTaxCheckCode("code")
       val licenceType  = LicenceType.ScrapMetalDealerSite
       val dateOfBirth  = DateOfBirth(LocalDate.now())
@@ -340,11 +346,21 @@ class TaxCheckControllerWithInternalAuthEnabledSpec extends ControllerSpec with 
 
       }
 
-      "return a 401 Unauthorised" when {
+      "return a UpstreamErrorResponse if the token is invalid" when {
 
         "there is no authenticated session" in {
-          mockInternalAuth(expectedPredicate)(Future.failed(InvalidBearerToken("Internal Auth token")))
-          assertThrows[RuntimeException](await(performAActionWithJsonBodyAndHeader(Json.toJson(companyMatchRequest))))
+          mockInternalAuth(expectedPredicate)(
+            Future.failed(UpstreamErrorResponse.apply("Unauthorized", Status.UNAUTHORIZED))
+          )
+          assertThrows[UpstreamErrorResponse](
+            await(performAActionWithJsonBodyAndHeader(Json.toJson(companyMatchRequest)))
+          )
+        }
+
+        "there is no header in  session" in {
+          assertThrows[UpstreamErrorResponse](
+            await(performAActionWithJsonBody(Json.toJson(companyMatchRequest)))
+          )
         }
 
       }
