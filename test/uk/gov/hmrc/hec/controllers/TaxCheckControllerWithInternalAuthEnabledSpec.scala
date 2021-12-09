@@ -334,7 +334,7 @@ class TaxCheckControllerWithInternalAuthEnabledSpec extends ControllerSpec with 
 
       }
 
-      "return an 500 (internal server error)" when {
+      "return a 500 (internal server error)" when {
 
         "there is an error saving the tax check" in {
           mockInternalAuth(expectedPredicate)(Future.successful(Unit))
@@ -346,21 +346,21 @@ class TaxCheckControllerWithInternalAuthEnabledSpec extends ControllerSpec with 
 
       }
 
-      "return a UpstreamErrorResponse if the token is invalid" when {
+      "return a 401 (Unauthorised)" when {
 
         "there is no authenticated session" in {
           mockInternalAuth(expectedPredicate)(
             Future.failed(UpstreamErrorResponse.apply("Unauthorized", Status.UNAUTHORIZED))
           )
-          assertThrows[UpstreamErrorResponse](
+          intercept[UpstreamErrorResponse](
             await(performAActionWithJsonBodyAndHeader(Json.toJson(companyMatchRequest)))
-          )
+          ).statusCode shouldBe UNAUTHORIZED
         }
 
         "there is no header in  session" in {
-          assertThrows[UpstreamErrorResponse](
+          intercept[UpstreamErrorResponse](
             await(performAActionWithJsonBody(Json.toJson(companyMatchRequest)))
-          )
+          ).statusCode shouldBe UNAUTHORIZED
         }
 
       }
