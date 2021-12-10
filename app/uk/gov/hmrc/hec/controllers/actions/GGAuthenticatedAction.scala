@@ -20,14 +20,15 @@ import com.google.inject.ImplementedBy
 import play.api.mvc._
 import uk.gov.hmrc.auth.core.AuthProvider.GovernmentGateway
 import uk.gov.hmrc.auth.core._
-import uk.gov.hmrc.auth.core.retrieve._
+import uk.gov.hmrc.auth.core.retrieve.v2.Retrievals
+import uk.gov.hmrc.hec.models.ids.GGCredId
 import uk.gov.hmrc.play.bootstrap.backend.controller.BackendHeaderCarrierProvider
 
 import javax.inject.Inject
 import scala.concurrent.{ExecutionContext, Future}
 
 final case class AuthenticatedGGRequest[+A](
-  ggCredId: String,
+  ggCredId: GGCredId,
   request: Request[A]
 ) extends WrappedRequest[A](request)
 
@@ -49,9 +50,9 @@ class GGAuthenticateActionBuilder @Inject() (
     val forbidden = Results.Forbidden("Forbidden")
     val carrier   = hc(request)
     authorised(AuthProviders(GovernmentGateway))
-      .retrieve(v2.Retrievals.credentials) {
+      .retrieve(Retrievals.credentials) {
         case Some(credentials) =>
-          block(new AuthenticatedGGRequest[A](credentials.providerId, request))
+          block(new AuthenticatedGGRequest[A](GGCredId(credentials.providerId), request))
         case _                 => Future.successful(forbidden)
       }(carrier, executionContext)
       .recover { case _: NoActiveSession =>

@@ -21,7 +21,6 @@ import com.google.inject.{Inject, Singleton}
 import play.api.libs.json.{JsError, JsSuccess, JsValue, Json}
 import play.api.mvc.{Action, AnyContent, ControllerComponents}
 import uk.gov.hmrc.hec.controllers.actions.{GGAuthenticateAction, GGOrStrideAuthenticateAction}
-import uk.gov.hmrc.hec.models.ids.GGCredId
 import uk.gov.hmrc.hec.models.hecTaxCheck.HECTaxCheckData
 import uk.gov.hmrc.hec.models.taxCheckMatch.HECTaxCheckMatchRequest
 import uk.gov.hmrc.hec.services.TaxCheckService
@@ -83,7 +82,7 @@ class TaxCheckController @Inject() (
 
   val getUnexpiredTaxCheckCodes: Action[AnyContent] = authenticateGG.async { implicit request =>
     taxCheckService
-      .getUnexpiredTaxCheckCodes(GGCredId(request.ggCredId))
+      .getUnexpiredTaxCheckCodes(request.ggCredId)
       .fold(
         { e =>
           logger.warn("Error while fetching tax check codes", e)
