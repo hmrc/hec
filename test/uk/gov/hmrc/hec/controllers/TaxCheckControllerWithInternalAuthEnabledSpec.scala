@@ -20,11 +20,14 @@ import cats.data.EitherT
 import cats.implicits.catsSyntaxOptionId
 import cats.instances.future._
 import com.github.ghik.silencer.silent
+import com.typesafe.config.ConfigFactory
+import play.api.Configuration
+import play.api.http.Status
 import play.api.inject.bind
 import play.api.inject.guice.GuiceableModule
 import play.api.libs.json._
 import play.api.mvc.Result
-import play.api.test.FakeRequest
+import play.api.test.{FakeRequest, Helpers}
 import play.api.test.Helpers._
 import uk.gov.hmrc.auth.core.AuthProvider.{GovernmentGateway, PrivilegedApplication}
 import uk.gov.hmrc.auth.core.retrieve.{PAClientId, VerifyPid, v2, GGCredId => AuthGGCredId}
@@ -43,27 +46,54 @@ import uk.gov.hmrc.hec.models.taxCheckMatch.{HECTaxCheckMatchRequest, HECTaxChec
 import uk.gov.hmrc.hec.models.{Error, TaxCheckListItem, taxCheckMatch}
 import uk.gov.hmrc.hec.services.TaxCheckService
 import uk.gov.hmrc.hec.util.TimeUtils
-import uk.gov.hmrc.http.HeaderCarrier
+import uk.gov.hmrc.http.{HeaderCarrier, UpstreamErrorResponse}
+import uk.gov.hmrc.internalauth.client.Predicate.Permission
+import uk.gov.hmrc.internalauth.client.Retrieval.EmptyRetrieval
+import uk.gov.hmrc.internalauth.client.{BackendAuthComponents, IAAction, Predicate, Resource, ResourceLocation, ResourceType, Retrieval}
+import uk.gov.hmrc.internalauth.client.test.{BackendAuthComponentsStub, StubBehaviour}
 
 import java.time.{LocalDate, ZoneId, ZonedDateTime}
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
 @silent("deprecated")
-class TaxCheckControllerSpec extends ControllerSpec with AuthSupport {
+class TaxCheckControllerWithInternalAuthEnabledSpec extends ControllerSpec with AuthSupport {
 
   val mockTaxCheckService = mock[TaxCheckService]
+
+  val taxCheckStartDateTime = ZonedDateTime.of(2021, 10, 9, 9, 12, 34, 0, ZoneId.of("Europe/London"))
+
+  val ggCredId    = GGCredId("ggCredId")
+  implicit val cc = Helpers.stubControllerComponents()
+
+  val mockInternalAuthStubBehaviour = mock[StubBehaviour]
+  val mockBackendAuthComponents     = BackendAuthComponentsStub(mockInternalAuthStubBehaviour)
 
   override val overrideBindings =
     List[GuiceableModule](
       bind[AuthConnector].toInstance(mockAuthConnector),
-      bind[TaxCheckService].toInstance(mockTaxCheckService)
+      bind[TaxCheckService].toInstance(mockTaxCheckService),
+      bind[BackendAuthComponents].toInstance(mockBackendAuthComponents)
     )
 
-  val taxCheckStartDateTime = ZonedDateTime.of(2021, 10, 9, 9, 12, 34, 0, ZoneId.of("Europe/London"))
-
   val controller = instanceOf[TaxCheckController]
-  val ggCredId   = GGCredId("ggCredId")
+
+  override def additionalConfig = super.additionalConfig.withFallback(
+    Configuration(
+      ConfigFactory.parseString(
+        s"""
+           | internal-auth {
+           |    enabled = true
+           |}
+           |""".stripMargin
+      )
+    )
+  )
+
+  val expectedResource: Resource = Resource(ResourceType("hec"), ResourceLocation("hec/match-tax-check"))
+
+  val expectedPredicate: Permission =
+    Permission(expectedResource, IAAction("READ"))
 
   def mockSaveTaxCheck(taxCheckData: HECTaxCheckData)(
     result: Either[Error, HECTaxCheck]
@@ -72,6 +102,12 @@ class TaxCheckControllerSpec extends ControllerSpec with AuthSupport {
       .saveTaxCheck(_: HECTaxCheckData)(_: HeaderCarrier))
       .expects(taxCheckData, *)
       .returning(EitherT.fromEither(result))
+
+  def mockInternalAuth(predicate: Predicate)(result: Future[_]) =
+    (mockInternalAuthStubBehaviour
+      .stubAuth(_: Option[Predicate], _: Retrieval[_]))
+      .expects(Some(predicate), EmptyRetrieval)
+      .returning(result)
 
   def mockMatchTaxCheck(matchRequest: HECTaxCheckMatchRequest)(result: Either[Error, HECTaxCheckMatchResult]) =
     (mockTaxCheckService
@@ -248,8 +284,13 @@ class TaxCheckControllerSpec extends ControllerSpec with AuthSupport {
 
     "handling requests to match a tax check" must {
 
+      def performAActionWithJsonBodyAndHeader(requestBody: JsValue): Future[Result] = {
+        val request = FakeRequest().withBody(requestBody).withHeaders(CONTENT_TYPE -> JSON, AUTHORIZATION -> "token")
+        controller.matchTaxCheck(request)
+      }
+
       def performAActionWithJsonBody(requestBody: JsValue): Future[Result] = {
-        val request = FakeRequest().withBody(requestBody).withHeaders(CONTENT_TYPE -> JSON)
+        val request = FakeRequest().withBody(requestBody)
         controller.matchTaxCheck(request)
       }
 
@@ -267,14 +308,17 @@ class TaxCheckControllerSpec extends ControllerSpec with AuthSupport {
       "return a 415 (unsupported media type)" when {
 
         "there is no body in the request" in {
-          val result: Future[Result] = controller.matchTaxCheck(FakeRequest()).run()
+          val result: Future[Result] =
+            controller.matchTaxCheck(FakeRequest().withHeaders(CONTENT_TYPE -> TEXT, AUTHORIZATION -> "token")).run()
           status(result) shouldBe UNSUPPORTED_MEDIA_TYPE
 
         }
 
         "there is no json body in the request" in {
           val result: Future[Result] =
-            controller.matchTaxCheck(FakeRequest().withBody("hi").withHeaders(CONTENT_TYPE -> TEXT)).run()
+            controller
+              .matchTaxCheck(FakeRequest().withBody("hi").withHeaders(CONTENT_TYPE -> TEXT, AUTHORIZATION -> "token"))
+              .run()
           status(result) shouldBe UNSUPPORTED_MEDIA_TYPE
 
         }
@@ -284,19 +328,39 @@ class TaxCheckControllerSpec extends ControllerSpec with AuthSupport {
       "return a 400 (bad request)" when {
 
         "the JSON in the request cannot be parsed" in {
-          status(performAActionWithJsonBody(JsString("hi"))) shouldBe BAD_REQUEST
-
+          mockInternalAuth(expectedPredicate)(Future.successful(Unit))
+          status(performAActionWithJsonBodyAndHeader(JsString("hi"))) shouldBe BAD_REQUEST
         }
 
       }
 
-      "return an 500 (internal server error)" when {
+      "return a 500 (internal server error)" when {
 
         "there is an error saving the tax check" in {
+          mockInternalAuth(expectedPredicate)(Future.successful(Unit))
           mockMatchTaxCheck(individualMatchRequest)(Left(Error(new Exception("Oh no!"))))
 
-          val result = performAActionWithJsonBody(Json.toJson(individualMatchRequest))
+          val result = performAActionWithJsonBodyAndHeader(Json.toJson(individualMatchRequest))
           status(result) shouldBe INTERNAL_SERVER_ERROR
+        }
+
+      }
+
+      "return a 401 (Unauthorised)" when {
+
+        "there is no authenticated session" in {
+          mockInternalAuth(expectedPredicate)(
+            Future.failed(UpstreamErrorResponse.apply("Unauthorized", Status.UNAUTHORIZED))
+          )
+          intercept[UpstreamErrorResponse](
+            await(performAActionWithJsonBodyAndHeader(Json.toJson(companyMatchRequest)))
+          ).statusCode shouldBe UNAUTHORIZED
+        }
+
+        "there is no header in  session" in {
+          intercept[UpstreamErrorResponse](
+            await(performAActionWithJsonBody(Json.toJson(companyMatchRequest)))
+          ).statusCode shouldBe UNAUTHORIZED
         }
 
       }
@@ -313,9 +377,10 @@ class TaxCheckControllerSpec extends ControllerSpec with AuthSupport {
             HECTaxCheckMatchResult(companyMatchRequest, dateTime, HECTaxCheckMatchStatus.Expired)
           ).foreach { matchResult =>
             withClue(s"For match result '$matchResult': ") {
+              mockInternalAuth(expectedPredicate)(Future.successful(Unit))
               mockMatchTaxCheck(companyMatchRequest)(Right(matchResult))
 
-              val result = performAActionWithJsonBody(Json.toJson(companyMatchRequest))
+              val result = performAActionWithJsonBodyAndHeader(Json.toJson(companyMatchRequest))
               status(result)                                                  shouldBe OK
               contentAsJson(result).validate[HECTaxCheckMatchResult].asEither shouldBe Right(matchResult)
             }

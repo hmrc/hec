@@ -32,7 +32,7 @@ trait ControllerSpec extends AnyWordSpec with Matchers with BeforeAndAfterAll wi
 
   def overrideBindings: List[GuiceableModule] = List.empty[GuiceableModule]
 
-  lazy val additionalConfig = Configuration()
+  def additionalConfig: Configuration = Configuration()
 
   def buildFakeApplication(): Application =
     new GuiceApplicationBuilder()
