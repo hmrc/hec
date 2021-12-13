@@ -170,9 +170,9 @@ class FileCreationServiceImpl @Inject() (timeProvider: TimeProvider) extends Fil
   }
 
   private def getCTStatusMap(accountingPeriod: Option[CTAccountingPeriod]) = accountingPeriod match {
-    case Some(d: CTAccountingPeriodDigital) => ctStatusMapping(d.ctStatus.some).some
-    case Some(s: CTAccountingPeriodStride)  => ctStatusMapping(s.ctStatus).some
-    case _                                  => CTStatusMapping(None, None, Some('N')).some
+    case Some(d: CTAccountingPeriodDigital) => ctStatusMapping(d.ctStatus.some)
+    case Some(s: CTAccountingPeriodStride)  => ctStatusMapping(s.ctStatus)
+    case _                                  => CTStatusMapping(None, None, Some('N'))
   }
 
   private def createHecTaxCheckFileBody(hecTaxCheckList: List[HECTaxCheck]): List[HECTaxCheckFileBody] =
@@ -211,7 +211,7 @@ class FileCreationServiceImpl @Inject() (timeProvider: TimeProvider) extends Fil
           )
         case c: CompanyHECTaxCheckData    =>
           val accountingPeriod                     = c.taxDetails.ctStatus.latestAccountingPeriod
-          val ctStatusMap: Option[CTStatusMapping] = getCTStatusMap(accountingPeriod)
+          val ctStatusMap: Option[CTStatusMapping] = getCTStatusMap(accountingPeriod).some
           HECTaxCheckFileBody(
             ggCredID = c.applicantDetails.ggCredId.map(_.value),
             CTUTR = Some(c.taxDetails.desCTUTR.value),
@@ -224,7 +224,7 @@ class FileCreationServiceImpl @Inject() (timeProvider: TimeProvider) extends Fil
             notChargeable = getNotChargeableInfo(c.taxDetails.chargeableForCT),
             hasAccountingPeriod = ctStatusMap.flatMap(_.accountingPeriod),
             accountingPeriodStartDate = accountingPeriod.flatMap(
-              _.fold(_.startDate.format(DATE_FORMATTER).some, _.startDate.map(_.format(DATE_FORMATTER)))
+              _.fold(_.startDate.format(DATE_FORMATTER).some, _ => None)
             ),
             accountingPeriodEndDate = accountingPeriod.map(_.endDate.format(DATE_FORMATTER)),
             recentlyStartedTrading = yesNoAnswerMap(c.taxDetails.recentlyStaredTrading),

@@ -21,7 +21,7 @@ import uk.gov.hmrc.hec.models.hecTaxCheck.HECTaxCheckSource
 
 import java.time.LocalDate
 
-trait CTAccountingPeriod {
+sealed trait CTAccountingPeriod {
   val endDate: LocalDate
   val accountingTypePeriodFor: HECTaxCheckSource
 }
@@ -37,7 +37,6 @@ object CTAccountingPeriod {
   }
 
   final case class CTAccountingPeriodStride(
-    startDate: Option[LocalDate],
     endDate: LocalDate,
     ctStatus: Option[CTStatus]
   ) extends CTAccountingPeriod {

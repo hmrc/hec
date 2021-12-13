@@ -566,7 +566,7 @@ class FileCreationServiceSpec extends AnyWordSpec with Matchers with MockFactory
                     CTUTR("1111111111"),
                     startDate,
                     endDate,
-                    CTAccountingPeriodStride(None, LocalDate.of(2021, 10, 8), None).some
+                    CTAccountingPeriodStride(LocalDate.of(2021, 10, 8), None).some
                   ),
                   ctIncomeDeclared = None,
                   recentlyStaredTrading = None,
