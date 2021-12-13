@@ -20,7 +20,9 @@ import com.google.inject.{Inject, Singleton}
 import play.api.Configuration
 import uk.gov.hmrc.hec.actors.TimeCalculator
 import uk.gov.hmrc.hec.models
+import uk.gov.hmrc.hec.models.Error
 import uk.gov.hmrc.hec.util.Logging
+import uk.gov.hmrc.hec.util.Logging._
 
 import java.time.{LocalTime, ZoneId}
 import scala.concurrent.duration.FiniteDuration
@@ -59,15 +61,16 @@ class HECTaxCheckScheduleService @Inject() (
           mayBeValue match {
             case Some(value) =>
               value match {
-                case Left(error: models.Error) => logger.warn(s"Job failed because of the error :: $error.")
-                case Right(_)                  => logger.info(s"Job ran successfully for creating and storing  tax checks files")
+                case Left(error: models.Error) => logger.warn(s"File extraction job failed", error)
+                case Right(_)                  =>
+                  logger.info(s"File extraction job ran successfully for creating and storing tax checks files")
 
               }
-            case None        => logger.info(s"Job did not run as lock couldn't be obtained.")
+            case None        => logger.info("File extraction job did not run as lock couldn't be obtained.")
           }
 
         case Failure(ex) =>
-          logger.warn(s"Job failed as the resource is already locked by another request with error:: ${ex.getMessage}.")
+          logger.warn(s"File extraction job failed with failed future", Error(ex))
       }
       scheduleNextJob()
     }
