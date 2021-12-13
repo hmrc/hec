@@ -18,6 +18,7 @@ package uk.gov.hmrc.hec.controllers
 
 import cats.instances.future._
 import com.google.inject.{Inject, Singleton}
+import play.api.Configuration
 import play.api.libs.json.{JsError, JsSuccess, JsValue, Json}
 import play.api.mvc.{Action, AnyContent, ControllerComponents}
 import uk.gov.hmrc.hec.controllers.actions.{GGAuthenticateAction, GGOrStrideAuthenticateAction}
@@ -26,6 +27,7 @@ import uk.gov.hmrc.hec.models.taxCheckMatch.HECTaxCheckMatchRequest
 import uk.gov.hmrc.hec.services.TaxCheckService
 import uk.gov.hmrc.hec.util.Logging
 import uk.gov.hmrc.hec.util.Logging.LoggerOps
+import uk.gov.hmrc.internalauth.client.{BackendAuthComponents, IAAction, Predicate, Resource, ResourceLocation, ResourceType}
 import uk.gov.hmrc.play.bootstrap.backend.controller.BackendController
 
 import scala.concurrent.{ExecutionContext, Future}
@@ -35,10 +37,22 @@ class TaxCheckController @Inject() (
   taxCheckService: TaxCheckService,
   authenticateGG: GGAuthenticateAction,
   authenticatedGGOrStride: GGOrStrideAuthenticateAction,
+  config: Configuration,
+  auth: BackendAuthComponents,
   cc: ControllerComponents
 )(implicit ec: ExecutionContext)
     extends BackendController(cc)
     with Logging {
+
+  val internalAuthEnabled: Boolean = config.get[Boolean]("internal-auth.enabled")
+
+  val internalAuthPermission: Predicate.Permission = Predicate.Permission(
+    resource = Resource(
+      resourceType = ResourceType("hec"),
+      resourceLocation = ResourceLocation("hec/match-tax-check")
+    ),
+    action = IAAction("READ")
+  )
 
   val saveTaxCheck: Action[JsValue] = authenticatedGGOrStride(parse.json).async { implicit request =>
     Json.fromJson[HECTaxCheckData](request.body) match {
@@ -61,24 +75,26 @@ class TaxCheckController @Inject() (
 
   }
 
-  val matchTaxCheck: Action[JsValue] = Action(parse.json).async { implicit request =>
-    Json.fromJson[HECTaxCheckMatchRequest](request.body) match {
-      case JsSuccess(matchRequest, _) =>
-        taxCheckService
-          .matchTaxCheck(matchRequest)
-          .fold(
-            { e =>
-              logger.warn("Could not match tax check", e)
-              InternalServerError
-            },
-            result => Ok(Json.toJson(result))
-          )
+  val matchTaxCheck: Action[JsValue] =
+    (if (internalAuthEnabled) auth.authorizedAction(predicate = internalAuthPermission)(parse.json)
+     else Action(parse.json)).async { implicit request =>
+      Json.fromJson[HECTaxCheckMatchRequest](request.body) match {
+        case JsSuccess(matchRequest, _) =>
+          taxCheckService
+            .matchTaxCheck(matchRequest)
+            .fold(
+              { e =>
+                logger.warn("Could not match tax check", e)
+                InternalServerError
+              },
+              result => Ok(Json.toJson(result))
+            )
 
-      case JsError(_) =>
-        logger.warn("Could not parse JSON")
-        Future.successful(BadRequest)
+        case JsError(_) =>
+          logger.warn("Could not parse JSON")
+          Future.successful(BadRequest)
+      }
     }
-  }
 
   val getUnexpiredTaxCheckCodes: Action[AnyContent] = authenticateGG.async { implicit request =>
     taxCheckService
