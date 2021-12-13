@@ -28,10 +28,11 @@ import uk.gov.hmrc.hec.models
 import uk.gov.hmrc.hec.models.hecTaxCheck.ApplicantDetails.{CompanyApplicantDetails, IndividualApplicantDetails}
 import uk.gov.hmrc.hec.models.hecTaxCheck.HECTaxCheckData.{CompanyHECTaxCheckData, IndividualHECTaxCheckData}
 import uk.gov.hmrc.hec.models.hecTaxCheck.TaxDetails.{CompanyTaxDetails, IndividualTaxDetails}
-import uk.gov.hmrc.hec.models.hecTaxCheck.company.{CTAccountingPeriod, CTStatus, CTStatusResponse, CompanyHouseName}
+import uk.gov.hmrc.hec.models.hecTaxCheck.company.{CTStatus, CTStatusResponse, CompanyHouseName}
 import uk.gov.hmrc.hec.models.hecTaxCheck.individual.{DateOfBirth, Name}
 import uk.gov.hmrc.hec.models.hecTaxCheck.licence.{LicenceDetails, LicenceTimeTrading, LicenceType, LicenceValidityPeriod}
 import uk.gov.hmrc.hec.models.hecTaxCheck._
+import uk.gov.hmrc.hec.models.hecTaxCheck.company.CTAccountingPeriod.CTAccountingPeriodDigital
 import uk.gov.hmrc.hec.models.ids._
 import uk.gov.hmrc.hec.models.taxCheckMatch.{HECTaxCheckMatchRequest, HECTaxCheckMatchResult, HECTaxCheckMatchStatus}
 import uk.gov.hmrc.hec.models.{Error, TaxCheckListItem, hecTaxCheck, taxCheckMatch}
@@ -240,7 +241,7 @@ class TaxCheckServiceImplSpec extends AnyWordSpec with Matchers with MockFactory
                 LocalDate.of(2020, 10, 9),
                 LocalDate.of(2021, 10, 9),
                 Some(
-                  CTAccountingPeriod(LocalDate.of(2020, 10, 9).some, LocalDate.of(2021, 10, 9), CTStatus.ReturnFound)
+                  CTAccountingPeriodDigital(LocalDate.of(2020, 10, 9), LocalDate.of(2021, 10, 9), CTStatus.ReturnFound)
                 )
               ),
               None,
@@ -449,7 +450,7 @@ class TaxCheckServiceImplSpec extends AnyWordSpec with Matchers with MockFactory
             CTUTR("1111111111"),
             LocalDate.of(2020, 10, 9),
             LocalDate.of(2021, 10, 9),
-            Some(CTAccountingPeriod(LocalDate.of(2020, 10, 9).some, LocalDate.of(2021, 10, 9), CTStatus.ReturnFound))
+            Some(CTAccountingPeriodDigital(LocalDate.of(2020, 10, 9), LocalDate.of(2021, 10, 9), CTStatus.ReturnFound))
           ),
           None,
           Some(YesNoAnswer.Yes),
@@ -521,7 +522,7 @@ class TaxCheckServiceImplSpec extends AnyWordSpec with Matchers with MockFactory
             CTUTR("1111111111"),
             LocalDate.of(2020, 10, 9),
             LocalDate.of(2021, 10, 9),
-            Some(CTAccountingPeriod(LocalDate.of(2020, 10, 9).some, LocalDate.of(2021, 10, 9), CTStatus.ReturnFound))
+            Some(CTAccountingPeriodDigital(LocalDate.of(2020, 10, 9), LocalDate.of(2021, 10, 9), CTStatus.ReturnFound))
           ),
           None,
           Some(YesNoAnswer.Yes),
@@ -577,7 +578,7 @@ class TaxCheckServiceImplSpec extends AnyWordSpec with Matchers with MockFactory
             CTUTR("1111111111"),
             LocalDate.of(2020, 10, 9),
             LocalDate.of(2021, 10, 9),
-            Some(CTAccountingPeriod(LocalDate.of(2020, 10, 9).some, LocalDate.of(2021, 10, 9), CTStatus.ReturnFound))
+            Some(CTAccountingPeriodDigital(LocalDate.of(2020, 10, 9), LocalDate.of(2021, 10, 9), CTStatus.ReturnFound))
           ),
           None,
           Some(YesNoAnswer.Yes),

@@ -24,7 +24,8 @@ import uk.gov.hmrc.hec.models.hecTaxCheck.ApplicantDetails.{CompanyApplicantDeta
 import uk.gov.hmrc.hec.models.hecTaxCheck.HECTaxCheckData.{CompanyHECTaxCheckData, IndividualHECTaxCheckData}
 import uk.gov.hmrc.hec.models.hecTaxCheck.TaxDetails.{CompanyTaxDetails, IndividualTaxDetails}
 import uk.gov.hmrc.hec.models.hecTaxCheck._
-import uk.gov.hmrc.hec.models.hecTaxCheck.company.{CTAccountingPeriod, CTStatus, CTStatusResponse, CompanyHouseName}
+import uk.gov.hmrc.hec.models.hecTaxCheck.company.CTAccountingPeriod.CTAccountingPeriodDigital
+import uk.gov.hmrc.hec.models.hecTaxCheck.company.{CTStatus, CTStatusResponse, CompanyHouseName}
 import uk.gov.hmrc.hec.models.hecTaxCheck.individual.{DateOfBirth, Name}
 import uk.gov.hmrc.hec.models.hecTaxCheck.licence.{LicenceDetails, LicenceTimeTrading, LicenceType, LicenceValidityPeriod}
 import uk.gov.hmrc.hec.models.ids._
@@ -109,7 +110,7 @@ class HECTaxCheckDataSpec extends AnyWordSpec with Matchers {
               startDate = LocalDate.of(2020, 10, 9),
               endDate = LocalDate.of(2021, 10, 9),
               latestAccountingPeriod = Some(
-                CTAccountingPeriod(LocalDate.of(2020, 10, 9).some, LocalDate.of(2021, 10, 9), CTStatus.ReturnFound)
+                CTAccountingPeriodDigital(LocalDate.of(2020, 10, 9), LocalDate.of(2021, 10, 9), CTStatus.ReturnFound)
               )
             ),
             recentlyStaredTrading = None,
@@ -142,7 +143,8 @@ class HECTaxCheckDataSpec extends AnyWordSpec with Matchers {
                                      |      "latestAccountingPeriod" : {
                                      |          "startDate":"2020-10-09",
                                      |           "endDate":"2021-10-09",
-                                     |           "ctStatus":"ReturnFound"
+                                     |           "ctStatus":"ReturnFound",
+                                     |           "type":"Digital"
                                      |      }
                                      |   },
                                      |   "chargeableForCT" : "Yes"

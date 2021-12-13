@@ -24,10 +24,11 @@ import uk.gov.hmrc.hec.models.Error
 import uk.gov.hmrc.hec.models.hecTaxCheck.ApplicantDetails.{CompanyApplicantDetails, IndividualApplicantDetails}
 import uk.gov.hmrc.hec.models.hecTaxCheck.HECTaxCheckData.{CompanyHECTaxCheckData, IndividualHECTaxCheckData}
 import uk.gov.hmrc.hec.models.hecTaxCheck.TaxDetails.{CompanyTaxDetails, IndividualTaxDetails}
-import uk.gov.hmrc.hec.models.hecTaxCheck.company.{CTAccountingPeriod, CTStatus, CTStatusResponse, CompanyHouseName}
+import uk.gov.hmrc.hec.models.hecTaxCheck.company.{CTStatus, CTStatusResponse, CompanyHouseName}
 import uk.gov.hmrc.hec.models.hecTaxCheck.individual.Name
 import uk.gov.hmrc.hec.models.hecTaxCheck.licence.{LicenceDetails, LicenceTimeTrading, LicenceValidityPeriod}
 import uk.gov.hmrc.hec.models.hecTaxCheck._
+import uk.gov.hmrc.hec.models.hecTaxCheck.company.CTAccountingPeriod.CTAccountingPeriodDigital
 import uk.gov.hmrc.hec.models.ids.{CTUTR, NINO}
 import uk.gov.hmrc.hec.repos.HECTaxCheckStore
 import uk.gov.hmrc.hec.testonly.models.SaveTaxCheckRequest
@@ -107,7 +108,7 @@ class TaxCheckServiceImpl @Inject() (
             CTUTR("1111111111"),
             LocalDate.of(2020, 10, 9),
             LocalDate.of(2021, 10, 9),
-            Some(CTAccountingPeriod(LocalDate.of(2020, 10, 9).some, LocalDate.of(2021, 10, 9), CTStatus.ReturnFound))
+            Some(CTAccountingPeriodDigital(LocalDate.of(2020, 10, 9), LocalDate.of(2021, 10, 9), CTStatus.ReturnFound))
           ),
           None,
           Some(YesNoAnswer.Yes),
