@@ -23,6 +23,7 @@ import play.api.http.Status.{NOT_FOUND, OK}
 import play.api.libs.json.{Json, Reads}
 import uk.gov.hmrc.hec.connectors.IFConnector
 import uk.gov.hmrc.hec.models.hecTaxCheck.TaxYear
+import uk.gov.hmrc.hec.models.hecTaxCheck.company.CTAccountingPeriod.CTAccountingPeriodDigital
 import uk.gov.hmrc.hec.models.hecTaxCheck.company.{CTAccountingPeriod, CTStatus, CTStatusResponse}
 import uk.gov.hmrc.hec.models.hecTaxCheck.individual.{SAStatus, SAStatusResponse}
 import uk.gov.hmrc.hec.models.ids.{CTUTR, SAUTR}
@@ -139,7 +140,7 @@ class IFServiceImpl @Inject() (
           .getOrElse(List.empty[RawAccountingPeriod])
           .traverse[Either[BackendError, *], CTAccountingPeriod](a =>
             toCtStatus(a)
-              .map(status => CTAccountingPeriod(a.accountingPeriodStartDate.some, a.accountingPeriodEndDate, status))
+              .map(status => CTAccountingPeriodDigital(a.accountingPeriodStartDate, a.accountingPeriodEndDate, status))
           )
           .filterOrElse(
             _.nonEmpty,

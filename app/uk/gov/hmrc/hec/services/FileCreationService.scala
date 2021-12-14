@@ -27,7 +27,8 @@ import uk.gov.hmrc.hec.models.hecTaxCheck.HECTaxCheckData.{CompanyHECTaxCheckDat
 import uk.gov.hmrc.hec.models.hecTaxCheck.HECTaxCheckSource.Digital
 import uk.gov.hmrc.hec.models.hecTaxCheck.TaxSituation._
 import uk.gov.hmrc.hec.models.hecTaxCheck._
-import uk.gov.hmrc.hec.models.hecTaxCheck.company.CTStatus
+import uk.gov.hmrc.hec.models.hecTaxCheck.company.CTAccountingPeriod.{CTAccountingPeriodDigital, CTAccountingPeriodStride}
+import uk.gov.hmrc.hec.models.hecTaxCheck.company.{CTAccountingPeriod, CTStatus}
 import uk.gov.hmrc.hec.models.hecTaxCheck.individual.SAStatus
 import uk.gov.hmrc.hec.models.hecTaxCheck.individual.SAStatus._
 import uk.gov.hmrc.hec.models.hecTaxCheck.licence.LicenceTimeTrading.{EightYearsOrMore, FourToEightYears, TwoToFourYears, ZeroToTwoYears}
@@ -147,12 +148,19 @@ class FileCreationServiceImpl @Inject() (timeProvider: TimeProvider) extends Fil
     case None                     => SAStatusMapping(None, None)
   }
 
-  private def ctStatusMapping(ctStatus: Option[CTStatus]) = ctStatus match {
-    case Some(CTStatus.ReturnFound)        => CTStatusMapping(Some('Y'), None, Some('Y'))
-    case Some(CTStatus.NoticeToFileIssued) => CTStatusMapping(Some('N'), Some('Y'), Some('Y'))
-    case Some(CTStatus.NoReturnFound)      => CTStatusMapping(Some('N'), Some('N'), Some('Y'))
-    case None                              => CTStatusMapping(None, None, Some('N'))
-  }
+  private def ctStatusMappingIfAccountingPeriodExists(
+    ctStatus: Option[CTStatus],
+    chargeableForCT: Option[YesNoAnswer]
+  ) =
+    (ctStatus, chargeableForCT) match {
+
+      case (_, Some(YesNoAnswer.No))              => CTStatusMapping(None, None, Some('Y'))
+      case (Some(CTStatus.ReturnFound), _)        => CTStatusMapping(Some('Y'), None, Some('Y'))
+      case (Some(CTStatus.NoticeToFileIssued), _) => CTStatusMapping(Some('N'), Some('Y'), Some('Y'))
+      case (Some(CTStatus.NoReturnFound), _)      => CTStatusMapping(Some('N'), Some('N'), Some('Y'))
+      case _                                      => CTStatusMapping(None, None, Some('Y'))
+
+    }
 
   private def getNotChargeableInfo(ctChargeableOpt: Option[YesNoAnswer]): Option[Char] = ctChargeableOpt match {
     case Some(YesNoAnswer.Yes) => Some('N')
@@ -165,6 +173,14 @@ class FileCreationServiceImpl @Inject() (timeProvider: TimeProvider) extends Fil
     case Some(YesNoAnswer.No)  => Some('N')
     case None                  => None
   }
+
+  private def getCTStatusMap(accountingPeriod: Option[CTAccountingPeriod], chargeableForCT: Option[YesNoAnswer]) =
+    accountingPeriod match {
+      case Some(d: CTAccountingPeriodDigital) =>
+        ctStatusMappingIfAccountingPeriodExists(d.ctStatus.some, chargeableForCT)
+      case Some(s: CTAccountingPeriodStride)  => ctStatusMappingIfAccountingPeriodExists(s.ctStatus, chargeableForCT)
+      case _                                  => CTStatusMapping(None, None, Some('N'))
+    }
 
   private def createHecTaxCheckFileBody(hecTaxCheckList: List[HECTaxCheck]): List[HECTaxCheckFileBody] =
     hecTaxCheckList.map { hecTaxCheck =>
@@ -201,9 +217,9 @@ class FileCreationServiceImpl @Inject() (timeProvider: TimeProvider) extends Fil
             onlineApplication = if (i.source === Digital) 'Y' else 'N'
           )
         case c: CompanyHECTaxCheckData    =>
-          val accountingPeriod = c.taxDetails.ctStatus.latestAccountingPeriod
-          val ctStatus         = accountingPeriod.map(_.ctStatus)
-          val ctStatusMap      = ctStatusMapping(ctStatus)
+          val accountingPeriod                     = c.taxDetails.ctStatus.latestAccountingPeriod
+          val chargeableForCT                      = c.taxDetails.chargeableForCT
+          val ctStatusMap: Option[CTStatusMapping] = getCTStatusMap(accountingPeriod, chargeableForCT).some
           HECTaxCheckFileBody(
             ggCredID = c.applicantDetails.ggCredId.map(_.value),
             CTUTR = Some(c.taxDetails.desCTUTR.value),
@@ -214,12 +230,14 @@ class FileCreationServiceImpl @Inject() (timeProvider: TimeProvider) extends Fil
             licenceTimeTrading = licenceTimeTradingEKV(c.licenceDetails.licenceTimeTrading)._1,
             entityType = 'C',
             notChargeable = getNotChargeableInfo(c.taxDetails.chargeableForCT),
-            hasAccountingPeriod = ctStatusMap.accountingPeriod,
-            accountingPeriodStartDate = accountingPeriod.flatMap(_.startDate.map(_.format(DATE_FORMATTER))),
+            hasAccountingPeriod = ctStatusMap.flatMap(_.accountingPeriod),
+            accountingPeriodStartDate = accountingPeriod.flatMap(
+              _.fold(_.startDate.format(DATE_FORMATTER).some, _ => None)
+            ),
             accountingPeriodEndDate = accountingPeriod.map(_.endDate.format(DATE_FORMATTER)),
             recentlyStartedTrading = yesNoAnswerMap(c.taxDetails.recentlyStaredTrading),
-            returnReceived = ctStatusMap.returnReceived,
-            noticeToFile = ctStatusMap.noticeToFileIssued,
+            returnReceived = ctStatusMap.flatMap(_.returnReceived),
+            noticeToFile = ctStatusMap.flatMap(_.noticeToFileIssued),
             taxComplianceDeclaration = yesNoAnswerMap(c.taxDetails.ctIncomeDeclared),
             correctiveAction = c.taxDetails.correctiveAction.map(ca => correctiveActionEKV(ca)._1),
             customerDeclaration = 'Y',

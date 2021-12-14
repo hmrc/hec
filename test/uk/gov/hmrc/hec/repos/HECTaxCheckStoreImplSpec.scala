@@ -27,7 +27,8 @@ import play.api.test.Helpers._
 import uk.gov.hmrc.hec.models.hecTaxCheck.ApplicantDetails.CompanyApplicantDetails
 import uk.gov.hmrc.hec.models.hecTaxCheck.HECTaxCheckData.CompanyHECTaxCheckData
 import uk.gov.hmrc.hec.models.hecTaxCheck.TaxDetails.CompanyTaxDetails
-import uk.gov.hmrc.hec.models.hecTaxCheck.company.{CTAccountingPeriod, CTStatus, CTStatusResponse, CompanyHouseName}
+import uk.gov.hmrc.hec.models.hecTaxCheck.company.CTAccountingPeriod.CTAccountingPeriodDigital
+import uk.gov.hmrc.hec.models.hecTaxCheck.company.{CTStatus, CTStatusResponse, CompanyHouseName}
 import uk.gov.hmrc.hec.models.hecTaxCheck.licence.{LicenceDetails, LicenceTimeTrading, LicenceType, LicenceValidityPeriod}
 import uk.gov.hmrc.hec.models.hecTaxCheck.{HECTaxCheck, HECTaxCheckCode, HECTaxCheckSource, YesNoAnswer}
 import uk.gov.hmrc.hec.models.ids.{CRN, CTUTR, GGCredId}
@@ -75,7 +76,7 @@ class HECTaxCheckStoreImplSpec extends AnyWordSpec with Matchers with Eventually
           CTUTR("1111111111"),
           LocalDate.of(2020, 10, 9),
           LocalDate.of(2021, 10, 9),
-          Some(CTAccountingPeriod(LocalDate.of(2020, 10, 9).some, LocalDate.of(2021, 10, 9), CTStatus.ReturnFound))
+          Some(CTAccountingPeriodDigital(LocalDate.of(2020, 10, 9), LocalDate.of(2021, 10, 9), CTStatus.ReturnFound))
         ),
         None,
         Some(YesNoAnswer.Yes),

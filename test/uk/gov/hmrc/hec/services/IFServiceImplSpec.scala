@@ -17,7 +17,6 @@
 package uk.gov.hmrc.hec.services
 
 import cats.data.EitherT
-import cats.implicits.catsSyntaxOptionId
 import cats.instances.future._
 import org.scalamock.scalatest.MockFactory
 import org.scalatest.OptionValues._
@@ -28,7 +27,8 @@ import play.api.test.Helpers._
 import uk.gov.hmrc.hec.connectors.IFConnector
 import uk.gov.hmrc.hec.models.Error
 import uk.gov.hmrc.hec.models.hecTaxCheck.TaxYear
-import uk.gov.hmrc.hec.models.hecTaxCheck.company.{CTAccountingPeriod, CTStatus, CTStatusResponse}
+import uk.gov.hmrc.hec.models.hecTaxCheck.company.CTAccountingPeriod.CTAccountingPeriodDigital
+import uk.gov.hmrc.hec.models.hecTaxCheck.company.{CTStatus, CTStatusResponse}
 import uk.gov.hmrc.hec.models.hecTaxCheck.individual.{SAStatus, SAStatusResponse}
 import uk.gov.hmrc.hec.models.ids.{CTUTR, SAUTR}
 import uk.gov.hmrc.hec.services.IFService.{BackendError, DataNotFoundError}
@@ -367,8 +367,8 @@ class IFServiceImplSpec extends AnyWordSpec with Matchers with MockFactory {
               fromDate,
               toDate,
               Some(
-                CTAccountingPeriod(
-                  LocalDate.of(2020, 10, 15).some,
+                CTAccountingPeriodDigital(
+                  LocalDate.of(2020, 10, 15),
                   LocalDate.of(2021, 10, 20),
                   expectedCtStatus
                 )
