@@ -21,7 +21,9 @@ import cats.implicits._
 import com.google.inject.{ImplementedBy, Inject, Singleton}
 import com.typesafe.config.Config
 import configs.syntax._
+import uk.gov.hmrc.hec.controllers.actions.AuthenticatedGGOrStrideRequest
 import uk.gov.hmrc.hec.models
+import uk.gov.hmrc.hec.models.AuditEvent.TaxCheckSuccess
 import uk.gov.hmrc.hec.models.ids.GGCredId
 import uk.gov.hmrc.hec.models.hecTaxCheck.HECTaxCheckData.{CompanyHECTaxCheckData, IndividualHECTaxCheckData}
 import uk.gov.hmrc.hec.models.hecTaxCheck.{HECTaxCheck, HECTaxCheckData}
@@ -38,7 +40,8 @@ import scala.concurrent.{ExecutionContext, Future}
 trait TaxCheckService {
 
   def saveTaxCheck(taxCheckData: HECTaxCheckData)(implicit
-    hc: HeaderCarrier
+    hc: HeaderCarrier,
+    request: AuthenticatedGGOrStrideRequest[_]
   ): EitherT[Future, Error, HECTaxCheck]
 
   def updateAllHecTaxCheck(list: List[HECTaxCheck])(implicit
@@ -66,6 +69,7 @@ trait TaxCheckService {
 @Singleton
 class TaxCheckServiceImpl @Inject() (
   taxCheckCodeGeneratorService: TaxCheckCodeGeneratorService,
+  auditService: AuditService,
   timeProvider: TimeProvider,
   taxCheckStore: HECTaxCheckStore,
   config: Config
@@ -77,14 +81,17 @@ class TaxCheckServiceImpl @Inject() (
 
   def saveTaxCheck(
     taxCheckData: HECTaxCheckData
-  )(implicit hc: HeaderCarrier): EitherT[Future, Error, HECTaxCheck] = {
+  )(implicit hc: HeaderCarrier, request: AuthenticatedGGOrStrideRequest[_]): EitherT[Future, Error, HECTaxCheck] = {
     val taxCheckCode = taxCheckCodeGeneratorService.generateTaxCheckCode()
     val expiryDate   = timeProvider.currentDate.plusDays(taxCheckCodeExpiresAfterDays)
     val createDate   = timeProvider.currentDateTime
     val taxCheck     =
       models.hecTaxCheck.HECTaxCheck(taxCheckData, taxCheckCode, expiryDate, createDate, false, None)
 
-    taxCheckStore.store(taxCheck).map(_ => taxCheck)
+    taxCheckStore.store(taxCheck).map { _ =>
+      auditService.sendEvent(TaxCheckSuccess(taxCheck, request.loginDetails.swap.toOption))
+      taxCheck
+    }
   }
 
   private def updateHecTaxCheck(

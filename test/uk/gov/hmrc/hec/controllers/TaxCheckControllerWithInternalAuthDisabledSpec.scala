@@ -30,10 +30,10 @@ import play.api.test.Helpers._
 import uk.gov.hmrc.auth.core.AuthConnector
 import uk.gov.hmrc.hec.models.hecTaxCheck.individual.DateOfBirth
 import uk.gov.hmrc.hec.models.hecTaxCheck.licence.LicenceType
-import uk.gov.hmrc.hec.models.hecTaxCheck.{HECTaxCheck, HECTaxCheckCode, HECTaxCheckData}
+import uk.gov.hmrc.hec.models.hecTaxCheck.HECTaxCheckCode
 import uk.gov.hmrc.hec.models.ids._
 import uk.gov.hmrc.hec.models.taxCheckMatch.{HECTaxCheckMatchRequest, HECTaxCheckMatchResult, HECTaxCheckMatchStatus}
-import uk.gov.hmrc.hec.models.{Error, TaxCheckListItem}
+import uk.gov.hmrc.hec.models.Error
 import uk.gov.hmrc.hec.services.TaxCheckService
 import uk.gov.hmrc.hec.util.TimeUtils
 import uk.gov.hmrc.http.HeaderCarrier
@@ -78,24 +78,10 @@ class TaxCheckControllerWithInternalAuthDisabledSpec extends ControllerSpec with
     )
   )
 
-  def mockSaveTaxCheck(taxCheckData: HECTaxCheckData)(
-    result: Either[Error, HECTaxCheck]
-  ) =
-    (mockTaxCheckService
-      .saveTaxCheck(_: HECTaxCheckData)(_: HeaderCarrier))
-      .expects(taxCheckData, *)
-      .returning(EitherT.fromEither(result))
-
   def mockMatchTaxCheck(matchRequest: HECTaxCheckMatchRequest)(result: Either[Error, HECTaxCheckMatchResult]) =
     (mockTaxCheckService
       .matchTaxCheck(_: HECTaxCheckMatchRequest)(_: HeaderCarrier))
       .expects(matchRequest, *)
-      .returning(EitherT.fromEither(result))
-
-  def mockGetValidTaxCheckCodes(ggCredId: GGCredId)(result: Either[Error, List[TaxCheckListItem]]) =
-    (mockTaxCheckService
-      .getUnexpiredTaxCheckCodes(_: GGCredId)(_: HeaderCarrier))
-      .expects(ggCredId, *)
       .returning(EitherT.fromEither(result))
 
   "TaxCheckController" when {

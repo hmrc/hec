@@ -23,8 +23,11 @@ import com.typesafe.config.ConfigFactory
 import org.scalamock.scalatest.MockFactory
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
+import play.api.test.FakeRequest
 import play.api.test.Helpers._
+import uk.gov.hmrc.hec.controllers.actions.AuthenticatedGGOrStrideRequest
 import uk.gov.hmrc.hec.models
+import uk.gov.hmrc.hec.models.AuditEvent.TaxCheckSuccess
 import uk.gov.hmrc.hec.models.hecTaxCheck.ApplicantDetails.{CompanyApplicantDetails, IndividualApplicantDetails}
 import uk.gov.hmrc.hec.models.hecTaxCheck.HECTaxCheckData.{CompanyHECTaxCheckData, IndividualHECTaxCheckData}
 import uk.gov.hmrc.hec.models.hecTaxCheck.TaxDetails.{CompanyTaxDetails, IndividualTaxDetails}
@@ -35,7 +38,7 @@ import uk.gov.hmrc.hec.models.hecTaxCheck._
 import uk.gov.hmrc.hec.models.hecTaxCheck.company.CTAccountingPeriod.CTAccountingPeriodDigital
 import uk.gov.hmrc.hec.models.ids._
 import uk.gov.hmrc.hec.models.taxCheckMatch.{HECTaxCheckMatchRequest, HECTaxCheckMatchResult, HECTaxCheckMatchStatus}
-import uk.gov.hmrc.hec.models.{Error, TaxCheckListItem, hecTaxCheck, taxCheckMatch}
+import uk.gov.hmrc.hec.models.{Error, StrideOperatorDetails, TaxCheckListItem, hecTaxCheck, taxCheckMatch}
 import uk.gov.hmrc.hec.repos.HECTaxCheckStore
 import uk.gov.hmrc.hec.util.{TimeProvider, TimeUtils}
 import uk.gov.hmrc.http.HeaderCarrier
@@ -45,7 +48,7 @@ import java.util.UUID
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.duration._
 
-class TaxCheckServiceImplSpec extends AnyWordSpec with Matchers with MockFactory {
+class TaxCheckServiceImplSpec extends AnyWordSpec with Matchers with MockFactory with AuditServiceSupport {
 
   val mockTaxCheckCodeGeneratorService = mock[TaxCheckCodeGeneratorService]
   val mockTaxCheckStore                = mock[HECTaxCheckStore]
@@ -59,6 +62,7 @@ class TaxCheckServiceImplSpec extends AnyWordSpec with Matchers with MockFactory
 
   val service = new TaxCheckServiceImpl(
     mockTaxCheckCodeGeneratorService,
+    mockAuditService,
     mockTimeProvider,
     mockTaxCheckStore,
     config
@@ -111,7 +115,6 @@ class TaxCheckServiceImplSpec extends AnyWordSpec with Matchers with MockFactory
   "TaxCheckServiceImpl" when {
 
     "handling requests to save a tax check" must {
-
       val taxCheckData = IndividualHECTaxCheckData(
         IndividualApplicantDetails(Some(GGCredId("")), Name("", ""), DateOfBirth(LocalDate.now())),
         LicenceDetails(
@@ -132,19 +135,22 @@ class TaxCheckServiceImplSpec extends AnyWordSpec with Matchers with MockFactory
         HECTaxCheckSource.Digital
       )
 
-      val expectedExpiryDate                        = TimeUtils.today().plusDays(expiresAfter.toDays)
-      val taxCheckCode                              = HECTaxCheckCode("code")
-      def taxCheck(fileCorrelationId: Option[UUID]) =
-        models.hecTaxCheck.HECTaxCheck(taxCheckData, taxCheckCode, expectedExpiryDate, now, false, fileCorrelationId)
+      val expectedExpiryDate = TimeUtils.today().plusDays(expiresAfter.toDays)
+      val taxCheckCode       = HECTaxCheckCode("code")
+      val taxCheck           =
+        models.hecTaxCheck.HECTaxCheck(taxCheckData, taxCheckCode, expectedExpiryDate, now, false, None)
 
       "return an error" when {
 
         "there is an error saving the tax check" in {
+          implicit val request: AuthenticatedGGOrStrideRequest[_] =
+            AuthenticatedGGOrStrideRequest(Right(GGCredId("")), FakeRequest())
+
           inSequence {
             mockGenerateTaxCheckCode(taxCheckCode)
             mockTimeProviderToday(today)
             mockTimeProviderNow(now)
-            mockStoreTaxCheck(taxCheck(None))(Left(Error("")))
+            mockStoreTaxCheck(taxCheck)(Left(Error("")))
           }
 
           val result = service.saveTaxCheck(taxCheckData).value
@@ -155,28 +161,21 @@ class TaxCheckServiceImplSpec extends AnyWordSpec with Matchers with MockFactory
 
       "return successfully" when {
 
-        "the tax check has been saved with file Correlation Id" in {
+        "the tax check has been saved" in {
+          val strideOperatorDetails                               = StrideOperatorDetails(PID(""), List.empty, None, None)
+          implicit val request: AuthenticatedGGOrStrideRequest[_] =
+            AuthenticatedGGOrStrideRequest(Left(strideOperatorDetails), FakeRequest())
+
           inSequence {
             mockGenerateTaxCheckCode(taxCheckCode)
             mockTimeProviderToday(today)
             mockTimeProviderNow(now)
-            mockStoreTaxCheck(taxCheck(None))(Right(()))
+            mockStoreTaxCheck(taxCheck)(Right(()))
+            mockSendAuditEvent(TaxCheckSuccess(taxCheck, Some(strideOperatorDetails)))
           }
 
           val result = service.saveTaxCheck(taxCheckData).value
-          await(result) shouldBe Right(taxCheck(None))
-        }
-
-        "the tax check has been saved without file Correlation Id" in {
-          inSequence {
-            mockGenerateTaxCheckCode(taxCheckCode)
-            mockTimeProviderToday(today)
-            mockTimeProviderNow(now)
-            mockStoreTaxCheck(taxCheck(None))(Right(()))
-          }
-
-          val result = service.saveTaxCheck(taxCheckData).value
-          await(result) shouldBe Right(taxCheck(None))
+          await(result) shouldBe Right(taxCheck)
         }
 
       }

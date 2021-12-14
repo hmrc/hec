@@ -21,7 +21,10 @@ import com.google.inject.ImplementedBy
 import play.api.mvc._
 import uk.gov.hmrc.auth.core.AuthProvider.{GovernmentGateway, PrivilegedApplication}
 import uk.gov.hmrc.auth.core._
-import uk.gov.hmrc.auth.core.retrieve._
+import uk.gov.hmrc.auth.core.retrieve.{PAClientId, ~, GGCredId => AuthGGCredId}
+import uk.gov.hmrc.auth.core.retrieve.v2.Retrievals._
+import uk.gov.hmrc.hec.models.StrideOperatorDetails
+import uk.gov.hmrc.hec.models.ids.{GGCredId, PID}
 import uk.gov.hmrc.hec.util.Logging
 import uk.gov.hmrc.play.bootstrap.backend.controller.BackendHeaderCarrierProvider
 
@@ -29,7 +32,7 @@ import javax.inject.Inject
 import scala.concurrent.{ExecutionContext, Future}
 
 final case class AuthenticatedGGOrStrideRequest[+A](
-  ggCredId: Option[String],
+  loginDetails: Either[StrideOperatorDetails, GGCredId],
   request: Request[A]
 ) extends WrappedRequest[A](request)
 
@@ -56,12 +59,25 @@ class GGOrStrideAuthenticateActionBuilder @Inject() (
     val carrier   = hc(request)
 
     authorised(AuthProviders(GovernmentGateway, PrivilegedApplication))
-      .retrieve(v2.Retrievals.authProviderId) {
-        case GGCredId(ggCredId) =>
-          block(new AuthenticatedGGOrStrideRequest[A](Some(ggCredId), request))
+      .retrieve(authProviderId and allEnrolments and name and email) {
+        case AuthGGCredId(ggCredId) ~ _ ~ _ ~ _ =>
+          block(new AuthenticatedGGOrStrideRequest[A](Right(GGCredId(ggCredId)), request))
 
-        case PAClientId(_) =>
-          block(new AuthenticatedGGOrStrideRequest[A](None, request))
+        case PAClientId(pid) ~ enrolments ~ name ~ email =>
+          val fullName = name.flatMap(_.name) -> name.flatMap(_.lastName) match {
+            case (None, None)              => None
+            case (Some(first), Some(last)) => Some(s"$first $last")
+            case (Some(first), None)       => Some(first)
+            case (None, Some(last))        => Some(last)
+          }
+
+          val strideOperatorDetails = StrideOperatorDetails(
+            PID(pid),
+            enrolments.enrolments.map(_.key).toList,
+            fullName,
+            email
+          )
+          block(new AuthenticatedGGOrStrideRequest[A](Left(strideOperatorDetails), request))
 
         case other =>
           logger.info(s"Found unsupported auth provider id type: ${other.getClass.getSimpleName}")

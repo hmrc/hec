@@ -26,12 +26,12 @@ import play.api.http.Status
 import play.api.inject.bind
 import play.api.inject.guice.GuiceableModule
 import play.api.libs.json._
-import play.api.mvc.Result
+import play.api.mvc.{Request, Result}
 import play.api.test.{FakeRequest, Helpers}
 import play.api.test.Helpers._
 import uk.gov.hmrc.auth.core.AuthProvider.{GovernmentGateway, PrivilegedApplication}
-import uk.gov.hmrc.auth.core.retrieve.{PAClientId, VerifyPid, v2, GGCredId => AuthGGCredId}
-import uk.gov.hmrc.auth.core.{AuthConnector, AuthProviders, InvalidBearerToken}
+import uk.gov.hmrc.auth.core.retrieve.{PAClientId, VerifyPid, GGCredId => AuthGGCredId, Name => RetrievalName}
+import uk.gov.hmrc.auth.core.{AuthConnector, AuthProviders, Enrolment, Enrolments, InvalidBearerToken}
 import uk.gov.hmrc.hec.controllers.actions.AuthenticatedGGOrStrideRequest
 import uk.gov.hmrc.hec.models
 import uk.gov.hmrc.hec.models.hecTaxCheck.ApplicantDetails.{CompanyApplicantDetails, IndividualApplicantDetails}
@@ -44,7 +44,7 @@ import uk.gov.hmrc.hec.models.hecTaxCheck.individual.{DateOfBirth, Name}
 import uk.gov.hmrc.hec.models.hecTaxCheck.licence.{LicenceDetails, LicenceTimeTrading, LicenceType, LicenceValidityPeriod}
 import uk.gov.hmrc.hec.models.ids._
 import uk.gov.hmrc.hec.models.taxCheckMatch.{HECTaxCheckMatchRequest, HECTaxCheckMatchResult, HECTaxCheckMatchStatus}
-import uk.gov.hmrc.hec.models.{Error, TaxCheckListItem, taxCheckMatch}
+import uk.gov.hmrc.hec.models.{Error, StrideOperatorDetails, TaxCheckListItem, taxCheckMatch}
 import uk.gov.hmrc.hec.services.TaxCheckService
 import uk.gov.hmrc.hec.util.TimeUtils
 import uk.gov.hmrc.http.{HeaderCarrier, UpstreamErrorResponse}
@@ -96,12 +96,12 @@ class TaxCheckControllerWithInternalAuthEnabledSpec extends ControllerSpec with 
   val expectedPredicate: Permission =
     Permission(expectedResource, IAAction("READ"))
 
-  def mockSaveTaxCheck(taxCheckData: HECTaxCheckData)(
+  def mockSaveTaxCheck(taxCheckData: HECTaxCheckData, request: AuthenticatedGGOrStrideRequest[_])(
     result: Either[Error, HECTaxCheck]
   ) =
     (mockTaxCheckService
-      .saveTaxCheck(_: HECTaxCheckData)(_: HeaderCarrier))
-      .expects(taxCheckData, *)
+      .saveTaxCheck(_: HECTaxCheckData)(_: HeaderCarrier, _: AuthenticatedGGOrStrideRequest[_]))
+      .expects(taxCheckData, *, request)
       .returning(EitherT.fromEither(result))
 
   def mockInternalAuth(predicate: Predicate)(result: Future[_]) =
@@ -126,10 +126,10 @@ class TaxCheckControllerWithInternalAuthEnabledSpec extends ControllerSpec with 
 
     "handling requests to save a tax check" must {
 
-      def performActionWithJsonBody(requestBody: JsValue): Future[Result] =
-        controller.saveTaxCheck(FakeRequest().withBody(requestBody).withHeaders(CONTENT_TYPE -> JSON))
+      def performAction[A](request: Request[JsValue]): Future[Result] =
+        controller.saveTaxCheck(request)
 
-      val taxCheckDataIndividual: HECTaxCheckData                         = IndividualHECTaxCheckData(
+      val taxCheckDataIndividual: HECTaxCheckData = IndividualHECTaxCheckData(
         IndividualApplicantDetails(Some(GGCredId("")), Name("", ""), DateOfBirth(LocalDate.now())),
         LicenceDetails(
           LicenceType.ScrapMetalDealerSite,
@@ -174,10 +174,13 @@ class TaxCheckControllerWithInternalAuthEnabledSpec extends ControllerSpec with 
         HECTaxCheckSource.Digital
       )
 
+      def requestWithJson(json: JsValue): Request[JsValue] =
+        FakeRequest().withBody(json).withHeaders(CONTENT_TYPE -> JSON)
+
       "return a 415 (unsupported media type)" when {
 
         "there is no body in the request" in {
-          val requestWithNoBody = AuthenticatedGGOrStrideRequest(None, FakeRequest())
+          val requestWithNoBody = AuthenticatedGGOrStrideRequest(Right(GGCredId("")), FakeRequest())
 
           val result: Future[Result] = controller.saveTaxCheck(requestWithNoBody).run()
           status(result) shouldBe UNSUPPORTED_MEDIA_TYPE
@@ -187,7 +190,7 @@ class TaxCheckControllerWithInternalAuthEnabledSpec extends ControllerSpec with 
         "there is no json body in the request" in {
           val requestWithNoJsonBody =
             AuthenticatedGGOrStrideRequest(
-              Some("AB123"),
+              Right(GGCredId("AB123")),
               FakeRequest().withBody("hi").withHeaders(CONTENT_TYPE -> TEXT)
             )
 
@@ -201,9 +204,9 @@ class TaxCheckControllerWithInternalAuthEnabledSpec extends ControllerSpec with 
       "return a 400 (bad request)" when {
 
         "the JSON in the request cannot be parsed" in {
-          mockGGOrStrideAuth(AuthGGCredId(ggCredId.value))
+          mockGGOrStrideAuth(AuthGGCredId(ggCredId.value), Enrolments(Set.empty), None, None)
 
-          status(performActionWithJsonBody(JsString("hi"))) shouldBe BAD_REQUEST
+          status(performAction(requestWithJson(JsString("hi")))) shouldBe BAD_REQUEST
 
         }
 
@@ -212,32 +215,35 @@ class TaxCheckControllerWithInternalAuthEnabledSpec extends ControllerSpec with 
       "return an 500 (internal server error)" when {
 
         "there is an error saving the tax check" in {
+          val request              = requestWithJson(Json.toJson(taxCheckDataIndividual))
+          val authenticatedRequest = AuthenticatedGGOrStrideRequest(Right(GGCredId("id")), request)
+
           inSequence {
-            mockGGOrStrideAuth(PAClientId(""))
-            mockSaveTaxCheck(taxCheckDataIndividual)(Left(Error(new Exception("Oh no!"))))
+            mockGGOrStrideAuth(AuthGGCredId("id"), Enrolments(Set.empty), None, None)
+            mockSaveTaxCheck(taxCheckDataIndividual, authenticatedRequest)(Left(Error(new Exception("Oh no!"))))
           }
 
-          val result = performActionWithJsonBody(Json.toJson(taxCheckDataIndividual))
+          val result = performAction(request)
           status(result) shouldBe INTERNAL_SERVER_ERROR
         }
 
       }
 
-      "return 403(forbidden)" when {
+      "return 403 (forbidden)" when {
 
         "there is no authenticated session" in {
-          mockAuth(AuthProviders(GovernmentGateway, PrivilegedApplication), v2.Retrievals.authProviderId)(
+          mockAuth(AuthProviders(GovernmentGateway, PrivilegedApplication), ggOrStrideAuthRetrievals)(
             Future.failed(InvalidBearerToken(""))
           )
 
-          val result = performActionWithJsonBody(Json.toJson(taxCheckDataIndividual))
+          val result = performAction(requestWithJson(Json.toJson(taxCheckDataIndividual)))
           status(result) shouldBe FORBIDDEN
         }
 
-        "there is no gg cred id or privleged application id found" in {
-          mockGGOrStrideAuth(VerifyPid(""))
+        "there is no gg cred id or privileged application id found" in {
+          mockGGOrStrideAuth(VerifyPid(""), Enrolments(Set.empty), None, None)
 
-          val result = performActionWithJsonBody(Json.toJson(taxCheckDataIndividual))
+          val result = performAction(requestWithJson(Json.toJson(taxCheckDataIndividual)))
           status(result) shouldBe FORBIDDEN
         }
 
@@ -246,37 +252,138 @@ class TaxCheckControllerWithInternalAuthEnabledSpec extends ControllerSpec with 
       "return a created (201)" when {
 
         "the tax check has been saved for individual" in {
-          val taxCheckCode     = HECTaxCheckCode("code")
-          val expiresAfterDate = LocalDate.MIN
-          val taxCheck         =
+          val taxCheckCode         = HECTaxCheckCode("code")
+          val expiresAfterDate     = LocalDate.MIN
+          val taxCheck             =
             models.hecTaxCheck
               .HECTaxCheck(taxCheckDataIndividual, taxCheckCode, expiresAfterDate, TimeUtils.now(), false, None)
+          val request              = requestWithJson(Json.toJson(taxCheckDataIndividual))
+          val authenticatedRequest = AuthenticatedGGOrStrideRequest(Right(ggCredId), request)
 
           inSequence {
-            mockGGOrStrideAuth(AuthGGCredId(ggCredId.value))
-            mockSaveTaxCheck(taxCheckDataIndividual)(Right(taxCheck))
+            mockGGOrStrideAuth(AuthGGCredId(ggCredId.value), Enrolments(Set.empty), None, None)
+            mockSaveTaxCheck(taxCheckDataIndividual, authenticatedRequest)(Right(taxCheck))
           }
 
-          val result = performActionWithJsonBody(Json.toJson(taxCheckDataIndividual))
+          val result = performAction(request)
           status(result)                              shouldBe CREATED
           contentAsJson(result).validate[HECTaxCheck] shouldBe JsSuccess(taxCheck)
         }
 
         "the tax check has been saved for company" in {
-          val taxCheckCode     = HECTaxCheckCode("code")
-          val expiresAfterDate = LocalDate.MIN
-          val taxCheck         =
+          val taxCheckCode         = HECTaxCheckCode("code")
+          val expiresAfterDate     = LocalDate.MIN
+          val taxCheck             =
             models.hecTaxCheck
               .HECTaxCheck(taxCheckDataCompany, taxCheckCode, expiresAfterDate, TimeUtils.now(), false, None)
+          val request              = requestWithJson(Json.toJson(taxCheckDataCompany))
+          val authenticatedRequest = AuthenticatedGGOrStrideRequest(Right(ggCredId), request)
 
           inSequence {
-            mockGGOrStrideAuth(PAClientId(""))
-            mockSaveTaxCheck(taxCheckDataCompany)(Right(taxCheck))
+            mockGGOrStrideAuth(AuthGGCredId(ggCredId.value), Enrolments(Set.empty), None, None)
+            mockSaveTaxCheck(taxCheckDataCompany, authenticatedRequest)(Right(taxCheck))
           }
 
-          val result = performActionWithJsonBody(Json.toJson(taxCheckDataCompany))
+          val result = performAction(request)
           status(result)                              shouldBe CREATED
           contentAsJson(result).validate[HECTaxCheck] shouldBe JsSuccess(taxCheck)
+        }
+
+        "the request has come from a stride operator" when {
+
+          def test(pid: PID, enrolments: Enrolments, name: Option[RetrievalName], email: Option[String])(
+            expectedStrideOperatorDetails: StrideOperatorDetails
+          ) = {
+            val taxCheckCode         = HECTaxCheckCode("code")
+            val expiresAfterDate     = LocalDate.MIN
+            val taxCheck             =
+              models.hecTaxCheck
+                .HECTaxCheck(taxCheckDataIndividual, taxCheckCode, expiresAfterDate, TimeUtils.now(), false, None)
+            val request              = requestWithJson(Json.toJson(taxCheckDataIndividual))
+            val authenticatedRequest = AuthenticatedGGOrStrideRequest(Left(expectedStrideOperatorDetails), request)
+
+            inSequence {
+              mockGGOrStrideAuth(PAClientId(pid.value), enrolments, name, email)
+              mockSaveTaxCheck(taxCheckDataIndividual, authenticatedRequest)(Right(taxCheck))
+            }
+
+            val result = performAction(request)
+            status(result)                              shouldBe CREATED
+            contentAsJson(result).validate[HECTaxCheck] shouldBe JsSuccess(taxCheck)
+          }
+
+          "all operator details are available" in {
+            test(
+              PID("pid"),
+              Enrolments(Set(Enrolment("role1"))),
+              Some(RetrievalName(Some("first"), Some("last"))),
+              Some("email")
+            )(
+              StrideOperatorDetails(
+                PID("pid"),
+                List("role1"),
+                Some("first last"),
+                Some("email")
+              )
+            )
+          }
+
+          "both the first and last name of the operator are not available" in {
+            List(
+              Some(RetrievalName(None, None)),
+              None
+            ).foreach { emptyName =>
+              withClue(s"For $emptyName: ") {
+                test(
+                  PID("pid"),
+                  Enrolments(Set(Enrolment("role1"))),
+                  emptyName,
+                  Some("email")
+                )(
+                  StrideOperatorDetails(
+                    PID("pid"),
+                    List("role1"),
+                    None,
+                    Some("email")
+                  )
+                )
+              }
+
+            }
+          }
+
+          "the last name of the operator is not available" in {
+            test(
+              PID("pid"),
+              Enrolments(Set(Enrolment("role1"))),
+              Some(RetrievalName(Some("first"), None)),
+              Some("email")
+            )(
+              StrideOperatorDetails(
+                PID("pid"),
+                List("role1"),
+                Some("first"),
+                Some("email")
+              )
+            )
+          }
+
+          "the first name of the operator is not available" in {
+            test(
+              PID("pid"),
+              Enrolments(Set(Enrolment("role1"), Enrolment("role2"))),
+              Some(RetrievalName(None, Some("last"))),
+              Some("email")
+            )(
+              StrideOperatorDetails(
+                PID("pid"),
+                List("role1", "role2"),
+                Some("last"),
+                Some("email")
+              )
+            )
+          }
+
         }
 
       }

@@ -20,7 +20,9 @@ import com.github.ghik.silencer.silent
 import uk.gov.hmrc.auth.core.AuthProvider.{GovernmentGateway, PrivilegedApplication}
 import uk.gov.hmrc.auth.core._
 import uk.gov.hmrc.auth.core.authorise.Predicate
-import uk.gov.hmrc.auth.core.retrieve.{Credentials, LegacyCredentials, Retrieval, v2}
+import uk.gov.hmrc.auth.core.retrieve.{Credentials, LegacyCredentials, Name, Retrieval, ~}
+import uk.gov.hmrc.auth.core.retrieve.v2.Retrievals
+import uk.gov.hmrc.hec.controllers.AuthSupport._
 import uk.gov.hmrc.http.HeaderCarrier
 
 import scala.concurrent.{ExecutionContext, Future}
@@ -41,19 +43,41 @@ trait AuthSupport { this: ControllerSpec =>
       .returning(result)
 
   def mockGGAuthWithGGRetrieval(ggCredId: String): Unit =
-    mockAuth(AuthProviders(GovernmentGateway), v2.Retrievals.credentials)(
+    mockAuth(AuthProviders(GovernmentGateway), Retrievals.credentials)(
       Future.successful(Some(Credentials(ggCredId, ggCredId)))
     )
 
   def mockGGAuthWithForbidden(): Unit =
-    mockAuth(AuthProviders(GovernmentGateway), v2.Retrievals.credentials)(
+    mockAuth(AuthProviders(GovernmentGateway), Retrievals.credentials)(
       Future.successful(None)
     )
 
   @silent("deprecated")
-  def mockGGOrStrideAuth(authProviderId: LegacyCredentials): Unit =
-    mockAuth(AuthProviders(GovernmentGateway, PrivilegedApplication), v2.Retrievals.authProviderId)(
-      Future.successful(authProviderId)
+  def mockGGOrStrideAuth(
+    authProviderId: LegacyCredentials,
+    enrolments: Enrolments,
+    name: Option[Name],
+    email: Option[String]
+  ): Unit =
+    mockAuth(
+      AuthProviders(GovernmentGateway, PrivilegedApplication),
+      ggOrStrideAuthRetrievals
+    )(
+      Future.successful(
+        new ~(authProviderId, enrolments) and name and email
+      )
     )
+
+  @silent("deprecated")
+  val ggOrStrideAuthRetrievals: Retrieval[LegacyCredentials ~ Enrolments ~ Option[Name] ~ Option[String]] =
+    Retrievals.authProviderId and Retrievals.allEnrolments and Retrievals.name and Retrievals.email
+
+}
+
+object AuthSupport {
+
+  implicit class RetrievalOps[A, B](val r: ~[A, B]) {
+    def and[C](c: C): ~[~[A, B], C] = new ~(r, c)
+  }
 
 }
