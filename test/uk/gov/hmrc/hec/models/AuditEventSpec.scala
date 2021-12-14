@@ -171,10 +171,9 @@ class AuditEventSpec extends Matchers with AnyWordSpecLike {
                   date,
                   date.plusDays(1L),
                   Some(
-                    CTAccountingPeriod(
-                      Some(date.plusDays(2L)),
+                    CTAccountingPeriod.CTAccountingPeriodStride(
                       date.plusDays(3L),
-                      CTStatus.ReturnFound
+                      Some(CTStatus.ReturnFound)
                     )
                   )
                 ),
@@ -217,9 +216,9 @@ class AuditEventSpec extends Matchers with AnyWordSpecLike {
             |            "startDate":  "2020-12-01",
             |            "endDate":  "2020-12-02",
             |            "latestAccountingPeriod": {
-            |               "startDate": "2020-12-03",
             |               "endDate": "2020-12-04",
-            |               "ctStatus": "ReturnFound"
+            |               "ctStatus": "ReturnFound",
+            |               "type": "Stride"
             |            }
             |         }, 
             |         "recentlyStaredTrading": "No",
