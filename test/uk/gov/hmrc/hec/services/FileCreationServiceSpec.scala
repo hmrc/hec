@@ -457,14 +457,14 @@ class FileCreationServiceSpec extends AnyWordSpec with Matchers with MockFactory
             "ct status api response is return Found" in {
               val hecTaxCheckList = List(
                 createCompanyHecTaxCheck(
-                  OperatorOfPrivateHireVehicles,
-                  LicenceTimeTrading.TwoToFourYears,
-                  LicenceValidityPeriod.UpToOneYear,
-                  getCTStatusResponse(CTStatus.ReturnFound),
-                  Some(YesNoAnswer.Yes),
-                  None,
-                  Some(YesNoAnswer.Yes),
-                  Some(CorrectiveAction.RegisterNewSAAccount)
+                  licenceType = OperatorOfPrivateHireVehicles,
+                  licenceTimeTrading = LicenceTimeTrading.TwoToFourYears,
+                  licenceValidityPeriod = LicenceValidityPeriod.UpToOneYear,
+                  ctStatusResponse = getCTStatusResponse(CTStatus.ReturnFound),
+                  ctIncomeDeclared = Some(YesNoAnswer.Yes),
+                  recentlyStaredTrading = None,
+                  chargeableForCT = Some(YesNoAnswer.Yes),
+                  correctiveAction = Some(CorrectiveAction.RegisterNewSAAccount)
                 )
               )
 
@@ -556,7 +556,43 @@ class FileCreationServiceSpec extends AnyWordSpec with Matchers with MockFactory
               result shouldBe Right((expected, s"HEC_SSA_0001_20211010_$partialFileName.dat"))
             }
 
-            "not chargeable but has accounting period end date (Stride)" in {
+            "(Digital journey)- not chargeable but has CTStatus , no Ct status status should be recorded in file but accounting period will be Y" in {
+
+              val hecTaxCheckList = List(
+                createCompanyHecTaxCheck(
+                  licenceType = OperatorOfPrivateHireVehicles,
+                  licenceTimeTrading = LicenceTimeTrading.TwoToFourYears,
+                  licenceValidityPeriod = LicenceValidityPeriod.UpToOneYear,
+                  ctStatusResponse = getCTStatusResponse(CTStatus.NoticeToFileIssued),
+                  ctIncomeDeclared = Some(YesNoAnswer.Yes),
+                  recentlyStaredTrading = None,
+                  chargeableForCT = Some(YesNoAnswer.No),
+                  correctiveAction = Some(CorrectiveAction.RegisterNewSAAccount)
+                )
+              )
+
+              inSequence {
+                mockDateProviderToday(LocalDate.of(2021, 10, 10))
+                mockTimeProviderNow(LocalTime.of(11, 36, 5), zoneId)
+              }
+
+              val result: Either[Error, (String, String)] =
+                fileCreationService.createFileContent(
+                  HECTaxCheckFileBodyList(hecTaxCheckList),
+                  "0001",
+                  partialFileName,
+                  true
+                )
+
+              val expected = s"""|00|HEC_SSA_0001_20211010_$partialFileName.dat|HEC|SSA|20211010|113605|000001|001
+                                 |01|AB123||||||1111111111|1123456|Test Tech Ltd|01|00|01|C|Y||||Y|20201009|20211009||||Y|00|Y|20210909090900|20210909090900|XNFFGBDD6|99990210|Y
+                                 |99|HEC_SSA_0001_20211010_$partialFileName.dat|3|Y""".stripMargin
+
+              result shouldBe Right((expected, s"HEC_SSA_0001_20211010_$partialFileName.dat"))
+
+            }
+
+            "(Stride Journey )-not chargeable but has accounting period end date " in {
               val hecTaxCheckList = List(
                 createCompanyHecTaxCheck(
                   licenceType = OperatorOfPrivateHireVehicles,

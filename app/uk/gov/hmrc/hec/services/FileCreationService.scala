@@ -148,12 +148,17 @@ class FileCreationServiceImpl @Inject() (timeProvider: TimeProvider) extends Fil
     case None                     => SAStatusMapping(None, None)
   }
 
-  private def ctStatusMapping(ctStatus: Option[CTStatus]) =
-    ctStatus match {
-      case Some(CTStatus.ReturnFound)        => CTStatusMapping(Some('Y'), None, Some('Y'))
-      case Some(CTStatus.NoticeToFileIssued) => CTStatusMapping(Some('N'), Some('Y'), Some('Y'))
-      case Some(CTStatus.NoReturnFound)      => CTStatusMapping(Some('N'), Some('N'), Some('Y'))
-      case None                              => CTStatusMapping(None, None, Some('Y'))
+  private def ctStatusMappingIfAccountingPeriodExists(
+    ctStatus: Option[CTStatus],
+    chargeableForCT: Option[YesNoAnswer]
+  ) =
+    (ctStatus, chargeableForCT) match {
+
+      case (_, Some(YesNoAnswer.No))              => CTStatusMapping(None, None, Some('Y'))
+      case (Some(CTStatus.ReturnFound), _)        => CTStatusMapping(Some('Y'), None, Some('Y'))
+      case (Some(CTStatus.NoticeToFileIssued), _) => CTStatusMapping(Some('N'), Some('Y'), Some('Y'))
+      case (Some(CTStatus.NoReturnFound), _)      => CTStatusMapping(Some('N'), Some('N'), Some('Y'))
+      case _                                      => CTStatusMapping(None, None, Some('Y'))
 
     }
 
@@ -169,11 +174,13 @@ class FileCreationServiceImpl @Inject() (timeProvider: TimeProvider) extends Fil
     case None                  => None
   }
 
-  private def getCTStatusMap(accountingPeriod: Option[CTAccountingPeriod]) = accountingPeriod match {
-    case Some(d: CTAccountingPeriodDigital) => ctStatusMapping(d.ctStatus.some)
-    case Some(s: CTAccountingPeriodStride)  => ctStatusMapping(s.ctStatus)
-    case _                                  => CTStatusMapping(None, None, Some('N'))
-  }
+  private def getCTStatusMap(accountingPeriod: Option[CTAccountingPeriod], chargeableForCT: Option[YesNoAnswer]) =
+    accountingPeriod match {
+      case Some(d: CTAccountingPeriodDigital) =>
+        ctStatusMappingIfAccountingPeriodExists(d.ctStatus.some, chargeableForCT)
+      case Some(s: CTAccountingPeriodStride)  => ctStatusMappingIfAccountingPeriodExists(s.ctStatus, chargeableForCT)
+      case _                                  => CTStatusMapping(None, None, Some('N'))
+    }
 
   private def createHecTaxCheckFileBody(hecTaxCheckList: List[HECTaxCheck]): List[HECTaxCheckFileBody] =
     hecTaxCheckList.map { hecTaxCheck =>
@@ -211,7 +218,8 @@ class FileCreationServiceImpl @Inject() (timeProvider: TimeProvider) extends Fil
           )
         case c: CompanyHECTaxCheckData    =>
           val accountingPeriod                     = c.taxDetails.ctStatus.latestAccountingPeriod
-          val ctStatusMap: Option[CTStatusMapping] = getCTStatusMap(accountingPeriod).some
+          val chargeableForCT                      = c.taxDetails.chargeableForCT
+          val ctStatusMap: Option[CTStatusMapping] = getCTStatusMap(accountingPeriod, chargeableForCT).some
           HECTaxCheckFileBody(
             ggCredID = c.applicantDetails.ggCredId.map(_.value),
             CTUTR = Some(c.taxDetails.desCTUTR.value),
