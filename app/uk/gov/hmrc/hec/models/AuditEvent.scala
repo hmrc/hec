@@ -18,6 +18,7 @@ package uk.gov.hmrc.hec.models
 
 import play.api.libs.json.{JsObject, Json, OWrites}
 import uk.gov.hmrc.hec.models.hecTaxCheck.HECTaxCheck
+import uk.gov.hmrc.hec.util.JsObjectUtils._
 
 sealed trait AuditEvent {
 
@@ -41,11 +42,22 @@ object AuditEvent {
 
   object TaxCheckSuccess {
 
-    implicit val writes: OWrites[TaxCheckSuccess] =
-      OWrites { t =>
-        (Json.toJsObject(t.taxCheck) - "isExtracted" - "fileCorrelationId") ++
-          t.operatorDetails.fold(JsObject.empty)(s => JsObject(Map("operatorDetails" -> Json.toJsObject(s))))
+    implicit val writes: OWrites[TaxCheckSuccess] = {
+      def mapFieldName(s: String): String = s match {
+        case "crn" => "companyRegistrationNumber"
+        case _     => s
       }
+
+      OWrites { t =>
+        val taxCheckJson = {
+          val json = Json.toJsObject(t.taxCheck) - "isExtracted" - "fileCorrelationId"
+          json.mapJsonFieldNames(mapFieldName)
+        }
+        val operatorDetailsJson =
+          t.operatorDetails.fold(JsObject.empty)(s => JsObject(Map("operatorDetails" -> Json.toJsObject(s))))
+        taxCheckJson ++ operatorDetailsJson
+      }
+    }
   }
 
 }
