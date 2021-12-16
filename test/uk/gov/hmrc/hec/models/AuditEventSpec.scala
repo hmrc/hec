@@ -199,7 +199,7 @@ class AuditEventSpec extends Matchers with AnyWordSpecLike {
             |   "taxCheckData" : {
             |      "applicantDetails": {
             |         "ggCredId": "cred",
-            |         "crn": "crn",
+            |         "companyRegistrationNumber": "crn",
             |         "companyName": "name"
             |      },
             |      "licenceDetails": {
