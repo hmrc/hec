@@ -222,7 +222,7 @@ class FileCreationServiceImpl @Inject() (timeProvider: TimeProvider) extends Fil
           val ctStatusMap: Option[CTStatusMapping] = getCTStatusMap(accountingPeriod, chargeableForCT).some
           HECTaxCheckFileBody(
             ggCredID = c.applicantDetails.ggCredId.map(_.value),
-            CTUTR = Some(c.taxDetails.desCTUTR.value),
+            CTUTR = Some(c.taxDetails.hmrcCTUTR.value),
             crn = Some(c.applicantDetails.crn.value),
             companyName = Some(c.applicantDetails.companyName.name),
             licenceType = licenceTypeEKV(c.licenceDetails.licenceType)._1,

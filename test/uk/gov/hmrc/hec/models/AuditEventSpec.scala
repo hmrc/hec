@@ -163,7 +163,7 @@ class AuditEventSpec extends Matchers with AnyWordSpecLike {
                 LicenceValidityPeriod.UpToOneYear
               ),
               CompanyTaxDetails(
-                CTUTR("desCtutr"),
+                CTUTR("hmrcCTUTR"),
                 Some(CTUTR("ctutr")),
                 Some(Yes),
                 CTStatusResponse(
@@ -208,7 +208,7 @@ class AuditEventSpec extends Matchers with AnyWordSpecLike {
             |         "licenceValidityPeriod": "UpToOneYear"
             |      },
             |      "taxDetails": {
-            |         "desCTUTR" :"desCtutr",
+            |         "hmrcCTUTR" : "hmrcCTUTR",
             |         "userSuppliedCTUTR": "ctutr",
             |         "ctIncomeDeclared": "Yes", 
             |         "ctStatus": {

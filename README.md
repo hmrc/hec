@@ -78,7 +78,7 @@ Example response body:
          "licenceValidityPeriod": "UpToOneYear"
       },
       "taxDetails": {
-         "desCTUTR" :"1111111111",
+         "hmrcCTUTR" :"1111111111",
          "userSuppliedCTUTR": "1111111111",
          "ctIncomeDeclared": "No", 
          "ctStatus": {
@@ -268,7 +268,7 @@ Example response body:
          "licenceValidityPeriod": "UpToOneYear"
       },
       "taxDetails": {
-         "desCTUTR": "1111111111",
+         "hmrcCTUTR": "1111111111",
          "ctStatus": {
             "ctutr": "1234567890",
             "startDate": "20201001",
