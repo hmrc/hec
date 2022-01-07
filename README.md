@@ -38,7 +38,7 @@ Example request body:
          "firstName": "First",
          "lastName": "Last"
       },
-      "dateOfBirth":"19221201"
+      "dateOfBirth":"1922-12-01"
    },
    "licenceDetails":{
       "licenceType": "DriverOfTaxisAndPrivateHires",
@@ -83,11 +83,11 @@ Example response body:
          "ctIncomeDeclared": "No", 
          "ctStatus": {
             "ctutr":  "1234567890",
-            "startDate":  "20201001",
-            "endDate":  "20193009",
+            "startDate":  "2020-10-01",
+            "endDate":  "2019-30-09",
             "latestAccountingPeriod": {
-               "startDate": "20200131",
-               "endDate": "20200524",
+               "startDate": "2020-01-31",
+               "endDate": "2020-05-24",
                "ctStatus": "NoticeToFileIssued"
             }
          }, 
@@ -121,7 +121,7 @@ Example request body:
    "taxCheckCode": "222RRR888",
    "licenceType": "ScrapMetalDealerSite",
    "verifier": {
-      "dateofbirth": "19221201"
+      "dateofbirth": "1922-12-01"
    }
 }
 ```
@@ -188,11 +188,11 @@ Example response body:
 {
    "ctStatus": {
       "ctutr":  "1234567890",
-      "startDate":  "20201001",
-      "endDate":  "20193009",
+      "startDate":  "2020-10-01",
+      "endDate":  "2019-30-09",
       "latestAccountingPeriod": {
-         "startDate": "20200131",
-         "endDate": "20200524",
+         "startDate": "2020-01-31",
+         "endDate": "2020-05-24",
          "ctStatus": "NoReturnFound"
       }
    }
@@ -238,9 +238,9 @@ Example request body:
    "ggCredId" : "testCred1",
    "licenceType": "OperatorOfPrivateHireVehicles",
    "verifier": {
-      "dateofbirth": "19221201"
+      "dateofbirth": "1922-12-01"
    },
-   "expiresAfter": "20211101",
+   "expiresAfter": "2021-11-01",
    "createDate": "2021-11-12T11:14:26.801+01:00[Europe/London]",
    "taxCheckStartDateTime": "2021-11-12T11:14:26.801+01:00[Europe/London]",
    "isExtracted": true,
@@ -271,8 +271,8 @@ Example response body:
          "hmrcCTUTR": "1111111111",
          "ctStatus": {
             "ctutr": "1234567890",
-            "startDate": "20201001",
-            "endDate": "20193009"
+            "startDate": "2020-10-01",
+            "endDate": "2019-30- jkhu09"
          },
          "recentlyStaredTrading": "Yes"
       },
