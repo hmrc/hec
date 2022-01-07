@@ -110,7 +110,7 @@ class AuditEventSpec extends Matchers with AnyWordSpecLike {
              |            "firstName": "First",
              |            "lastName": "Last"
              |         },
-             |         "dateOfBirth": "20201201"
+             |         "dateOfBirth": "2020-12-01"
              |      },
              |   "licenceDetails":{
              |      "licenceType": "OperatorOfPrivateHireVehicles",
