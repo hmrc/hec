@@ -91,7 +91,7 @@ class TaxCheckControllerSpec extends ControllerSpec {
         controller.saveTaxCheck(request)
       }
 
-      def toJsonString(date: LocalDate): String = date.format(DateTimeFormatter.BASIC_ISO_DATE)
+      def toJsonString(date: LocalDate): String = date.format(DateTimeFormatter.ISO_LOCAL_DATE)
 
       def requestJsonString(
         r: SaveTaxCheckRequest

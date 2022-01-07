@@ -23,7 +23,6 @@ import uk.gov.hmrc.hec.models.hecTaxCheck.licence.LicenceType
 import uk.gov.hmrc.hec.util.EitherUtils.eitherFormat
 import uk.gov.hmrc.hec.models.hecTaxCheck.{CorrectiveAction, HECTaxCheckCode, HECTaxCheckSource, TaxYear}
 
-import java.time.format.DateTimeFormatter
 import java.time.{LocalDate, ZonedDateTime}
 
 final case class SaveTaxCheckRequest(
@@ -41,8 +40,6 @@ final case class SaveTaxCheckRequest(
 )
 
 object SaveTaxCheckRequest {
-
-  implicit val localDateReads: Reads[LocalDate] = Reads.localDateReads(DateTimeFormatter.BASIC_ISO_DATE)
 
   implicit val reads: Reads[SaveTaxCheckRequest] = Json.reads
 
