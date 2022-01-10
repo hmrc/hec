@@ -272,7 +272,7 @@ Example response body:
          "ctStatus": {
             "ctutr": "1234567890",
             "startDate": "2020-10-01",
-            "endDate": "2019-30- jkhu09"
+            "endDate": "2019-30-09"
          },
          "recentlyStaredTrading": "Yes"
       },
