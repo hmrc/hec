@@ -44,7 +44,7 @@ lazy val microservice = Project(appName, file("."))
   .disablePlugins(JUnitXmlReportPlugin)
   .settings(addCompilerPlugin("org.typelevel" %% "kind-projector" % "0.10.3"))
   .settings(
-    majorVersion := 0,
+    majorVersion := 1,
     scalaVersion := "2.12.13",
     libraryDependencies ++= AppDependencies.compile ++ AppDependencies.test,
     // ***************
