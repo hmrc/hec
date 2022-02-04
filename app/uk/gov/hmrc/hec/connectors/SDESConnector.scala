@@ -19,10 +19,11 @@ package uk.gov.hmrc.hec.connectors
 import cats.data.EitherT
 import com.google.inject.{ImplementedBy, Inject, Singleton}
 import play.api.Configuration
+import play.api.libs.json.Writes
 import uk.gov.hmrc.hec.models.Error
 import uk.gov.hmrc.hec.models.sdes.SDESFileNotifyRequest
 import uk.gov.hmrc.http.HttpReads.Implicits._
-import uk.gov.hmrc.http.{HeaderCarrier, HttpClient, HttpResponse}
+import uk.gov.hmrc.http.{HeaderCarrier, HttpClient, HttpReads, HttpResponse}
 import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
 
 import scala.concurrent.{ExecutionContext, Future}
@@ -36,9 +37,20 @@ trait SDESConnector {
 class SDESConnectorImpl @Inject() (http: HttpClient, servicesConfig: ServicesConfig, config: Configuration)(implicit
   ec: ExecutionContext
 ) extends SDESConnector {
-  private val baseUrl: String     = servicesConfig.baseUrl("sdes")
-  private val apiLocation: String = config.get[String]("hec-file-extraction-details.file-notification-api.location")
-  private val sdesUrl: String     =
+
+  private val baseUrl: String = servicesConfig.baseUrl("sdes")
+
+  private def getApiConfigString(configParameter: String): String =
+    config.get[String](s"hec-file-extraction-details.file-notification-api.$configParameter")
+
+  private val (serverTokenHeader, serverTokenValue) =
+    getApiConfigString("server-token-header") -> getApiConfigString("server-token-value")
+
+  private val extraHeaders = Seq(serverTokenHeader -> serverTokenValue)
+
+  private val apiLocation: String = getApiConfigString("location")
+
+  private val sdesUrl: String =
     if (apiLocation.isEmpty) s"$baseUrl/notification/fileready" else s"$baseUrl/$apiLocation/notification/fileready"
 
   override def notify(
@@ -46,7 +58,12 @@ class SDESConnectorImpl @Inject() (http: HttpClient, servicesConfig: ServicesCon
   )(implicit hc: HeaderCarrier): EitherT[Future, Error, HttpResponse] =
     EitherT[Future, Error, HttpResponse](
       http
-        .POST[SDESFileNotifyRequest, HttpResponse](sdesUrl, fileNotifyRequest)
+        .POST[SDESFileNotifyRequest, HttpResponse](sdesUrl, fileNotifyRequest, extraHeaders)(
+          implicitly[Writes[SDESFileNotifyRequest]],
+          implicitly[HttpReads[HttpResponse]],
+          hc.copy(authorization = None),
+          ec
+        )
         .map(Right(_))
         .recover { case e => Left(Error(e)) }
     )

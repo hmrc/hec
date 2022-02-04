@@ -22,15 +22,16 @@ import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
 import play.api.Configuration
 import uk.gov.hmrc.hec.models.sdes.{FileAudit, FileChecksum, FileMetaData, SDESFileNotifyRequest}
-import uk.gov.hmrc.http.HeaderCarrier
+import uk.gov.hmrc.http.{Authorization, HeaderCarrier}
 import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
 
 import java.util.UUID
 import scala.concurrent.ExecutionContext.Implicits.global
 
 class SDESConnectorSpec extends AnyWordSpec with Matchers with MockFactory with HttpSupport with ConnectorSpec {
-  val (protocol, host, port) = ("http", "host", "123")
-  val config                 = Configuration(
+  val (protocol, host, port)                = ("http", "host", "123")
+  val (serverTokenHeader, serverTokenValue) = "header" -> "token"
+  val config                                = Configuration(
     ConfigFactory.parseString(s"""
                                  | microservice.services.sdes {
                                  |    host     = $host
@@ -39,6 +40,8 @@ class SDESConnectorSpec extends AnyWordSpec with Matchers with MockFactory with 
                                  |  hec-file-extraction-details {
                                  |   file-notification-api {
                                  |       location = "sdes-stub"
+                                 |       server-token-header = "$serverTokenHeader"
+                                 |       server-token-value = "$serverTokenValue"
                                  |      }
                                  |   }
                                  |
@@ -61,15 +64,15 @@ class SDESConnectorSpec extends AnyWordSpec with Matchers with MockFactory with 
   )
 
   "SDESConnectorImpl" when {
-    implicit val hc: HeaderCarrier = HeaderCarrier()
+    val expectedUrl = s"$protocol://$host:$port/sdes-stub/notification/fileready"
+
     "handling requests to notify  SDES about the files generated" must {
-      val expectedUrl = s"$protocol://$host:$port/sdes-stub/notification/fileready"
+      implicit val hc: HeaderCarrier = HeaderCarrier().copy(authorization = Some(Authorization("bearer")))
 
       behave like connectorBehaviour(
-        mockPost(expectedUrl, Seq.empty, notifyRequest)(_),
+        mockPost(expectedUrl, Seq(serverTokenHeader -> serverTokenValue), notifyRequest)(_),
         () => connector.notify(notifyRequest)
       )
-
     }
   }
 }
