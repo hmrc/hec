@@ -19,8 +19,10 @@ package uk.gov.hmrc.hec.services
 import cats.implicits.catsSyntaxOptionId
 import cats.syntax.eq._
 import com.google.inject.{ImplementedBy, Inject}
+import play.api.Configuration
 import uk.gov.hmrc.hec.models.Error
 import uk.gov.hmrc.hec.models.fileFormat.FileFormat.toFileContent
+import uk.gov.hmrc.hec.models.fileFormat.HECTaxCheckFileBody.FeatureEnabledField
 import uk.gov.hmrc.hec.models.fileFormat._
 import uk.gov.hmrc.hec.models.hecTaxCheck.CorrectiveAction._
 import uk.gov.hmrc.hec.models.hecTaxCheck.HECTaxCheckData.{CompanyHECTaxCheckData, IndividualHECTaxCheckData}
@@ -55,7 +57,11 @@ trait FileCreationService {
 }
 
 @Singleton
-class FileCreationServiceImpl @Inject() (timeProvider: TimeProvider) extends FileCreationService {
+class FileCreationServiceImpl @Inject() (timeProvider: TimeProvider, config: Configuration)
+    extends FileCreationService {
+
+  val emailAddressFieldEnabled: Boolean =
+    config.get[Boolean]("hec-file-extraction-details.enable-email-address-field")
 
   val DATE_FORMATTER: DateTimeFormatter      = DateTimeFormatter.ofPattern("yyyyMMdd")
   val TIME_FORMATTER: DateTimeFormatter      = DateTimeFormatter.ofPattern("HHmmss")
@@ -214,9 +220,12 @@ class FileCreationServiceImpl @Inject() (timeProvider: TimeProvider) extends Fil
               hecTaxCheck.createDate.withZoneSameInstant(ZoneId.of("GMT")).format(DATE_TIME_FORMATTER),
             taxCheckCode = hecTaxCheck.taxCheckCode.value,
             taxCheckExpiryDate = hecTaxCheck.expiresAfter.format(DATE_FORMATTER),
-            onlineApplication = if (i.source === Digital) 'Y' else 'N'
+            onlineApplication = if (i.source === Digital) 'Y' else 'N',
+            emailAddress =
+              FeatureEnabledField(hecTaxCheck.latestTaxCheckEmailSentTo.map(_.value), emailAddressFieldEnabled)
           )
-        case c: CompanyHECTaxCheckData    =>
+
+        case c: CompanyHECTaxCheckData =>
           val accountingPeriod                     = c.taxDetails.ctStatus.latestAccountingPeriod
           val chargeableForCT                      = c.taxDetails.chargeableForCT
           val ctStatusMap: Option[CTStatusMapping] = getCTStatusMap(accountingPeriod, chargeableForCT).some
@@ -247,7 +256,9 @@ class FileCreationServiceImpl @Inject() (timeProvider: TimeProvider) extends Fil
               hecTaxCheck.createDate.withZoneSameInstant(ZoneId.of("GMT")).format(DATE_TIME_FORMATTER),
             taxCheckCode = hecTaxCheck.taxCheckCode.value,
             taxCheckExpiryDate = hecTaxCheck.expiresAfter.format(DATE_FORMATTER),
-            onlineApplication = if (c.source === Digital) 'Y' else 'N'
+            onlineApplication = if (c.source === Digital) 'Y' else 'N',
+            emailAddress =
+              FeatureEnabledField(hecTaxCheck.latestTaxCheckEmailSentTo.map(_.value), emailAddressFieldEnabled)
           )
       }
     }
