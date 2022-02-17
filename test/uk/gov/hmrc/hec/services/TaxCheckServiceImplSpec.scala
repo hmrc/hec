@@ -38,7 +38,7 @@ import uk.gov.hmrc.hec.models.hecTaxCheck._
 import uk.gov.hmrc.hec.models.hecTaxCheck.company.CTAccountingPeriod.CTAccountingPeriodDigital
 import uk.gov.hmrc.hec.models.ids._
 import uk.gov.hmrc.hec.models.taxCheckMatch.{HECTaxCheckMatchRequest, HECTaxCheckMatchResult, HECTaxCheckMatchStatus}
-import uk.gov.hmrc.hec.models.{Error, StrideOperatorDetails, TaxCheckListItem, hecTaxCheck, taxCheckMatch}
+import uk.gov.hmrc.hec.models.{EmailAddress, Error, SaveEmailAddressRequest, StrideOperatorDetails, TaxCheckListItem, hecTaxCheck, taxCheckMatch}
 import uk.gov.hmrc.hec.repos.HECTaxCheckStore
 import uk.gov.hmrc.hec.util.{TimeProvider, TimeUtils}
 import uk.gov.hmrc.http.HeaderCarrier
@@ -138,7 +138,7 @@ class TaxCheckServiceImplSpec extends AnyWordSpec with Matchers with MockFactory
       val expectedExpiryDate = TimeUtils.today().plusDays(expiresAfter.toDays)
       val taxCheckCode       = HECTaxCheckCode("code")
       val taxCheck           =
-        models.hecTaxCheck.HECTaxCheck(taxCheckData, taxCheckCode, expectedExpiryDate, now, false, None)
+        models.hecTaxCheck.HECTaxCheck(taxCheckData, taxCheckCode, expectedExpiryDate, now, false, None, None)
 
       "return an error" when {
 
@@ -223,6 +223,7 @@ class TaxCheckServiceImplSpec extends AnyWordSpec with Matchers with MockFactory
           TimeUtils.today().plusMonths(1L),
           now,
           false,
+          None,
           None
         )
 
@@ -254,6 +255,7 @@ class TaxCheckServiceImplSpec extends AnyWordSpec with Matchers with MockFactory
           TimeUtils.today().plusMonths(1L),
           now,
           false,
+          None,
           None
         )
 
@@ -478,9 +480,9 @@ class TaxCheckServiceImplSpec extends AnyWordSpec with Matchers with MockFactory
         val code2 = HECTaxCheckCode("code2")
         val code3 = HECTaxCheckCode("code3")
 
-        val taxCheckToday     = hecTaxCheck.HECTaxCheck(taxCheckData, code1, today, now, false, None)
-        val taxCheckYesterday = hecTaxCheck.HECTaxCheck(taxCheckData, code2, yesterday, now, false, None)
-        val taxCheckTomorrow  = hecTaxCheck.HECTaxCheck(taxCheckData, code3, tomorrow, now, false, None)
+        val taxCheckToday     = hecTaxCheck.HECTaxCheck(taxCheckData, code1, today, now, false, None, None)
+        val taxCheckYesterday = hecTaxCheck.HECTaxCheck(taxCheckData, code2, yesterday, now, false, None, None)
+        val taxCheckTomorrow  = hecTaxCheck.HECTaxCheck(taxCheckData, code3, tomorrow, now, false, None, None)
 
         val todayItem    = TaxCheckListItem(
           taxCheckToday.taxCheckData.licenceDetails.licenceType,
@@ -545,11 +547,35 @@ class TaxCheckServiceImplSpec extends AnyWordSpec with Matchers with MockFactory
       "only return HEC Tac check code with isExtracted false" in {
 
         val hecTaxCheck1 =
-          hecTaxCheck.HECTaxCheck(taxCheckData, HECTaxCheckCode("ABC 123 ABC"), today.plusDays(1), now, false, None)
+          hecTaxCheck.HECTaxCheck(
+            taxCheckData,
+            HECTaxCheckCode("ABC 123 ABC"),
+            today.plusDays(1),
+            now,
+            false,
+            None,
+            None
+          )
         val hecTaxCheck2 =
-          hecTaxCheck.HECTaxCheck(taxCheckData, HECTaxCheckCode("EBC 123 ABC"), today.plusDays(1), now, false, None)
+          hecTaxCheck.HECTaxCheck(
+            taxCheckData,
+            HECTaxCheckCode("EBC 123 ABC"),
+            today.plusDays(1),
+            now,
+            false,
+            None,
+            None
+          )
         val hecTaxCheck3 =
-          hecTaxCheck.HECTaxCheck(taxCheckData, HECTaxCheckCode("MBC 123 ABC"), today.plusDays(1), now, false, None)
+          hecTaxCheck.HECTaxCheck(
+            taxCheckData,
+            HECTaxCheckCode("MBC 123 ABC"),
+            today.plusDays(1),
+            now,
+            false,
+            None,
+            None
+          )
 
         mockGetAllTaxCheckCodesByStatus(false, 0, 3, "_id")(Right(List(hecTaxCheck1, hecTaxCheck2, hecTaxCheck3)))
 
@@ -558,7 +584,7 @@ class TaxCheckServiceImplSpec extends AnyWordSpec with Matchers with MockFactory
       }
     }
 
-    "handling requests to fetch HEC Tac check code for the given fileCorrelarionId" must {
+    "handling requests to fetch HEC Tac check code for the given fileCorrelationId" must {
       val ggCredId = GGCredId("ggCredId")
       val uuid     = UUID.randomUUID()
 
@@ -607,7 +633,8 @@ class TaxCheckServiceImplSpec extends AnyWordSpec with Matchers with MockFactory
             today.plusDays(1),
             now,
             false,
-            uuid.some
+            uuid.some,
+            None
           )
         val hecTaxCheck2 =
           hecTaxCheck.HECTaxCheck(
@@ -616,13 +643,95 @@ class TaxCheckServiceImplSpec extends AnyWordSpec with Matchers with MockFactory
             today.plusDays(1),
             now,
             false,
-            uuid.some
+            uuid.some,
+            None
           )
 
         mockGetAllTaxCheckCodesByCorrelationId(uuid)(Right(List(hecTaxCheck1, hecTaxCheck2)))
 
         val result = service.getAllTaxCheckCodesByFileCorrelationId(uuid.toString)
         await(result.value) shouldBe Right(List(hecTaxCheck1, hecTaxCheck2))
+      }
+    }
+
+    "handling requests to save an email address" must {
+
+      val saveEmailAddressRequest = SaveEmailAddressRequest(EmailAddress("email"), HECTaxCheckCode("code"))
+
+      val taxCheckData = IndividualHECTaxCheckData(
+        IndividualApplicantDetails(None, Name("First", "Last"), DateOfBirth(LocalDate.now())),
+        licence.LicenceDetails(
+          LicenceType.ScrapMetalDealerSite,
+          LicenceTimeTrading.EightYearsOrMore,
+          LicenceValidityPeriod.UpToOneYear
+        ),
+        IndividualTaxDetails(
+          NINO(""),
+          None,
+          TaxSituation.SAPAYE,
+          None,
+          None,
+          TaxYear(2000),
+          None
+        ),
+        taxCheckStartDateTime,
+        HECTaxCheckSource.Digital
+      )
+
+      val taxCheck        = HECTaxCheck(
+        taxCheckData,
+        saveEmailAddressRequest.taxCheckCode,
+        LocalDate.now(),
+        ZonedDateTime.now(),
+        false,
+        None,
+        None
+      )
+      val updatedTaxCheck = taxCheck.copy(latestTaxCheckEmailSentTo = Some(saveEmailAddressRequest.emailAddress))
+
+      "return an error" when {
+
+        "there is an error getting the tax check data" in {
+          inSequence {
+            mockGetTaxCheck(saveEmailAddressRequest.taxCheckCode)(Left(Error("")))
+          }
+
+          await(service.saveEmailAddress(saveEmailAddressRequest).value) shouldBe a[Left[_, _]]
+        }
+
+        "there is an error updating the tax check data" in {
+          inSequence {
+            mockGetTaxCheck(saveEmailAddressRequest.taxCheckCode)(Right(Some(taxCheck)))
+            mockStoreTaxCheck(updatedTaxCheck)(Left(Error("")))
+          }
+
+          await(service.saveEmailAddress(saveEmailAddressRequest).value) shouldBe a[Left[_, _]]
+        }
+      }
+
+      "return None" when {
+
+        "there is no tax check found with the given tax check code" in {
+          inSequence {
+            mockGetTaxCheck(saveEmailAddressRequest.taxCheckCode)(Right(None))
+          }
+
+          await(service.saveEmailAddress(saveEmailAddressRequest).value) shouldBe Right(None)
+        }
+
+      }
+
+      "return Some" when {
+
+        "there is a tax check found with the given tax check code and the update is successful" in {
+          inSequence {
+            mockGetTaxCheck(saveEmailAddressRequest.taxCheckCode)(Right(Some(taxCheck)))
+            mockStoreTaxCheck(updatedTaxCheck)(Right(()))
+          }
+
+          await(service.saveEmailAddress(saveEmailAddressRequest).value) shouldBe Right(Some(()))
+        }
+
       }
     }
 

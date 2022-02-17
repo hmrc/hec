@@ -17,7 +17,9 @@
 package uk.gov.hmrc.hec.services
 
 import cats.data.EitherT
-import cats.implicits._
+import cats.syntax.eq._
+import cats.syntax.traverse._
+import cats.instances.option._
 import com.google.inject.{ImplementedBy, Inject, Singleton}
 import com.typesafe.config.Config
 import configs.syntax._
@@ -28,7 +30,7 @@ import uk.gov.hmrc.hec.models.ids.GGCredId
 import uk.gov.hmrc.hec.models.hecTaxCheck.HECTaxCheckData.{CompanyHECTaxCheckData, IndividualHECTaxCheckData}
 import uk.gov.hmrc.hec.models.hecTaxCheck.{HECTaxCheck, HECTaxCheckData}
 import uk.gov.hmrc.hec.models.taxCheckMatch.{HECTaxCheckMatchRequest, HECTaxCheckMatchResult, HECTaxCheckMatchStatus}
-import uk.gov.hmrc.hec.models.{Error, TaxCheckListItem}
+import uk.gov.hmrc.hec.models.{Error, SaveEmailAddressRequest, TaxCheckListItem}
 import uk.gov.hmrc.hec.repos.HECTaxCheckStore
 import uk.gov.hmrc.hec.util.TimeProvider
 import uk.gov.hmrc.http.HeaderCarrier
@@ -64,6 +66,10 @@ trait TaxCheckService {
     hc: HeaderCarrier
   ): EitherT[Future, Error, List[HECTaxCheck]]
 
+  def saveEmailAddress(request: SaveEmailAddressRequest)(implicit
+    hc: HeaderCarrier
+  ): EitherT[Future, Error, Option[Unit]]
+
 }
 
 @Singleton
@@ -86,7 +92,7 @@ class TaxCheckServiceImpl @Inject() (
     val expiryDate   = timeProvider.currentDate.plusDays(taxCheckCodeExpiresAfterDays)
     val createDate   = timeProvider.currentDateTime
     val taxCheck     =
-      models.hecTaxCheck.HECTaxCheck(taxCheckData, taxCheckCode, expiryDate, createDate, false, None)
+      models.hecTaxCheck.HECTaxCheck(taxCheckData, taxCheckCode, expiryDate, createDate, false, None, None)
 
     taxCheckStore.store(taxCheck).map { _ =>
       auditService.sendEvent(TaxCheckSuccess(taxCheck, request.loginDetails.swap.toOption))
@@ -166,4 +172,14 @@ class TaxCheckServiceImpl @Inject() (
     hc: HeaderCarrier
   ): EitherT[Future, Error, List[HECTaxCheck]] =
     taxCheckStore.getAllTaxCheckCodesByFileCorrelationId(fileCorrelationId)
+
+  override def saveEmailAddress(
+    request: SaveEmailAddressRequest
+  )(implicit hc: HeaderCarrier): EitherT[Future, Error, Option[Unit]] =
+    for {
+      taxCheck       <- taxCheckStore.get(request.taxCheckCode)
+      updatedTaxCheck = taxCheck.map(_.copy(latestTaxCheckEmailSentTo = Some(request.emailAddress)))
+      result         <- updatedTaxCheck.map(taxCheckStore.store).sequence[EitherT[Future, Error, *], Unit]
+    } yield result
+
 }

@@ -44,7 +44,7 @@ import uk.gov.hmrc.hec.models.hecTaxCheck.individual.{DateOfBirth, Name}
 import uk.gov.hmrc.hec.models.hecTaxCheck.licence.{LicenceDetails, LicenceTimeTrading, LicenceType, LicenceValidityPeriod}
 import uk.gov.hmrc.hec.models.ids._
 import uk.gov.hmrc.hec.models.taxCheckMatch.{HECTaxCheckMatchRequest, HECTaxCheckMatchResult, HECTaxCheckMatchStatus}
-import uk.gov.hmrc.hec.models.{Error, StrideOperatorDetails, TaxCheckListItem, taxCheckMatch}
+import uk.gov.hmrc.hec.models.{EmailAddress, Error, SaveEmailAddressRequest, StrideOperatorDetails, TaxCheckListItem, taxCheckMatch}
 import uk.gov.hmrc.hec.services.TaxCheckService
 import uk.gov.hmrc.hec.util.TimeUtils
 import uk.gov.hmrc.http.{HeaderCarrier, UpstreamErrorResponse}
@@ -120,6 +120,14 @@ class TaxCheckControllerWithInternalAuthEnabledSpec extends ControllerSpec with 
     (mockTaxCheckService
       .getUnexpiredTaxCheckCodes(_: GGCredId)(_: HeaderCarrier))
       .expects(ggCredId, *)
+      .returning(EitherT.fromEither(result))
+
+  def mockSaveEmailAddress(saveEmailAddressRequest: SaveEmailAddressRequest)(
+    result: Either[Error, Option[Unit]]
+  ) =
+    (mockTaxCheckService
+      .saveEmailAddress(_: SaveEmailAddressRequest)(_: HeaderCarrier))
+      .expects(saveEmailAddressRequest, *)
       .returning(EitherT.fromEither(result))
 
   "TaxCheckController" when {
@@ -256,7 +264,7 @@ class TaxCheckControllerWithInternalAuthEnabledSpec extends ControllerSpec with 
           val expiresAfterDate     = LocalDate.MIN
           val taxCheck             =
             models.hecTaxCheck
-              .HECTaxCheck(taxCheckDataIndividual, taxCheckCode, expiresAfterDate, TimeUtils.now(), false, None)
+              .HECTaxCheck(taxCheckDataIndividual, taxCheckCode, expiresAfterDate, TimeUtils.now(), false, None, None)
           val request              = requestWithJson(Json.toJson(taxCheckDataIndividual))
           val authenticatedRequest = AuthenticatedGGOrStrideRequest(Right(ggCredId), request)
 
@@ -275,7 +283,7 @@ class TaxCheckControllerWithInternalAuthEnabledSpec extends ControllerSpec with 
           val expiresAfterDate     = LocalDate.MIN
           val taxCheck             =
             models.hecTaxCheck
-              .HECTaxCheck(taxCheckDataCompany, taxCheckCode, expiresAfterDate, TimeUtils.now(), false, None)
+              .HECTaxCheck(taxCheckDataCompany, taxCheckCode, expiresAfterDate, TimeUtils.now(), false, None, None)
           val request              = requestWithJson(Json.toJson(taxCheckDataCompany))
           val authenticatedRequest = AuthenticatedGGOrStrideRequest(Right(ggCredId), request)
 
@@ -298,7 +306,7 @@ class TaxCheckControllerWithInternalAuthEnabledSpec extends ControllerSpec with 
             val expiresAfterDate     = LocalDate.MIN
             val taxCheck             =
               models.hecTaxCheck
-                .HECTaxCheck(taxCheckDataIndividual, taxCheckCode, expiresAfterDate, TimeUtils.now(), false, None)
+                .HECTaxCheck(taxCheckDataIndividual, taxCheckCode, expiresAfterDate, TimeUtils.now(), false, None, None)
             val request              = requestWithJson(Json.toJson(taxCheckDataIndividual))
             val authenticatedRequest = AuthenticatedGGOrStrideRequest(Left(expectedStrideOperatorDetails), request)
 
@@ -552,6 +560,91 @@ class TaxCheckControllerWithInternalAuthEnabledSpec extends ControllerSpec with 
         val result = controller.getUnexpiredTaxCheckCodes(FakeRequest())
         status(result) shouldBe FORBIDDEN
       }
+    }
+
+    "handling requests to save an email address" must {
+
+      def performAActionWithJsonBody(requestBody: JsValue): Future[Result] = {
+        val request = FakeRequest().withBody(requestBody)
+        controller.saveEmailAddress(request)
+      }
+
+      val saveEmailAddressRequest = SaveEmailAddressRequest(EmailAddress("email"), HECTaxCheckCode("code"))
+
+      "return a 415 (unsupported media type)" when {
+
+        "there is no body in the request" in {
+          val requestWithNoBody = AuthenticatedGGOrStrideRequest(Right(GGCredId("")), FakeRequest())
+
+          val result: Future[Result] = controller.saveEmailAddress(requestWithNoBody).run()
+          status(result) shouldBe UNSUPPORTED_MEDIA_TYPE
+
+        }
+
+        "there is no json body in the request" in {
+          val requestWithNoJsonBody =
+            AuthenticatedGGOrStrideRequest(
+              Right(GGCredId("AB123")),
+              FakeRequest().withBody("hi").withHeaders(CONTENT_TYPE -> TEXT)
+            )
+
+          val result: Future[Result] =
+            controller.saveEmailAddress(requestWithNoJsonBody).run()
+          status(result) shouldBe UNSUPPORTED_MEDIA_TYPE
+        }
+
+      }
+
+      "return a 400 (bad request)" when {
+
+        "the JSON in the request cannot be parsed" in {
+          mockGGAuthWithGGRetrieval(ggCredId.value)
+
+          status(performAActionWithJsonBody(JsString("hi"))) shouldBe BAD_REQUEST
+
+        }
+
+      }
+
+      "return a 500 (internal server error)" when {
+
+        "the call to save the email address returns an error" in {
+          inSequence {
+            mockGGAuthWithGGRetrieval(ggCredId.value)
+            mockSaveEmailAddress(saveEmailAddressRequest)(Left(Error("")))
+          }
+
+          status(performAActionWithJsonBody(Json.toJson(saveEmailAddressRequest))) shouldBe INTERNAL_SERVER_ERROR
+        }
+
+      }
+
+      "return a 404 (not found)" when {
+
+        "the call to save the email address returns None" in {
+          inSequence {
+            mockGGAuthWithGGRetrieval(ggCredId.value)
+            mockSaveEmailAddress(saveEmailAddressRequest)(Right(None))
+          }
+
+          status(performAActionWithJsonBody(Json.toJson(saveEmailAddressRequest))) shouldBe NOT_FOUND
+        }
+
+      }
+
+      "return a 200 (ok)" when {
+
+        "the call to save the email address returns Some" in {
+          inSequence {
+            mockGGAuthWithGGRetrieval(ggCredId.value)
+            mockSaveEmailAddress(saveEmailAddressRequest)(Right(Some(())))
+          }
+
+          status(performAActionWithJsonBody(Json.toJson(saveEmailAddressRequest))) shouldBe OK
+        }
+
+      }
+
     }
 
   }

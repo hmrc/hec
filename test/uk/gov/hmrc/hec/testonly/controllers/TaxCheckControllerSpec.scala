@@ -303,7 +303,7 @@ class TaxCheckControllerSpec extends ControllerSpec {
           )
           val taxCheck     =
             models.hecTaxCheck
-              .HECTaxCheck(taxCheckData, validTaxCheckCode, TimeUtils.today(), TimeUtils.now(), false, None)
+              .HECTaxCheck(taxCheckData, validTaxCheckCode, TimeUtils.today(), TimeUtils.now(), false, None, None)
 
           mockGetTaxCheck(validTaxCheckCode)(Right(Some(taxCheck)))
 

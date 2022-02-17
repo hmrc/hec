@@ -22,6 +22,7 @@ import play.api.Configuration
 import play.api.libs.json.{JsError, JsSuccess, JsValue, Json}
 import play.api.mvc.{Action, AnyContent, ControllerComponents}
 import uk.gov.hmrc.hec.controllers.actions.{GGAuthenticateAction, GGOrStrideAuthenticateAction}
+import uk.gov.hmrc.hec.models.SaveEmailAddressRequest
 import uk.gov.hmrc.hec.models.hecTaxCheck.HECTaxCheckData
 import uk.gov.hmrc.hec.models.taxCheckMatch.HECTaxCheckMatchRequest
 import uk.gov.hmrc.hec.services.TaxCheckService
@@ -106,6 +107,28 @@ class TaxCheckController @Inject() (
         },
         result => Ok(Json.toJson(result))
       )
+  }
+
+  val saveEmailAddress: Action[JsValue] = authenticateGG.async(parse.json) { implicit request =>
+    Json.fromJson[SaveEmailAddressRequest](request.body) match {
+      case JsSuccess(saveEmailAddressRequest, _) =>
+        taxCheckService
+          .saveEmailAddress(saveEmailAddressRequest)
+          .fold(
+            { e =>
+              logger.warn("Could not save email address", e)
+              InternalServerError
+            },
+            {
+              case None    => NotFound
+              case Some(_) => Ok
+            }
+          )
+
+      case JsError(_) =>
+        logger.warn("Could not parse JSON")
+        BadRequest
+    }
   }
 
 }

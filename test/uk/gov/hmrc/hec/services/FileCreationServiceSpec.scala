@@ -184,6 +184,7 @@ class FileCreationServiceSpec extends AnyWordSpec with Matchers with MockFactory
                 LocalDate.of(9999, 2, 10),
                 zonedDateTime,
                 false,
+                None,
                 None
               )
 
@@ -451,6 +452,7 @@ class FileCreationServiceSpec extends AnyWordSpec with Matchers with MockFactory
                 LocalDate.of(9999, 2, 10),
                 zonedDateTime,
                 false,
+                None,
                 None
               )
 
