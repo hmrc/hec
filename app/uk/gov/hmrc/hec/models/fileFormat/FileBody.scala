@@ -16,6 +16,8 @@
 
 package uk.gov.hmrc.hec.models.fileFormat
 
+import uk.gov.hmrc.hec.models.fileFormat.HECTaxCheckFileBody.FeatureEnabledField
+
 trait FileBody extends Product with Serializable {
   def recordType: String
   def toRowString: String
@@ -60,16 +62,31 @@ final case class HECTaxCheckFileBody(
   taxCheckCompleteDateTime: String,
   taxCheckCode: String,
   taxCheckExpiryDate: String,
-  onlineApplication: Char
+  onlineApplication: Char,
+  emailAddress: FeatureEnabledField[Option[String]]
 ) extends FileBody {
 
   @SuppressWarnings(Array("org.wartremover.warts.Any"))
-  override def toRowString: String = this.productIterator
+  override def toRowString: String = this.productIterator.toList
+    .foldLeft(List.empty[Any]) { case (acc, curr) =>
+      curr match {
+        case FeatureEnabledField(_, false)    => acc
+        case FeatureEnabledField(value, true) => value :: acc
+        case value                            => value :: acc
+      }
+    }
+    .reverse
     .map {
       case Some(value) => value
       case None        => ""
       case rest        => rest
     }
     .mkString("|")
+
+}
+
+object HECTaxCheckFileBody {
+
+  final case class FeatureEnabledField[A](a: A, enabled: Boolean)
 
 }

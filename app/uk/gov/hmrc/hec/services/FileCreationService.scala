@@ -19,8 +19,10 @@ package uk.gov.hmrc.hec.services
 import cats.implicits.catsSyntaxOptionId
 import cats.syntax.eq._
 import com.google.inject.{ImplementedBy, Inject}
+import play.api.Configuration
 import uk.gov.hmrc.hec.models.Error
 import uk.gov.hmrc.hec.models.fileFormat.FileFormat.toFileContent
+import uk.gov.hmrc.hec.models.fileFormat.HECTaxCheckFileBody.FeatureEnabledField
 import uk.gov.hmrc.hec.models.fileFormat._
 import uk.gov.hmrc.hec.models.hecTaxCheck.CorrectiveAction._
 import uk.gov.hmrc.hec.models.hecTaxCheck.HECTaxCheckData.{CompanyHECTaxCheckData, IndividualHECTaxCheckData}
@@ -55,7 +57,11 @@ trait FileCreationService {
 }
 
 @Singleton
-class FileCreationServiceImpl @Inject() (timeProvider: TimeProvider) extends FileCreationService {
+class FileCreationServiceImpl @Inject() (timeProvider: TimeProvider, config: Configuration)
+    extends FileCreationService {
+
+  val emailAddressFieldEnabled: Boolean =
+    config.get[Boolean]("hec-file-extraction-details.enable-email-address-field")
 
   val DATE_FORMATTER: DateTimeFormatter      = DateTimeFormatter.ofPattern("yyyyMMdd")
   val TIME_FORMATTER: DateTimeFormatter      = DateTimeFormatter.ofPattern("HHmmss")
@@ -184,7 +190,21 @@ class FileCreationServiceImpl @Inject() (timeProvider: TimeProvider) extends Fil
 
   private def createHecTaxCheckFileBody(hecTaxCheckList: List[HECTaxCheck]): List[HECTaxCheckFileBody] =
     hecTaxCheckList.map { hecTaxCheck =>
-      hecTaxCheck.taxCheckData match {
+      val taxCheckData             = hecTaxCheck.taxCheckData
+      val licenceType              = licenceTypeEKV(taxCheckData.licenceDetails.licenceType)._1
+      val licenceValidityPeriod    = licenceValidityPeriodEKV(taxCheckData.licenceDetails.licenceValidityPeriod)._1
+      val licenceTimeTrading       = licenceTimeTradingEKV(taxCheckData.licenceDetails.licenceTimeTrading)._1
+      val taxCheckStartDateTime    =
+        taxCheckData.taxCheckStartDateTime.withZoneSameInstant(ZoneId.of("GMT")).format(DATE_TIME_FORMATTER)
+      val taxCheckCompleteDateTime =
+        hecTaxCheck.createDate.withZoneSameInstant(ZoneId.of("GMT")).format(DATE_TIME_FORMATTER)
+      val taxCheckCode             = hecTaxCheck.taxCheckCode.value
+      val taxCheckExpiryDate       = hecTaxCheck.expiresAfter.format(DATE_FORMATTER)
+      val onlineApplication        = if (taxCheckData.source === Digital) 'Y' else 'N'
+      val emailAddress             =
+        FeatureEnabledField(hecTaxCheck.latestTaxCheckEmailSentTo.map(_.value), emailAddressFieldEnabled)
+
+      taxCheckData match {
         case i: IndividualHECTaxCheckData =>
           val taxSituationMap = taxSituationMapping(i.taxDetails.taxSituation)
           val saStatusMap     = saStatusMapping(i.taxDetails.saStatusResponse.map(_.status))
@@ -195,9 +215,9 @@ class FileCreationServiceImpl @Inject() (timeProvider: TimeProvider) extends Fil
             lastName = Some(i.applicantDetails.name.lastName),
             dob = Some(i.applicantDetails.dateOfBirth.value.format(DATE_FORMATTER)),
             SAUTR = i.taxDetails.sautr.map(_.value),
-            licenceType = licenceTypeEKV(i.licenceDetails.licenceType)._1,
-            licenceValidityPeriod = licenceValidityPeriodEKV(i.licenceDetails.licenceValidityPeriod)._1,
-            licenceTimeTrading = licenceTimeTradingEKV(i.licenceDetails.licenceTimeTrading)._1,
+            licenceType = licenceType,
+            licenceValidityPeriod = licenceValidityPeriod,
+            licenceTimeTrading = licenceTimeTrading,
             entityType = 'I',
             notChargeable = taxSituationMap.NotChargeable,
             PAYE = taxSituationMap.PAYE,
@@ -208,15 +228,15 @@ class FileCreationServiceImpl @Inject() (timeProvider: TimeProvider) extends Fil
             taxComplianceDeclaration = saStatusMap.returnReceived,
             correctiveAction = i.taxDetails.correctiveAction.map(ca => correctiveActionEKV(ca)._1),
             customerDeclaration = 'Y',
-            taxCheckStartDateTime =
-              i.taxCheckStartDateTime.withZoneSameInstant(ZoneId.of("GMT")).format(DATE_TIME_FORMATTER),
-            taxCheckCompleteDateTime =
-              hecTaxCheck.createDate.withZoneSameInstant(ZoneId.of("GMT")).format(DATE_TIME_FORMATTER),
-            taxCheckCode = hecTaxCheck.taxCheckCode.value,
-            taxCheckExpiryDate = hecTaxCheck.expiresAfter.format(DATE_FORMATTER),
-            onlineApplication = if (i.source === Digital) 'Y' else 'N'
+            taxCheckStartDateTime = taxCheckStartDateTime,
+            taxCheckCompleteDateTime = taxCheckCompleteDateTime,
+            taxCheckCode = taxCheckCode,
+            taxCheckExpiryDate = taxCheckExpiryDate,
+            onlineApplication = onlineApplication,
+            emailAddress = emailAddress
           )
-        case c: CompanyHECTaxCheckData    =>
+
+        case c: CompanyHECTaxCheckData =>
           val accountingPeriod                     = c.taxDetails.ctStatus.latestAccountingPeriod
           val chargeableForCT                      = c.taxDetails.chargeableForCT
           val ctStatusMap: Option[CTStatusMapping] = getCTStatusMap(accountingPeriod, chargeableForCT).some
@@ -225,9 +245,9 @@ class FileCreationServiceImpl @Inject() (timeProvider: TimeProvider) extends Fil
             CTUTR = Some(c.taxDetails.hmrcCTUTR.value),
             crn = Some(c.applicantDetails.crn.value),
             companyName = Some(c.applicantDetails.companyName.name),
-            licenceType = licenceTypeEKV(c.licenceDetails.licenceType)._1,
-            licenceValidityPeriod = licenceValidityPeriodEKV(c.licenceDetails.licenceValidityPeriod)._1,
-            licenceTimeTrading = licenceTimeTradingEKV(c.licenceDetails.licenceTimeTrading)._1,
+            licenceType = licenceType,
+            licenceValidityPeriod = licenceValidityPeriod,
+            licenceTimeTrading = licenceTimeTrading,
             entityType = 'C',
             notChargeable = getNotChargeableInfo(c.taxDetails.chargeableForCT),
             hasAccountingPeriod = ctStatusMap.flatMap(_.accountingPeriod),
@@ -241,19 +261,17 @@ class FileCreationServiceImpl @Inject() (timeProvider: TimeProvider) extends Fil
             taxComplianceDeclaration = yesNoAnswerMap(c.taxDetails.ctIncomeDeclared),
             correctiveAction = c.taxDetails.correctiveAction.map(ca => correctiveActionEKV(ca)._1),
             customerDeclaration = 'Y',
-            taxCheckStartDateTime =
-              c.taxCheckStartDateTime.withZoneSameInstant(ZoneId.of("GMT")).format(DATE_TIME_FORMATTER),
-            taxCheckCompleteDateTime =
-              hecTaxCheck.createDate.withZoneSameInstant(ZoneId.of("GMT")).format(DATE_TIME_FORMATTER),
-            taxCheckCode = hecTaxCheck.taxCheckCode.value,
-            taxCheckExpiryDate = hecTaxCheck.expiresAfter.format(DATE_FORMATTER),
-            onlineApplication = if (c.source === Digital) 'Y' else 'N'
+            taxCheckStartDateTime = taxCheckStartDateTime,
+            taxCheckCompleteDateTime = taxCheckCompleteDateTime,
+            taxCheckCode = taxCheckCode,
+            taxCheckExpiryDate = taxCheckExpiryDate,
+            onlineApplication = onlineApplication,
+            emailAddress = emailAddress
           )
       }
     }
-
   //Create the  file body contents excluding header and trailer
-  private def getFileBodyContents[A](inputType: A): Either[Error, List[FileBody]] =
+  private def getFileBodyContents[A](inputType: A): Either[Error, List[FileBody]]                      =
     inputType match {
       case LicenceType                   => Right(createLicenceTypeEnumFileBody)
       case LicenceTimeTrading            => Right(createLicenceTimeTradingEnumFileBody)

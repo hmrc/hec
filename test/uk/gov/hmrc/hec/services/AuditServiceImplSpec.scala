@@ -103,6 +103,7 @@ class AuditServiceImplSpec extends Matchers with AnyWordSpecLike with MockFactor
             LocalDate.now(),
             ZonedDateTime.now(),
             false,
+            None,
             None
           ),
           None

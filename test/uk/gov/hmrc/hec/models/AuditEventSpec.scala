@@ -95,7 +95,8 @@ class AuditEventSpec extends Matchers with AnyWordSpecLike {
             date.plusDays(1L),
             zonedDateTime.plusDays(1L),
             true,
-            Some(UUID.randomUUID())
+            Some(UUID.randomUUID()),
+            None
           ),
           Some(strideOperatorDetails)
         )
@@ -188,7 +189,8 @@ class AuditEventSpec extends Matchers with AnyWordSpecLike {
             date.plusDays(4L),
             zonedDateTime.plusDays(1L),
             false,
-            Some(UUID.randomUUID())
+            Some(UUID.randomUUID()),
+            None
           ),
           Some(strideOperatorDetails)
         )

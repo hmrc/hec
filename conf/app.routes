@@ -4,8 +4,11 @@ POST       /tax-check                           uk.gov.hmrc.hec.controllers.TaxC
 POST       /match-tax-check                     uk.gov.hmrc.hec.controllers.TaxCheckController.matchTaxCheck
 GET        /unexpired-tax-checks                uk.gov.hmrc.hec.controllers.TaxCheckController.getUnexpiredTaxCheckCodes
 
+POST       /email-address                       uk.gov.hmrc.hec.controllers.TaxCheckController.saveEmailAddress
+
 GET        /sa-status/:utr/:taxYear             uk.gov.hmrc.hec.controllers.IFController.getSAStatus(utr: String, taxYear: String)
 GET        /ct-status/:utr/:startDate/:endDate  uk.gov.hmrc.hec.controllers.IFController.getCTStatus(utr: String, startDate: String, endDate: String)
 
 GET        /ctutr/:crn                          uk.gov.hmrc.hec.controllers.DESController.getCtutr(crn: String)
+
 POST       /file-transfer/callback              uk.gov.hmrc.hec.controllers.SDESCallbackController.callback

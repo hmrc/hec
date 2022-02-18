@@ -112,9 +112,25 @@ class SDESCallbackControllerSpec extends ControllerSpec {
   )
 
   val hecTaxCheck1 =
-    hecTaxCheck.HECTaxCheck(taxCheckData, HECTaxCheckCode("ABC 123 ABC"), today.plusDays(1), now, false, uuid.some)
+    hecTaxCheck.HECTaxCheck(
+      taxCheckData,
+      HECTaxCheckCode("ABC 123 ABC"),
+      today.plusDays(1),
+      now,
+      false,
+      uuid.some,
+      None
+    )
   val hecTaxCheck2 =
-    hecTaxCheck.HECTaxCheck(taxCheckData, HECTaxCheckCode("EBC 123 ABC"), today.plusDays(1), now, false, uuid.some)
+    hecTaxCheck.HECTaxCheck(
+      taxCheckData,
+      HECTaxCheckCode("EBC 123 ABC"),
+      today.plusDays(1),
+      now,
+      false,
+      uuid.some,
+      None
+    )
 
   val fileName1 = "HEC_SSA_0001_20210908_HEC_LICENCE_TYPE.dat"
   val fileName2 = "HEC_SSA_0001_20210908_HEC_APPLICATION.dat"

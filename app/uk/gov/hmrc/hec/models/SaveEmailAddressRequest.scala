@@ -14,28 +14,15 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.hec.models.hecTaxCheck
+package uk.gov.hmrc.hec.models
 
 import play.api.libs.json.{Json, OFormat}
-import uk.gov.hmrc.hec.models.EmailAddress
+import uk.gov.hmrc.hec.models.hecTaxCheck.HECTaxCheckCode
 
-import java.time.{LocalDate, ZonedDateTime}
-import java.util.UUID
+final case class SaveEmailAddressRequest(emailAddress: EmailAddress, taxCheckCode: HECTaxCheckCode)
 
-final case class HECTaxCheck(
-  taxCheckData: HECTaxCheckData,
-  taxCheckCode: HECTaxCheckCode,
-  expiresAfter: LocalDate,
-  createDate: ZonedDateTime,
-  isExtracted: Boolean,
-  fileCorrelationId: Option[UUID],
-  latestTaxCheckEmailSentTo: Option[EmailAddress]
-)
+object SaveEmailAddressRequest {
 
-object HECTaxCheck {
-
-  implicit val format: OFormat[HECTaxCheck] = Json.format
+  implicit val format: OFormat[SaveEmailAddressRequest] = Json.format
 
 }
-
-final case class HECTaxCheckFileBodyList(list: List[HECTaxCheck])
