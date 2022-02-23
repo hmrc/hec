@@ -64,7 +64,7 @@ class HecTaxCheckExtractionServiceImpl @Inject() (
     config.get[String]("hec-file-extraction-details.file-notification-api.recipient-or-sender")
   val fileLocationBaseUrl: String       =
     config.get[String]("hec-file-extraction-details.file-notification-api.file-location-base-url")
-  val objectStoreLocationPrefix: String = s"$fileLocationBaseUrl/object-store/object/hec/"
+  val objectStoreLocationPrefix: String = s"$fileLocationBaseUrl/object-store/object/"
 
   val hec: String           = "HEC"
   val sdesDirectory: String = "sdes"
@@ -229,7 +229,6 @@ class HecTaxCheckExtractionServiceImpl @Inject() (
       ),
       FileAudit(uuid.toString)
     )
-
 }
 
 object HecTaxCheckExtractionServiceImpl {
