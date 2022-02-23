@@ -311,6 +311,14 @@ to this service informing us of the progress of the consumption process. If the 
 unsuccessfully) we delete the corresponding files from `object-store` and mark the relevant tax checks as sent 
 (`isExtracted = true`).  
 
+### Testing file transfers locally
+When testing file transfers locally, a command to create an internal-auth token must be made in order for the 
+call to store files in `object-store` work. To make the default token in `application.conf` work, run this command:
+```bash
+curl -v -X POST --header "Content-Type: application/json"  --data '{ "token": "123457",  "principal": "object-store", "permissions": [{ "resourceType": "hec", "resourceLocation": "*", "actions": ["*"] }] }' http://localhost:8470/test-only/token 
+```
+
+
 ## License
 
 This code is open source software licensed under the [Apache 2.0 License]("http://www.apache.org/licenses/LICENSE-2.0.html").

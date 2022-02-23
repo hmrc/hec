@@ -212,7 +212,7 @@ class HecTaxCheckExtractionServiceSpec
         FileMetaData(
           "hec",
           fileName,
-          s"http://localhost:8464/object-store/object/hec/$location/$fileName",
+          s"http://localhost:8464/object-store/object/$location/$fileName",
           FileChecksum(value = "hashValue"),
           2000,
           List()
