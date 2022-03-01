@@ -25,8 +25,9 @@ import uk.gov.hmrc.hec.services.scheduleService.HECTaxCheckExtractionContext
 import uk.gov.hmrc.hec.util.Logging
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.objectstore.client.play.PlayObjectStoreClient
-import uk.gov.hmrc.objectstore.client.{ObjectSummaryWithMd5, Path, RetentionPeriod}
+import uk.gov.hmrc.objectstore.client.{Md5Hash, ObjectSummaryWithMd5, Path, RetentionPeriod}
 
+import java.security.MessageDigest
 import javax.inject.Singleton
 import scala.concurrent.Future
 
@@ -66,6 +67,8 @@ class FileStoreServiceImpl @Inject() (client: PlayObjectStoreClient, config: Con
     hecTaxCheckExtractionContext: HECTaxCheckExtractionContext
   ): EitherT[Future, models.Error, ObjectSummaryWithMd5] = {
     val bytes = StringUtils.getBytesUtf8(fileContent)
+    val md5   = MessageDigest.getInstance("MD5").digest(bytes).toString
+
     import uk.gov.hmrc.objectstore.client.play.Implicits._
     EitherT(
       client
@@ -77,7 +80,7 @@ class FileStoreServiceImpl @Inject() (client: PlayObjectStoreClient, config: Con
         )
         .map { objSummary =>
           logger.info(s"Saved File :: $fileName in object store")
-          Right(objSummary)
+          Right(objSummary.copy(contentMd5 = Md5Hash(md5)))
         }
         .recover { case e: Exception =>
           logger.error(s"Document save failed for file :: $fileName error: ${e.getMessage}")
