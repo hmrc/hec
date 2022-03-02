@@ -198,7 +198,7 @@ class HecTaxCheckExtractionServiceSpec
         taxCheck3.copy(fileCorrelationId = uuid.some)
       )
 
-    // hash values below taken from actual value sent to SDES and value calculated by SDES in test
+    // hash values below taken from actual unmodified value sent to SDES and value calculated by SDES in test
     val (md5Hash, expectedFileChecksum) =
       Md5Hash("a6WaSjh/V3z7xWS9JTTztQ==") -> FileChecksum("md5", "6ba59a4a387f577cfbc564bd2534f3b5")
 
