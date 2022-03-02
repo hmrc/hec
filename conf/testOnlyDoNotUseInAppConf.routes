@@ -16,3 +16,5 @@ POST       /hec/test-only/tax-check                 uk.gov.hmrc.hec.testonly.con
 GET        /hec/test-only/tax-check/:taxCheckCode   uk.gov.hmrc.hec.testonly.controllers.TaxCheckController.getTaxCheck(taxCheckCode: String)
 DELETE     /hec/test-only/tax-check                 uk.gov.hmrc.hec.testonly.controllers.TaxCheckController.deleteAllTaxChecks
 DELETE     /hec/test-only/tax-check/:taxCheckCode   uk.gov.hmrc.hec.testonly.controllers.TaxCheckController.deleteTaxCheck(taxCheckCode: String)
+
+GET        /hec/test-only/file-transfer             uk.gov.hmrc.hec.testonly.controllers.FileTransferController.fileTransfer

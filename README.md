@@ -291,6 +291,12 @@ successfully been deleted.
 Unauthenticated test-only endpoint to delete tax check data corresponding to the given tax check code. Returns a `200` 
 (OK) response if the tax check data has been successfully been deleted.
 
+### `GET        /hec/test-only/file-transfer`
+Unauthenticated test-only endpoint to immediately trigger a file transfer job (see next section for more details). 
+The files that would have been created in the next scheduled file transfer will be created and be sent over. The next
+scheduled job will still run at the configured time.
+
+
 ## HEC Tax Check Data File Transfer
 
 This service will periodically send tax check data to consuming downstream systems via a file transfer process. 
