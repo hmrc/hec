@@ -29,9 +29,9 @@ import uk.gov.hmrc.hec.services._
 import uk.gov.hmrc.hec.services.scheduleService.HecTaxCheckExtractionServiceImpl._
 import uk.gov.hmrc.hec.util.{FileMapOps, Logging, UUIDGenerator}
 import uk.gov.hmrc.http.HeaderCarrier
-import uk.gov.hmrc.objectstore.client.ObjectSummaryWithMd5
+import uk.gov.hmrc.objectstore.client.{Md5Hash, ObjectSummaryWithMd5}
 
-import java.util.UUID
+import java.util.{Base64, UUID}
 import javax.inject.Singleton
 import scala.concurrent.Future
 
@@ -223,12 +223,18 @@ class HecTaxCheckExtractionServiceImpl @Inject() (
         recipientOrSender,
         fileName,
         s"$objectStoreLocationPrefix${objSummary.location.asUri}",
-        FileChecksum(value = objSummary.contentMd5.value),
+        FileChecksum(value = convertToHexString(objSummary.contentMd5)),
         objSummary.contentLength,
         List()
       ),
       FileAudit(uuid.toString)
     )
+
+  private val toHexFormatString = "%02x"
+
+  private def convertToHexString(md5Hash: Md5Hash): String =
+    Base64.getDecoder.decode(md5Hash.value).map(_.formatted(toHexFormatString)).mkString
+
 }
 
 object HecTaxCheckExtractionServiceImpl {
