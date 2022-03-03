@@ -48,7 +48,9 @@ class SDESCallbackController @Inject() (
       case JsSuccess(callbackNotification, _) =>
         logger.info(
           s"Received SDES callback for file: ${callbackNotification.filename}, " +
-            s"with correlationId : ${callbackNotification.correlationID} and status : ${callbackNotification.notification}"
+            s"with correlationId : ${callbackNotification.correlationID}," +
+            s" status : ${callbackNotification.notification}," +
+            s" and failureReason : '${callbackNotification.failureReason}'"
         )
         callbackNotification.notification match {
           case FileReady | FileReceived => Future.successful(Ok)
