@@ -19,6 +19,7 @@ package uk.gov.hmrc.hec.services
 import cats.data.EitherT
 import com.google.inject.{ImplementedBy, Inject, Singleton}
 import play.api.http.Status._
+import play.api.libs.json.Json
 import uk.gov.hmrc.hec.connectors.SDESConnector
 import uk.gov.hmrc.hec.models.Error
 import uk.gov.hmrc.hec.models.sdes.SDESFileNotifyRequest
@@ -50,7 +51,7 @@ class SDESServiceImpl @Inject() (
         response.status match {
           case NO_CONTENT =>
             logger.info(
-              s"SDES has been notified of file :: ${fileNotifyRequest.file.name}  with correlationId::${fileNotifyRequest.audit.correlationID}"
+              s"SDES has been notified of file :: ${fileNotifyRequest.file.name}. Request body was ${Json.toJson(fileNotifyRequest).toString()}. "
             )
             Right(())
           case rest       => Left(Error(s"$message $rest, ${response.body}"))
