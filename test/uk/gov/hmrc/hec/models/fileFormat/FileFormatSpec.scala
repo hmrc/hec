@@ -40,7 +40,8 @@ class FileFormatSpec extends AnyWordSpec with Matchers {
             |01|00|record1
             |01|01|record2
             |01|02|record3
-            |99|file1.dat|9999|Y""".stripMargin
+            |99|file1.dat|9999|Y
+            |""".stripMargin
 
       result shouldBe expected
     }
