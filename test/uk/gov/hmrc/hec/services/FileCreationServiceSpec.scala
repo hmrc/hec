@@ -79,7 +79,8 @@ class FileCreationServiceSpec extends AnyWordSpec with Matchers with MockFactory
              |01|01|Operator of private hire vehicles
              |01|02|Scrap metal mobile collector
              |01|03|Scrap metal dealer site
-             |99|HEC_SSA_0001_20211010_HEC_LICENCE_TYPE.dat|6|Y""".stripMargin
+             |99|HEC_SSA_0001_20211010_HEC_LICENCE_TYPE.dat|6|Y
+             |""".stripMargin
 
         result shouldBe (Right((expected, "HEC_SSA_0001_20211010_HEC_LICENCE_TYPE.dat")))
 
@@ -98,7 +99,8 @@ class FileCreationServiceSpec extends AnyWordSpec with Matchers with MockFactory
                            |01|01|2 to 4 years
                            |01|02|4 to 8 years
                            |01|03|More than 8 years
-                           |99|HEC_SSA_0001_20211010_HEC_LICENCE_TIME_TRADING.dat|6|Y""".stripMargin
+                           |99|HEC_SSA_0001_20211010_HEC_LICENCE_TIME_TRADING.dat|6|Y
+                           |""".stripMargin
 
         result shouldBe Right((expected, "HEC_SSA_0001_20211010_HEC_LICENCE_TIME_TRADING.dat"))
 
@@ -118,7 +120,8 @@ class FileCreationServiceSpec extends AnyWordSpec with Matchers with MockFactory
                            |01|02|Up to 3 years
                            |01|03|Up to 4 years
                            |01|04|Up to 5 years
-                           |99|HEC_SSA_0001_20211010_HEC_LICENCE_VALIDITY_PERIOD.dat|7|Y""".stripMargin
+                           |99|HEC_SSA_0001_20211010_HEC_LICENCE_VALIDITY_PERIOD.dat|7|Y
+                           |""".stripMargin
 
         result shouldBe Right((expected, "HEC_SSA_0001_20211010_HEC_LICENCE_VALIDITY_PERIOD.dat"))
 
@@ -138,7 +141,8 @@ class FileCreationServiceSpec extends AnyWordSpec with Matchers with MockFactory
                                                           |01|00|Register new SA account
                                                           |01|01|Dormant account reactivated
                                                           |01|02|Other corrective action
-                                                          |99|HEC_SSA_0001_20211010_$partialFileName.dat|5|Y""".stripMargin
+                                                          |99|HEC_SSA_0001_20211010_$partialFileName.dat|5|Y
+                                                          |""".stripMargin
 
         result shouldBe Right((expected, s"HEC_SSA_0001_20211010_$partialFileName.dat"))
 
@@ -248,7 +252,8 @@ class FileCreationServiceSpec extends AnyWordSpec with Matchers with MockFactory
               |01|AB123|AB123456C|Karen|mcFie|19221201|1234567||||00|04|02|I||Y|N|2022|||||Y||Y|00|Y|20210909090900|20210909090900|XNFFGBDD6|99990210|Y|email
               |01|AB123|AB123456C|Karen|mcFie|19221201|1234567||||00|04|01|I||Y|N|2022|||||N|Y|N|00|Y|20210909090900|20210909090900|XNFFGBDD6|99990210|Y|
               |01|AB123|AB123456C|Karen|mcFie|19221201|1234567||||00|04|01|I||Y|N|2022|||||N|N|N|00|Y|20210909090900|20210909090900|XNFFGBDD6|99990210|Y|
-              |99|HEC_SSA_0001_20211010_$partialFileName.dat|5|Y""".stripMargin
+              |99|HEC_SSA_0001_20211010_$partialFileName.dat|5|Y
+              |""".stripMargin
 
               result shouldBe Right((expected, s"HEC_SSA_0001_20211010_$partialFileName.dat"))
             }
@@ -302,7 +307,8 @@ class FileCreationServiceSpec extends AnyWordSpec with Matchers with MockFactory
               |01|AB123|AB123456C|Karen|mcFie|19221201|1234567||||01|00|02|I||N|Y|2022|||||Y||Y|00|Y|20210909090900|20210909090900|XNFFGBDD6|99990210|Y|email
               |01|AB123|AB123456C|Karen|mcFie|19221201|1234567||||02|01|01|I||N|Y|2022|||||N|Y|N|00|Y|20210909090900|20210909090900|XNFFGBDD6|99990210|Y|
               |01|AB123|AB123456C|Karen|mcFie|19221201|1234567||||03|02|01|I||N|Y|2022|||||N|N|N|00|Y|20210909090900|20210909090900|XNFFGBDD6|99990210|Y|
-              |99|HEC_SSA_0001_20211010_$partialFileName.dat|5|Y""".stripMargin
+              |99|HEC_SSA_0001_20211010_$partialFileName.dat|5|Y
+              |""".stripMargin
 
               result shouldBe Right((expected, s"HEC_SSA_0001_20211010_$partialFileName.dat"))
             }
@@ -356,7 +362,8 @@ class FileCreationServiceSpec extends AnyWordSpec with Matchers with MockFactory
               |01|AB123|AB123456C|Karen|mcFie|19221201|1234567||||01|00|02|I||Y|Y|2022|||||Y||Y|00|Y|20210909090900|20210909090900|XNFFGBDD6|99990210|Y|email
               |01|AB123|AB123456C|Karen|mcFie|19221201|1234567||||02|01|01|I||Y|Y|2022|||||N|Y|N|00|Y|20210909090900|20210909090900|XNFFGBDD6|99990210|Y|
               |01|AB123|AB123456C|Karen|mcFie|19221201|1234567||||03|02|01|I||Y|Y|2022|||||N|N|N|00|Y|20210909090900|20210909090900|XNFFGBDD6|99990210|Y|
-              |99|HEC_SSA_0001_20211010_$partialFileName.dat|5|Y""".stripMargin
+              |99|HEC_SSA_0001_20211010_$partialFileName.dat|5|Y
+              |""".stripMargin
 
               result shouldBe Right((expected, s"HEC_SSA_0001_20211010_$partialFileName.dat"))
             }
@@ -410,7 +417,8 @@ class FileCreationServiceSpec extends AnyWordSpec with Matchers with MockFactory
               |01|AB123|AB123456C|Karen|mcFie|19221201|1234567||||01|00|02|I|Y|||2022|||||Y||Y|00|Y|20210909090900|20210909090900|XNFFGBDD6|99990210|Y|
               |01|AB123|AB123456C|Karen|mcFie|19221201|1234567||||02|01|01|I|Y|||2022|||||N|Y|N|00|Y|20210909090900|20210909090900|XNFFGBDD6|99990210|Y|
               |01|AB123|AB123456C|Karen|mcFie|19221201|1234567||||03|02|01|I|Y|||2022|||||N|N|N|00|Y|20210909090900|20210909090900|XNFFGBDD6|99990210|Y|
-              |99|HEC_SSA_0001_20211010_$partialFileName.dat|5|Y""".stripMargin
+              |99|HEC_SSA_0001_20211010_$partialFileName.dat|5|Y
+                                 |""".stripMargin
 
               result shouldBe Right((expected, s"HEC_SSA_0001_20211010_$partialFileName.dat"))
             }
@@ -511,7 +519,8 @@ class FileCreationServiceSpec extends AnyWordSpec with Matchers with MockFactory
 
               val expected = s"""|00|HEC_SSA_0001_20211010_$partialFileName.dat|HEC|SSA|20211010|113605|000001|001
                                  |01|AB123||||||1111111111|1123456|Test Tech Ltd|01|00|01|C|N||||Y|20201009|20211009||Y||Y|00|Y|20210909090900|20210909090900|XNFFGBDD6|99990210|Y|email
-                                 |99|HEC_SSA_0001_20211010_$partialFileName.dat|3|Y""".stripMargin
+                                 |99|HEC_SSA_0001_20211010_$partialFileName.dat|3|Y
+                                 |""".stripMargin
 
               result shouldBe Right((expected, s"HEC_SSA_0001_20211010_$partialFileName.dat"))
             }
@@ -546,7 +555,8 @@ class FileCreationServiceSpec extends AnyWordSpec with Matchers with MockFactory
 
               val expected = s"""|00|HEC_SSA_0001_20211010_$partialFileName.dat|HEC|SSA|20211010|113605|000001|001
                                  |01|AB123||||||1111111111|1123456|Test Tech Ltd|01|00|01|C|N||||Y|20201009|20211009||N|Y|Y|00|Y|20210909090900|20210909090900|XNFFGBDD6|99990210|Y|
-                                 |99|HEC_SSA_0001_20211010_$partialFileName.dat|3|Y""".stripMargin
+                                 |99|HEC_SSA_0001_20211010_$partialFileName.dat|3|Y
+                                 |""".stripMargin
 
               result shouldBe Right((expected, s"HEC_SSA_0001_20211010_$partialFileName.dat"))
             }
@@ -581,7 +591,8 @@ class FileCreationServiceSpec extends AnyWordSpec with Matchers with MockFactory
 
               val expected = s"""|00|HEC_SSA_0001_20211010_$partialFileName.dat|HEC|SSA|20211010|113605|000001|001
                                  |01|AB123||||||1111111111|1123456|Test Tech Ltd|01|00|01|C|||||Y|20201009|20211009||N|N||00|Y|20210909090900|20210909090900|XNFFGBDD6|99990210|Y|
-                                 |99|HEC_SSA_0001_20211010_$partialFileName.dat|3|Y""".stripMargin
+                                 |99|HEC_SSA_0001_20211010_$partialFileName.dat|3|Y
+                                 |""".stripMargin
 
               result shouldBe Right((expected, s"HEC_SSA_0001_20211010_$partialFileName.dat"))
             }
@@ -617,7 +628,8 @@ class FileCreationServiceSpec extends AnyWordSpec with Matchers with MockFactory
 
               val expected = s"""|00|HEC_SSA_0001_20211010_$partialFileName.dat|HEC|SSA|20211010|113605|000001|001
                                  |01|AB123||||||1111111111|1123456|Test Tech Ltd|01|00|01|C|Y||||Y|20201009|20211009||||Y|00|Y|20210909090900|20210909090900|XNFFGBDD6|99990210|Y|email
-                                 |99|HEC_SSA_0001_20211010_$partialFileName.dat|3|Y""".stripMargin
+                                 |99|HEC_SSA_0001_20211010_$partialFileName.dat|3|Y
+                                 |""".stripMargin
 
               result shouldBe Right((expected, s"HEC_SSA_0001_20211010_$partialFileName.dat"))
 
@@ -658,7 +670,8 @@ class FileCreationServiceSpec extends AnyWordSpec with Matchers with MockFactory
 
               val expected = s"""|00|HEC_SSA_0001_20211010_$partialFileName.dat|HEC|SSA|20211010|113605|000001|001
                                  |01|AB123||||||1111111111|1123456|Test Tech Ltd|01|00|01|C|Y||||Y||20211008||||||Y|20210909090900|20210909090900|XNFFGBDD6|99990210|Y|
-                                 |99|HEC_SSA_0001_20211010_$partialFileName.dat|3|Y""".stripMargin
+                                 |99|HEC_SSA_0001_20211010_$partialFileName.dat|3|Y
+                                 |""".stripMargin
 
               result shouldBe Right((expected, s"HEC_SSA_0001_20211010_$partialFileName.dat"))
             }
@@ -693,7 +706,8 @@ class FileCreationServiceSpec extends AnyWordSpec with Matchers with MockFactory
 
               val expected = s"""|00|HEC_SSA_0001_20211010_$partialFileName.dat|HEC|SSA|20211010|113605|000001|001
                                  |01|AB123||||||1111111111|1123456|Test Tech Ltd|01|00|01|C|||||N|||Y|||||Y|20210909090900|20210909090900|XNFFGBDD6|99990210|Y|
-                                 |99|HEC_SSA_0001_20211010_$partialFileName.dat|3|Y""".stripMargin
+                                 |99|HEC_SSA_0001_20211010_$partialFileName.dat|3|Y
+                                 |""".stripMargin
 
               result shouldBe Right((expected, s"HEC_SSA_0001_20211010_$partialFileName.dat"))
             }
@@ -717,7 +731,8 @@ class FileCreationServiceSpec extends AnyWordSpec with Matchers with MockFactory
               true
             )
           val expected                                = s"""|00|HEC_SSA_0001_20211010_$partialFileName.dat|HEC|SSA|20211010|113605|000001|001
-                                                            |99|HEC_SSA_0001_20211010_$partialFileName.dat|2|Y""".stripMargin
+                                                            |99|HEC_SSA_0001_20211010_$partialFileName.dat|2|Y
+                                                            |""".stripMargin
 
           result shouldBe Right((expected, s"HEC_SSA_0001_20211010_$partialFileName.dat"))
 
@@ -871,7 +886,8 @@ class FileCreationServiceEmailDisabledSpec extends AnyWordSpec with Matchers wit
                                  |01|AB123|AB123456C|Karen|mcFie|19221201|1234567||||00|04|02|I||Y|N|2022|||||Y||Y|00|Y|20210909090900|20210909090900|XNFFGBDD6|99990210|Y
                                  |01|AB123|AB123456C|Karen|mcFie|19221201|1234567||||00|04|01|I||Y|N|2022|||||N|Y|N|00|Y|20210909090900|20210909090900|XNFFGBDD6|99990210|Y
                                  |01|AB123|AB123456C|Karen|mcFie|19221201|1234567||||00|04|01|I||Y|N|2022|||||N|N|N|00|Y|20210909090900|20210909090900|XNFFGBDD6|99990210|Y
-                                 |99|HEC_SSA_0001_20211010_$partialFileName.dat|5|Y""".stripMargin
+                                 |99|HEC_SSA_0001_20211010_$partialFileName.dat|5|Y
+                                 |""".stripMargin
 
               result shouldBe Right((expected, s"HEC_SSA_0001_20211010_$partialFileName.dat"))
             }
@@ -925,7 +941,8 @@ class FileCreationServiceEmailDisabledSpec extends AnyWordSpec with Matchers wit
                                  |01|AB123|AB123456C|Karen|mcFie|19221201|1234567||||01|00|02|I||N|Y|2022|||||Y||Y|00|Y|20210909090900|20210909090900|XNFFGBDD6|99990210|Y
                                  |01|AB123|AB123456C|Karen|mcFie|19221201|1234567||||02|01|01|I||N|Y|2022|||||N|Y|N|00|Y|20210909090900|20210909090900|XNFFGBDD6|99990210|Y
                                  |01|AB123|AB123456C|Karen|mcFie|19221201|1234567||||03|02|01|I||N|Y|2022|||||N|N|N|00|Y|20210909090900|20210909090900|XNFFGBDD6|99990210|Y
-                                 |99|HEC_SSA_0001_20211010_$partialFileName.dat|5|Y""".stripMargin
+                                 |99|HEC_SSA_0001_20211010_$partialFileName.dat|5|Y
+                                 |""".stripMargin
 
               result shouldBe Right((expected, s"HEC_SSA_0001_20211010_$partialFileName.dat"))
             }
@@ -979,7 +996,8 @@ class FileCreationServiceEmailDisabledSpec extends AnyWordSpec with Matchers wit
                                  |01|AB123|AB123456C|Karen|mcFie|19221201|1234567||||01|00|02|I||Y|Y|2022|||||Y||Y|00|Y|20210909090900|20210909090900|XNFFGBDD6|99990210|Y
                                  |01|AB123|AB123456C|Karen|mcFie|19221201|1234567||||02|01|01|I||Y|Y|2022|||||N|Y|N|00|Y|20210909090900|20210909090900|XNFFGBDD6|99990210|Y
                                  |01|AB123|AB123456C|Karen|mcFie|19221201|1234567||||03|02|01|I||Y|Y|2022|||||N|N|N|00|Y|20210909090900|20210909090900|XNFFGBDD6|99990210|Y
-                                 |99|HEC_SSA_0001_20211010_$partialFileName.dat|5|Y""".stripMargin
+                                 |99|HEC_SSA_0001_20211010_$partialFileName.dat|5|Y
+                                 |""".stripMargin
 
               result shouldBe Right((expected, s"HEC_SSA_0001_20211010_$partialFileName.dat"))
             }
@@ -1033,7 +1051,8 @@ class FileCreationServiceEmailDisabledSpec extends AnyWordSpec with Matchers wit
                                  |01|AB123|AB123456C|Karen|mcFie|19221201|1234567||||01|00|02|I|Y|||2022|||||Y||Y|00|Y|20210909090900|20210909090900|XNFFGBDD6|99990210|Y
                                  |01|AB123|AB123456C|Karen|mcFie|19221201|1234567||||02|01|01|I|Y|||2022|||||N|Y|N|00|Y|20210909090900|20210909090900|XNFFGBDD6|99990210|Y
                                  |01|AB123|AB123456C|Karen|mcFie|19221201|1234567||||03|02|01|I|Y|||2022|||||N|N|N|00|Y|20210909090900|20210909090900|XNFFGBDD6|99990210|Y
-                                 |99|HEC_SSA_0001_20211010_$partialFileName.dat|5|Y""".stripMargin
+                                 |99|HEC_SSA_0001_20211010_$partialFileName.dat|5|Y
+                                 |""".stripMargin
 
               result shouldBe Right((expected, s"HEC_SSA_0001_20211010_$partialFileName.dat"))
             }
@@ -1134,7 +1153,8 @@ class FileCreationServiceEmailDisabledSpec extends AnyWordSpec with Matchers wit
 
               val expected = s"""|00|HEC_SSA_0001_20211010_$partialFileName.dat|HEC|SSA|20211010|113605|000001|001
                                  |01|AB123||||||1111111111|1123456|Test Tech Ltd|01|00|01|C|N||||Y|20201009|20211009||Y||Y|00|Y|20210909090900|20210909090900|XNFFGBDD6|99990210|Y
-                                 |99|HEC_SSA_0001_20211010_$partialFileName.dat|3|Y""".stripMargin
+                                 |99|HEC_SSA_0001_20211010_$partialFileName.dat|3|Y
+                                 |""".stripMargin
 
               result shouldBe Right((expected, s"HEC_SSA_0001_20211010_$partialFileName.dat"))
             }
@@ -1169,7 +1189,8 @@ class FileCreationServiceEmailDisabledSpec extends AnyWordSpec with Matchers wit
 
               val expected = s"""|00|HEC_SSA_0001_20211010_$partialFileName.dat|HEC|SSA|20211010|113605|000001|001
                                  |01|AB123||||||1111111111|1123456|Test Tech Ltd|01|00|01|C|N||||Y|20201009|20211009||N|Y|Y|00|Y|20210909090900|20210909090900|XNFFGBDD6|99990210|Y
-                                 |99|HEC_SSA_0001_20211010_$partialFileName.dat|3|Y""".stripMargin
+                                 |99|HEC_SSA_0001_20211010_$partialFileName.dat|3|Y
+                                 |""".stripMargin
 
               result shouldBe Right((expected, s"HEC_SSA_0001_20211010_$partialFileName.dat"))
             }
@@ -1204,7 +1225,8 @@ class FileCreationServiceEmailDisabledSpec extends AnyWordSpec with Matchers wit
 
               val expected = s"""|00|HEC_SSA_0001_20211010_$partialFileName.dat|HEC|SSA|20211010|113605|000001|001
                                  |01|AB123||||||1111111111|1123456|Test Tech Ltd|01|00|01|C|||||Y|20201009|20211009||N|N||00|Y|20210909090900|20210909090900|XNFFGBDD6|99990210|Y
-                                 |99|HEC_SSA_0001_20211010_$partialFileName.dat|3|Y""".stripMargin
+                                 |99|HEC_SSA_0001_20211010_$partialFileName.dat|3|Y
+                                 |""".stripMargin
 
               result shouldBe Right((expected, s"HEC_SSA_0001_20211010_$partialFileName.dat"))
             }
@@ -1240,7 +1262,8 @@ class FileCreationServiceEmailDisabledSpec extends AnyWordSpec with Matchers wit
 
               val expected = s"""|00|HEC_SSA_0001_20211010_$partialFileName.dat|HEC|SSA|20211010|113605|000001|001
                                  |01|AB123||||||1111111111|1123456|Test Tech Ltd|01|00|01|C|Y||||Y|20201009|20211009||||Y|00|Y|20210909090900|20210909090900|XNFFGBDD6|99990210|Y
-                                 |99|HEC_SSA_0001_20211010_$partialFileName.dat|3|Y""".stripMargin
+                                 |99|HEC_SSA_0001_20211010_$partialFileName.dat|3|Y
+                                 |""".stripMargin
 
               result shouldBe Right((expected, s"HEC_SSA_0001_20211010_$partialFileName.dat"))
 
@@ -1281,7 +1304,8 @@ class FileCreationServiceEmailDisabledSpec extends AnyWordSpec with Matchers wit
 
               val expected = s"""|00|HEC_SSA_0001_20211010_$partialFileName.dat|HEC|SSA|20211010|113605|000001|001
                                  |01|AB123||||||1111111111|1123456|Test Tech Ltd|01|00|01|C|Y||||Y||20211008||||||Y|20210909090900|20210909090900|XNFFGBDD6|99990210|Y
-                                 |99|HEC_SSA_0001_20211010_$partialFileName.dat|3|Y""".stripMargin
+                                 |99|HEC_SSA_0001_20211010_$partialFileName.dat|3|Y
+                                 |""".stripMargin
 
               result shouldBe Right((expected, s"HEC_SSA_0001_20211010_$partialFileName.dat"))
             }
@@ -1316,7 +1340,8 @@ class FileCreationServiceEmailDisabledSpec extends AnyWordSpec with Matchers wit
 
               val expected = s"""|00|HEC_SSA_0001_20211010_$partialFileName.dat|HEC|SSA|20211010|113605|000001|001
                                  |01|AB123||||||1111111111|1123456|Test Tech Ltd|01|00|01|C|||||N|||Y|||||Y|20210909090900|20210909090900|XNFFGBDD6|99990210|Y
-                                 |99|HEC_SSA_0001_20211010_$partialFileName.dat|3|Y""".stripMargin
+                                 |99|HEC_SSA_0001_20211010_$partialFileName.dat|3|Y
+                                 |""".stripMargin
 
               result shouldBe Right((expected, s"HEC_SSA_0001_20211010_$partialFileName.dat"))
             }
