@@ -135,7 +135,7 @@ class AuditEventSpec extends Matchers with AnyWordSpecLike {
              |   "taxCheckStartDateTime": "2020-11-01T20:55:31.000000032Z[Europe/London]",
              |   "source": "Digital",
              |   "type": "Individual",
-             |   "preferredLanguage": "cy"
+             |   "languagePreference": "cy"
              |   },    
              |   "taxCheckCode": "code",
              |   "expiresAfter": "2020-12-02",

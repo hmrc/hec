@@ -39,7 +39,7 @@ object HECTaxCheckData {
     taxDetails: IndividualTaxDetails,
     taxCheckStartDateTime: ZonedDateTime,
     source: HECTaxCheckSource,
-    preferredLanguage: Option[Language]
+    languagePreference: Option[Language]
   ) extends HECTaxCheckData {
     val entityType: EntityType = EntityType.Individual
   }
@@ -50,7 +50,7 @@ object HECTaxCheckData {
     taxDetails: CompanyTaxDetails,
     taxCheckStartDateTime: ZonedDateTime,
     source: HECTaxCheckSource,
-    preferredLanguage: Option[Language]
+    languagePreference: Option[Language]
   ) extends HECTaxCheckData {
     val entityType: EntityType = EntityType.Company
   }
