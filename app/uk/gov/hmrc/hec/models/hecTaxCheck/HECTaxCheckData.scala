@@ -17,6 +17,7 @@
 package uk.gov.hmrc.hec.models.hecTaxCheck
 
 import play.api.libs.json._
+import uk.gov.hmrc.hec.models.Language
 import uk.gov.hmrc.hec.models.hecTaxCheck.ApplicantDetails.{CompanyApplicantDetails, IndividualApplicantDetails}
 import uk.gov.hmrc.hec.models.hecTaxCheck.TaxDetails.{CompanyTaxDetails, IndividualTaxDetails}
 import uk.gov.hmrc.hec.models.hecTaxCheck.licence.LicenceDetails
@@ -37,7 +38,8 @@ object HECTaxCheckData {
     licenceDetails: LicenceDetails,
     taxDetails: IndividualTaxDetails,
     taxCheckStartDateTime: ZonedDateTime,
-    source: HECTaxCheckSource
+    source: HECTaxCheckSource,
+    preferredLanguage: Option[Language]
   ) extends HECTaxCheckData {
     val entityType: EntityType = EntityType.Individual
   }
@@ -47,7 +49,8 @@ object HECTaxCheckData {
     licenceDetails: LicenceDetails,
     taxDetails: CompanyTaxDetails,
     taxCheckStartDateTime: ZonedDateTime,
-    source: HECTaxCheckSource
+    source: HECTaxCheckSource,
+    preferredLanguage: Option[Language]
   ) extends HECTaxCheckData {
     val entityType: EntityType = EntityType.Company
   }

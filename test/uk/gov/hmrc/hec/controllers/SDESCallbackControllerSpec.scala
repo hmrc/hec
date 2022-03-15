@@ -108,7 +108,8 @@ class SDESCallbackControllerSpec extends ControllerSpec {
       None
     ),
     taxCheckStartDateTime,
-    HECTaxCheckSource.Digital
+    HECTaxCheckSource.Digital,
+    None
   )
 
   val hecTaxCheck1 =

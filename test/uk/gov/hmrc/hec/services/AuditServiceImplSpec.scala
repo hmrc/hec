@@ -23,6 +23,7 @@ import play.api.libs.json.Json
 import play.api.mvc.{Headers, Request}
 import play.api.test.FakeRequest
 import uk.gov.hmrc.hec.models.AuditEvent.TaxCheckSuccess
+import uk.gov.hmrc.hec.models.Language
 import uk.gov.hmrc.hec.models.hecTaxCheck.ApplicantDetails.CompanyApplicantDetails
 import uk.gov.hmrc.hec.models.hecTaxCheck.{HECTaxCheck, HECTaxCheckCode, HECTaxCheckSource}
 import uk.gov.hmrc.hec.models.hecTaxCheck.HECTaxCheckData.CompanyHECTaxCheckData
@@ -97,7 +98,8 @@ class AuditServiceImplSpec extends Matchers with AnyWordSpecLike with MockFactor
                 None
               ),
               ZonedDateTime.now(),
-              HECTaxCheckSource.Stride
+              HECTaxCheckSource.Stride,
+              Some(Language.Welsh)
             ),
             HECTaxCheckCode(""),
             LocalDate.now(),

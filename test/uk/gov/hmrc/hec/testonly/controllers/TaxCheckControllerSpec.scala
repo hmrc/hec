@@ -27,7 +27,7 @@ import play.api.test.FakeRequest
 import play.api.test.Helpers._
 import uk.gov.hmrc.hec.controllers.ControllerSpec
 import uk.gov.hmrc.hec.models
-import uk.gov.hmrc.hec.models.Error
+import uk.gov.hmrc.hec.models.{Error, Language}
 import uk.gov.hmrc.hec.models.hecTaxCheck.ApplicantDetails.IndividualApplicantDetails
 import uk.gov.hmrc.hec.models.hecTaxCheck.HECTaxCheckData.IndividualHECTaxCheckData
 import uk.gov.hmrc.hec.models.hecTaxCheck.TaxDetails.IndividualTaxDetails
@@ -299,7 +299,8 @@ class TaxCheckControllerSpec extends ControllerSpec {
               None
             ),
             taxCheckStartDateTime,
-            HECTaxCheckSource.Digital
+            HECTaxCheckSource.Digital,
+            Some(Language.Welsh)
           )
           val taxCheck     =
             models.hecTaxCheck

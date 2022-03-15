@@ -132,7 +132,8 @@ class TaxCheckServiceImplSpec extends AnyWordSpec with Matchers with MockFactory
           None
         ),
         taxCheckStartDateTime,
-        HECTaxCheckSource.Digital
+        HECTaxCheckSource.Digital,
+        None
       )
 
       val expectedExpiryDate = TimeUtils.today().plusDays(expiresAfter.toDays)
@@ -217,7 +218,8 @@ class TaxCheckServiceImplSpec extends AnyWordSpec with Matchers with MockFactory
               None
             ),
             taxCheckStartDateTime,
-            HECTaxCheckSource.Digital
+            HECTaxCheckSource.Digital,
+            None
           ),
           taxCheckCode,
           TimeUtils.today().plusMonths(1L),
@@ -249,7 +251,8 @@ class TaxCheckServiceImplSpec extends AnyWordSpec with Matchers with MockFactory
               None
             ),
             taxCheckStartDateTime,
-            HECTaxCheckSource.Digital
+            HECTaxCheckSource.Digital,
+            None
           ),
           taxCheckCode,
           TimeUtils.today().plusMonths(1L),
@@ -458,7 +461,8 @@ class TaxCheckServiceImplSpec extends AnyWordSpec with Matchers with MockFactory
           None
         ),
         taxCheckStartDateTime,
-        HECTaxCheckSource.Digital
+        HECTaxCheckSource.Digital,
+        None
       )
 
       "return an error" when {
@@ -530,7 +534,8 @@ class TaxCheckServiceImplSpec extends AnyWordSpec with Matchers with MockFactory
           None
         ),
         taxCheckStartDateTime,
-        HECTaxCheckSource.Digital
+        HECTaxCheckSource.Digital,
+        None
       )
 
       "return an error" when {
@@ -610,7 +615,8 @@ class TaxCheckServiceImplSpec extends AnyWordSpec with Matchers with MockFactory
           None
         ),
         taxCheckStartDateTime,
-        HECTaxCheckSource.Digital
+        HECTaxCheckSource.Digital,
+        None
       )
 
       "return an error" when {
@@ -675,7 +681,8 @@ class TaxCheckServiceImplSpec extends AnyWordSpec with Matchers with MockFactory
           None
         ),
         taxCheckStartDateTime,
-        HECTaxCheckSource.Digital
+        HECTaxCheckSource.Digital,
+        None
       )
 
       val taxCheck        = HECTaxCheck(

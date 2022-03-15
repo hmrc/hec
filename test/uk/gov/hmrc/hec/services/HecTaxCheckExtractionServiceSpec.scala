@@ -178,7 +178,8 @@ class HecTaxCheckExtractionServiceSpec
         None
       ),
       taxCheckStartDateTime,
-      HECTaxCheckSource.Digital
+      HECTaxCheckSource.Digital,
+      Some(Language.English)
     )
     val taxCheckCode1 = HECTaxCheckCode("code1")
     val taxCheckCode2 = HECTaxCheckCode("code12")
