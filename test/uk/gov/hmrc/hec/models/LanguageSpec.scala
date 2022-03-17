@@ -33,7 +33,7 @@ class LanguageSpec extends AnyWordSpec with Matchers {
 
     "write a json string using the language code" in {
       forEachLanguage { lang =>
-        Json.toJson(lang) shouldBe JsString(lang.code)
+        Json.toJson(lang) shouldBe JsString(lang.toString)
       }
 
     }
@@ -58,7 +58,7 @@ class LanguageSpec extends AnyWordSpec with Matchers {
 
       "a string value is recognised" in {
         forEachLanguage { lang =>
-          JsString(lang.code).validate[Language] shouldBe JsSuccess(lang)
+          JsString(lang.toString).validate[Language] shouldBe JsSuccess(lang)
         }
 
       }

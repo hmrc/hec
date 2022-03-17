@@ -92,7 +92,7 @@ class HECTaxCheckDataSpec extends AnyWordSpec with Matchers {
                                          | "taxCheckStartDateTime" : "2021-10-09T09:12:34+01:00[Europe/London]",
                                          | "type":"Individual",
                                          | "source": "Digital",
-                                         | "languagePreference": "en"
+                                         | "languagePreference": "English"
                                          |}""".stripMargin)
 
       val companyTaxCheckData: HECTaxCheckData =

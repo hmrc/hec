@@ -18,28 +18,22 @@ package uk.gov.hmrc.hec.models
 
 import play.api.libs.json.{Format, JsError, JsString, JsSuccess, Reads, Writes}
 
-sealed trait Language extends Product with Serializable {
-  val code: String
-}
+sealed trait Language extends Product with Serializable
 
 object Language {
 
-  case object English extends Language {
-    val code = "en"
-  }
+  case object English extends Language
 
-  case object Welsh extends Language {
-    val code = "cy"
-  }
+  case object Welsh extends Language
 
   implicit val format: Format[Language] = Format(
     Reads({
-      case JsString(English.code) => JsSuccess(English)
-      case JsString(Welsh.code)   => JsSuccess(Welsh)
-      case JsString(other)        => JsError(s"Found unsupported language code $other")
-      case other                  => JsError(s"Expected string but found ${other.getClass.getSimpleName}")
+      case JsString("English") => JsSuccess(English)
+      case JsString("Welsh")   => JsSuccess(Welsh)
+      case JsString(other)     => JsError(s"Found unsupported language code $other")
+      case other               => JsError(s"Expected string but found ${other.getClass.getSimpleName}")
     }),
-    Writes(l => JsString(l.code))
+    Writes(l => JsString(l.toString))
   )
 
 }
