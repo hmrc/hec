@@ -30,7 +30,7 @@ object Language {
     Reads({
       case JsString("English") => JsSuccess(English)
       case JsString("Welsh")   => JsSuccess(Welsh)
-      case JsString(other)     => JsError(s"Found unsupported language code $other")
+      case JsString(other)     => JsError(s"Found unsupported language $other")
       case other               => JsError(s"Expected string but found ${other.getClass.getSimpleName}")
     }),
     Writes(l => JsString(l.toString))
