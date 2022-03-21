@@ -24,6 +24,7 @@ import org.scalatest.wordspec.AnyWordSpec
 import play.api.Configuration
 import play.api.libs.json.{JsNumber, JsObject, Json}
 import play.api.test.Helpers._
+import uk.gov.hmrc.hec.models.Language
 import uk.gov.hmrc.hec.models.hecTaxCheck.ApplicantDetails.CompanyApplicantDetails
 import uk.gov.hmrc.hec.models.hecTaxCheck.HECTaxCheckData.CompanyHECTaxCheckData
 import uk.gov.hmrc.hec.models.hecTaxCheck.TaxDetails.CompanyTaxDetails
@@ -83,7 +84,8 @@ class HECTaxCheckStoreImplSpec extends AnyWordSpec with Matchers with Eventually
         None
       ),
       taxCheckStartDateTime,
-      HECTaxCheckSource.Digital
+      HECTaxCheckSource.Digital,
+      Some(Language.Welsh)
     )
 
     val taxCheckCode1 = HECTaxCheckCode("code1")

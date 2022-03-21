@@ -97,7 +97,8 @@ Example response body:
       },
       "taxCheckStartDateTime": "2021-12-02T14:56:11.75Z[Europe/London]",
       "source": "Digital",
-      "type": "Company"
+      "type": "Company",
+      "languagePreference": "English"
    },
    "taxCheckCode": "TLAR4D6HB",
    "expiresAfter": "2022-04-01",

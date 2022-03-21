@@ -33,7 +33,7 @@ import uk.gov.hmrc.hec.models.hecTaxCheck.licence.{LicenceDetails, LicenceTimeTr
 import uk.gov.hmrc.hec.models.hecTaxCheck._
 import uk.gov.hmrc.hec.models.hecTaxCheck.company.CTAccountingPeriod.{CTAccountingPeriodDigital, CTAccountingPeriodStride}
 import uk.gov.hmrc.hec.models.ids._
-import uk.gov.hmrc.hec.models.{EmailAddress, Error, hecTaxCheck}
+import uk.gov.hmrc.hec.models.{EmailAddress, Error, Language, hecTaxCheck}
 import uk.gov.hmrc.hec.util.TimeProvider
 
 import java.time.{LocalDate, LocalTime, ZoneId, ZonedDateTime}
@@ -194,7 +194,8 @@ class FileCreationServiceSpec extends AnyWordSpec with Matchers with MockFactory
                   LicenceDetails(licenceType, licenceTimeTrading, licenceValidityPeriod),
                   createTaxDetails(taxSituation, saStatusResponse, correctiveAction),
                   zonedDateTime,
-                  Digital
+                  Digital,
+                  Some(Language.Welsh)
                 ),
                 HECTaxCheckCode("XNFFGBDD6"),
                 LocalDate.of(9999, 2, 10),
@@ -479,7 +480,8 @@ class FileCreationServiceSpec extends AnyWordSpec with Matchers with MockFactory
                     correctiveAction
                   ),
                   zonedDateTime,
-                  Digital
+                  Digital,
+                  Some(Language.English)
                 ),
                 HECTaxCheckCode("XNFFGBDD6"),
                 LocalDate.of(9999, 2, 10),
@@ -828,7 +830,8 @@ class FileCreationServiceEmailDisabledSpec extends AnyWordSpec with Matchers wit
                   LicenceDetails(licenceType, licenceTimeTrading, licenceValidityPeriod),
                   createTaxDetails(taxSituation, saStatusResponse, correctiveAction),
                   zonedDateTime,
-                  Digital
+                  Digital,
+                  Some(Language.Welsh)
                 ),
                 HECTaxCheckCode("XNFFGBDD6"),
                 LocalDate.of(9999, 2, 10),
@@ -1113,7 +1116,8 @@ class FileCreationServiceEmailDisabledSpec extends AnyWordSpec with Matchers wit
                     correctiveAction
                   ),
                   zonedDateTime,
-                  Digital
+                  Digital,
+                  Some(Language.Welsh)
                 ),
                 HECTaxCheckCode("XNFFGBDD6"),
                 LocalDate.of(9999, 2, 10),

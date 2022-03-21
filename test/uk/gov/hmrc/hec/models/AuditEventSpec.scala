@@ -89,7 +89,8 @@ class AuditEventSpec extends Matchers with AnyWordSpecLike {
                 Some(CorrectiveAction.RegisterNewSAAccount)
               ),
               zonedDateTime,
-              HECTaxCheckSource.Digital
+              HECTaxCheckSource.Digital,
+              Some(Language.Welsh)
             ),
             HECTaxCheckCode("code"),
             date.plusDays(1L),
@@ -133,7 +134,8 @@ class AuditEventSpec extends Matchers with AnyWordSpecLike {
              |   },
              |   "taxCheckStartDateTime": "2020-11-01T20:55:31.000000032Z[Europe/London]",
              |   "source": "Digital",
-             |   "type": "Individual"
+             |   "type": "Individual",
+             |   "languagePreference": "Welsh"
              |   },    
              |   "taxCheckCode": "code",
              |   "expiresAfter": "2020-12-02",
@@ -183,7 +185,8 @@ class AuditEventSpec extends Matchers with AnyWordSpecLike {
                 Some(CorrectiveAction.Other)
               ),
               zonedDateTime,
-              HECTaxCheckSource.Stride
+              HECTaxCheckSource.Stride,
+              None
             ),
             HECTaxCheckCode("code"),
             date.plusDays(4L),

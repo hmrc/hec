@@ -24,7 +24,7 @@ import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
 import play.api.test.Helpers._
 import uk.gov.hmrc.hec.models
-import uk.gov.hmrc.hec.models.Error
+import uk.gov.hmrc.hec.models.{Error, Language}
 import uk.gov.hmrc.hec.models.hecTaxCheck.ApplicantDetails.IndividualApplicantDetails
 import uk.gov.hmrc.hec.models.hecTaxCheck.HECTaxCheckData.IndividualHECTaxCheckData
 import uk.gov.hmrc.hec.models.hecTaxCheck.TaxDetails.IndividualTaxDetails
@@ -202,7 +202,8 @@ class TaxCheckServiceImplSpec extends AnyWordSpec with Matchers with MockFactory
               None
             ),
             taxCheckStartDateTime,
-            HECTaxCheckSource.Digital
+            HECTaxCheckSource.Digital,
+            Some(Language.English)
           )
           val taxCheck     =
             models.hecTaxCheck
