@@ -16,14 +16,22 @@
 
 package uk.gov.hmrc.hec.services.scheduleService
 
-import akka.actor.{ActorSystem, Scheduler}
+import akka.actor.{ActorSystem, Cancellable}
 import com.google.inject.{ImplementedBy, Inject}
+
+import scala.concurrent.ExecutionContext
+import scala.concurrent.duration.FiniteDuration
 
 @ImplementedBy(classOf[SchedulerProviderImpl])
 trait SchedulerProvider {
-  val scheduler: Scheduler
+
+  def scheduleOnce(delay: FiniteDuration)(f: => Unit)(implicit ec: ExecutionContext): Cancellable
+
 }
 
 class SchedulerProviderImpl @Inject() (val system: ActorSystem) extends SchedulerProvider {
-  val scheduler = system.scheduler
+
+  override def scheduleOnce(delay: FiniteDuration)(f: => Unit)(implicit ec: ExecutionContext): Cancellable =
+    system.scheduler.scheduleOnce(delay)(f)
+
 }

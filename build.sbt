@@ -6,7 +6,7 @@ import wartremover.WartRemover.autoImport.wartremoverErrors
 
 val appName = "hec"
 
-val silencerVersion = "1.7.3"
+val silencerVersion = "1.7.8"
 
 lazy val wartremoverSettings =
   Seq(
@@ -45,7 +45,7 @@ lazy val microservice = Project(appName, file("."))
   .settings(addCompilerPlugin("org.typelevel" %% "kind-projector" % "0.10.3"))
   .settings(
     majorVersion := 1,
-    scalaVersion := "2.12.13",
+    scalaVersion := "2.12.15",
     libraryDependencies ++= AppDependencies.compile ++ AppDependencies.test,
     // ***************
     // Use the silencer plugin to suppress warnings
@@ -55,9 +55,9 @@ lazy val microservice = Project(appName, file("."))
       "com.github.ghik" % "silencer-lib" % silencerVersion % Provided cross CrossVersion.full
     ),
     // ***************
-    sources in (Compile, doc) := Seq.empty
+    Compile / doc / sources := Seq.empty
   )
-  .settings(scalacOptions in Test --= Seq("-Ywarn-value-discard"))
+  .settings(Test / scalacOptions --= Seq("-Ywarn-value-discard"))
   .settings(publishingSettings: _*)
   .configs(IntegrationTest)
   .settings(integrationTestSettings(): _*)
