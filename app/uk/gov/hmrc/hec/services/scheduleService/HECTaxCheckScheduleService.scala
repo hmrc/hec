@@ -46,7 +46,7 @@ class HECTaxCheckScheduleService @Inject() (
   private def timeUntilNextJob(): FiniteDuration = timeCalculator.timeUntil(jobStartTime, extractionTimeZone)
 
   def scheduleNextJob(): Unit = {
-    val _ = schedulerProvider.scheduler.scheduleOnce(timeUntilNextJob())(runScheduledJob)
+    val _ = schedulerProvider.scheduleOnce(timeUntilNextJob())(runScheduledJob)
   }
 
   scheduleNextJob()

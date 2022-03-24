@@ -16,11 +16,11 @@
 
 package uk.gov.hmrc.hec.services
 
-import akka.actor.{ActorRef, ActorSystem, Cancellable, Scheduler}
+import akka.actor.{ActorRef, ActorSystem, Cancellable}
 import akka.pattern.ask
 import akka.testkit.{TestKit, TestProbe}
 import akka.util.Timeout
-import com.miguno.akka.testing.{MockScheduler, VirtualTime}
+import com.miguno.akka.testing.VirtualTime
 import com.typesafe.config.{ConfigFactory, ConfigValueFactory}
 import org.scalatest.BeforeAndAfterAll
 import org.scalatest.matchers.should.Matchers
@@ -30,9 +30,9 @@ import uk.gov.hmrc.hec.actors.TimeCalculator
 import uk.gov.hmrc.hec.models
 import uk.gov.hmrc.hec.models.Error
 import uk.gov.hmrc.hec.services.HecTaxCheckScheduleServiceImplSpec.TestHecTaxCheckScheduleService.{RunJobRequest, RunJobResponse}
-import uk.gov.hmrc.hec.services.HecTaxCheckScheduleServiceImplSpec.TestScheduler.JobScheduledOnce
+import uk.gov.hmrc.hec.services.HecTaxCheckScheduleServiceImplSpec.TestSchedulerProvider.JobScheduledOnce
 import uk.gov.hmrc.hec.services.HecTaxCheckScheduleServiceImplSpec.TestTimeCalculator.{TimeUntilRequest, TimeUntilResponse}
-import uk.gov.hmrc.hec.services.HecTaxCheckScheduleServiceImplSpec.{TestHecTaxCheckScheduleService, TestScheduler, TestSchedulerProvider, TestTimeCalculator}
+import uk.gov.hmrc.hec.services.HecTaxCheckScheduleServiceImplSpec.{TestHecTaxCheckScheduleService, TestSchedulerProvider, TestTimeCalculator}
 import uk.gov.hmrc.hec.services.scheduleService.{HECTaxCheckExtractionContext, HECTaxCheckScheduleService, HecTaxCheckExtractionService, SchedulerProvider}
 import uk.gov.hmrc.http.HeaderCarrier
 
@@ -67,13 +67,11 @@ class HecTaxCheckScheduleServiceImplSpec
 
   val testProbe: TestProbe = TestProbe()
 
-  // set up with `TestScheduler` here so that when we can be sure that the job has actually been scheduled
-  // (after we receive a `JobScheduledOnce` message) before advancing time
-  val virtualTime: VirtualTime = new VirtualTime() {
-    override val scheduler = new TestScheduler(testProbe.ref, this)
-  }
+  val virtualTime: VirtualTime = new VirtualTime
 
-  val testScheduleProvider = new TestSchedulerProvider(virtualTime)
+  // set up with `TestSchedulerProvider` here so that when we can be sure that the job has actually been scheduled
+  // (after we receive a `JobScheduledOnce` message) before advancing time
+  val testScheduleProvider = new TestSchedulerProvider(testProbe.ref, virtualTime)
 
   val testHecTaxCheckScheduleService = new TestHecTaxCheckScheduleService(testProbe.ref)
   val testTimeCalculator             = new TestTimeCalculator(testProbe.ref)
@@ -99,7 +97,6 @@ class HecTaxCheckScheduleServiceImplSpec
   "HecTaxCheckScheduleServiceSpec" must {
 
     "schedule a job that runs repeatedly at the set interval with the correct initial delay" in {
-
       // stick in a future to let the scheduler run on a different thread - if it runs on the same thread
       // a timeout will occur because the scheduler is expecting a `TimeUntilResponse` before continuing
       val _ = Future {
@@ -173,8 +170,18 @@ object HecTaxCheckScheduleServiceImplSpec {
 
   }
 
-  class TestSchedulerProvider(virtualTime: VirtualTime) extends SchedulerProvider {
-    override val scheduler: Scheduler = virtualTime.scheduler
+  class TestSchedulerProvider(reportTo: ActorRef, virtualTime: VirtualTime) extends SchedulerProvider {
+    override def scheduleOnce(delay: FiniteDuration)(f: => Unit)(implicit ec: ExecutionContext): Cancellable = {
+      val job = virtualTime.scheduler.scheduleOnce(delay)(f)
+      reportTo ! JobScheduledOnce(delay)
+      job
+    }
+  }
+
+  object TestSchedulerProvider {
+
+    final case class JobScheduledOnce(delay: FiniteDuration)
+
   }
 
   class TestHecTaxCheckScheduleService(reportTo: ActorRef) extends HecTaxCheckExtractionService {
@@ -188,21 +195,6 @@ object HecTaxCheckScheduleServiceImplSpec {
     case object RunJobRequest
 
     final case class RunJobResponse(result: Option[Either[models.Error, Unit]])
-
-  }
-
-  class TestScheduler(reportTo: ActorRef, time: VirtualTime) extends MockScheduler(time) {
-
-    override def scheduleOnce(delay: FiniteDuration, runnable: Runnable)(implicit ec: ExecutionContext): Cancellable = {
-      val job = super.scheduleOnce(delay, runnable)
-      reportTo ! JobScheduledOnce(delay)
-      job
-    }
-  }
-
-  object TestScheduler {
-
-    final case class JobScheduledOnce(delay: FiniteDuration)
 
   }
 
