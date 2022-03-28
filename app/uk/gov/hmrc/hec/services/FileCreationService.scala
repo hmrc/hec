@@ -225,7 +225,7 @@ class FileCreationServiceImpl @Inject() (timeProvider: TimeProvider, config: Con
             incomeTaxYear = (i.taxDetails.relevantIncomeTaxYear.startYear + 1).some,
             returnReceived = saStatusMap.returnReceived,
             noticeToFile = saStatusMap.noticeToFileIssued,
-            taxComplianceDeclaration = saStatusMap.returnReceived,
+            taxComplianceDeclaration = yesNoAnswerMap(i.taxDetails.saIncomeDeclared),
             correctiveAction = i.taxDetails.correctiveAction.map(ca => correctiveActionEKV(ca)._1),
             customerDeclaration = 'Y',
             taxCheckStartDateTime = taxCheckStartDateTime,

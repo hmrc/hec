@@ -167,13 +167,14 @@ class FileCreationServiceSpec extends AnyWordSpec with Matchers with MockFactory
             def createTaxDetails(
               taxSituation: TaxSituation,
               saStatusResponse: Option[SAStatusResponse],
-              correctiveAction: Option[CorrectiveAction]
+              correctiveAction: Option[CorrectiveAction],
+              saIncomeDeclared: Option[YesNoAnswer]
             ) =
               IndividualTaxDetails(
                 NINO("AB123456C"),
                 Some(SAUTR("1234567")),
                 taxSituation,
-                Some(YesNoAnswer.Yes),
+                saIncomeDeclared,
                 saStatusResponse,
                 TaxYear(2021),
                 correctiveAction
@@ -186,13 +187,14 @@ class FileCreationServiceSpec extends AnyWordSpec with Matchers with MockFactory
               taxSituation: TaxSituation,
               saStatusResponse: Option[SAStatusResponse],
               correctiveAction: Option[CorrectiveAction],
-              emailAddress: Option[EmailAddress]
+              emailAddress: Option[EmailAddress],
+              saIncomeDeclared: Option[YesNoAnswer]
             ) =
               HECTaxCheck(
                 IndividualHECTaxCheckData(
                   individualApplicantDetails,
                   LicenceDetails(licenceType, licenceTimeTrading, licenceValidityPeriod),
-                  createTaxDetails(taxSituation, saStatusResponse, correctiveAction),
+                  createTaxDetails(taxSituation, saStatusResponse, correctiveAction, saIncomeDeclared),
                   zonedDateTime,
                   Digital,
                   Some(Language.Welsh)
@@ -214,7 +216,8 @@ class FileCreationServiceSpec extends AnyWordSpec with Matchers with MockFactory
                   TaxSituation.PAYE,
                   Some(SAStatusResponse(SAUTR("1234567"), TaxYear(2021), SAStatus.ReturnFound)),
                   Some(CorrectiveAction.RegisterNewSAAccount),
-                  Some(EmailAddress("email"))
+                  Some(EmailAddress("email")),
+                  Some(YesNoAnswer.Yes)
                 ),
                 createIndividualHecTaxCheck(
                   DriverOfTaxisAndPrivateHires,
@@ -223,7 +226,8 @@ class FileCreationServiceSpec extends AnyWordSpec with Matchers with MockFactory
                   TaxSituation.PAYE,
                   Some(individual.SAStatusResponse(SAUTR("1234567"), TaxYear(2021), SAStatus.NoticeToFileIssued)),
                   Some(CorrectiveAction.RegisterNewSAAccount),
-                  None
+                  None,
+                  Some(YesNoAnswer.No)
                 ),
                 createIndividualHecTaxCheck(
                   DriverOfTaxisAndPrivateHires,
@@ -232,6 +236,7 @@ class FileCreationServiceSpec extends AnyWordSpec with Matchers with MockFactory
                   TaxSituation.PAYE,
                   Some(individual.SAStatusResponse(SAUTR("1234567"), TaxYear(2021), SAStatus.NoReturnFound)),
                   Some(CorrectiveAction.RegisterNewSAAccount),
+                  None,
                   None
                 )
               )
@@ -252,7 +257,7 @@ class FileCreationServiceSpec extends AnyWordSpec with Matchers with MockFactory
               val expected = s"""|00|HEC_SSA_0001_20211010_$partialFileName.dat|HEC|SSA|20211010|113605|000001|001
               |01|AB123|AB123456C|Karen|mcFie|19221201|1234567||||00|04|02|I||Y|N|2022|||||Y||Y|00|Y|20210909090900|20210909090900|XNFFGBDD6|99990210|Y|email
               |01|AB123|AB123456C|Karen|mcFie|19221201|1234567||||00|04|01|I||Y|N|2022|||||N|Y|N|00|Y|20210909090900|20210909090900|XNFFGBDD6|99990210|Y|
-              |01|AB123|AB123456C|Karen|mcFie|19221201|1234567||||00|04|01|I||Y|N|2022|||||N|N|N|00|Y|20210909090900|20210909090900|XNFFGBDD6|99990210|Y|
+              |01|AB123|AB123456C|Karen|mcFie|19221201|1234567||||00|04|01|I||Y|N|2022|||||N|N||00|Y|20210909090900|20210909090900|XNFFGBDD6|99990210|Y|
               |99|HEC_SSA_0001_20211010_$partialFileName.dat|5|Y
               |""".stripMargin
 
@@ -268,7 +273,8 @@ class FileCreationServiceSpec extends AnyWordSpec with Matchers with MockFactory
                   TaxSituation.SA,
                   Some(individual.SAStatusResponse(SAUTR("1234567"), TaxYear(2021), SAStatus.ReturnFound)),
                   Some(CorrectiveAction.RegisterNewSAAccount),
-                  Some(EmailAddress("email"))
+                  Some(EmailAddress("email")),
+                  None
                 ),
                 createIndividualHecTaxCheck(
                   ScrapMetalMobileCollector,
@@ -277,7 +283,8 @@ class FileCreationServiceSpec extends AnyWordSpec with Matchers with MockFactory
                   TaxSituation.SA,
                   Some(individual.SAStatusResponse(SAUTR("1234567"), TaxYear(2021), SAStatus.NoticeToFileIssued)),
                   Some(CorrectiveAction.RegisterNewSAAccount),
-                  None
+                  None,
+                  Some(YesNoAnswer.No)
                 ),
                 createIndividualHecTaxCheck(
                   ScrapMetalDealerSite,
@@ -286,7 +293,8 @@ class FileCreationServiceSpec extends AnyWordSpec with Matchers with MockFactory
                   TaxSituation.SA,
                   Some(individual.SAStatusResponse(SAUTR("1234567"), TaxYear(2021), SAStatus.NoReturnFound)),
                   Some(CorrectiveAction.RegisterNewSAAccount),
-                  None
+                  None,
+                  Some(YesNoAnswer.Yes)
                 )
               )
 
@@ -305,9 +313,9 @@ class FileCreationServiceSpec extends AnyWordSpec with Matchers with MockFactory
                 )
 
               val expected = s"""|00|HEC_SSA_0001_20211010_$partialFileName.dat|HEC|SSA|20211010|113605|000001|001
-              |01|AB123|AB123456C|Karen|mcFie|19221201|1234567||||01|00|02|I||N|Y|2022|||||Y||Y|00|Y|20210909090900|20210909090900|XNFFGBDD6|99990210|Y|email
+              |01|AB123|AB123456C|Karen|mcFie|19221201|1234567||||01|00|02|I||N|Y|2022|||||Y|||00|Y|20210909090900|20210909090900|XNFFGBDD6|99990210|Y|email
               |01|AB123|AB123456C|Karen|mcFie|19221201|1234567||||02|01|01|I||N|Y|2022|||||N|Y|N|00|Y|20210909090900|20210909090900|XNFFGBDD6|99990210|Y|
-              |01|AB123|AB123456C|Karen|mcFie|19221201|1234567||||03|02|01|I||N|Y|2022|||||N|N|N|00|Y|20210909090900|20210909090900|XNFFGBDD6|99990210|Y|
+              |01|AB123|AB123456C|Karen|mcFie|19221201|1234567||||03|02|01|I||N|Y|2022|||||N|N|Y|00|Y|20210909090900|20210909090900|XNFFGBDD6|99990210|Y|
               |99|HEC_SSA_0001_20211010_$partialFileName.dat|5|Y
               |""".stripMargin
 
@@ -323,7 +331,8 @@ class FileCreationServiceSpec extends AnyWordSpec with Matchers with MockFactory
                   TaxSituation.SAPAYE,
                   Some(individual.SAStatusResponse(SAUTR("1234567"), TaxYear(2021), SAStatus.ReturnFound)),
                   Some(CorrectiveAction.RegisterNewSAAccount),
-                  Some(EmailAddress("email"))
+                  Some(EmailAddress("email")),
+                  Some(YesNoAnswer.No)
                 ),
                 createIndividualHecTaxCheck(
                   ScrapMetalMobileCollector,
@@ -332,6 +341,7 @@ class FileCreationServiceSpec extends AnyWordSpec with Matchers with MockFactory
                   TaxSituation.SAPAYE,
                   Some(individual.SAStatusResponse(SAUTR("1234567"), TaxYear(2021), SAStatus.NoticeToFileIssued)),
                   Some(CorrectiveAction.RegisterNewSAAccount),
+                  None,
                   None
                 ),
                 createIndividualHecTaxCheck(
@@ -341,7 +351,8 @@ class FileCreationServiceSpec extends AnyWordSpec with Matchers with MockFactory
                   TaxSituation.SAPAYE,
                   Some(individual.SAStatusResponse(SAUTR("1234567"), TaxYear(2021), SAStatus.NoReturnFound)),
                   Some(CorrectiveAction.RegisterNewSAAccount),
-                  None
+                  None,
+                  Some(YesNoAnswer.Yes)
                 )
               )
 
@@ -360,9 +371,9 @@ class FileCreationServiceSpec extends AnyWordSpec with Matchers with MockFactory
                 )
 
               val expected = s"""|00|HEC_SSA_0001_20211010_$partialFileName.dat|HEC|SSA|20211010|113605|000001|001
-              |01|AB123|AB123456C|Karen|mcFie|19221201|1234567||||01|00|02|I||Y|Y|2022|||||Y||Y|00|Y|20210909090900|20210909090900|XNFFGBDD6|99990210|Y|email
-              |01|AB123|AB123456C|Karen|mcFie|19221201|1234567||||02|01|01|I||Y|Y|2022|||||N|Y|N|00|Y|20210909090900|20210909090900|XNFFGBDD6|99990210|Y|
-              |01|AB123|AB123456C|Karen|mcFie|19221201|1234567||||03|02|01|I||Y|Y|2022|||||N|N|N|00|Y|20210909090900|20210909090900|XNFFGBDD6|99990210|Y|
+              |01|AB123|AB123456C|Karen|mcFie|19221201|1234567||||01|00|02|I||Y|Y|2022|||||Y||N|00|Y|20210909090900|20210909090900|XNFFGBDD6|99990210|Y|email
+              |01|AB123|AB123456C|Karen|mcFie|19221201|1234567||||02|01|01|I||Y|Y|2022|||||N|Y||00|Y|20210909090900|20210909090900|XNFFGBDD6|99990210|Y|
+              |01|AB123|AB123456C|Karen|mcFie|19221201|1234567||||03|02|01|I||Y|Y|2022|||||N|N|Y|00|Y|20210909090900|20210909090900|XNFFGBDD6|99990210|Y|
               |99|HEC_SSA_0001_20211010_$partialFileName.dat|5|Y
               |""".stripMargin
 
@@ -378,7 +389,8 @@ class FileCreationServiceSpec extends AnyWordSpec with Matchers with MockFactory
                   TaxSituation.NotChargeable,
                   Some(individual.SAStatusResponse(SAUTR("1234567"), TaxYear(2021), SAStatus.ReturnFound)),
                   Some(CorrectiveAction.RegisterNewSAAccount),
-                  None
+                  None,
+                  Some(YesNoAnswer.Yes)
                 ),
                 createIndividualHecTaxCheck(
                   ScrapMetalMobileCollector,
@@ -387,6 +399,7 @@ class FileCreationServiceSpec extends AnyWordSpec with Matchers with MockFactory
                   TaxSituation.NotChargeable,
                   Some(individual.SAStatusResponse(SAUTR("1234567"), TaxYear(2021), SAStatus.NoticeToFileIssued)),
                   Some(CorrectiveAction.RegisterNewSAAccount),
+                  None,
                   None
                 ),
                 createIndividualHecTaxCheck(
@@ -396,7 +409,8 @@ class FileCreationServiceSpec extends AnyWordSpec with Matchers with MockFactory
                   TaxSituation.NotChargeable,
                   Some(individual.SAStatusResponse(SAUTR("1234567"), TaxYear(2021), SAStatus.NoReturnFound)),
                   Some(CorrectiveAction.RegisterNewSAAccount),
-                  None
+                  None,
+                  Some(YesNoAnswer.No)
                 )
               )
 
@@ -416,7 +430,7 @@ class FileCreationServiceSpec extends AnyWordSpec with Matchers with MockFactory
 
               val expected = s"""|00|HEC_SSA_0001_20211010_$partialFileName.dat|HEC|SSA|20211010|113605|000001|001
               |01|AB123|AB123456C|Karen|mcFie|19221201|1234567||||01|00|02|I|Y|||2022|||||Y||Y|00|Y|20210909090900|20210909090900|XNFFGBDD6|99990210|Y|
-              |01|AB123|AB123456C|Karen|mcFie|19221201|1234567||||02|01|01|I|Y|||2022|||||N|Y|N|00|Y|20210909090900|20210909090900|XNFFGBDD6|99990210|Y|
+              |01|AB123|AB123456C|Karen|mcFie|19221201|1234567||||02|01|01|I|Y|||2022|||||N|Y||00|Y|20210909090900|20210909090900|XNFFGBDD6|99990210|Y|
               |01|AB123|AB123456C|Karen|mcFie|19221201|1234567||||03|02|01|I|Y|||2022|||||N|N|N|00|Y|20210909090900|20210909090900|XNFFGBDD6|99990210|Y|
               |99|HEC_SSA_0001_20211010_$partialFileName.dat|5|Y
                                  |""".stripMargin
@@ -803,13 +817,14 @@ class FileCreationServiceEmailDisabledSpec extends AnyWordSpec with Matchers wit
             def createTaxDetails(
               taxSituation: TaxSituation,
               saStatusResponse: Option[SAStatusResponse],
-              correctiveAction: Option[CorrectiveAction]
+              correctiveAction: Option[CorrectiveAction],
+              saIncomeDeclared: Option[YesNoAnswer]
             ) =
               IndividualTaxDetails(
                 NINO("AB123456C"),
                 Some(SAUTR("1234567")),
                 taxSituation,
-                Some(YesNoAnswer.Yes),
+                saIncomeDeclared,
                 saStatusResponse,
                 TaxYear(2021),
                 correctiveAction
@@ -822,13 +837,14 @@ class FileCreationServiceEmailDisabledSpec extends AnyWordSpec with Matchers wit
               taxSituation: TaxSituation,
               saStatusResponse: Option[SAStatusResponse],
               correctiveAction: Option[CorrectiveAction],
-              emailAddress: Option[EmailAddress]
+              emailAddress: Option[EmailAddress],
+              saIncomeDeclared: Option[YesNoAnswer]
             ) =
               HECTaxCheck(
                 IndividualHECTaxCheckData(
                   individualApplicantDetails,
                   LicenceDetails(licenceType, licenceTimeTrading, licenceValidityPeriod),
-                  createTaxDetails(taxSituation, saStatusResponse, correctiveAction),
+                  createTaxDetails(taxSituation, saStatusResponse, correctiveAction, saIncomeDeclared),
                   zonedDateTime,
                   Digital,
                   Some(Language.Welsh)
@@ -850,7 +866,8 @@ class FileCreationServiceEmailDisabledSpec extends AnyWordSpec with Matchers wit
                   TaxSituation.PAYE,
                   Some(SAStatusResponse(SAUTR("1234567"), TaxYear(2021), SAStatus.ReturnFound)),
                   Some(CorrectiveAction.RegisterNewSAAccount),
-                  Some(EmailAddress("email"))
+                  Some(EmailAddress("email")),
+                  Some(YesNoAnswer.Yes)
                 ),
                 createIndividualHecTaxCheck(
                   DriverOfTaxisAndPrivateHires,
@@ -859,7 +876,8 @@ class FileCreationServiceEmailDisabledSpec extends AnyWordSpec with Matchers wit
                   TaxSituation.PAYE,
                   Some(individual.SAStatusResponse(SAUTR("1234567"), TaxYear(2021), SAStatus.NoticeToFileIssued)),
                   Some(CorrectiveAction.RegisterNewSAAccount),
-                  None
+                  None,
+                  Some(YesNoAnswer.No)
                 ),
                 createIndividualHecTaxCheck(
                   DriverOfTaxisAndPrivateHires,
@@ -868,6 +886,7 @@ class FileCreationServiceEmailDisabledSpec extends AnyWordSpec with Matchers wit
                   TaxSituation.PAYE,
                   Some(individual.SAStatusResponse(SAUTR("1234567"), TaxYear(2021), SAStatus.NoReturnFound)),
                   Some(CorrectiveAction.RegisterNewSAAccount),
+                  None,
                   None
                 )
               )
@@ -888,7 +907,7 @@ class FileCreationServiceEmailDisabledSpec extends AnyWordSpec with Matchers wit
               val expected = s"""|00|HEC_SSA_0001_20211010_$partialFileName.dat|HEC|SSA|20211010|113605|000001|001
                                  |01|AB123|AB123456C|Karen|mcFie|19221201|1234567||||00|04|02|I||Y|N|2022|||||Y||Y|00|Y|20210909090900|20210909090900|XNFFGBDD6|99990210|Y
                                  |01|AB123|AB123456C|Karen|mcFie|19221201|1234567||||00|04|01|I||Y|N|2022|||||N|Y|N|00|Y|20210909090900|20210909090900|XNFFGBDD6|99990210|Y
-                                 |01|AB123|AB123456C|Karen|mcFie|19221201|1234567||||00|04|01|I||Y|N|2022|||||N|N|N|00|Y|20210909090900|20210909090900|XNFFGBDD6|99990210|Y
+                                 |01|AB123|AB123456C|Karen|mcFie|19221201|1234567||||00|04|01|I||Y|N|2022|||||N|N||00|Y|20210909090900|20210909090900|XNFFGBDD6|99990210|Y
                                  |99|HEC_SSA_0001_20211010_$partialFileName.dat|5|Y
                                  |""".stripMargin
 
@@ -904,7 +923,8 @@ class FileCreationServiceEmailDisabledSpec extends AnyWordSpec with Matchers wit
                   TaxSituation.SA,
                   Some(individual.SAStatusResponse(SAUTR("1234567"), TaxYear(2021), SAStatus.ReturnFound)),
                   Some(CorrectiveAction.RegisterNewSAAccount),
-                  Some(EmailAddress("email"))
+                  Some(EmailAddress("email")),
+                  Some(YesNoAnswer.No)
                 ),
                 createIndividualHecTaxCheck(
                   ScrapMetalMobileCollector,
@@ -913,7 +933,8 @@ class FileCreationServiceEmailDisabledSpec extends AnyWordSpec with Matchers wit
                   TaxSituation.SA,
                   Some(individual.SAStatusResponse(SAUTR("1234567"), TaxYear(2021), SAStatus.NoticeToFileIssued)),
                   Some(CorrectiveAction.RegisterNewSAAccount),
-                  None
+                  None,
+                  Some(YesNoAnswer.Yes)
                 ),
                 createIndividualHecTaxCheck(
                   ScrapMetalDealerSite,
@@ -922,6 +943,7 @@ class FileCreationServiceEmailDisabledSpec extends AnyWordSpec with Matchers wit
                   TaxSituation.SA,
                   Some(individual.SAStatusResponse(SAUTR("1234567"), TaxYear(2021), SAStatus.NoReturnFound)),
                   Some(CorrectiveAction.RegisterNewSAAccount),
+                  None,
                   None
                 )
               )
@@ -941,9 +963,9 @@ class FileCreationServiceEmailDisabledSpec extends AnyWordSpec with Matchers wit
                 )
 
               val expected = s"""|00|HEC_SSA_0001_20211010_$partialFileName.dat|HEC|SSA|20211010|113605|000001|001
-                                 |01|AB123|AB123456C|Karen|mcFie|19221201|1234567||||01|00|02|I||N|Y|2022|||||Y||Y|00|Y|20210909090900|20210909090900|XNFFGBDD6|99990210|Y
-                                 |01|AB123|AB123456C|Karen|mcFie|19221201|1234567||||02|01|01|I||N|Y|2022|||||N|Y|N|00|Y|20210909090900|20210909090900|XNFFGBDD6|99990210|Y
-                                 |01|AB123|AB123456C|Karen|mcFie|19221201|1234567||||03|02|01|I||N|Y|2022|||||N|N|N|00|Y|20210909090900|20210909090900|XNFFGBDD6|99990210|Y
+                                 |01|AB123|AB123456C|Karen|mcFie|19221201|1234567||||01|00|02|I||N|Y|2022|||||Y||N|00|Y|20210909090900|20210909090900|XNFFGBDD6|99990210|Y
+                                 |01|AB123|AB123456C|Karen|mcFie|19221201|1234567||||02|01|01|I||N|Y|2022|||||N|Y|Y|00|Y|20210909090900|20210909090900|XNFFGBDD6|99990210|Y
+                                 |01|AB123|AB123456C|Karen|mcFie|19221201|1234567||||03|02|01|I||N|Y|2022|||||N|N||00|Y|20210909090900|20210909090900|XNFFGBDD6|99990210|Y
                                  |99|HEC_SSA_0001_20211010_$partialFileName.dat|5|Y
                                  |""".stripMargin
 
@@ -959,7 +981,8 @@ class FileCreationServiceEmailDisabledSpec extends AnyWordSpec with Matchers wit
                   TaxSituation.SAPAYE,
                   Some(individual.SAStatusResponse(SAUTR("1234567"), TaxYear(2021), SAStatus.ReturnFound)),
                   Some(CorrectiveAction.RegisterNewSAAccount),
-                  Some(EmailAddress("email"))
+                  Some(EmailAddress("email")),
+                  None
                 ),
                 createIndividualHecTaxCheck(
                   ScrapMetalMobileCollector,
@@ -968,7 +991,8 @@ class FileCreationServiceEmailDisabledSpec extends AnyWordSpec with Matchers wit
                   TaxSituation.SAPAYE,
                   Some(individual.SAStatusResponse(SAUTR("1234567"), TaxYear(2021), SAStatus.NoticeToFileIssued)),
                   Some(CorrectiveAction.RegisterNewSAAccount),
-                  None
+                  None,
+                  Some(YesNoAnswer.Yes)
                 ),
                 createIndividualHecTaxCheck(
                   ScrapMetalDealerSite,
@@ -977,7 +1001,8 @@ class FileCreationServiceEmailDisabledSpec extends AnyWordSpec with Matchers wit
                   TaxSituation.SAPAYE,
                   Some(individual.SAStatusResponse(SAUTR("1234567"), TaxYear(2021), SAStatus.NoReturnFound)),
                   Some(CorrectiveAction.RegisterNewSAAccount),
-                  None
+                  None,
+                  Some(YesNoAnswer.No)
                 )
               )
 
@@ -996,8 +1021,8 @@ class FileCreationServiceEmailDisabledSpec extends AnyWordSpec with Matchers wit
                 )
 
               val expected = s"""|00|HEC_SSA_0001_20211010_$partialFileName.dat|HEC|SSA|20211010|113605|000001|001
-                                 |01|AB123|AB123456C|Karen|mcFie|19221201|1234567||||01|00|02|I||Y|Y|2022|||||Y||Y|00|Y|20210909090900|20210909090900|XNFFGBDD6|99990210|Y
-                                 |01|AB123|AB123456C|Karen|mcFie|19221201|1234567||||02|01|01|I||Y|Y|2022|||||N|Y|N|00|Y|20210909090900|20210909090900|XNFFGBDD6|99990210|Y
+                                 |01|AB123|AB123456C|Karen|mcFie|19221201|1234567||||01|00|02|I||Y|Y|2022|||||Y|||00|Y|20210909090900|20210909090900|XNFFGBDD6|99990210|Y
+                                 |01|AB123|AB123456C|Karen|mcFie|19221201|1234567||||02|01|01|I||Y|Y|2022|||||N|Y|Y|00|Y|20210909090900|20210909090900|XNFFGBDD6|99990210|Y
                                  |01|AB123|AB123456C|Karen|mcFie|19221201|1234567||||03|02|01|I||Y|Y|2022|||||N|N|N|00|Y|20210909090900|20210909090900|XNFFGBDD6|99990210|Y
                                  |99|HEC_SSA_0001_20211010_$partialFileName.dat|5|Y
                                  |""".stripMargin
@@ -1014,7 +1039,8 @@ class FileCreationServiceEmailDisabledSpec extends AnyWordSpec with Matchers wit
                   TaxSituation.NotChargeable,
                   Some(individual.SAStatusResponse(SAUTR("1234567"), TaxYear(2021), SAStatus.ReturnFound)),
                   Some(CorrectiveAction.RegisterNewSAAccount),
-                  None
+                  None,
+                  Some(YesNoAnswer.No)
                 ),
                 createIndividualHecTaxCheck(
                   ScrapMetalMobileCollector,
@@ -1023,6 +1049,7 @@ class FileCreationServiceEmailDisabledSpec extends AnyWordSpec with Matchers wit
                   TaxSituation.NotChargeable,
                   Some(individual.SAStatusResponse(SAUTR("1234567"), TaxYear(2021), SAStatus.NoticeToFileIssued)),
                   Some(CorrectiveAction.RegisterNewSAAccount),
+                  None,
                   None
                 ),
                 createIndividualHecTaxCheck(
@@ -1032,7 +1059,8 @@ class FileCreationServiceEmailDisabledSpec extends AnyWordSpec with Matchers wit
                   TaxSituation.NotChargeable,
                   Some(individual.SAStatusResponse(SAUTR("1234567"), TaxYear(2021), SAStatus.NoReturnFound)),
                   Some(CorrectiveAction.RegisterNewSAAccount),
-                  None
+                  None,
+                  Some(YesNoAnswer.Yes)
                 )
               )
 
@@ -1051,9 +1079,9 @@ class FileCreationServiceEmailDisabledSpec extends AnyWordSpec with Matchers wit
                 )
 
               val expected = s"""|00|HEC_SSA_0001_20211010_$partialFileName.dat|HEC|SSA|20211010|113605|000001|001
-                                 |01|AB123|AB123456C|Karen|mcFie|19221201|1234567||||01|00|02|I|Y|||2022|||||Y||Y|00|Y|20210909090900|20210909090900|XNFFGBDD6|99990210|Y
-                                 |01|AB123|AB123456C|Karen|mcFie|19221201|1234567||||02|01|01|I|Y|||2022|||||N|Y|N|00|Y|20210909090900|20210909090900|XNFFGBDD6|99990210|Y
-                                 |01|AB123|AB123456C|Karen|mcFie|19221201|1234567||||03|02|01|I|Y|||2022|||||N|N|N|00|Y|20210909090900|20210909090900|XNFFGBDD6|99990210|Y
+                                 |01|AB123|AB123456C|Karen|mcFie|19221201|1234567||||01|00|02|I|Y|||2022|||||Y||N|00|Y|20210909090900|20210909090900|XNFFGBDD6|99990210|Y
+                                 |01|AB123|AB123456C|Karen|mcFie|19221201|1234567||||02|01|01|I|Y|||2022|||||N|Y||00|Y|20210909090900|20210909090900|XNFFGBDD6|99990210|Y
+                                 |01|AB123|AB123456C|Karen|mcFie|19221201|1234567||||03|02|01|I|Y|||2022|||||N|N|Y|00|Y|20210909090900|20210909090900|XNFFGBDD6|99990210|Y
                                  |99|HEC_SSA_0001_20211010_$partialFileName.dat|5|Y
                                  |""".stripMargin
 
