@@ -43,7 +43,7 @@ import uk.gov.hmrc.hec.models.hecTaxCheck.company.{CTStatus, CTStatusResponse, C
 import uk.gov.hmrc.hec.models.hecTaxCheck.individual.{DateOfBirth, Name}
 import uk.gov.hmrc.hec.models.hecTaxCheck.licence.{LicenceDetails, LicenceTimeTrading, LicenceType, LicenceValidityPeriod}
 import uk.gov.hmrc.hec.models.ids._
-import uk.gov.hmrc.hec.models.taxCheckMatch.{HECTaxCheckMatchRequest, HECTaxCheckMatchResult, HECTaxCheckMatchStatus}
+import uk.gov.hmrc.hec.models.taxCheckMatch.{HECTaxCheckMatchRequest, HECTaxCheckMatchResult, HECTaxCheckMatchStatus, MatchFailureReason}
 import uk.gov.hmrc.hec.models.{EmailAddress, Error, SaveEmailAddressRequest, StrideOperatorDetails, TaxCheckListItem, taxCheckMatch}
 import uk.gov.hmrc.hec.services.TaxCheckService
 import uk.gov.hmrc.hec.util.TimeUtils
@@ -491,7 +491,11 @@ class TaxCheckControllerWithInternalAuthEnabledSpec extends ControllerSpec with 
 
           List[HECTaxCheckMatchResult](
             HECTaxCheckMatchResult(companyMatchRequest, dateTime, HECTaxCheckMatchStatus.Match),
-            HECTaxCheckMatchResult(companyMatchRequest, dateTime, HECTaxCheckMatchStatus.NoMatch),
+            HECTaxCheckMatchResult(
+              companyMatchRequest,
+              dateTime,
+              HECTaxCheckMatchStatus.NoMatch(MatchFailureReason.LicenceTypeDateOfBirthNotMatched)
+            ),
             HECTaxCheckMatchResult(companyMatchRequest, dateTime, HECTaxCheckMatchStatus.Expired)
           ).foreach { matchResult =>
             withClue(s"For match result '$matchResult': ") {

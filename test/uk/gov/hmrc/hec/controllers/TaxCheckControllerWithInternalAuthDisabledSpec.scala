@@ -32,7 +32,7 @@ import uk.gov.hmrc.hec.models.hecTaxCheck.individual.DateOfBirth
 import uk.gov.hmrc.hec.models.hecTaxCheck.licence.LicenceType
 import uk.gov.hmrc.hec.models.hecTaxCheck.HECTaxCheckCode
 import uk.gov.hmrc.hec.models.ids._
-import uk.gov.hmrc.hec.models.taxCheckMatch.{HECTaxCheckMatchRequest, HECTaxCheckMatchResult, HECTaxCheckMatchStatus}
+import uk.gov.hmrc.hec.models.taxCheckMatch.{HECTaxCheckMatchRequest, HECTaxCheckMatchResult, HECTaxCheckMatchStatus, MatchFailureReason}
 import uk.gov.hmrc.hec.models.Error
 import uk.gov.hmrc.hec.services.TaxCheckService
 import uk.gov.hmrc.hec.util.TimeUtils
@@ -151,7 +151,11 @@ class TaxCheckControllerWithInternalAuthDisabledSpec extends ControllerSpec with
 
           List[HECTaxCheckMatchResult](
             HECTaxCheckMatchResult(companyMatchRequest, dateTime, HECTaxCheckMatchStatus.Match),
-            HECTaxCheckMatchResult(companyMatchRequest, dateTime, HECTaxCheckMatchStatus.NoMatch),
+            HECTaxCheckMatchResult(
+              companyMatchRequest,
+              dateTime,
+              HECTaxCheckMatchStatus.NoMatch(MatchFailureReason.CRNNotMatched)
+            ),
             HECTaxCheckMatchResult(companyMatchRequest, dateTime, HECTaxCheckMatchStatus.Expired)
           ).foreach { matchResult =>
             withClue(s"For match result '$matchResult': ") {

@@ -29,7 +29,7 @@ import uk.gov.hmrc.hec.models.AuditEvent.TaxCheckSuccess
 import uk.gov.hmrc.hec.models.ids.GGCredId
 import uk.gov.hmrc.hec.models.hecTaxCheck.HECTaxCheckData.{CompanyHECTaxCheckData, IndividualHECTaxCheckData}
 import uk.gov.hmrc.hec.models.hecTaxCheck.{HECTaxCheck, HECTaxCheckData}
-import uk.gov.hmrc.hec.models.taxCheckMatch.{HECTaxCheckMatchRequest, HECTaxCheckMatchResult, HECTaxCheckMatchStatus}
+import uk.gov.hmrc.hec.models.taxCheckMatch.{HECTaxCheckMatchRequest, HECTaxCheckMatchResult, HECTaxCheckMatchStatus, MatchFailureReason}
 import uk.gov.hmrc.hec.models.{Error, SaveEmailAddressRequest, TaxCheckListItem}
 import uk.gov.hmrc.hec.repos.HECTaxCheckStore
 import uk.gov.hmrc.hec.util.TimeProvider
@@ -117,7 +117,11 @@ class TaxCheckServiceImpl @Inject() (
       .get(taxCheckMatchRequest.taxCheckCode)
       .map(
         _.fold[HECTaxCheckMatchResult](
-          HECTaxCheckMatchResult(taxCheckMatchRequest, timeProvider.currentDateTime, HECTaxCheckMatchStatus.NoMatch)
+          HECTaxCheckMatchResult(
+            taxCheckMatchRequest,
+            timeProvider.currentDateTime,
+            HECTaxCheckMatchStatus.NoMatch(MatchFailureReason.TaxCheckCodeNotMatched)
+          )
         )(
           doMatch(taxCheckMatchRequest, _)
         )
@@ -129,26 +133,33 @@ class TaxCheckServiceImpl @Inject() (
   ): HECTaxCheckMatchResult = {
     lazy val hasExpired = timeProvider.currentDate.isAfter(storedTaxCheck.expiresAfter)
 
-    val applicantVerifierMatches = (taxCheckMatchRequest.verifier, storedTaxCheck.taxCheckData) match {
+    val licenceTypeMatchFailure =
+      if (taxCheckMatchRequest.licenceType === storedTaxCheck.taxCheckData.licenceDetails.licenceType) None
+      else Some(MatchFailureReason.LicenceTypeNotMatched)
+
+    val failureReason: Option[MatchFailureReason] = (taxCheckMatchRequest.verifier, storedTaxCheck.taxCheckData) match {
       case (Right(dateOfBirth), storedIndividualData: IndividualHECTaxCheckData) =>
-        dateOfBirth === storedIndividualData.applicantDetails.dateOfBirth
+        if (dateOfBirth === storedIndividualData.applicantDetails.dateOfBirth) licenceTypeMatchFailure
+        else if (licenceTypeMatchFailure.isEmpty) Some(MatchFailureReason.DateOfBirthNotMatched)
+        else Some(MatchFailureReason.LicenceTypeDateOfBirthNotMatched)
 
       case (Left(crn), storedCompanyData: CompanyHECTaxCheckData) =>
-        crn === storedCompanyData.applicantDetails.crn
+        if (crn === storedCompanyData.applicantDetails.crn) licenceTypeMatchFailure
+        else if (licenceTypeMatchFailure.isEmpty) Some(MatchFailureReason.CRNNotMatched)
+        else Some(MatchFailureReason.LicenceTypeCRNNotMatched)
 
       case _ =>
-        false
+        if (licenceTypeMatchFailure.isEmpty) Some(MatchFailureReason.EntityTypeNotMatched)
+        else Some(MatchFailureReason.LicenceTypeEntityTypeNotMatched)
     }
 
-    val licenceTypeMatches =
-      taxCheckMatchRequest.licenceType === storedTaxCheck.taxCheckData.licenceDetails.licenceType
-
-    if (licenceTypeMatches && applicantVerifierMatches) {
+    failureReason.fold(
       if (hasExpired)
         HECTaxCheckMatchResult(taxCheckMatchRequest, timeProvider.currentDateTime, HECTaxCheckMatchStatus.Expired)
       else HECTaxCheckMatchResult(taxCheckMatchRequest, timeProvider.currentDateTime, HECTaxCheckMatchStatus.Match)
-    } else
-      HECTaxCheckMatchResult(taxCheckMatchRequest, timeProvider.currentDateTime, HECTaxCheckMatchStatus.NoMatch)
+    ) { reason =>
+      HECTaxCheckMatchResult(taxCheckMatchRequest, timeProvider.currentDateTime, HECTaxCheckMatchStatus.NoMatch(reason))
+    }
   }
 
   def getUnexpiredTaxCheckCodes(
