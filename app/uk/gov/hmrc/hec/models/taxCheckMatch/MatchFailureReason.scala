@@ -19,22 +19,29 @@ package uk.gov.hmrc.hec.models.taxCheckMatch
 import ai.x.play.json.Jsonx
 import ai.x.play.json.SingletonEncoder.simpleName
 import ai.x.play.json.implicits.formatSingleton
-import play.api.libs.json.{Format, Json, OFormat}
+import play.api.libs.json.Format
 
-sealed trait HECTaxCheckMatchStatus extends Product with Serializable
+sealed trait MatchFailureReason extends Product with Serializable
 
-object HECTaxCheckMatchStatus {
+object MatchFailureReason {
 
-  final case class NoMatch(failureReason: MatchFailureReason) extends HECTaxCheckMatchStatus
+  case object TaxCheckCodeNotMatched extends MatchFailureReason
 
-  case object Match extends HECTaxCheckMatchStatus
+  case object EntityTypeNotMatched extends MatchFailureReason
 
-  case object Expired extends HECTaxCheckMatchStatus
+  case object DateOfBirthNotMatched extends MatchFailureReason
+
+  case object CRNNotMatched extends MatchFailureReason
+
+  case object LicenceTypeNotMatched extends MatchFailureReason
+
+  case object LicenceTypeEntityTypeNotMatched extends MatchFailureReason
+
+  case object LicenceTypeDateOfBirthNotMatched extends MatchFailureReason
+
+  case object LicenceTypeCRNNotMatched extends MatchFailureReason
 
   @SuppressWarnings(Array("org.wartremover.warts.Throw", "org.wartremover.warts.Equals"))
-  implicit val format: Format[HECTaxCheckMatchStatus] = {
-    implicit val noMatchFormat: OFormat[NoMatch] = Json.format
-    Jsonx.formatSealed[HECTaxCheckMatchStatus]
-  }
+  implicit val format: Format[MatchFailureReason] = Jsonx.formatSealed[MatchFailureReason]
 
 }

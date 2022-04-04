@@ -37,7 +37,7 @@ import uk.gov.hmrc.hec.models.hecTaxCheck.licence.{LicenceDetails, LicenceTimeTr
 import uk.gov.hmrc.hec.models.hecTaxCheck._
 import uk.gov.hmrc.hec.models.hecTaxCheck.company.CTAccountingPeriod.CTAccountingPeriodDigital
 import uk.gov.hmrc.hec.models.ids._
-import uk.gov.hmrc.hec.models.taxCheckMatch.{HECTaxCheckMatchRequest, HECTaxCheckMatchResult, HECTaxCheckMatchStatus}
+import uk.gov.hmrc.hec.models.taxCheckMatch.{HECTaxCheckMatchRequest, HECTaxCheckMatchResult, HECTaxCheckMatchStatus, MatchFailureReason}
 import uk.gov.hmrc.hec.models.{EmailAddress, Error, SaveEmailAddressRequest, StrideOperatorDetails, TaxCheckListItem, hecTaxCheck, taxCheckMatch}
 import uk.gov.hmrc.hec.repos.HECTaxCheckStore
 import uk.gov.hmrc.hec.util.{TimeProvider, TimeUtils}
@@ -288,84 +288,201 @@ class TaxCheckServiceImplSpec extends AnyWordSpec with Matchers with MockFactory
       "return a 'no match' result" when {
 
         "no tax check exists with the given tax check code" in {
-
           val dateTime = TimeUtils.now()
-          mockGetTaxCheck(taxCheckCode)(Right(None))
-          mockTimeProviderNow(dateTime)
+          inSequence {
+            mockGetTaxCheck(taxCheckCode)(Right(None))
+            mockTimeProviderNow(dateTime)
+          }
 
           val result = service.matchTaxCheck(matchingIndividualMatchRequest)
           await(result.value) shouldBe Right(
-            HECTaxCheckMatchResult(matchingIndividualMatchRequest, dateTime, HECTaxCheckMatchStatus.NoMatch)
+            HECTaxCheckMatchResult(
+              matchingIndividualMatchRequest,
+              dateTime,
+              HECTaxCheckMatchStatus.NoMatch(MatchFailureReason.TaxCheckCodeNotMatched)
+            )
           )
         }
 
         "the match request is for an individual but the stored tax check is for a company" in {
           val dateTime = TimeUtils.now()
-          mockGetTaxCheck(taxCheckCode)(Right(Some(storedCompanyTaxCheck)))
-          mockTimeProviderNow(dateTime)
+          inSequence {
+            mockGetTaxCheck(taxCheckCode)(Right(Some(storedCompanyTaxCheck)))
+            mockTimeProviderNow(dateTime)
+          }
 
           val result = service.matchTaxCheck(matchingIndividualMatchRequest)
           await(result.value) shouldBe Right(
-            HECTaxCheckMatchResult(matchingIndividualMatchRequest, dateTime, HECTaxCheckMatchStatus.NoMatch)
+            HECTaxCheckMatchResult(
+              matchingIndividualMatchRequest,
+              dateTime,
+              HECTaxCheckMatchStatus.NoMatch(MatchFailureReason.EntityTypeNotMatched)
+            )
+          )
+        }
+
+        "the match request is for an individual but the stored tax check is for a company and the licence type is wrong" in {
+          val dateTime = TimeUtils.now()
+          inSequence {
+            mockGetTaxCheck(taxCheckCode)(Right(Some(storedCompanyTaxCheck)))
+            mockTimeProviderNow(dateTime)
+          }
+
+          val matchRequest = matchingIndividualMatchRequest.copy(licenceType = incorrectLicenceType)
+          val result       = service.matchTaxCheck(matchRequest)
+          await(result.value) shouldBe Right(
+            HECTaxCheckMatchResult(
+              matchRequest,
+              dateTime,
+              HECTaxCheckMatchStatus.NoMatch(MatchFailureReason.LicenceTypeEntityTypeNotMatched)
+            )
           )
         }
 
         "the match request is for a company but the stored tax check is for an individual" in {
           val dateTime = TimeUtils.now()
-          mockGetTaxCheck(taxCheckCode)(Right(Some(storedIndividualTaxCheck)))
-          mockTimeProviderNow(dateTime)
+          inSequence {
+            mockGetTaxCheck(taxCheckCode)(Right(Some(storedIndividualTaxCheck)))
+            mockTimeProviderNow(dateTime)
+          }
 
           val result = service.matchTaxCheck(matchingCompanyMatchRequest)
           await(result.value) shouldBe Right(
-            HECTaxCheckMatchResult(matchingCompanyMatchRequest, dateTime, HECTaxCheckMatchStatus.NoMatch)
+            HECTaxCheckMatchResult(
+              matchingCompanyMatchRequest,
+              dateTime,
+              HECTaxCheckMatchStatus.NoMatch(MatchFailureReason.EntityTypeNotMatched)
+            )
+          )
+        }
+
+        "the match request is for a company but the stored tax check is for an individual and the licence type is wrong" in {
+          val dateTime = TimeUtils.now()
+          inSequence {
+            mockGetTaxCheck(taxCheckCode)(Right(Some(storedIndividualTaxCheck)))
+            mockTimeProviderNow(dateTime)
+          }
+
+          val matchRequest = matchingCompanyMatchRequest.copy(licenceType = incorrectLicenceType)
+          val result       = service.matchTaxCheck(matchRequest)
+          await(result.value) shouldBe Right(
+            HECTaxCheckMatchResult(
+              matchRequest,
+              dateTime,
+              HECTaxCheckMatchStatus.NoMatch(MatchFailureReason.LicenceTypeEntityTypeNotMatched)
+            )
           )
         }
 
         "the date of births in the match request and the stored tax check do not match" in {
           val dateTime = TimeUtils.now()
-          mockGetTaxCheck(taxCheckCode)(Right(Some(storedIndividualTaxCheck)))
-          mockTimeProviderNow(dateTime)
+          inSequence {
+            mockGetTaxCheck(taxCheckCode)(Right(Some(storedIndividualTaxCheck)))
+            mockTimeProviderNow(dateTime)
+          }
 
           val matchRequest = matchingIndividualMatchRequest.copy(verifier = Right(incorrectDateOfBirth))
           val result       = service.matchTaxCheck(matchRequest)
           await(result.value) shouldBe Right(
-            HECTaxCheckMatchResult(matchRequest, dateTime, HECTaxCheckMatchStatus.NoMatch)
+            HECTaxCheckMatchResult(
+              matchRequest,
+              dateTime,
+              HECTaxCheckMatchStatus.NoMatch(MatchFailureReason.DateOfBirthNotMatched)
+            )
+          )
+        }
+
+        "the date of births and the licence type in the match request and the stored tax check do not match" in {
+          val dateTime = TimeUtils.now()
+          inSequence {
+            mockGetTaxCheck(taxCheckCode)(Right(Some(storedIndividualTaxCheck)))
+            mockTimeProviderNow(dateTime)
+          }
+
+          val matchRequest = matchingIndividualMatchRequest.copy(
+            verifier = Right(incorrectDateOfBirth),
+            licenceType = incorrectLicenceType
+          )
+          val result       = service.matchTaxCheck(matchRequest)
+          await(result.value) shouldBe Right(
+            HECTaxCheckMatchResult(
+              matchRequest,
+              dateTime,
+              HECTaxCheckMatchStatus.NoMatch(MatchFailureReason.LicenceTypeDateOfBirthNotMatched)
+            )
           )
         }
 
         "the CRN's in the match request and the stored tax check do not match" in {
           val dateTime = TimeUtils.now()
-          mockGetTaxCheck(taxCheckCode)(Right(Some(storedCompanyTaxCheck)))
-          mockTimeProviderNow(dateTime)
+          inSequence {
+            mockGetTaxCheck(taxCheckCode)(Right(Some(storedCompanyTaxCheck)))
+            mockTimeProviderNow(dateTime)
+          }
 
           val matchRequest = matchingCompanyMatchRequest.copy(verifier = Left(incorrectCRN))
           val result       = service.matchTaxCheck(matchRequest)
           await(result.value) shouldBe Right(
-            HECTaxCheckMatchResult(matchRequest, dateTime, HECTaxCheckMatchStatus.NoMatch)
+            HECTaxCheckMatchResult(
+              matchRequest,
+              dateTime,
+              HECTaxCheckMatchStatus.NoMatch(MatchFailureReason.CRNNotMatched)
+            )
+          )
+        }
+
+        "the CRN's and licence types in the match request and the stored tax check do not match" in {
+          val dateTime = TimeUtils.now()
+          inSequence {
+            mockGetTaxCheck(taxCheckCode)(Right(Some(storedCompanyTaxCheck)))
+            mockTimeProviderNow(dateTime)
+          }
+
+          val matchRequest =
+            matchingCompanyMatchRequest.copy(verifier = Left(incorrectCRN), licenceType = incorrectLicenceType)
+          val result       = service.matchTaxCheck(matchRequest)
+          await(result.value) shouldBe Right(
+            HECTaxCheckMatchResult(
+              matchRequest,
+              dateTime,
+              HECTaxCheckMatchStatus.NoMatch(MatchFailureReason.LicenceTypeCRNNotMatched)
+            )
           )
         }
 
         "the date of births match but the licence types do not" in {
           val dateTime = TimeUtils.now()
-          mockGetTaxCheck(taxCheckCode)(Right(Some(storedIndividualTaxCheck)))
-          mockTimeProviderNow(dateTime)
+          inSequence {
+            mockGetTaxCheck(taxCheckCode)(Right(Some(storedIndividualTaxCheck)))
+            mockTimeProviderNow(dateTime)
+          }
 
           val matchRequest = matchingIndividualMatchRequest.copy(licenceType = incorrectLicenceType)
           val result       = service.matchTaxCheck(matchRequest)
           await(result.value) shouldBe Right(
-            HECTaxCheckMatchResult(matchRequest, dateTime, HECTaxCheckMatchStatus.NoMatch)
+            HECTaxCheckMatchResult(
+              matchRequest,
+              dateTime,
+              HECTaxCheckMatchStatus.NoMatch(MatchFailureReason.LicenceTypeNotMatched)
+            )
           )
         }
 
         "the CRN's match but the licence types do not" in {
           val dateTime = TimeUtils.now()
-          mockGetTaxCheck(taxCheckCode)(Right(Some(storedCompanyTaxCheck)))
-          mockTimeProviderNow(dateTime)
+          inSequence {
+            mockGetTaxCheck(taxCheckCode)(Right(Some(storedCompanyTaxCheck)))
+            mockTimeProviderNow(dateTime)
+          }
 
           val matchRequest = matchingCompanyMatchRequest.copy(licenceType = incorrectLicenceType)
           val result       = service.matchTaxCheck(matchRequest)
           await(result.value) shouldBe Right(
-            HECTaxCheckMatchResult(matchRequest, dateTime, HECTaxCheckMatchStatus.NoMatch)
+            HECTaxCheckMatchResult(
+              matchRequest,
+              dateTime,
+              HECTaxCheckMatchStatus.NoMatch(MatchFailureReason.LicenceTypeNotMatched)
+            )
           )
         }
 
