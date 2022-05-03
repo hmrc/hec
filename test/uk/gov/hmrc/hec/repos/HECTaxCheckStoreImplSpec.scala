@@ -39,6 +39,7 @@ import uk.gov.hmrc.mongo.cache.{CacheItem, DataKey}
 
 import java.time.{LocalDate, ZoneId, ZonedDateTime}
 import java.util.UUID
+import java.util.concurrent.TimeUnit
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
@@ -285,6 +286,29 @@ class HECTaxCheckStoreImplSpec extends AnyWordSpec with Matchers with Eventually
       await(taxCheckStore.put(taxCheckCode)(DataKey("hec-tax-check"), invalidData))
       await(taxCheckStore.getAllTaxCheckCodesByFileCorrelationId(uuid.toString).value).isLeft shouldBe true
     }
+
+    "be able to reset 'sent' flags for all tax check data created on or after the given date" in {
+      val initialTaxCheck1 =
+        HECTaxCheck(taxCheckData, taxCheckCode1, TimeUtils.today(), TimeUtils.now(), isExtracted = true, None, None)
+      val initialTaxCheck2 = taxCheck1.copy(taxCheckCode = taxCheckCode2, isExtracted = true)
+      val initialTaxCheck3 = taxCheck1.copy(taxCheckCode = taxCheckCode3, isExtracted = false)
+
+      await(taxCheckStore.store(initialTaxCheck1).value) shouldBe Right(())
+
+      // 'isExtracted' should be left untouched before this time
+      val time = ZonedDateTime.now(ZoneId.of("Z"))
+      TimeUnit.SECONDS.sleep(1L)
+
+      await(taxCheckStore.store(initialTaxCheck2).value) shouldBe Right(())
+      await(taxCheckStore.store(initialTaxCheck3).value) shouldBe Right(())
+
+      await(taxCheckStore.resetTaxCheckIsExtractedFlag(time).value) shouldBe Right(())
+
+      await(taxCheckStore.get(taxCheckCode1).value) shouldBe Right(Some(initialTaxCheck1))
+      await(taxCheckStore.get(taxCheckCode2).value) shouldBe Right(Some(initialTaxCheck2.copy(isExtracted = false)))
+      await(taxCheckStore.get(taxCheckCode3).value) shouldBe Right(Some(initialTaxCheck3))
+    }
+
   }
 
 }

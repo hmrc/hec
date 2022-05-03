@@ -17,9 +17,13 @@
 package uk.gov.hmrc.hec.module
 
 import com.google.inject.AbstractModule
-import uk.gov.hmrc.hec.services.scheduleService.HECTaxCheckScheduleService
+import uk.gov.hmrc.hec.services.scheduleService.{HECTaxCheckScheduleService, ResetTaxChecksSentFlagService}
 
 class HecTaxCheckExtractionModule extends AbstractModule {
-  override def configure(): Unit =
+
+  override def configure(): Unit = {
+    bind(classOf[ResetTaxChecksSentFlagService]).asEagerSingleton()
     bind(classOf[HECTaxCheckScheduleService]).asEagerSingleton()
+  }
+
 }

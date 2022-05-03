@@ -20,7 +20,8 @@ import cats.data.{EitherT, OptionT}
 import cats.instances.either._
 import cats.syntax.either._
 import com.google.inject.{ImplementedBy, Inject, Singleton}
-import org.mongodb.scala.bson.BsonDocument
+import org.mongodb.scala.bson.{BsonDateTime, BsonDocument}
+import org.mongodb.scala.model.Filters.gte
 import org.mongodb.scala.model.{Filters, IndexModel, IndexOptions, Indexes, Sorts}
 import play.api.Configuration
 import play.api.libs.json.{JsError, JsSuccess, JsonValidationError}
@@ -33,6 +34,7 @@ import uk.gov.hmrc.mongo.cache.{CacheIdType, CacheItem, DataKey, MongoCacheRepos
 import uk.gov.hmrc.mongo.{CurrentTimestampSupport, MongoComponent, MongoUtils}
 import uk.gov.hmrc.play.http.logging.Mdc.preservingMdc
 
+import java.time.ZonedDateTime
 import scala.concurrent.duration._
 import scala.concurrent.{ExecutionContext, Future}
 
@@ -62,6 +64,8 @@ trait HECTaxCheckStore {
   def getAllTaxCheckCodesByFileCorrelationId(correlationId: String)(implicit
     hc: HeaderCarrier
   ): EitherT[Future, Error, List[HECTaxCheck]]
+
+  def resetTaxCheckIsExtractedFlag(createdOnOrAfter: ZonedDateTime): EitherT[Future, Error, Unit]
 
 }
 
@@ -187,6 +191,19 @@ class HECTaxCheckStoreImpl @Inject() (
         .toFuture()
         .map(_ => ())
         .map[Either[Error, Unit]](Right(_))
+        .recover { case e => Left(Error(e)) }
+    }
+  )
+
+  def resetTaxCheckIsExtractedFlag(createdOnOrAfter: ZonedDateTime): EitherT[Future, Error, Unit] = EitherT(
+    preservingMdc {
+      collection
+        .updateMany(
+          gte("modifiedDetails.createdAt", BsonDateTime(createdOnOrAfter.toInstant.toEpochMilli)),
+          BsonDocument("{ $set: { \"data.hec-tax-check.isExtracted\": false } }")
+        )
+        .toFuture()
+        .map[Either[Error, Unit]](_ => Right(()))
         .recover { case e => Left(Error(e)) }
     }
   )
