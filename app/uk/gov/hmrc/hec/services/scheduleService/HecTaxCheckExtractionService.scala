@@ -82,8 +82,10 @@ class HecTaxCheckExtractionServiceImpl @Inject() (
 
   val hecData: FileDetails[List[HECTaxCheck]] = FileMapOps.getFileDetails[List[HECTaxCheck]](s"${hec}_APPLICATION")
 
+  val lockId: String = "hecTaxChecks"
+
   override def lockAndProcessHecData(): Future[Option[Either[models.Error, Unit]]] =
-    mongoLockService.withLock(processHecData)
+    mongoLockService.withLock(lockId, processHecData)
 
   private def processHecData()(implicit hc: HeaderCarrier): Future[Either[models.Error, Unit]] = {
     val seqNum = "0001"

@@ -85,13 +85,16 @@ class HecTaxCheckExtractionServiceSpec
       .returning(EitherT.fromEither[Future](result))
 
   @SuppressWarnings(Array("org.wartremover.warts.All"))
-  def mockWithLock(lockObtained: Boolean) =
+  def mockWithLock(lockId: String, lockObtained: Boolean) =
     (mockMongoLockService
-      .withLock(_: Future[Either[models.Error, List[HECTaxCheck]]])(_: HECTaxCheckExtractionContext))
-      .expects(*, *)
+      .withLock(_: String, _: Future[Either[models.Error, List[HECTaxCheck]]])(_: HECTaxCheckExtractionContext))
+      .expects(lockId, *, *)
       .onCall { test =>
         if (lockObtained)
-          test.productElement(0).asInstanceOf[() => Future[Either[models.Error, List[HECTaxCheck]]]]().map(Some(_))
+          test
+            .productElement(1)
+            .asInstanceOf[() => Future[Either[models.Error, List[HECTaxCheck]]]]()
+            .map(Some(_))
         else
           Future.successful(None)
       }
@@ -153,6 +156,8 @@ class HecTaxCheckExtractionServiceSpec
     mockUUIDGenerator,
     config
   )
+
+  val lockId = "hecTaxChecks"
 
   "HecTaxCheckExtractionServiceSpec" must {
 
@@ -229,7 +234,7 @@ class HecTaxCheckExtractionServiceSpec
 
       " no lock is obtained on mongo db" in {
         inSequence {
-          mockWithLock(lockObtained = false)
+          mockWithLock(lockId, lockObtained = false)
         }
         val result =
           hecTaxCheckExtractionService.lockAndProcessHecData()
@@ -243,7 +248,7 @@ class HecTaxCheckExtractionServiceSpec
 
       "there is error in fetching data from mongo" in {
         inSequence {
-          mockWithLock(lockObtained = true)
+          mockWithLock(lockId, lockObtained = true)
           mockGenerateUUID(uuid)
           mockCreateFileContent(LicenceType, "0001", "HEC_LICENCE_TYPE", true)(
             Right(("00|file1.dat|HEC|SSA|20210909|154556|000001|001", "file1.dat"))
@@ -297,7 +302,7 @@ class HecTaxCheckExtractionServiceSpec
 
       "There is an error in file creation" in {
         inSequence {
-          mockWithLock(lockObtained = true)
+          mockWithLock(lockId, lockObtained = true)
           mockGenerateUUID(uuid)
           mockCreateFileContent(LicenceType, "0001", "HEC_LICENCE_TYPE", true)(Left(models.Error("err")))
         }
@@ -308,7 +313,7 @@ class HecTaxCheckExtractionServiceSpec
 
       "There is an error in file storage" in {
         inSequence {
-          mockWithLock(lockObtained = true)
+          mockWithLock(lockId, lockObtained = true)
           mockGenerateUUID(uuid)
           mockCreateFileContent(LicenceType, "0001", "HEC_LICENCE_TYPE", true)(
             Right(("00|file1.dat|HEC|SSA|20210909|154556|000001|001", "file1.dat"))
@@ -324,7 +329,7 @@ class HecTaxCheckExtractionServiceSpec
 
       "There is an error in mongo record update" in {
         inSequence {
-          mockWithLock(lockObtained = true)
+          mockWithLock(lockId, lockObtained = true)
           mockGenerateUUID(uuid)
           mockCreateFileContent(LicenceType, "0001", "HEC_LICENCE_TYPE", true)(
             Right(("00|file1.dat|HEC|SSA|20210909|154556|000001|001", "file1.dat"))
@@ -391,7 +396,7 @@ class HecTaxCheckExtractionServiceSpec
 
       "There is an error in file notify" in {
         inSequence {
-          mockWithLock(lockObtained = true)
+          mockWithLock(lockId, lockObtained = true)
           mockGenerateUUID(uuid)
           mockCreateFileContent(LicenceType, "0001", "HEC_LICENCE_TYPE", true)(
             Right(("00|file1.dat|HEC|SSA|20210909|154556|000001|001", "file1.dat"))
@@ -412,7 +417,7 @@ class HecTaxCheckExtractionServiceSpec
 
       "all fetch , update , file creation , file storage  and file notify passed without error" in {
         inSequence {
-          mockWithLock(lockObtained = true)
+          mockWithLock(lockId, lockObtained = true)
           mockGenerateUUID(uuid)
           mockCreateFileContent(LicenceType, "0001", "HEC_LICENCE_TYPE", true)(
             Right(("00|file1.dat|HEC|SSA|20210909|154556|000001|001", "file1.dat"))
