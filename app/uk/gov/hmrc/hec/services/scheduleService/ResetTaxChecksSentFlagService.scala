@@ -43,6 +43,8 @@ class ResetTaxChecksSentFlagService @Inject() (
       config.get[String]("hec-file-extraction-details.reset-sent-flags.reset-tax-checks-created-on-or-after")
     )
 
+  private val lockId: String = "reset-tax-check-sent-flags"
+
   if (resetSentFlagsOnStart) {
     resetSentFlags().onComplete {
       case Failure(e)       => logger.warn(s"Could not run job reset 'sent' flags for tax check data: ${e.getMessage}")
@@ -54,14 +56,16 @@ class ResetTaxChecksSentFlagService @Inject() (
   }
 
   private def resetSentFlags(): Future[Option[Unit]] =
-    mongoLockService.withLock {
-      logger.info(s"Resetting 'sent' flag for all tax checks created on or after $resetTaxChecksCreatedOnOrAfter")
-      taxCheckStore
-        .resetTaxCheckIsExtractedFlag(resetTaxChecksCreatedOnOrAfter)
-        .fold(
-          e => logger.warn("Could not reset 'sent' flags for tax check data", e),
-          _ => logger.info("Successfully reset 'sent' flags for tax check data")
-        )
-    }
+    mongoLockService.withLock(
+      lockId, {
+        logger.info(s"Resetting 'sent' flag for all tax checks created on or after $resetTaxChecksCreatedOnOrAfter")
+        taxCheckStore
+          .resetTaxCheckIsExtractedFlag(resetTaxChecksCreatedOnOrAfter)
+          .fold(
+            e => logger.warn("Could not reset 'sent' flags for tax check data", e),
+            _ => logger.info("Successfully reset 'sent' flags for tax check data")
+          )
+      }
+    )
 
 }

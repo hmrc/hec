@@ -55,13 +55,13 @@ class ResetTaxChecksServiceSpec
   }
 
   @SuppressWarnings(Array("org.wartremover.warts.All"))
-  def mockWithLock(lockObtained: Boolean) =
+  def mockWithLock(lockId: String, lockObtained: Boolean) =
     (mockMongoLockService
-      .withLock(_: Future[Either[Error, List[HECTaxCheck]]])(_: HECTaxCheckExtractionContext))
-      .expects(*, *)
+      .withLock(_: String, _: Future[Either[Error, List[HECTaxCheck]]])(_: HECTaxCheckExtractionContext))
+      .expects(lockId, *, *)
       .onCall { test =>
         if (lockObtained)
-          test.productElement(0).asInstanceOf[() => Future[Either[Error, List[HECTaxCheck]]]]().map(Some(_))
+          test.productElement(1).asInstanceOf[() => Future[Either[Error, List[HECTaxCheck]]]]().map(Some(_))
         else
           Future.successful(None)
       }
@@ -78,6 +78,8 @@ class ResetTaxChecksServiceSpec
   implicit val hecTaxCheckExtractionContext: HECTaxCheckExtractionContext = new HECTaxCheckExtractionContext(system)
 
   class Context(resetEnabled: Boolean) {
+
+    val lockId: String = "reset-tax-check-sent-flags"
 
     val resetTaxChecksCreatedOnOrAfter: ZonedDateTime =
       ZonedDateTime.now(ZoneId.of("Z"))
@@ -113,7 +115,7 @@ class ResetTaxChecksServiceSpec
       }
 
       "the job is enabled but a lock could not be obtained" in new Context(resetEnabled = true) {
-        mockWithLock(lockObtained = false)
+        mockWithLock(lockId, lockObtained = false)
 
         startService()
       }
@@ -126,7 +128,7 @@ class ResetTaxChecksServiceSpec
 
         "the job succeeds" in new Context(resetEnabled = true) {
           inSequence {
-            mockWithLock(lockObtained = true)
+            mockWithLock(lockId, lockObtained = true)
             mockResetTaxCheckIsExtractedFlag(resetTaxChecksCreatedOnOrAfter)(Right(()))
           }
 
@@ -135,7 +137,7 @@ class ResetTaxChecksServiceSpec
 
         "the job fails" in new Context(resetEnabled = true) {
           inSequence {
-            mockWithLock(lockObtained = true)
+            mockWithLock(lockId, lockObtained = true)
             mockResetTaxCheckIsExtractedFlag(resetTaxChecksCreatedOnOrAfter)(Left(Error("")))
           }
 
