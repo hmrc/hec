@@ -197,7 +197,8 @@ class FileCreationServiceSpec extends AnyWordSpec with Matchers with MockFactory
                   createTaxDetails(taxSituation, saStatusResponse, correctiveAction, saIncomeDeclared),
                   zonedDateTime,
                   Digital,
-                  Some(Language.Welsh)
+                  Some(Language.Welsh),
+                  None
                 ),
                 HECTaxCheckCode("XNFFGBDD6"),
                 LocalDate.of(9999, 2, 10),
@@ -495,7 +496,8 @@ class FileCreationServiceSpec extends AnyWordSpec with Matchers with MockFactory
                   ),
                   zonedDateTime,
                   Digital,
-                  Some(Language.English)
+                  Some(Language.English),
+                  None
                 ),
                 HECTaxCheckCode("XNFFGBDD6"),
                 LocalDate.of(9999, 2, 10),
@@ -847,7 +849,8 @@ class FileCreationServiceEmailDisabledSpec extends AnyWordSpec with Matchers wit
                   createTaxDetails(taxSituation, saStatusResponse, correctiveAction, saIncomeDeclared),
                   zonedDateTime,
                   Digital,
-                  Some(Language.Welsh)
+                  Some(Language.Welsh),
+                  None
                 ),
                 HECTaxCheckCode("XNFFGBDD6"),
                 LocalDate.of(9999, 2, 10),
@@ -1145,7 +1148,8 @@ class FileCreationServiceEmailDisabledSpec extends AnyWordSpec with Matchers wit
                   ),
                   zonedDateTime,
                   Digital,
-                  Some(Language.Welsh)
+                  Some(Language.Welsh),
+                  None
                 ),
                 HECTaxCheckCode("XNFFGBDD6"),
                 LocalDate.of(9999, 2, 10),

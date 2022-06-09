@@ -90,7 +90,8 @@ class AuditEventSpec extends Matchers with AnyWordSpecLike {
               ),
               zonedDateTime,
               HECTaxCheckSource.Digital,
-              Some(Language.Welsh)
+              Some(Language.Welsh),
+              None
             ),
             HECTaxCheckCode("code"),
             date.plusDays(1L),
@@ -186,6 +187,7 @@ class AuditEventSpec extends Matchers with AnyWordSpecLike {
               ),
               zonedDateTime,
               HECTaxCheckSource.Stride,
+              None,
               None
             ),
             HECTaxCheckCode("code"),

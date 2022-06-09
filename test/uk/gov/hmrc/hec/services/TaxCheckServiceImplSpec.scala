@@ -133,7 +133,8 @@ class TaxCheckServiceImplSpec extends AnyWordSpec with Matchers with MockFactory
         ),
         taxCheckStartDateTime,
         HECTaxCheckSource.Digital,
-        None
+        None,
+        Some(true)
       )
 
       val expectedExpiryDate = TimeUtils.today().plusDays(expiresAfter.toDays)
@@ -219,6 +220,7 @@ class TaxCheckServiceImplSpec extends AnyWordSpec with Matchers with MockFactory
             ),
             taxCheckStartDateTime,
             HECTaxCheckSource.Digital,
+            None,
             None
           ),
           taxCheckCode,
@@ -252,7 +254,8 @@ class TaxCheckServiceImplSpec extends AnyWordSpec with Matchers with MockFactory
             ),
             taxCheckStartDateTime,
             HECTaxCheckSource.Digital,
-            None
+            None,
+            Some(false)
           ),
           taxCheckCode,
           TimeUtils.today().plusMonths(1L),
@@ -579,7 +582,8 @@ class TaxCheckServiceImplSpec extends AnyWordSpec with Matchers with MockFactory
         ),
         taxCheckStartDateTime,
         HECTaxCheckSource.Digital,
-        None
+        None,
+        Some(true)
       )
 
       "return an error" when {
@@ -652,6 +656,7 @@ class TaxCheckServiceImplSpec extends AnyWordSpec with Matchers with MockFactory
         ),
         taxCheckStartDateTime,
         HECTaxCheckSource.Digital,
+        None,
         None
       )
 
@@ -733,7 +738,8 @@ class TaxCheckServiceImplSpec extends AnyWordSpec with Matchers with MockFactory
         ),
         taxCheckStartDateTime,
         HECTaxCheckSource.Digital,
-        None
+        None,
+        Some(true)
       )
 
       "return an error" when {
@@ -799,6 +805,7 @@ class TaxCheckServiceImplSpec extends AnyWordSpec with Matchers with MockFactory
         ),
         taxCheckStartDateTime,
         HECTaxCheckSource.Digital,
+        None,
         None
       )
 
