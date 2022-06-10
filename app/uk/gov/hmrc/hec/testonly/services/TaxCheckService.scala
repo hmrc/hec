@@ -121,7 +121,8 @@ class TaxCheckServiceImpl @Inject() (
           companyTaxDetails,
           saveTaxCheckRequest.taxCheckStartDateTime,
           saveTaxCheckRequest.source,
-          None
+          None,
+          Some(false)
         )
 
       case Right(dob) =>
@@ -141,7 +142,8 @@ class TaxCheckServiceImpl @Inject() (
           individualTaxDetails,
           saveTaxCheckRequest.taxCheckStartDateTime,
           saveTaxCheckRequest.source,
-          None
+          None,
+          Some(false)
         )
     }
 

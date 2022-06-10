@@ -203,7 +203,8 @@ class TaxCheckServiceImplSpec extends AnyWordSpec with Matchers with MockFactory
             ),
             taxCheckStartDateTime,
             HECTaxCheckSource.Digital,
-            Some(Language.English)
+            Some(Language.English),
+            Some(false)
           )
           val taxCheck     =
             models.hecTaxCheck
