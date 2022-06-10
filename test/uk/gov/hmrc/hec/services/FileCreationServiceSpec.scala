@@ -28,7 +28,7 @@ import uk.gov.hmrc.hec.models.hecTaxCheck.HECTaxCheckSource.Digital
 import uk.gov.hmrc.hec.models.hecTaxCheck.TaxDetails.{CompanyTaxDetails, IndividualTaxDetails}
 import uk.gov.hmrc.hec.models.hecTaxCheck.company.{CTStatus, CTStatusResponse, CompanyHouseName}
 import uk.gov.hmrc.hec.models.hecTaxCheck.individual.{DateOfBirth, Name, SAStatus, SAStatusResponse}
-import uk.gov.hmrc.hec.models.hecTaxCheck.licence.LicenceType.{DriverOfTaxisAndPrivateHires, OperatorOfPrivateHireVehicles, ScrapMetalDealerSite, ScrapMetalMobileCollector}
+import uk.gov.hmrc.hec.models.hecTaxCheck.licence.LicenceType._
 import uk.gov.hmrc.hec.models.hecTaxCheck.licence.{LicenceDetails, LicenceTimeTrading, LicenceType, LicenceValidityPeriod}
 import uk.gov.hmrc.hec.models.hecTaxCheck._
 import uk.gov.hmrc.hec.models.hecTaxCheck.company.CTAccountingPeriod.{CTAccountingPeriodDigital, CTAccountingPeriodStride}
@@ -231,7 +231,7 @@ class FileCreationServiceSpec extends AnyWordSpec with Matchers with MockFactory
                   Some(YesNoAnswer.No)
                 ),
                 createIndividualHecTaxCheck(
-                  DriverOfTaxisAndPrivateHires,
+                  BookingOffice,
                   LicenceTimeTrading.TwoToFourYears,
                   LicenceValidityPeriod.UpToFiveYears,
                   TaxSituation.PAYE,
@@ -258,7 +258,7 @@ class FileCreationServiceSpec extends AnyWordSpec with Matchers with MockFactory
               val expected = s"""|00|HEC_SSA_0001_20211010_$partialFileName.dat|HEC|SSA|20211010|113605|000001|001
               |01|AB123|AB123456C|Karen|mcFie|19221201|1234567||||00|04|02|I||Y|N|2022|||||Y||Y|00|Y|20210909090900|20210909090900|XNFFGBDD6|99990210|Y|email
               |01|AB123|AB123456C|Karen|mcFie|19221201|1234567||||00|04|01|I||Y|N|2022|||||N|Y|N|00|Y|20210909090900|20210909090900|XNFFGBDD6|99990210|Y|
-              |01|AB123|AB123456C|Karen|mcFie|19221201|1234567||||00|04|01|I||Y|N|2022|||||N|N||00|Y|20210909090900|20210909090900|XNFFGBDD6|99990210|Y|
+              |01|AB123|AB123456C|Karen|mcFie|19221201|1234567||||01|04|01|I||Y|N|2022|||||N|N||00|Y|20210909090900|20210909090900|XNFFGBDD6|99990210|Y|
               |99|HEC_SSA_0001_20211010_$partialFileName.dat|5|Y
               |""".stripMargin
 
