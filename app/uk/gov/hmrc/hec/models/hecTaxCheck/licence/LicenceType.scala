@@ -37,6 +37,8 @@ object LicenceType extends Enum[LicenceType] {
 
   case object ScrapMetalDealerSite extends LicenceType
 
+  case object BookingOffice extends LicenceType
+
   val values: immutable.IndexedSeq[LicenceType] = findValues
 
   @SuppressWarnings(Array("org.wartremover.warts.Throw", "org.wartremover.warts.Equals"))

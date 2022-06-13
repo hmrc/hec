@@ -34,7 +34,7 @@ import uk.gov.hmrc.hec.models.hecTaxCheck.company.{CTAccountingPeriod, CTStatus}
 import uk.gov.hmrc.hec.models.hecTaxCheck.individual.SAStatus
 import uk.gov.hmrc.hec.models.hecTaxCheck.individual.SAStatus._
 import uk.gov.hmrc.hec.models.hecTaxCheck.licence.LicenceTimeTrading.{EightYearsOrMore, FourToEightYears, TwoToFourYears, ZeroToTwoYears}
-import uk.gov.hmrc.hec.models.hecTaxCheck.licence.LicenceType.{DriverOfTaxisAndPrivateHires, OperatorOfPrivateHireVehicles, ScrapMetalDealerSite, ScrapMetalMobileCollector}
+import uk.gov.hmrc.hec.models.hecTaxCheck.licence.LicenceType._
 import uk.gov.hmrc.hec.models.hecTaxCheck.licence.LicenceValidityPeriod.{UpToFiveYears, UpToFourYears, UpToOneYear, UpToThreeYears, UpToTwoYears}
 import uk.gov.hmrc.hec.models.hecTaxCheck.licence.{LicenceTimeTrading, LicenceType, LicenceValidityPeriod}
 import uk.gov.hmrc.hec.util.TimeProvider
@@ -85,10 +85,10 @@ class FileCreationServiceImpl @Inject() (timeProvider: TimeProvider, config: Con
   }
 
   private def licenceTypeEKV(licenceType: LicenceType): (String, String) = licenceType match {
-    case DriverOfTaxisAndPrivateHires  => ("00", "Driver of taxis and private hires")
-    case OperatorOfPrivateHireVehicles => ("01", "Operator of private hire vehicles")
-    case ScrapMetalMobileCollector     => ("02", "Scrap metal mobile collector")
-    case ScrapMetalDealerSite          => ("03", "Scrap metal dealer site")
+    case DriverOfTaxisAndPrivateHires                  => ("00", "Driver of taxis and private hires")
+    case OperatorOfPrivateHireVehicles | BookingOffice => ("01", "Operator of private hire vehicles")
+    case ScrapMetalMobileCollector                     => ("02", "Scrap metal mobile collector")
+    case ScrapMetalDealerSite                          => ("03", "Scrap metal dealer site")
   }
 
   def licenceValidityPeriodEKV(licenceValidityPeriod: LicenceValidityPeriod): (String, String) =
@@ -114,10 +114,13 @@ class FileCreationServiceImpl @Inject() (timeProvider: TimeProvider, config: Con
     }.toList
 
   private def createLicenceTypeEnumFileBody =
-    LicenceType.values.map { values =>
-      val keyValue = licenceTypeEKV(values)
-      EnumFileBody(recordId = keyValue._1, recordDescription = keyValue._2)
-    }.toList
+    LicenceType.values
+      .filter(_ =!= BookingOffice)
+      .map { values =>
+        val keyValue = licenceTypeEKV(values)
+        EnumFileBody(recordId = keyValue._1, recordDescription = keyValue._2)
+      }
+      .toList
 
   private def createLicenceValidityPeriodFileBody =
     LicenceValidityPeriod.values.map { values =>
