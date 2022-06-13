@@ -40,7 +40,8 @@ object HECTaxCheckData {
     taxCheckStartDateTime: ZonedDateTime,
     source: HECTaxCheckSource,
     languagePreference: Option[Language],
-    didConfirmUncertainEntityType: Option[Boolean]
+    didConfirmUncertainEntityType: Option[Boolean],
+    filterFromFileTransfer: Option[Boolean]
   ) extends HECTaxCheckData {
     val entityType: EntityType = EntityType.Individual
   }
@@ -52,7 +53,8 @@ object HECTaxCheckData {
     taxCheckStartDateTime: ZonedDateTime,
     source: HECTaxCheckSource,
     languagePreference: Option[Language],
-    didConfirmUncertainEntityType: Option[Boolean]
+    didConfirmUncertainEntityType: Option[Boolean],
+    filterFromFileTransfer: Option[Boolean]
   ) extends HECTaxCheckData {
     val entityType: EntityType = EntityType.Company
   }

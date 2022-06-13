@@ -100,7 +100,8 @@ class AuditServiceImplSpec extends Matchers with AnyWordSpecLike with MockFactor
               ZonedDateTime.now(),
               HECTaxCheckSource.Stride,
               Some(Language.Welsh),
-              Some(false)
+              Some(false),
+              None
             ),
             HECTaxCheckCode(""),
             LocalDate.now(),

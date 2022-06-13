@@ -198,6 +198,7 @@ class FileCreationServiceSpec extends AnyWordSpec with Matchers with MockFactory
                   zonedDateTime,
                   Digital,
                   Some(Language.Welsh),
+                  None,
                   None
                 ),
                 HECTaxCheckCode("XNFFGBDD6"),
@@ -497,7 +498,8 @@ class FileCreationServiceSpec extends AnyWordSpec with Matchers with MockFactory
                   zonedDateTime,
                   Digital,
                   Some(Language.English),
-                  None
+                  None,
+                  Some(false)
                 ),
                 HECTaxCheckCode("XNFFGBDD6"),
                 LocalDate.of(9999, 2, 10),
@@ -850,6 +852,7 @@ class FileCreationServiceEmailDisabledSpec extends AnyWordSpec with Matchers wit
                   zonedDateTime,
                   Digital,
                   Some(Language.Welsh),
+                  None,
                   None
                 ),
                 HECTaxCheckCode("XNFFGBDD6"),
@@ -1149,7 +1152,8 @@ class FileCreationServiceEmailDisabledSpec extends AnyWordSpec with Matchers wit
                   zonedDateTime,
                   Digital,
                   Some(Language.Welsh),
-                  None
+                  None,
+                  Some(false)
                 ),
                 HECTaxCheckCode("XNFFGBDD6"),
                 LocalDate.of(9999, 2, 10),

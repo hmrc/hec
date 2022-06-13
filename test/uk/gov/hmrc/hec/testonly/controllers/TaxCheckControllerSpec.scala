@@ -301,7 +301,8 @@ class TaxCheckControllerSpec extends ControllerSpec {
             taxCheckStartDateTime,
             HECTaxCheckSource.Digital,
             Some(Language.Welsh),
-            Some(false)
+            Some(false),
+            Some(true)
           )
           val taxCheck     =
             models.hecTaxCheck
