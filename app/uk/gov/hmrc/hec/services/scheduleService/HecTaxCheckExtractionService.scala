@@ -145,13 +145,15 @@ class HecTaxCheckExtractionServiceImpl @Inject() (
     ): EitherT[Future, Error, Unit] = {
 
       val fetchNextBatchHECTaxCheckData = for {
-        hecTaxCheckList          <- currentBatch
+        hecTaxCheckList          <- currentBatch.map(_.filterNot(_.taxCheckData.filterFromFileTransfer.contains(true)))
         _                         =
           logger.info(
             s" Processing file no :: $seqNumInt, with records:: ${hecTaxCheckList.size}}"
           )
         hecTaxCheckListNextBatch <-
-          taxCheckService.getAllTaxCheckCodesByExtractedStatus(false, skip + limit, limit, sortBy)
+          taxCheckService
+            .getAllTaxCheckCodesByExtractedStatus(false, skip + limit, limit, sortBy)
+            .map(_.filterNot(_.taxCheckData.filterFromFileTransfer.contains(true)))
         _                        <- if ((hecTaxCheckList.size === 0 && seqNumInt =!= 1) || seqNumInt > 9999) EitherT.pure[Future, Error](())
                                     else {
                                       createAndStoreFileThenNotify(
