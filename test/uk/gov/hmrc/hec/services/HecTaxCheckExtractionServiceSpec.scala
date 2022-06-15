@@ -185,25 +185,34 @@ class HecTaxCheckExtractionServiceSpec
       taxCheckStartDateTime,
       HECTaxCheckSource.Digital,
       Some(Language.English),
+      None,
       None
     )
     val taxCheckCode1 = HECTaxCheckCode("code1")
     val taxCheckCode2 = HECTaxCheckCode("code12")
     val taxCheckCode3 = HECTaxCheckCode("code13")
-    val taxCheck1     =
-      hecTaxCheck.HECTaxCheck(taxCheckData, taxCheckCode1, TimeUtils.today(), TimeUtils.now(), false, None, None)
-    val taxCheck2     = taxCheck1.copy(taxCheckCode = taxCheckCode2)
-    val taxCheck3     = taxCheck1.copy(taxCheckCode = taxCheckCode3, isExtracted = false)
+    val taxCheckCode4 = HECTaxCheckCode("code14")
+    val taxCheckCode5 = HECTaxCheckCode("code15")
 
-    val hecTaxCheckList        = List(taxCheck1, taxCheck2, taxCheck3)
-    val sdesDirectory          = "sdes"
-    val uuid                   = UUID.randomUUID()
-    val updatedHecTaxCheckList =
-      List(
-        taxCheck1.copy(fileCorrelationId = uuid.some),
-        taxCheck2.copy(fileCorrelationId = uuid.some),
-        taxCheck3.copy(fileCorrelationId = uuid.some)
-      )
+    val taxCheck1 =
+      hecTaxCheck.HECTaxCheck(taxCheckData, taxCheckCode1, TimeUtils.today(), TimeUtils.now(), false, None, None)
+    val taxCheck2 = taxCheck1.copy(
+      taxCheckCode = taxCheckCode2,
+      taxCheckData = taxCheckData.copy(filterFromFileTransfer = Some(false))
+    )
+    val taxCheck3 = taxCheck1.copy(taxCheckCode = taxCheckCode3, isExtracted = false)
+    val taxCheck4 = taxCheck1.copy(
+      taxCheckCode = taxCheckCode4,
+      taxCheckData = taxCheckData.copy(filterFromFileTransfer = Some(true))
+    )
+    val taxCheck5 = taxCheck4.copy(taxCheckCode = taxCheckCode5)
+
+    val sdesDirectory = "sdes"
+    val uuid          = UUID.randomUUID()
+
+    val updatedTaxCheck1 = taxCheck1.copy(fileCorrelationId = uuid.some)
+    val updatedTaxCheck2 = taxCheck2.copy(fileCorrelationId = uuid.some)
+    val updatedTaxCheck3 = taxCheck3.copy(fileCorrelationId = uuid.some)
 
     // hash values below taken from actual unmodified value sent to SDES and value calculated by SDES in test
     val (md5Hash, expectedFileChecksum) =
@@ -233,7 +242,7 @@ class HecTaxCheckExtractionServiceSpec
 
     "return None" when {
 
-      " no lock is obtained on mongo db" in {
+      "no lock is obtained on mongo db" in {
         inSequence {
           mockWithLock(lockId, lockObtained = false)
         }
@@ -375,10 +384,10 @@ class HecTaxCheckExtractionServiceSpec
             Right(createObjectSummary(s"$sdesDirectory/corrective-action", "file1.dat"))
           )
           mockFileNotify(createFileNotifyRequest("file1.dat", s"$sdesDirectory/corrective-action"))(Right(()))
-          mockGetAlltaxCheckByExtractedStatus(false, 0, 2, "_id")(Right(hecTaxCheckList.take(2)))
+          mockGetAlltaxCheckByExtractedStatus(false, 0, 2, "_id")(Right(List(taxCheck1, taxCheck2)))
           mockGetAlltaxCheckByExtractedStatus(false, 2, 2, "_id")(Right(List()))
           mockGenerateUUID(uuid)
-          mockCreateFileContent(HECTaxCheckFileBodyList(hecTaxCheckList.take(2)), "0001", "HEC_APPLICATION", true)(
+          mockCreateFileContent(HECTaxCheckFileBodyList(List(taxCheck1, taxCheck2)), "0001", "HEC_APPLICATION", true)(
             Right(("00|file1.dat|HEC|SSA|20210909|154556|000001|001", "file1.dat"))
           )
           mockStoreFile(
@@ -388,7 +397,7 @@ class HecTaxCheckExtractionServiceSpec
           )(
             Right(createObjectSummary(s"$sdesDirectory/tax-checks", "file1.dat"))
           )
-          mockUpdateAllHecTaxCheck(updatedHecTaxCheckList.take(2))(Left(models.Error("err")))
+          mockUpdateAllHecTaxCheck(List(updatedTaxCheck1, updatedTaxCheck2))(Left(models.Error("err")))
         }
         val result =
           hecTaxCheckExtractionService.lockAndProcessHecData()
@@ -419,6 +428,7 @@ class HecTaxCheckExtractionServiceSpec
       "all fetch , update , file creation , file storage  and file notify passed without error" in {
         inSequence {
           mockWithLock(lockId, lockObtained = true)
+          // licence type enum file
           mockGenerateUUID(uuid)
           mockCreateFileContent(LicenceType, "0001", "HEC_LICENCE_TYPE", true)(
             Right(("00|file1.dat|HEC|SSA|20210909|154556|000001|001", "file1.dat"))
@@ -427,6 +437,8 @@ class HecTaxCheckExtractionServiceSpec
             Right(createObjectSummary(s"$sdesDirectory/licence-type", "file1.dat"))
           )
           mockFileNotify(createFileNotifyRequest("file1.dat", s"$sdesDirectory/licence-type"))(Right(()))
+
+          // licence time trading enum file
           mockGenerateUUID(uuid)
           mockCreateFileContent(LicenceTimeTrading, "0001", "HEC_LICENCE_TIME_TRADING", true)(
             Right(("00|file1.dat|HEC|SSA|20210909|154556|000001|001", "file1.dat"))
@@ -439,6 +451,8 @@ class HecTaxCheckExtractionServiceSpec
             Right(createObjectSummary(s"$sdesDirectory/licence-time-trading", "file1.dat"))
           )
           mockFileNotify(createFileNotifyRequest("file1.dat", s"$sdesDirectory/licence-time-trading"))(Right(()))
+
+          // licence validity period enum file
           mockGenerateUUID(uuid)
           mockCreateFileContent(LicenceValidityPeriod, "0001", "HEC_LICENCE_VALIDITY_PERIOD", true)(
             Right(("00|file1.dat|HEC|SSA|20210909|154556|000001|001", "file1.dat"))
@@ -451,6 +465,8 @@ class HecTaxCheckExtractionServiceSpec
             Right(createObjectSummary(s"$sdesDirectory/licence-validity-period", "file1.dat"))
           )
           mockFileNotify(createFileNotifyRequest("file1.dat", s"$sdesDirectory/licence-validity-period"))(Right(()))
+
+          // corrective action enum file
           mockGenerateUUID(uuid)
           mockCreateFileContent(CorrectiveAction, "0001", "HEC_CORRECTIVE_ACTION", true)(
             Right(("00|file1.dat|HEC|SSA|20210909|154556|000001|001", "file1.dat"))
@@ -463,27 +479,34 @@ class HecTaxCheckExtractionServiceSpec
             Right(createObjectSummary(s"$sdesDirectory/corrective-action", "file1.dat"))
           )
           mockFileNotify(createFileNotifyRequest("file1.dat", s"$sdesDirectory/corrective-action"))(Right(()))
-          mockGetAlltaxCheckByExtractedStatus(false, 0, 2, "_id")(Right(hecTaxCheckList.take(2)))
-          mockGetAlltaxCheckByExtractedStatus(false, 2, 2, "_id")(Right(hecTaxCheckList.take(2)))
+
+          // tax check data loop 1
+          mockGetAlltaxCheckByExtractedStatus(false, 0, 2, "_id")(Right(List(taxCheck1, taxCheck2)))
+          // tax check 4 should be filtered from file feed
+          mockGetAlltaxCheckByExtractedStatus(false, 2, 2, "_id")(Right(List(taxCheck3, taxCheck4)))
           mockGenerateUUID(uuid)
-          mockCreateFileContent(HECTaxCheckFileBodyList(hecTaxCheckList.take(2)), "0001", "HEC_APPLICATION", false)(
+          mockCreateFileContent(HECTaxCheckFileBodyList(List(taxCheck1, taxCheck2)), "0001", "HEC_APPLICATION", false)(
             Right(("00|file1.dat|HEC|SSA|20210909|154556|000001|001", "file1.dat"))
           )
           mockStoreFile("00|file1.dat|HEC|SSA|20210909|154556|000001|001", "file1.dat", s"$sdesDirectory/tax-checks")(
             Right(createObjectSummary(s"$sdesDirectory/tax-checks", "file1.dat"))
           )
-          mockUpdateAllHecTaxCheck(updatedHecTaxCheckList.take(2))(Right(updatedHecTaxCheckList.take(2)))
+          mockUpdateAllHecTaxCheck(List(updatedTaxCheck1, updatedTaxCheck2))(
+            Right(List(updatedTaxCheck1, updatedTaxCheck2))
+          )
           mockFileNotify(createFileNotifyRequest("file1.dat", s"$sdesDirectory/tax-checks"))(Right(()))
-          mockGetAlltaxCheckByExtractedStatus(false, 4, 2, "_id")(Right(List()))
+
+          // tax check data loop 2 - tax check 5 should be filtered from file feed
+          mockGetAlltaxCheckByExtractedStatus(false, 4, 2, "_id")(Right(List(taxCheck5)))
           mockGenerateUUID(uuid)
-          mockCreateFileContent(HECTaxCheckFileBodyList(hecTaxCheckList.take(2)), "0002", "HEC_APPLICATION", true)(
-            Right(("00|file1.dat|HEC|SSA|20210909|154556|000001|001", "file1.dat"))
+          mockCreateFileContent(HECTaxCheckFileBodyList(List(taxCheck3)), "0002", "HEC_APPLICATION", true)(
+            Right(("00|file2.dat|HEC|SSA|20210909|154556|000001|001", "file2.dat"))
           )
-          mockStoreFile("00|file1.dat|HEC|SSA|20210909|154556|000001|001", "file1.dat", s"$sdesDirectory/tax-checks")(
-            Right(createObjectSummary(s"$sdesDirectory/tax-checks", "file1.dat"))
+          mockStoreFile("00|file2.dat|HEC|SSA|20210909|154556|000001|001", "file2.dat", s"$sdesDirectory/tax-checks")(
+            Right(createObjectSummary(s"$sdesDirectory/tax-checks", "file2.dat"))
           )
-          mockUpdateAllHecTaxCheck(updatedHecTaxCheckList.take(2))(Right(updatedHecTaxCheckList.take(2)))
-          mockFileNotify(createFileNotifyRequest("file1.dat", s"$sdesDirectory/tax-checks"))(Right(()))
+          mockUpdateAllHecTaxCheck(List(updatedTaxCheck3))(Right(List(updatedTaxCheck3)))
+          mockFileNotify(createFileNotifyRequest("file2.dat", s"$sdesDirectory/tax-checks"))(Right(()))
         }
         val result =
           hecTaxCheckExtractionService.lockAndProcessHecData()

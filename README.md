@@ -60,6 +60,9 @@ Example request body:
    },
    "taxCheckStartDateTime": "2021-12-02T14:56:11.75Z[Europe/London]",
    "source":"Stride",
+   "languagePreference": "Welsh",
+   "didConfirmUncertainEntityType": true,
+   "filterFromFileTransfer": false,
    "type":"Individual"
 }
 ```
@@ -97,8 +100,10 @@ Example response body:
       },
       "taxCheckStartDateTime": "2021-12-02T14:56:11.75Z[Europe/London]",
       "source": "Digital",
-      "type": "Company",
-      "languagePreference": "English"
+      "languagePreference": "English",
+      "didConfirmUncertainEntityType": false,
+      "filterFromFileTransfer": true,
+      "type": "Company"
    },
    "taxCheckCode": "TLAR4D6HB",
    "expiresAfter": "2022-04-01",

@@ -29,6 +29,7 @@ sealed trait HECTaxCheckData extends Product with Serializable {
   val entityType: EntityType
   val taxCheckStartDateTime: ZonedDateTime
   val source: HECTaxCheckSource
+  val filterFromFileTransfer: Option[Boolean]
 }
 
 object HECTaxCheckData {
@@ -40,7 +41,8 @@ object HECTaxCheckData {
     taxCheckStartDateTime: ZonedDateTime,
     source: HECTaxCheckSource,
     languagePreference: Option[Language],
-    didConfirmUncertainEntityType: Option[Boolean]
+    didConfirmUncertainEntityType: Option[Boolean],
+    filterFromFileTransfer: Option[Boolean]
   ) extends HECTaxCheckData {
     val entityType: EntityType = EntityType.Individual
   }
@@ -52,7 +54,8 @@ object HECTaxCheckData {
     taxCheckStartDateTime: ZonedDateTime,
     source: HECTaxCheckSource,
     languagePreference: Option[Language],
-    didConfirmUncertainEntityType: Option[Boolean]
+    didConfirmUncertainEntityType: Option[Boolean],
+    filterFromFileTransfer: Option[Boolean]
   ) extends HECTaxCheckData {
     val entityType: EntityType = EntityType.Company
   }

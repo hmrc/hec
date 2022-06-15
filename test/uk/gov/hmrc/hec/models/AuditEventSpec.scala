@@ -91,6 +91,7 @@ class AuditEventSpec extends Matchers with AnyWordSpecLike {
               zonedDateTime,
               HECTaxCheckSource.Digital,
               Some(Language.Welsh),
+              None,
               None
             ),
             HECTaxCheckCode("code"),
@@ -188,7 +189,8 @@ class AuditEventSpec extends Matchers with AnyWordSpecLike {
               zonedDateTime,
               HECTaxCheckSource.Stride,
               None,
-              None
+              None,
+              Some(true)
             ),
             HECTaxCheckCode("code"),
             date.plusDays(4L),
@@ -234,7 +236,8 @@ class AuditEventSpec extends Matchers with AnyWordSpecLike {
             |      },
             |      "taxCheckStartDateTime": "2020-11-01T20:55:31.000000032Z[Europe/London]",
             |      "source": "Stride",
-            |      "type": "Company"
+            |      "type": "Company",
+            |      "filterFromFileTransfer": true
             |   },
             |   "taxCheckCode": "code",
             |   "expiresAfter": "2020-12-05",

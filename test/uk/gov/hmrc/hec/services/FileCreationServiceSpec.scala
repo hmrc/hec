@@ -149,7 +149,7 @@ class FileCreationServiceSpec extends AnyWordSpec with Matchers with MockFactory
       }
 
       "content type is list of HecTaxChek" when {
-        val partialFileName = s"HEC"
+        val partialFileName = "HEC"
 
         val zonedDateTime = ZonedDateTime.of(2021, 9, 9, 10, 9, 0, 0, ZoneId.of("Europe/London"))
 
@@ -198,6 +198,7 @@ class FileCreationServiceSpec extends AnyWordSpec with Matchers with MockFactory
                   zonedDateTime,
                   Digital,
                   Some(Language.Welsh),
+                  None,
                   None
                 ),
                 HECTaxCheckCode("XNFFGBDD6"),
@@ -304,7 +305,7 @@ class FileCreationServiceSpec extends AnyWordSpec with Matchers with MockFactory
                 mockTimeProviderNow(LocalTime.of(11, 36, 5), zoneId)
               }
 
-              val partialFileName                         = s"HEC"
+              val partialFileName                         = "HEC"
               val result: Either[Error, (String, String)] =
                 fileCreationService.createFileContent(
                   HECTaxCheckFileBodyList(hecTaxCheckList),
@@ -362,7 +363,7 @@ class FileCreationServiceSpec extends AnyWordSpec with Matchers with MockFactory
                 mockTimeProviderNow(LocalTime.of(11, 36, 5), zoneId)
               }
 
-              val partialFileName                         = s"HEC"
+              val partialFileName                         = "HEC"
               val result: Either[Error, (String, String)] =
                 fileCreationService.createFileContent(
                   HECTaxCheckFileBodyList(hecTaxCheckList),
@@ -420,7 +421,7 @@ class FileCreationServiceSpec extends AnyWordSpec with Matchers with MockFactory
                 mockTimeProviderNow(LocalTime.of(11, 36, 5), zoneId)
               }
 
-              val partialFileName                         = s"HEC"
+              val partialFileName                         = "HEC"
               val result: Either[Error, (String, String)] =
                 fileCreationService.createFileContent(
                   HECTaxCheckFileBodyList(hecTaxCheckList),
@@ -497,7 +498,8 @@ class FileCreationServiceSpec extends AnyWordSpec with Matchers with MockFactory
                   zonedDateTime,
                   Digital,
                   Some(Language.English),
-                  None
+                  None,
+                  Some(false)
                 ),
                 HECTaxCheckCode("XNFFGBDD6"),
                 LocalDate.of(9999, 2, 10),
@@ -801,7 +803,7 @@ class FileCreationServiceEmailDisabledSpec extends AnyWordSpec with Matchers wit
     "create file content" when {
 
       "content type is list of HecTaxChek" when {
-        val partialFileName = s"HEC"
+        val partialFileName = "HEC"
 
         val zonedDateTime = ZonedDateTime.of(2021, 9, 9, 10, 9, 0, 0, ZoneId.of("Europe/London"))
 
@@ -850,6 +852,7 @@ class FileCreationServiceEmailDisabledSpec extends AnyWordSpec with Matchers wit
                   zonedDateTime,
                   Digital,
                   Some(Language.Welsh),
+                  None,
                   None
                 ),
                 HECTaxCheckCode("XNFFGBDD6"),
@@ -956,7 +959,7 @@ class FileCreationServiceEmailDisabledSpec extends AnyWordSpec with Matchers wit
                 mockTimeProviderNow(LocalTime.of(11, 36, 5), zoneId)
               }
 
-              val partialFileName                         = s"HEC"
+              val partialFileName                         = "HEC"
               val result: Either[Error, (String, String)] =
                 fileCreationService.createFileContent(
                   HECTaxCheckFileBodyList(hecTaxCheckList),
@@ -1014,7 +1017,7 @@ class FileCreationServiceEmailDisabledSpec extends AnyWordSpec with Matchers wit
                 mockTimeProviderNow(LocalTime.of(11, 36, 5), zoneId)
               }
 
-              val partialFileName                         = s"HEC"
+              val partialFileName                         = "HEC"
               val result: Either[Error, (String, String)] =
                 fileCreationService.createFileContent(
                   HECTaxCheckFileBodyList(hecTaxCheckList),
@@ -1072,7 +1075,7 @@ class FileCreationServiceEmailDisabledSpec extends AnyWordSpec with Matchers wit
                 mockTimeProviderNow(LocalTime.of(11, 36, 5), zoneId)
               }
 
-              val partialFileName                         = s"HEC"
+              val partialFileName                         = "HEC"
               val result: Either[Error, (String, String)] =
                 fileCreationService.createFileContent(
                   HECTaxCheckFileBodyList(hecTaxCheckList),
@@ -1149,7 +1152,8 @@ class FileCreationServiceEmailDisabledSpec extends AnyWordSpec with Matchers wit
                   zonedDateTime,
                   Digital,
                   Some(Language.Welsh),
-                  None
+                  None,
+                  Some(false)
                 ),
                 HECTaxCheckCode("XNFFGBDD6"),
                 LocalDate.of(9999, 2, 10),

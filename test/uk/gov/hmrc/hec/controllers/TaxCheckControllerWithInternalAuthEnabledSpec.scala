@@ -156,7 +156,8 @@ class TaxCheckControllerWithInternalAuthEnabledSpec extends ControllerSpec with 
         taxCheckStartDateTime,
         HECTaxCheckSource.Digital,
         None,
-        Some(true)
+        Some(true),
+        None
       )
 
       val taxCheckDataCompany: HECTaxCheckData = CompanyHECTaxCheckData(
@@ -183,7 +184,8 @@ class TaxCheckControllerWithInternalAuthEnabledSpec extends ControllerSpec with 
         taxCheckStartDateTime,
         HECTaxCheckSource.Digital,
         None,
-        Some(false)
+        Some(false),
+        Some(true)
       )
 
       def requestWithJson(json: JsValue): Request[JsValue] =

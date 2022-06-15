@@ -87,7 +87,8 @@ class HECTaxCheckStoreImplSpec extends AnyWordSpec with Matchers with Eventually
       taxCheckStartDateTime,
       HECTaxCheckSource.Digital,
       Some(Language.Welsh),
-      Some(true)
+      Some(true),
+      None
     )
 
     val taxCheckCode1 = HECTaxCheckCode("code1")
