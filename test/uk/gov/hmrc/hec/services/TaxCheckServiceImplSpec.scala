@@ -205,26 +205,55 @@ class TaxCheckServiceImplSpec extends AnyWordSpec with Matchers with MockFactory
           LicenceValidityPeriod.UpToOneYear
         )
 
-      val storedIndividualTaxCheck =
-        hecTaxCheck.HECTaxCheck(
-          IndividualHECTaxCheckData(
-            IndividualApplicantDetails(Some(GGCredId("")), Name("", ""), storedDateOfBirth),
-            storedLicenceDetails,
-            IndividualTaxDetails(
-              NINO(""),
-              Some(SAUTR("")),
-              TaxSituation.SAPAYE,
-              Some(YesNoAnswer.No),
-              None,
-              TaxYear(2021),
-              None
+      val storedIndividualTaxCheckData = IndividualHECTaxCheckData(
+        IndividualApplicantDetails(Some(GGCredId("")), Name("", ""), storedDateOfBirth),
+        storedLicenceDetails,
+        IndividualTaxDetails(
+          NINO(""),
+          Some(SAUTR("")),
+          TaxSituation.SAPAYE,
+          Some(YesNoAnswer.No),
+          None,
+          TaxYear(2021),
+          None
+        ),
+        taxCheckStartDateTime,
+        HECTaxCheckSource.Digital,
+        None,
+        None,
+        None
+      )
+
+      val storedCompanyTaxCheckData =
+        CompanyHECTaxCheckData(
+          CompanyApplicantDetails(GGCredId("").some, storedCRN, CompanyHouseName("Test Tech Ltd")),
+          storedLicenceDetails,
+          CompanyTaxDetails(
+            CTUTR("1111111111"),
+            Some(CTUTR("1111111111")),
+            Some(YesNoAnswer.Yes),
+            CTStatusResponse(
+              CTUTR("1111111111"),
+              LocalDate.of(2020, 10, 9),
+              LocalDate.of(2021, 10, 9),
+              Some(
+                CTAccountingPeriodDigital(LocalDate.of(2020, 10, 9), LocalDate.of(2021, 10, 9), CTStatus.ReturnFound)
+              )
             ),
-            taxCheckStartDateTime,
-            HECTaxCheckSource.Digital,
             None,
-            None,
+            Some(YesNoAnswer.Yes),
             None
           ),
+          taxCheckStartDateTime,
+          HECTaxCheckSource.Digital,
+          None,
+          Some(false),
+          None
+        )
+
+      val storedIndividualTaxCheck =
+        hecTaxCheck.HECTaxCheck(
+          storedIndividualTaxCheckData,
           taxCheckCode,
           TimeUtils.today().plusMonths(1L),
           now,
@@ -235,31 +264,7 @@ class TaxCheckServiceImplSpec extends AnyWordSpec with Matchers with MockFactory
 
       val storedCompanyTaxCheck =
         hecTaxCheck.HECTaxCheck(
-          CompanyHECTaxCheckData(
-            CompanyApplicantDetails(GGCredId("").some, storedCRN, CompanyHouseName("Test Tech Ltd")),
-            storedLicenceDetails,
-            CompanyTaxDetails(
-              CTUTR("1111111111"),
-              Some(CTUTR("1111111111")),
-              Some(YesNoAnswer.Yes),
-              CTStatusResponse(
-                CTUTR("1111111111"),
-                LocalDate.of(2020, 10, 9),
-                LocalDate.of(2021, 10, 9),
-                Some(
-                  CTAccountingPeriodDigital(LocalDate.of(2020, 10, 9), LocalDate.of(2021, 10, 9), CTStatus.ReturnFound)
-                )
-              ),
-              None,
-              Some(YesNoAnswer.Yes),
-              None
-            ),
-            taxCheckStartDateTime,
-            HECTaxCheckSource.Digital,
-            None,
-            Some(false),
-            None
-          ),
+          storedCompanyTaxCheckData,
           taxCheckCode,
           TimeUtils.today().plusMonths(1L),
           now,
@@ -551,6 +556,57 @@ class TaxCheckServiceImplSpec extends AnyWordSpec with Matchers with MockFactory
           val result = service.matchTaxCheck(matchingCompanyMatchRequest)
           await(result.value) shouldBe Right(
             HECTaxCheckMatchResult(matchingCompanyMatchRequest, now, HECTaxCheckMatchStatus.Match)
+          )
+        }
+
+        "the submitted licence type is Booking Office and the actual licence type is OperatorOfPrivateHireVehicles" in {
+          mockGetTaxCheck(taxCheckCode)(
+            Right(
+              Some(
+                storedIndividualTaxCheck.copy(
+                  taxCheckData = storedIndividualTaxCheckData.copy(
+                    licenceDetails = storedLicenceDetails.copy(
+                      licenceType = LicenceType.OperatorOfPrivateHireVehicles
+                    )
+                  )
+                )
+              )
+            )
+          )
+          mockTimeProviderNow(now)
+          mockTimeProviderToday(today)
+
+          val matchRequest = matchingIndividualMatchRequest.copy(licenceType = LicenceType.BookingOffice)
+          val result       = service.matchTaxCheck(matchRequest)
+
+          await(result.value) shouldBe Right(
+            HECTaxCheckMatchResult(matchRequest, now, HECTaxCheckMatchStatus.Match)
+          )
+        }
+
+        "the submitted licence type is OperatorOfPrivateHireVehicles and the actual licence type is BookingOffice" in {
+          mockGetTaxCheck(taxCheckCode)(
+            Right(
+              Some(
+                storedIndividualTaxCheck.copy(
+                  taxCheckData = storedIndividualTaxCheckData.copy(
+                    licenceDetails = storedLicenceDetails.copy(
+                      licenceType = LicenceType.BookingOffice
+                    )
+                  )
+                )
+              )
+            )
+          )
+          mockTimeProviderNow(now)
+          mockTimeProviderToday(today)
+
+          val matchRequest =
+            matchingIndividualMatchRequest.copy(licenceType = LicenceType.OperatorOfPrivateHireVehicles)
+          val result       = service.matchTaxCheck(matchRequest)
+
+          await(result.value) shouldBe Right(
+            HECTaxCheckMatchResult(matchRequest, now, HECTaxCheckMatchStatus.Match)
           )
         }
 
