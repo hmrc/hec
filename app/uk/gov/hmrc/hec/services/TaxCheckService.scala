@@ -31,6 +31,7 @@ import uk.gov.hmrc.hec.models.hecTaxCheck.HECTaxCheckData.{CompanyHECTaxCheckDat
 import uk.gov.hmrc.hec.models.hecTaxCheck.{HECTaxCheck, HECTaxCheckData}
 import uk.gov.hmrc.hec.models.taxCheckMatch.{HECTaxCheckMatchRequest, HECTaxCheckMatchResult, HECTaxCheckMatchStatus, MatchFailureReason}
 import uk.gov.hmrc.hec.models.{Error, SaveEmailAddressRequest, TaxCheckListItem}
+import uk.gov.hmrc.hec.models.hecTaxCheck.licence.LicenceType
 import uk.gov.hmrc.hec.repos.HECTaxCheckStore
 import uk.gov.hmrc.hec.util.TimeProvider
 import uk.gov.hmrc.http.HeaderCarrier
@@ -134,7 +135,8 @@ class TaxCheckServiceImpl @Inject() (
     lazy val hasExpired = timeProvider.currentDate.isAfter(storedTaxCheck.expiresAfter)
 
     val licenceTypeMatchFailure =
-      if (taxCheckMatchRequest.licenceType === storedTaxCheck.taxCheckData.licenceDetails.licenceType) None
+      if (licenceTypeMatches(taxCheckMatchRequest.licenceType, storedTaxCheck.taxCheckData.licenceDetails.licenceType))
+        None
       else Some(MatchFailureReason.LicenceTypeNotMatched)
 
     val failureReason: Option[MatchFailureReason] = (taxCheckMatchRequest.verifier, storedTaxCheck.taxCheckData) match {
@@ -161,6 +163,13 @@ class TaxCheckServiceImpl @Inject() (
       HECTaxCheckMatchResult(taxCheckMatchRequest, timeProvider.currentDateTime, HECTaxCheckMatchStatus.NoMatch(reason))
     }
   }
+
+  private def licenceTypeMatches(submittedLicenceType: LicenceType, actualLicenceType: LicenceType): Boolean =
+    (submittedLicenceType, actualLicenceType) match {
+      case (LicenceType.BookingOffice, LicenceType.OperatorOfPrivateHireVehicles) => true
+      case (LicenceType.OperatorOfPrivateHireVehicles, LicenceType.BookingOffice) => true
+      case _                                                                      => submittedLicenceType === actualLicenceType
+    }
 
   def getUnexpiredTaxCheckCodes(
     ggCredId: GGCredId
