@@ -85,10 +85,11 @@ class FileCreationServiceImpl @Inject() (timeProvider: TimeProvider, config: Con
   }
 
   private def licenceTypeEKV(licenceType: LicenceType): (String, String) = licenceType match {
-    case DriverOfTaxisAndPrivateHires                  => ("00", "Driver of taxis and private hires")
-    case OperatorOfPrivateHireVehicles | BookingOffice => ("01", "Operator of private hire vehicles")
-    case ScrapMetalMobileCollector                     => ("02", "Scrap metal mobile collector")
-    case ScrapMetalDealerSite                          => ("03", "Scrap metal dealer site")
+    case DriverOfTaxisAndPrivateHires  => ("00", "Driver of taxis and private hires")
+    case OperatorOfPrivateHireVehicles => ("01", "Operator of private hire vehicles")
+    case ScrapMetalMobileCollector     => ("02", "Scrap metal mobile collector")
+    case ScrapMetalDealerSite          => ("03", "Scrap metal dealer site")
+    case BookingOffice                 => ("04", "Booking office")
   }
 
   def licenceValidityPeriodEKV(licenceValidityPeriod: LicenceValidityPeriod): (String, String) =
@@ -114,13 +115,10 @@ class FileCreationServiceImpl @Inject() (timeProvider: TimeProvider, config: Con
     }.toList
 
   private def createLicenceTypeEnumFileBody =
-    LicenceType.values
-      .filter(_ =!= BookingOffice)
-      .map { values =>
-        val keyValue = licenceTypeEKV(values)
-        EnumFileBody(recordId = keyValue._1, recordDescription = keyValue._2)
-      }
-      .toList
+    LicenceType.values.map { values =>
+      val keyValue = licenceTypeEKV(values)
+      EnumFileBody(recordId = keyValue._1, recordDescription = keyValue._2)
+    }.toList
 
   private def createLicenceValidityPeriodFileBody =
     LicenceValidityPeriod.values.map { values =>
