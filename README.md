@@ -327,7 +327,7 @@ unsuccessfully) we delete the corresponding files from `object-store` and mark t
 When testing file transfers locally, a command to create an internal-auth token must be made in order for the 
 call to store files in `object-store` work. To make the default token in `application.conf` work, run this command:
 ```bash
-curl -v -X POST --header "Content-Type: application/json"  --data '{ "token": "123457",  "principal": "object-store", "permissions": [{ "resourceType": "hec", "resourceLocation": "*", "actions": ["*"] }] }' http://localhost:8470/test-only/token 
+curl -v -X POST --header "Content-Type: application/json"  --data '{ "token": "123457",  "principal": "hec", "permissions": [{ "resourceType": "object-store", "resourceLocation": "*", "actions": ["*"] }] }' http://localhost:8470/test-only/token 
 ```
 
 
