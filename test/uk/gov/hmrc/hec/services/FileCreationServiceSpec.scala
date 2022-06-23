@@ -79,7 +79,8 @@ class FileCreationServiceSpec extends AnyWordSpec with Matchers with MockFactory
              |01|01|Operator of private hire vehicles
              |01|02|Scrap metal mobile collector
              |01|03|Scrap metal dealer site
-             |99|HEC_SSA_0001_20211010_HEC_LICENCE_TYPE.dat|6|Y
+             |01|04|Booking office
+             |99|HEC_SSA_0001_20211010_HEC_LICENCE_TYPE.dat|7|Y
              |""".stripMargin
 
         result shouldBe (Right((expected, "HEC_SSA_0001_20211010_HEC_LICENCE_TYPE.dat")))
@@ -259,7 +260,7 @@ class FileCreationServiceSpec extends AnyWordSpec with Matchers with MockFactory
               val expected = s"""|00|HEC_SSA_0001_20211010_$partialFileName.dat|HEC|SSA|20211010|113605|000001|001
               |01|AB123|AB123456C|Karen|mcFie|19221201|1234567||||00|04|02|I||Y|N|2022|||||Y||Y|00|Y|20210909090900|20210909090900|XNFFGBDD6|99990210|Y|email
               |01|AB123|AB123456C|Karen|mcFie|19221201|1234567||||00|04|01|I||Y|N|2022|||||N|Y|N|00|Y|20210909090900|20210909090900|XNFFGBDD6|99990210|Y|
-              |01|AB123|AB123456C|Karen|mcFie|19221201|1234567||||01|04|01|I||Y|N|2022|||||N|N||00|Y|20210909090900|20210909090900|XNFFGBDD6|99990210|Y|
+              |01|AB123|AB123456C|Karen|mcFie|19221201|1234567||||04|04|01|I||Y|N|2022|||||N|N||00|Y|20210909090900|20210909090900|XNFFGBDD6|99990210|Y|
               |99|HEC_SSA_0001_20211010_$partialFileName.dat|5|Y
               |""".stripMargin
 
