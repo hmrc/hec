@@ -63,7 +63,7 @@ final case class HECTaxCheckFileBody(
   taxCheckCode: String,
   taxCheckExpiryDate: String,
   onlineApplication: Char,
-  emailAddress: FeatureEnabledField[Option[String]]
+  emailAddress: Option[String]
 ) extends FileBody {
 
   @SuppressWarnings(Array("org.wartremover.warts.Any"))

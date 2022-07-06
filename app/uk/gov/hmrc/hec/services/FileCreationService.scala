@@ -19,10 +19,8 @@ package uk.gov.hmrc.hec.services
 import cats.implicits.catsSyntaxOptionId
 import cats.syntax.eq._
 import com.google.inject.{ImplementedBy, Inject}
-import play.api.Configuration
 import uk.gov.hmrc.hec.models.Error
 import uk.gov.hmrc.hec.models.fileFormat.FileFormat.toFileContent
-import uk.gov.hmrc.hec.models.fileFormat.HECTaxCheckFileBody.FeatureEnabledField
 import uk.gov.hmrc.hec.models.fileFormat._
 import uk.gov.hmrc.hec.models.hecTaxCheck.CorrectiveAction._
 import uk.gov.hmrc.hec.models.hecTaxCheck.HECTaxCheckData.{CompanyHECTaxCheckData, IndividualHECTaxCheckData}
@@ -57,11 +55,7 @@ trait FileCreationService {
 }
 
 @Singleton
-class FileCreationServiceImpl @Inject() (timeProvider: TimeProvider, config: Configuration)
-    extends FileCreationService {
-
-  val emailAddressFieldEnabled: Boolean =
-    config.get[Boolean]("hec-file-extraction-details.enable-email-address-field")
+class FileCreationServiceImpl @Inject() (timeProvider: TimeProvider) extends FileCreationService {
 
   val DATE_FORMATTER: DateTimeFormatter      = DateTimeFormatter.ofPattern("yyyyMMdd")
   val TIME_FORMATTER: DateTimeFormatter      = DateTimeFormatter.ofPattern("HHmmss")
@@ -202,8 +196,7 @@ class FileCreationServiceImpl @Inject() (timeProvider: TimeProvider, config: Con
       val taxCheckCode             = hecTaxCheck.taxCheckCode.value
       val taxCheckExpiryDate       = hecTaxCheck.expiresAfter.format(DATE_FORMATTER)
       val onlineApplication        = if (taxCheckData.source === Digital) 'Y' else 'N'
-      val emailAddress             =
-        FeatureEnabledField(hecTaxCheck.latestTaxCheckEmailSentTo.map(_.value), emailAddressFieldEnabled)
+      val emailAddress             = hecTaxCheck.latestTaxCheckEmailSentTo.map(_.value)
 
       taxCheckData match {
         case i: IndividualHECTaxCheckData =>
