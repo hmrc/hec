@@ -37,6 +37,6 @@ object FileMapOps {
   }
 
   def getDirName(partialFileName: String): String =
-    fileNameDirMap.get(partialFileName).getOrElse(sys.error("fileName doesn't exists in map"))
+    fileNameDirMap.getOrElse(partialFileName, sys.error("fileName doesn't exists in map"))
 
 }
