@@ -189,7 +189,6 @@ class TaxCheckControllerSpec extends ControllerSpec {
           mockSaveTaxCheck(request)(Left(Error("")))
 
           val result = performActionWithJsonBody(body)
-          println(s"${contentAsString(result)}\n\n")
           status(result) shouldBe INTERNAL_SERVER_ERROR
         }
 
