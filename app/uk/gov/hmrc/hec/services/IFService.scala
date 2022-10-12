@@ -67,7 +67,13 @@ class IFServiceImpl @Inject() (
   private def handleErrorPath(httpResponse: HttpResponse, utrType: String) = {
     val responseError = s"Response to get $utrType status came back with status ${httpResponse.status}"
     httpResponse.parseJSON[RawFailureResponse] match {
-      case Left(_)         => Left(BackendError(Error(s"$responseError; could not parse body")))
+      case Left(message)   =>
+        val errorMsg = s"$responseError - could not parse body - $message"
+        if (httpResponse.status === NOT_FOUND) {
+          Left(DataNotFoundError(errorMsg))
+        } else {
+          Left(BackendError(Error(errorMsg)))
+        }
       case Right(failures) =>
         val errorMsg = s"$responseError - ${failures.failures}"
         if (httpResponse.status === NOT_FOUND && failures.failures.exists(_.code === "NO_DATA_FOUND")) {
