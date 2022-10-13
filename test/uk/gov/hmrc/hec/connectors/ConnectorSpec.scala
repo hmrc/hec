@@ -36,6 +36,9 @@ trait ConnectorSpec { this: Matchers with AnyWordSpecLike =>
       List(
         HttpResponse(200, "{}"),
         HttpResponse(200, JsString("hi"), Map.empty[String, Seq[String]]),
+        HttpResponse(404, "{}"),
+        HttpResponse(404, ""),
+        HttpResponse(404, JsString("hi"), Map.empty[String, Seq[String]]),
         HttpResponse(500, "{}")
       ).foreach { httpResponse =>
         withClue(s"For http response [${httpResponse.toString}]") {

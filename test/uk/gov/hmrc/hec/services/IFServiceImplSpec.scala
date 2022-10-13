@@ -105,6 +105,10 @@ class IFServiceImplSpec extends AnyWordSpec with Matchers with MockFactory {
           testIsError[BackendError](Right(HttpResponse(404, errorJson)))
         }
 
+        "the call to fetch SA status returns with 404 not found response with empty/unknown body" in {
+          testIsError[DataNotFoundError](Right(HttpResponse(404, "")))
+        }
+
         "the call to fetch SA status returns with 404 not found response with NO_DATA_FOUND code" in {
           val notFoundErrorJson = getErrorJson("NO_DATA_FOUND")
           testIsError[DataNotFoundError](Right(HttpResponse(404, notFoundErrorJson)))
