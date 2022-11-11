@@ -52,10 +52,11 @@ class DESController @Inject() (
       InternalServerError
   }
 
-  /**
-    * Fetch CTUTR for a company using the CRN
-    * @param crn Company number
-    * @return CTUTR
+  /** Fetch CTUTR for a company using the CRN
+    * @param crn
+    *   Company number
+    * @return
+    *   CTUTR
     */
   def getCtutr(crn: String): Action[AnyContent] = authenticateGG.async { implicit request =>
     val crnValidation = CRN.fromString(crn).toValidNel("Invalid CRN")

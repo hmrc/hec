@@ -51,8 +51,8 @@ class HECTaxCheckScheduleService @Inject() (
 
   scheduleNextJob()
 
-  //Run the job to put a mongo lock and perform fetch and update
-  //Once that is done, call the scheduleNextJob() again to schedule the next job
+  // Run the job to put a mongo lock and perform fetch and update
+  // Once that is done, call the scheduleNextJob() again to schedule the next job
   // as per the extraction time in conf
   def runScheduledJob(): Unit =
     hecTaxCheckExtractionService.lockAndProcessHecData().onComplete { result =>

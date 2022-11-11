@@ -5,8 +5,8 @@ import sbt._
 object AppDependencies {
   val playVersion      = s"-play-28"
   val akkaVersion      = "2.6.19"
-  val bootstrapVersion = "6.3.0"
-  val hmrcMongoVersion = "0.68.0"
+  val bootstrapVersion = "7.8.0"
+  val hmrcMongoVersion = "0.73.0"
 
   val compile = Seq(
     "uk.gov.hmrc"             %% s"bootstrap-backend$playVersion"    % bootstrapVersion,

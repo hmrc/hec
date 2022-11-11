@@ -88,8 +88,8 @@ class HecTaxCheckExtractionServiceImpl @Inject() (
     mongoLockService.withLock(lockId, processHecData)
 
   private def processHecData()(implicit hc: HeaderCarrier): Future[Either[models.Error, Unit]] = {
-    val seqNum = "0001"
-    val result: EitherT[Future, models.Error, Unit] = {
+    val seqNum                                      = "0001"
+    val result: EitherT[Future, models.Error, Unit] =
       for {
         _ <- createAndStoreFileThenNotify(LicenceType, seqNum, licenceType.partialFileName, licenceType.dirName, true)
         _ <-
@@ -121,7 +121,6 @@ class HecTaxCheckExtractionServiceImpl @Inject() (
              )
 
       } yield ()
-    }
     result.value
   }
 
@@ -183,10 +182,10 @@ class HecTaxCheckExtractionServiceImpl @Inject() (
     )
   }
 
-  //Combining the process of creating , Storing file ,
+  // Combining the process of creating , Storing file ,
   // updating hec tax check records with correlation Id
   // and notify the SDES about the file
-  //useful when we have to create n number of files for large dataset.
+  // useful when we have to create n number of files for large dataset.
   private def createAndStoreFileThenNotify[A](
     inputType: A,
     seqNum: String,
@@ -237,7 +236,7 @@ class HecTaxCheckExtractionServiceImpl @Inject() (
   private val toHexFormatString = "%02x"
 
   private def convertToHexString(md5Hash: Md5Hash): String =
-    Base64.getDecoder.decode(md5Hash.value).map(_.formatted(toHexFormatString)).mkString
+    Base64.getDecoder.decode(md5Hash.value).map(toHexFormatString.format(_)).mkString
 
 }
 

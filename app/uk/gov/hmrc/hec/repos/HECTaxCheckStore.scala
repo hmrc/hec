@@ -91,7 +91,7 @@ class HECTaxCheckStoreImpl @Inject() (
   private val isExtractedField: String  = s"data.$key.isExtracted"
   private val fileCorrelationId: String = s"data.$key.fileCorrelationId"
 
-  //indexes for hecTaxChecks collection
+  // indexes for hecTaxChecks collection
   def mongoIndexes: Seq[IndexModel] = Seq(
     IndexModel(
       Indexes.ascending("ggCredId")
@@ -122,8 +122,8 @@ class HECTaxCheckStoreImpl @Inject() (
           .map { maybeCache =>
             val response: OptionT[Either[Error, *], HECTaxCheck] = for {
               cache ← OptionT.fromOption[Either[Error, *]](maybeCache)
-              //even if there is no data , cache returns with -> {"id" : "code1", data : {}}
-              //so added a logic if the json is empty, then return None
+              // even if there is no data , cache returns with -> {"id" : "code1", data : {}}
+              // so added a logic if the json is empty, then return None
               // but if there is, then proceed to validate json
               cacheLength = cache.data.keys.size
               data       <- OptionT.fromOption[Either[Error, *]](if (cacheLength == 0) None else Some(cache.data))
@@ -145,11 +145,13 @@ class HECTaxCheckStoreImpl @Inject() (
       }
     )
 
-  /**
-    * Fetch existing tax check codes for the specified GGCredId
-    * @param ggCredId The government gateway ID
-    * @param hc header information
-    * @return A list of tax check code details
+  /** Fetch existing tax check codes for the specified GGCredId
+    * @param ggCredId
+    *   The government gateway ID
+    * @param hc
+    *   header information
+    * @return
+    *   A list of tax check code details
     */
   def getTaxCheckCodes(ggCredId: GGCredId)(implicit
     hc: HeaderCarrier

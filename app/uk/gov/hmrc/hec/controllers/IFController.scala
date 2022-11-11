@@ -57,11 +57,13 @@ class IFController @Inject() (
       InternalServerError
   }
 
-  /**
-    * Fetch individual user's self-assessment status
-    * @param utr Self-assessment UTR
-    * @param taxYear Start tax year
-    * @return Self-assessment status with UTR and tax year
+  /** Fetch individual user's self-assessment status
+    * @param utr
+    *   Self-assessment UTR
+    * @param taxYear
+    *   Start tax year
+    * @return
+    *   Self-assessment status with UTR and tax year
     */
   def getSAStatus(utr: String, taxYear: String): Action[AnyContent] = authenticateGG.async { implicit request =>
     val correlationId: UUID = UUID.randomUUID()
@@ -85,12 +87,15 @@ class IFController @Inject() (
     }
   }
 
-  /**
-    * Fetch a company's corporation tax status
-    * @param utr The corporation tax UTR
-    * @param startDate The start date of the tax period
-    * @param endDate The end date of the tax period
-    * @return Corporation tax status & accounting periods
+  /** Fetch a company's corporation tax status
+    * @param utr
+    *   The corporation tax UTR
+    * @param startDate
+    *   The start date of the tax period
+    * @param endDate
+    *   The end date of the tax period
+    * @return
+    *   Corporation tax status & accounting periods
     */
   def getCTStatus(
     utr: String,

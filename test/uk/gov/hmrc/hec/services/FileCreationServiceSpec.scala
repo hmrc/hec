@@ -60,9 +60,9 @@ class FileCreationServiceSpec extends AnyWordSpec with Matchers with MockFactory
         }
         val result: Either[Error, (String, String)] =
           fileCreationService.createFileContent(LicenceType, "0001", "HEC_LICENCE_TYPE", true)
-        //In future if content grows we can reduce the test to check only for few lines or header and trailer.
-        //As of now content is less, so no harm in testing i guess
-        //same applies for other test
+        // In future if content grows we can reduce the test to check only for few lines or header and trailer.
+        // As of now content is less, so no harm in testing i guess
+        // same applies for other test
         val expected                                = s"""|00|HEC_SSA_0001_20211010_HEC_LICENCE_TYPE.dat|HEC|SSA|20211010|113605|000001|001
              |01|00|Driver of taxis and private hires
              |01|01|Operator of private hire vehicles

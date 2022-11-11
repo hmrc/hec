@@ -6,7 +6,7 @@ import wartremover.WartRemover.autoImport.wartremoverErrors
 
 val appName = "hec"
 
-val silencerVersion = "1.7.8"
+val silencerVersion = "1.7.9"
 
 lazy val wartremoverSettings =
   Seq(
@@ -45,7 +45,7 @@ lazy val microservice = Project(appName, file("."))
   .settings(addCompilerPlugin("org.typelevel" %% "kind-projector" % "0.13.2" cross CrossVersion.full))
   .settings(
     majorVersion := 1,
-    scalaVersion := "2.12.15",
+    scalaVersion := "2.12.16",
     libraryDependencies ++= AppDependencies.compile ++ AppDependencies.test,
     // ***************
     // Use the silencer plugin to suppress warnings

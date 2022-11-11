@@ -114,9 +114,9 @@ class SDESCallbackController @Inject() (
   } yield ()
 
   // object store delete need dir name to delete the file but
-  //call back from SDES doesn't hold this information
+  // call back from SDES doesn't hold this information
   // So, Identifying the directory name of the file from the map
-  //which has  data like partial file name ->  dir name
+  // which has  data like partial file name ->  dir name
   private def getDirName(filename: String) =
     FileMapOps.fileNameDirMap
       .find { case (key, _) => filename.contains(key) }

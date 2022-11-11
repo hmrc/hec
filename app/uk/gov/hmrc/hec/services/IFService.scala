@@ -136,7 +136,7 @@ class IFServiceImpl @Inject() (
 
   private def ctAccountingPeriodsValidation(
     response: RawCTSuccessResponse
-  ): Either[BackendError, List[CTAccountingPeriod]]                                                           =
+  ): Either[BackendError, List[CTAccountingPeriod]] =
     toCtLookupStatus(response).flatMap {
       case CTLookupStatus.NoLiveRecords =>
         Right(List.empty)

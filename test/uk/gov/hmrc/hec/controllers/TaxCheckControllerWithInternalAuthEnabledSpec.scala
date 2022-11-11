@@ -30,7 +30,7 @@ import play.api.mvc.{Request, Result}
 import play.api.test.{FakeRequest, Helpers}
 import play.api.test.Helpers._
 import uk.gov.hmrc.auth.core.AuthProvider.{GovernmentGateway, PrivilegedApplication}
-import uk.gov.hmrc.auth.core.retrieve.{PAClientId, VerifyPid, GGCredId => AuthGGCredId, Name => RetrievalName}
+import uk.gov.hmrc.auth.core.retrieve.{GGCredId => AuthGGCredId, Name => RetrievalName, PAClientId, VerifyPid}
 import uk.gov.hmrc.auth.core.{AuthConnector, AuthProviders, Enrolment, Enrolments, InvalidBearerToken}
 import uk.gov.hmrc.hec.controllers.actions.AuthenticatedGGOrStrideRequest
 import uk.gov.hmrc.hec.models

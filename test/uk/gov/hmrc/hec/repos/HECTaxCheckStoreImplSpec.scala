@@ -223,7 +223,7 @@ class HECTaxCheckStoreImplSpec extends AnyWordSpec with Matchers with Eventually
         await(taxCheckStore.store(taxCheck4).value) shouldBe Right(())
         eventually {
           await(taxCheckStore.getAllTaxCheckCodesByExtractedStatus(false, 2, 2, "_id").value).map(_.toSet) should be(
-            Right(Set(taxCheck4)) //since only one record is there after skipping 2 records
+            Right(Set(taxCheck4)) // since only one record is there after skipping 2 records
           )
         }
       }
