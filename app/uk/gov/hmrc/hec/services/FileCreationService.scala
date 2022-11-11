@@ -44,7 +44,7 @@ import javax.inject.Singleton
 @ImplementedBy(classOf[FileCreationServiceImpl])
 trait FileCreationService {
 
-  //creates the file content and returns it along with full file name in a tuple
+  // creates the file content and returns it along with full file name in a tuple
   def createFileContent[A](
     inputType: A,
     seqNum: String,
@@ -264,7 +264,7 @@ class FileCreationServiceImpl @Inject() (timeProvider: TimeProvider) extends Fil
           )
       }
     }
-  //Create the  file body contents excluding header and trailer
+  // Create the  file body contents excluding header and trailer
   private def getFileBodyContents[A](inputType: A): Either[Error, List[FileBody]]                      =
     inputType match {
       case LicenceType                   => Right(createLicenceTypeEnumFileBody)
@@ -275,7 +275,7 @@ class FileCreationServiceImpl @Inject() (timeProvider: TimeProvider) extends Fil
       case _                             => Left(Error("Input Type is not valid."))
     }
 
-  //Create the  full file content including header and trailer
+  // Create the  full file content including header and trailer
   private def createContent(
     seqNum: String,
     partialFileName: String,
@@ -294,7 +294,7 @@ class FileCreationServiceImpl @Inject() (timeProvider: TimeProvider) extends Fil
     val fileTrailer =
       FileTrailer(
         fileName = fileName,
-        recordCount = (2L + fileBody.size.toLong),
+        recordCount = 2L + fileBody.size.toLong,
         inSequenceFlag = if (isLastInSequence) 'Y' else 'N'
       )
     (toFileContent(FileFormat(fileHeader, fileBody, fileTrailer)), fileName)

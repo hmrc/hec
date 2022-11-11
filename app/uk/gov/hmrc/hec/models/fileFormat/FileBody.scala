@@ -25,7 +25,7 @@ trait FileBody extends Product with Serializable {
 
 //file body for enum file
 final case class EnumFileBody(recordType: String = "01", recordId: String, recordDescription: String) extends FileBody {
-  //convert the file body to pipe delimited string
+  // convert the file body to pipe delimited string
   override def toRowString: String = this.productIterator.mkString("|")
 
 }

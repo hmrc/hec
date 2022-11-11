@@ -21,7 +21,7 @@ import com.google.inject.ImplementedBy
 import play.api.mvc._
 import uk.gov.hmrc.auth.core.AuthProvider.{GovernmentGateway, PrivilegedApplication}
 import uk.gov.hmrc.auth.core._
-import uk.gov.hmrc.auth.core.retrieve.{PAClientId, ~, GGCredId => AuthGGCredId}
+import uk.gov.hmrc.auth.core.retrieve.{GGCredId => AuthGGCredId, PAClientId, ~}
 import uk.gov.hmrc.auth.core.retrieve.v2.Retrievals._
 import uk.gov.hmrc.hec.models.StrideOperatorDetails
 import uk.gov.hmrc.hec.models.ids.{GGCredId, PID}

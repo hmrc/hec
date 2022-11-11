@@ -49,7 +49,7 @@ object AuditEvent {
       }
 
       OWrites { t =>
-        val taxCheckJson = {
+        val taxCheckJson        = {
           val json = Json.toJsObject(t.taxCheck) - "isExtracted" - "fileCorrelationId"
           json.mapJsonFieldNames(mapFieldName)
         }

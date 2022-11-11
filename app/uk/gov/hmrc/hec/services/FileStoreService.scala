@@ -18,7 +18,7 @@ package uk.gov.hmrc.hec.services
 
 import cats.data.EitherT
 import com.google.inject.{ImplementedBy, Inject}
-import org.apache.commons.codec.binary.StringUtils
+import org.apache.commons.lang3.StringUtils
 import play.api.Configuration
 import uk.gov.hmrc.hec.models
 import uk.gov.hmrc.hec.services.scheduleService.HECTaxCheckExtractionContext
@@ -27,13 +27,14 @@ import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.objectstore.client.play.PlayObjectStoreClient
 import uk.gov.hmrc.objectstore.client.{ObjectSummaryWithMd5, Path, RetentionPeriod}
 
+import java.nio.charset.StandardCharsets
 import javax.inject.Singleton
 import scala.concurrent.Future
 
 @ImplementedBy(classOf[FileStoreServiceImpl])
 trait FileStoreService {
 
-  //store the file in object store
+  // store the file in object store
   def storeFile(
     fileContent: String,
     fileName: String,
@@ -65,13 +66,13 @@ class FileStoreServiceImpl @Inject() (client: PlayObjectStoreClient, config: Con
     hc: HeaderCarrier,
     hecTaxCheckExtractionContext: HECTaxCheckExtractionContext
   ): EitherT[Future, models.Error, ObjectSummaryWithMd5] = {
-    val bytes = StringUtils.getBytesUtf8(fileContent)
+    val bytes = StringUtils.getBytes(fileContent, StandardCharsets.UTF_8)
     import uk.gov.hmrc.objectstore.client.play.Implicits._
     EitherT(
       client
         .putObject(
           path = Path.Directory(dirName).file(fileName),
-          content = StringUtils.newStringUtf8(bytes),
+          content = StringUtils.toEncodedString(bytes, StandardCharsets.UTF_8),
           retentionPeriod = getRetentionPeriod,
           owner = owner
         )

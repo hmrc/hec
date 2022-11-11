@@ -20,7 +20,7 @@ final case class FileFormat(header: FileHeader, body: List[FileBody], trailer: F
 
 object FileFormat {
 
-  //convert the whole file content into pipe delimited string with appropriate new line
+  // convert the whole file content into pipe delimited string with appropriate new line
   def toFileContent(fileFormat: FileFormat): String = {
     val header  = FileHeader.toRowString(fileFormat.header)
     val body    = fileFormat.body.map(_.toRowString).mkString("\n")
