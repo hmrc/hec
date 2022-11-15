@@ -33,6 +33,5 @@ object TaxSituation {
 
   case object NotChargeable extends TaxSituation
 
-  @SuppressWarnings(Array("org.wartremover.warts.Throw", "org.wartremover.warts.Equals"))
   implicit val format: Format[TaxSituation] = Jsonx.formatSealed[TaxSituation]
 }

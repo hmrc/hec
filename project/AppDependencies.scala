@@ -4,26 +4,26 @@ import sbt._
 
 object AppDependencies {
   val playVersion      = s"-play-28"
-  val akkaVersion      = "2.6.19"
-  val bootstrapVersion = "7.8.0"
+  val akkaVersion      = "2.6.20"
+  val bootstrapVersion = "7.11.0"
   val hmrcMongoVersion = "0.73.0"
 
   val compile = Seq(
     "uk.gov.hmrc"             %% s"bootstrap-backend$playVersion"    % bootstrapVersion,
     "uk.gov.hmrc.mongo"       %% s"hmrc-mongo$playVersion"           % hmrcMongoVersion,
-    "uk.gov.hmrc"             %% "domain"                            % "8.1.0-play-28",
+    "uk.gov.hmrc"             %% "domain"                            % s"8.1.0$playVersion",
     "uk.gov.hmrc"             %% s"internal-auth-client$playVersion" % "1.2.0",
     "ai.x"                    %% "play-json-extensions"              % "0.42.0",
     "org.typelevel"           %% "cats-core"                         % "2.8.0",
     "com.github.kxbmap"       %% "configs"                           % "0.6.1",
-    "uk.gov.hmrc.objectstore" %% s"object-store-client$playVersion"  % "0.39.0",
+    "uk.gov.hmrc.objectstore" %% s"object-store-client$playVersion"  % "1.0.0",
     "com.beachape"            %% "enumeratum"                        % "1.7.0"
   )
 
   val test = Seq(
     "uk.gov.hmrc"            %% s"bootstrap-test$playVersion"  % bootstrapVersion    % Test,
     "uk.gov.hmrc.mongo"      %% s"hmrc-mongo-test$playVersion" % hmrcMongoVersion    % Test,
-    "org.scalatest"          %% "scalatest"                    % "3.2.12"            % Test,
+    "org.scalatest"          %% "scalatest"                    % "3.2.14"            % Test,
     "com.typesafe.play"      %% "play-test"                    % PlayVersion.current % Test,
     "org.scalamock"          %% "scalamock"                    % "5.2.0"             % Test,
     "com.vladsch.flexmark"    % "flexmark-all"                 % "0.62.2"            % "test, it",

@@ -103,9 +103,9 @@ class TaxCheckServiceImplSpec extends AnyWordSpec with Matchers with MockFactory
       .expects(correlationId.toString, *)
       .returning(EitherT.fromEither(result))
 
-  def mockTimeProviderNow(d: ZonedDateTime) = (mockTimeProvider.currentDateTime _).expects().returning(d)
+  def mockTimeProviderNow(d: ZonedDateTime) = (() => mockTimeProvider.currentDateTime).expects().returning(d)
 
-  def mockTimeProviderToday(d: LocalDate) = (mockTimeProvider.currentDate _).expects().returning(d)
+  def mockTimeProviderToday(d: LocalDate) = (() => mockTimeProvider.currentDate).expects().returning(d)
 
   implicit val hc: HeaderCarrier = HeaderCarrier()
   val taxCheckStartDateTime      = ZonedDateTime.of(2021, 10, 9, 9, 12, 34, 0, ZoneId.of("Europe/London"))

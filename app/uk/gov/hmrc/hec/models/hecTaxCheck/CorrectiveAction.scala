@@ -31,7 +31,6 @@ object CorrectiveAction extends Enum[CorrectiveAction] {
 
   val values = findValues
 
-  @SuppressWarnings(Array("org.wartremover.warts.Throw", "org.wartremover.warts.Equals"))
   implicit val format: Format[CorrectiveAction] = Jsonx.formatSealed[CorrectiveAction]
 
 }

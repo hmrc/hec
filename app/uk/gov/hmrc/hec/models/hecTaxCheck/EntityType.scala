@@ -27,6 +27,5 @@ object EntityType {
   case object Individual extends EntityType
   case object Company extends EntityType
 
-  @SuppressWarnings(Array("org.wartremover.warts.Throw", "org.wartremover.warts.Equals"))
   implicit val format: Format[EntityType] = Jsonx.formatSealed[EntityType]
 }

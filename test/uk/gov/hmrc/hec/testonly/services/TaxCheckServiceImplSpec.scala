@@ -74,7 +74,7 @@ class TaxCheckServiceImplSpec extends AnyWordSpec with Matchers with MockFactory
       .expects(*)
       .returning(EitherT.fromEither(result))
 
-  def mockTimeProviderToday(d: LocalDate) = (mockTimeProvider.currentDate _).expects().returning(d)
+  def mockTimeProviderToday(d: LocalDate) = (() => mockTimeProvider.currentDate).expects().returning(d)
   val fileCorrelationId                   = UUID.fromString("20354d7a-e4fe-47af-8ff6-187bca92f3f9")
 
   implicit val hc: HeaderCarrier = HeaderCarrier()

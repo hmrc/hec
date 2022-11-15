@@ -72,7 +72,6 @@ class IFController @Inject() (
     val sautrValidation   = SAUTR.fromString(utr).toValidNel("Invalid SAUTR")
     val taxYearValidation = TaxYear.fromString(taxYear).toValidNel("Invalid tax year")
 
-    @SuppressWarnings(Array("org.wartremover.warts.Any"))
     val validation = (sautrValidation, taxYearValidation).mapN((_, _))
     validation match {
       case Valid((utr, year)) =>
@@ -115,7 +114,6 @@ class IFController @Inject() (
     val fromDateValidation: ValidatedNel[String, LocalDate] = parsedDate(startDate, "Invalid startDate format")
     val toDateValidation: ValidatedNel[String, LocalDate]   = parsedDate(endDate, "Invalid endDate format")
 
-    @SuppressWarnings(Array("org.wartremover.warts.Any"))
     val validation = (ctutrValidation, fromDateValidation, toDateValidation).mapN((_, _, _))
     validation match {
       case Valid((utr, from, to)) =>

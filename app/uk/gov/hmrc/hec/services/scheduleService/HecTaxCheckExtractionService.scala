@@ -85,7 +85,7 @@ class HecTaxCheckExtractionServiceImpl @Inject() (
   val lockId: String = "hecTaxChecks"
 
   override def lockAndProcessHecData(): Future[Option[Either[models.Error, Unit]]] =
-    mongoLockService.withLock(lockId, processHecData)
+    mongoLockService.withLock(lockId, processHecData())
 
   private def processHecData()(implicit hc: HeaderCarrier): Future[Either[models.Error, Unit]] = {
     val seqNum                                      = "0001"
@@ -132,7 +132,6 @@ class HecTaxCheckExtractionServiceImpl @Inject() (
     dirname: String
   ): EitherT[Future, Error, Unit] = {
 
-    @SuppressWarnings(Array("org.wartremover.warts.All"))
     def loop(
       seqNumInt: Int,
       skip: Int,

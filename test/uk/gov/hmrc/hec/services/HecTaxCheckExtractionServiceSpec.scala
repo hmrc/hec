@@ -84,7 +84,6 @@ class HecTaxCheckExtractionServiceSpec
       .expects(isExtracted, skip, limit, sortBy, *)
       .returning(EitherT.fromEither[Future](result))
 
-  @SuppressWarnings(Array("org.wartremover.warts.All"))
   def mockWithLock(lockId: String, lockObtained: Boolean) =
     (mockMongoLockService
       .withLock(_: String, _: Future[Either[models.Error, List[HECTaxCheck]]])(_: HECTaxCheckExtractionContext))
@@ -121,7 +120,7 @@ class HecTaxCheckExtractionServiceSpec
       .expects(fileContent, fileName, dirName, *, *)
       .returning(EitherT.fromEither[Future](result))
 
-  def mockGenerateUUID(result: UUID) = (mockUUIDGenerator.generateUUID _).expects().returning(result)
+  def mockGenerateUUID(result: UUID) = (() => mockUUIDGenerator.generateUUID).expects().returning(result)
 
   def mockFileNotify(fileNotifyRequest: SDESFileNotifyRequest)(result: Either[models.Error, Unit]) = (mockSDESService
     .fileNotify(_: SDESFileNotifyRequest)(_: HeaderCarrier))

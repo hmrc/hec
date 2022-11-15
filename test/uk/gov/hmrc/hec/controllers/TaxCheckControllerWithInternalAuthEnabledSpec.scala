@@ -19,7 +19,6 @@ package uk.gov.hmrc.hec.controllers
 import cats.data.EitherT
 import cats.implicits.catsSyntaxOptionId
 import cats.instances.future._
-import com.github.ghik.silencer.silent
 import com.typesafe.config.ConfigFactory
 import play.api.Configuration
 import play.api.http.Status
@@ -27,11 +26,11 @@ import play.api.inject.bind
 import play.api.inject.guice.GuiceableModule
 import play.api.libs.json._
 import play.api.mvc.{Request, Result}
-import play.api.test.{FakeRequest, Helpers}
 import play.api.test.Helpers._
+import play.api.test.{FakeRequest, Helpers}
 import uk.gov.hmrc.auth.core.AuthProvider.{GovernmentGateway, PrivilegedApplication}
 import uk.gov.hmrc.auth.core.retrieve.{GGCredId => AuthGGCredId, Name => RetrievalName, PAClientId, VerifyPid}
-import uk.gov.hmrc.auth.core.{AuthConnector, AuthProviders, Enrolment, Enrolments, InvalidBearerToken}
+import uk.gov.hmrc.auth.core._
 import uk.gov.hmrc.hec.controllers.actions.AuthenticatedGGOrStrideRequest
 import uk.gov.hmrc.hec.models
 import uk.gov.hmrc.hec.models.hecTaxCheck.ApplicantDetails.{CompanyApplicantDetails, IndividualApplicantDetails}
@@ -50,14 +49,15 @@ import uk.gov.hmrc.hec.util.TimeUtils
 import uk.gov.hmrc.http.{HeaderCarrier, UpstreamErrorResponse}
 import uk.gov.hmrc.internalauth.client.Predicate.Permission
 import uk.gov.hmrc.internalauth.client.Retrieval.EmptyRetrieval
-import uk.gov.hmrc.internalauth.client.{BackendAuthComponents, IAAction, Predicate, Resource, ResourceLocation, ResourceType, Retrieval}
 import uk.gov.hmrc.internalauth.client.test.{BackendAuthComponentsStub, StubBehaviour}
+import uk.gov.hmrc.internalauth.client._
 
 import java.time.{LocalDate, ZoneId, ZonedDateTime}
+import scala.annotation.nowarn
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
-@silent("deprecated")
+@nowarn("msg=deprecated")
 class TaxCheckControllerWithInternalAuthEnabledSpec extends ControllerSpec with AuthSupport {
 
   val mockTaxCheckService = mock[TaxCheckService]
@@ -450,7 +450,7 @@ class TaxCheckControllerWithInternalAuthEnabledSpec extends ControllerSpec with 
       "return a 400 (bad request)" when {
 
         "the JSON in the request cannot be parsed" in {
-          mockInternalAuth(expectedPredicate)(Future.successful(Unit))
+          mockInternalAuth(expectedPredicate)(Future.successful(()))
           status(performAActionWithJsonBodyAndHeader(JsString("hi"))) shouldBe BAD_REQUEST
         }
 
@@ -459,7 +459,7 @@ class TaxCheckControllerWithInternalAuthEnabledSpec extends ControllerSpec with 
       "return a 500 (internal server error)" when {
 
         "there is an error saving the tax check" in {
-          mockInternalAuth(expectedPredicate)(Future.successful(Unit))
+          mockInternalAuth(expectedPredicate)(Future.successful(()))
           mockMatchTaxCheck(individualMatchRequest)(Left(Error(new Exception("Oh no!"))))
 
           val result = performAActionWithJsonBodyAndHeader(Json.toJson(individualMatchRequest))
@@ -503,7 +503,7 @@ class TaxCheckControllerWithInternalAuthEnabledSpec extends ControllerSpec with 
             HECTaxCheckMatchResult(companyMatchRequest, dateTime, HECTaxCheckMatchStatus.Expired)
           ).foreach { matchResult =>
             withClue(s"For match result '$matchResult': ") {
-              mockInternalAuth(expectedPredicate)(Future.successful(Unit))
+              mockInternalAuth(expectedPredicate)(Future.successful(()))
               mockMatchTaxCheck(companyMatchRequest)(Right(matchResult))
 
               val result = performAActionWithJsonBodyAndHeader(Json.toJson(companyMatchRequest))

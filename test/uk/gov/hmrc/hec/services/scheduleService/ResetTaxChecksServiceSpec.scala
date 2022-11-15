@@ -54,7 +54,6 @@ class ResetTaxChecksServiceSpec
     TestKit.shutdownActorSystem(system)
   }
 
-  @SuppressWarnings(Array("org.wartremover.warts.All"))
   def mockWithLock(lockId: String, lockObtained: Boolean) =
     (mockMongoLockService
       .withLock(_: String, _: Future[Either[Error, List[HECTaxCheck]]])(_: HECTaxCheckExtractionContext))

@@ -41,7 +41,6 @@ object LicenceTimeTrading extends Enum[LicenceTimeTrading] {
   // data insertion in mongo is not impacted
   val values: immutable.IndexedSeq[LicenceTimeTrading] = findValues
 
-  @SuppressWarnings(Array("org.wartremover.warts.Throw", "org.wartremover.warts.Equals"))
   implicit val format: Format[LicenceTimeTrading] = Jsonx.formatSealed[LicenceTimeTrading]
 
 }

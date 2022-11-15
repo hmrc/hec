@@ -66,7 +66,6 @@ final case class HECTaxCheckFileBody(
   emailAddress: Option[String]
 ) extends FileBody {
 
-  @SuppressWarnings(Array("org.wartremover.warts.Any"))
   override def toRowString: String = this.productIterator.toList
     .foldLeft(List.empty[Any]) { case (acc, curr) =>
       curr match {

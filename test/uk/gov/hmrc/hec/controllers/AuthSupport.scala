@@ -16,15 +16,15 @@
 
 package uk.gov.hmrc.hec.controllers
 
-import com.github.ghik.silencer.silent
 import uk.gov.hmrc.auth.core.AuthProvider.{GovernmentGateway, PrivilegedApplication}
 import uk.gov.hmrc.auth.core._
 import uk.gov.hmrc.auth.core.authorise.Predicate
-import uk.gov.hmrc.auth.core.retrieve.{Credentials, LegacyCredentials, Name, Retrieval, ~}
 import uk.gov.hmrc.auth.core.retrieve.v2.Retrievals
+import uk.gov.hmrc.auth.core.retrieve._
 import uk.gov.hmrc.hec.controllers.AuthSupport._
 import uk.gov.hmrc.http.HeaderCarrier
 
+import scala.annotation.nowarn
 import scala.concurrent.{ExecutionContext, Future}
 
 trait AuthSupport { this: ControllerSpec =>
@@ -52,7 +52,7 @@ trait AuthSupport { this: ControllerSpec =>
       Future.successful(None)
     )
 
-  @silent("deprecated")
+  @nowarn("msg=deprecated")
   def mockGGOrStrideAuth(
     authProviderId: LegacyCredentials,
     enrolments: Enrolments,
@@ -68,7 +68,7 @@ trait AuthSupport { this: ControllerSpec =>
       )
     )
 
-  @silent("deprecated")
+  @nowarn("msg=deprecated")
   val ggOrStrideAuthRetrievals: Retrieval[LegacyCredentials ~ Enrolments ~ Option[Name] ~ Option[String]] =
     Retrievals.authProviderId and Retrievals.allEnrolments and Retrievals.name and Retrievals.email
 
