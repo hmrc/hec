@@ -34,7 +34,6 @@ object NotificationStatus {
 
   case object FileProcessed extends NotificationStatus
 
-  @SuppressWarnings(Array("org.wartremover.warts.Throw", "org.wartremover.warts.Equals"))
   implicit val format: Format[NotificationStatus] = Jsonx.formatSealed[NotificationStatus]
 
   implicit val eq: Eq[NotificationStatus] = Eq.fromUniversalEquals

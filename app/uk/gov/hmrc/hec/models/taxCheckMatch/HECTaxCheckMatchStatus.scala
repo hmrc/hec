@@ -31,7 +31,6 @@ object HECTaxCheckMatchStatus {
 
   case object Expired extends HECTaxCheckMatchStatus
 
-  @SuppressWarnings(Array("org.wartremover.warts.Throw", "org.wartremover.warts.Equals"))
   implicit val format: Format[HECTaxCheckMatchStatus] = {
     implicit val noMatchFormat: OFormat[NoMatch] = Json.format
     Jsonx.formatSealed[HECTaxCheckMatchStatus]

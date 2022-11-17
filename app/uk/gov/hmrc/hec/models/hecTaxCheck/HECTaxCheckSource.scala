@@ -30,7 +30,6 @@ object HECTaxCheckSource {
 
   case object Stride extends HECTaxCheckSource
 
-  @SuppressWarnings(Array("org.wartremover.warts.Throw", "org.wartremover.warts.Equals"))
   implicit val format: Format[HECTaxCheckSource] = Jsonx.formatSealed[HECTaxCheckSource]
 
   implicit val eq: Eq[HECTaxCheckSource] = Eq.fromUniversalEquals

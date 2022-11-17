@@ -36,7 +36,6 @@ object LicenceValidityPeriod extends Enum[LicenceValidityPeriod] {
 
   val values: immutable.IndexedSeq[LicenceValidityPeriod] = findValues
 
-  @SuppressWarnings(Array("org.wartremover.warts.Throw", "org.wartremover.warts.Equals"))
   implicit val format: Format[LicenceValidityPeriod] = Jsonx.formatSealed[LicenceValidityPeriod]
 
 }

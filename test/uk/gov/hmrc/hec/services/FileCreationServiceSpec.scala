@@ -42,7 +42,7 @@ class FileCreationServiceSpec extends AnyWordSpec with Matchers with MockFactory
 
   val fileCreationService = new FileCreationServiceImpl(mockTimeProvider)
 
-  def mockDateProviderToday(d: LocalDate)               = (mockTimeProvider.currentDate _).expects().returning(d)
+  def mockDateProviderToday(d: LocalDate)               = (() => mockTimeProvider.currentDate).expects().returning(d)
   def mockTimeProviderNow(d: LocalTime, zoneId: ZoneId) =
     (mockTimeProvider.currentTime(_: ZoneId)).expects(zoneId).returning(d)
 

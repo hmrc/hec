@@ -41,7 +41,6 @@ object MatchFailureReason {
 
   case object LicenceTypeCRNNotMatched extends MatchFailureReason
 
-  @SuppressWarnings(Array("org.wartremover.warts.Throw", "org.wartremover.warts.Equals"))
   implicit val format: Format[MatchFailureReason] = Jsonx.formatSealed[MatchFailureReason]
 
 }

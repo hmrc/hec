@@ -16,7 +16,6 @@
 
 package uk.gov.hmrc.hec.controllers.actions
 
-import com.github.ghik.silencer.silent
 import com.google.inject.ImplementedBy
 import play.api.mvc._
 import uk.gov.hmrc.auth.core.AuthProvider.{GovernmentGateway, PrivilegedApplication}
@@ -29,6 +28,7 @@ import uk.gov.hmrc.hec.util.Logging
 import uk.gov.hmrc.play.bootstrap.backend.controller.BackendHeaderCarrierProvider
 
 import javax.inject.Inject
+import scala.annotation.nowarn
 import scala.concurrent.{ExecutionContext, Future}
 
 final case class AuthenticatedGGOrStrideRequest[+A](
@@ -50,7 +50,7 @@ class GGOrStrideAuthenticateActionBuilder @Inject() (
 
   // authProviderId retrieval is deprecated but is necessary for the AuthProvider type PrivilegedApplication
   // since the recommended alternative retrieval does not work for it
-  @silent("deprecated")
+  @nowarn("msg=deprecated")
   override def invokeBlock[A](
     request: Request[A],
     block: AuthenticatedGGOrStrideRequest[A] => Future[Result]

@@ -31,7 +31,6 @@ object CTStatus {
 
   case object NoReturnFound extends CTStatus
 
-  @SuppressWarnings(Array("org.wartremover.warts.All"))
   implicit val format: Format[CTStatus] = Jsonx.formatSealed[CTStatus]
 
 }

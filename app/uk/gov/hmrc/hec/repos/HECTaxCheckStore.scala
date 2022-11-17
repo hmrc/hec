@@ -121,27 +121,27 @@ class HECTaxCheckStoreImpl @Inject() (
         findById(taxCheckCode.value)
           .map { maybeCache =>
             val response: OptionT[Either[Error, *], HECTaxCheck] = for {
-              cache ← OptionT.fromOption[Either[Error, *]](maybeCache)
+              cache      <- OptionT.fromOption[Either[Error, *]](maybeCache)
               // even if there is no data , cache returns with -> {"id" : "code1", data : {}}
               // so added a logic if the json is empty, then return None
               // but if there is, then proceed to validate json
               cacheLength = cache.data.keys.size
               data       <- OptionT.fromOption[Either[Error, *]](if (cacheLength == 0) None else Some(cache.data))
-              result ← OptionT.liftF[Either[Error, *], HECTaxCheck](
-                         (data \ key)
-                           .validate[HECTaxCheck]
-                           .asEither
-                           .leftMap(e ⇒
-                             Error(
-                               s"Could not parse session data from mongo: ${e.mkString("; ")}"
-                             )
-                           )
-                       )
+              result     <- OptionT.liftF[Either[Error, *], HECTaxCheck](
+                              (data \ key)
+                                .validate[HECTaxCheck]
+                                .asEither
+                                .leftMap(e =>
+                                  Error(
+                                    s"Could not parse session data from mongo: ${e.mkString("; ")}"
+                                  )
+                                )
+                            )
             } yield result
 
             response.value
           }
-          .recover { case e ⇒ Left(Error(e)) }
+          .recover { case e => Left(Error(e)) }
       }
     )
 

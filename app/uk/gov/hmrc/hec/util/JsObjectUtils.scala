@@ -22,7 +22,6 @@ object JsObjectUtils {
 
   implicit class JsObjectOps(private val j: JsObject) extends AnyVal {
 
-    @SuppressWarnings(Array("org.wartremover.warts.Recursion"))
     def mapJsonFieldNames(mapFieldName: String => String): JsObject =
       JsObject(
         j.value.map {
