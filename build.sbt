@@ -18,7 +18,7 @@ lazy val microservice = Project(appName, file("."))
   .settings(addCompilerPlugin("org.typelevel" %% "kind-projector" % "0.13.2" cross CrossVersion.full))
   .settings(
     majorVersion := 1,
-    scalaVersion := "2.13.8",
+    scalaVersion := "2.13.10",
     libraryDependencies ++= AppDependencies.compile ++ AppDependencies.test,
     scalacOptions := Seq(
       "-Ymacro-annotations",
