@@ -3,20 +3,20 @@ import play.core.PlayVersion
 import sbt._
 
 object AppDependencies {
-  val playVersion      = s"-play-28"
+  val playVersion      = "-play-28"
   val akkaVersion      = "2.6.20"
-  val bootstrapVersion = "7.11.0"
-  val hmrcMongoVersion = "0.73.0"
+  val bootstrapVersion = "7.19.0"
+  val hmrcMongoVersion = "1.3.0"
 
   val compile = Seq(
     "uk.gov.hmrc"             %% s"bootstrap-backend$playVersion"    % bootstrapVersion,
     "uk.gov.hmrc.mongo"       %% s"hmrc-mongo$playVersion"           % hmrcMongoVersion,
-    "uk.gov.hmrc"             %% "domain"                            % s"8.1.0$playVersion",
-    "uk.gov.hmrc"             %% s"internal-auth-client$playVersion" % "1.2.0",
+    "uk.gov.hmrc"             %% "domain"                            % "8.3.0-play-28",
+    "uk.gov.hmrc"             %% s"internal-auth-client$playVersion" % "1.6.0",
     "ai.x"                    %% "play-json-extensions"              % "0.42.0",
     "org.typelevel"           %% "cats-core"                         % "2.8.0",
     "com.github.kxbmap"       %% "configs"                           % "0.6.1",
-    "uk.gov.hmrc.objectstore" %% s"object-store-client$playVersion"  % "1.0.0",
+    "uk.gov.hmrc.objectstore" %% s"object-store-client$playVersion"  % "1.1.0",
     "com.beachape"            %% "enumeratum"                        % "1.7.0"
   )
 
