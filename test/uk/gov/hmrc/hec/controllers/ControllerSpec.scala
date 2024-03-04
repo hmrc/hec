@@ -16,7 +16,7 @@
 
 package uk.gov.hmrc.hec.controllers
 
-import akka.stream.Materializer
+import org.apache.pekko.stream.Materializer
 import com.typesafe.config.ConfigFactory
 import org.scalamock.scalatest.MockFactory
 import org.scalatest.BeforeAndAfterAll

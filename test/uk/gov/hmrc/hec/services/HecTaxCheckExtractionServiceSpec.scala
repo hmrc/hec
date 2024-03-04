@@ -16,8 +16,8 @@
 
 package uk.gov.hmrc.hec.services
 
-import akka.actor.ActorSystem
-import akka.testkit.TestKit
+import org.apache.pekko.actor.ActorSystem
+import org.apache.pekko.testkit.TestKit
 import cats.data.EitherT
 import cats.implicits._
 import com.typesafe.config.{ConfigFactory, ConfigValueFactory}

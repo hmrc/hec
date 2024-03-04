@@ -16,7 +16,7 @@
 
 package uk.gov.hmrc.hec.services.scheduleService
 
-import akka.actor.{ActorSystem, Cancellable}
+import org.apache.pekko.actor.{ActorSystem, Cancellable}
 import com.google.inject.{ImplementedBy, Inject}
 
 import scala.concurrent.ExecutionContext

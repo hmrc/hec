@@ -16,10 +16,10 @@
 
 package uk.gov.hmrc.hec.services
 
-import akka.actor.{ActorRef, ActorSystem, Cancellable}
-import akka.pattern.ask
-import akka.testkit.{TestKit, TestProbe}
-import akka.util.Timeout
+import org.apache.pekko.actor.{ActorRef, ActorSystem, Cancellable}
+import org.apache.pekko.pattern.ask
+import org.apache.pekko.testkit.{TestKit, TestProbe}
+import org.apache.pekko.util.Timeout
 import com.miguno.akka.testing.VirtualTime
 import com.typesafe.config.{ConfigFactory, ConfigValueFactory}
 import org.scalatest.BeforeAndAfterAll

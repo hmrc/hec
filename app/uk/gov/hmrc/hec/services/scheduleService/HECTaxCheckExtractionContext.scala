@@ -16,7 +16,7 @@
 
 package uk.gov.hmrc.hec.services.scheduleService
 
-import org.apache.pekko
+import org.apache.pekko.actor.ActorSystem
 import com.google.inject.Inject
 import play.api.libs.concurrent.CustomExecutionContext
 

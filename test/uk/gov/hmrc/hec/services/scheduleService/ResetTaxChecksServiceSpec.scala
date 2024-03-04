@@ -16,8 +16,8 @@
 
 package uk.gov.hmrc.hec.services.scheduleService
 
-import akka.actor.ActorSystem
-import akka.testkit.TestKit
+import org.apache.pekko.actor.ActorSystem
+import org.apache.pekko.stream.testkit.TestKit
 import cats.data.EitherT
 import com.typesafe.config.{ConfigFactory, ConfigValueFactory}
 import org.scalamock.scalatest.MockFactory

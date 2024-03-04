@@ -16,12 +16,12 @@
 
 package uk.gov.hmrc.hec.services
 
-import akka.NotUsed
-import akka.actor.ActorSystem
-import akka.stream.Materializer
-import akka.stream.scaladsl.Source
-import akka.testkit.TestKit
-import akka.util.ByteString
+import org.apache.pekko.NotUsed
+import org.apache.pekko.actor.ActorSystem
+import org.apache.pekko.stream.Materializer
+import org.apache.pekko.stream.scaladsl.Source
+import org.apache.pekko.testkit.TestKit
+import org.apache.pekko.util.ByteString
 import com.typesafe.config.{ConfigFactory, ConfigValueFactory}
 import org.scalamock.scalatest.MockFactory
 import org.scalatest.concurrent.ScalaFutures
