@@ -4,9 +4,9 @@ import sbt._
 
 object AppDependencies {
   val playVersion      = "-play-28"
-  val akkaVersion      = "2.6.20"
   val bootstrapVersion = "7.19.0"
   val hmrcMongoVersion = "1.3.0"
+  val PekkoVersion = "1.0.2"
 
   val compile = Seq(
     "uk.gov.hmrc"             %% s"bootstrap-backend$playVersion"    % bootstrapVersion,
@@ -28,7 +28,7 @@ object AppDependencies {
     "org.scalamock"          %% "scalamock"                    % "5.2.0"             % Test,
     "com.vladsch.flexmark"    % "flexmark-all"                 % "0.62.2"            % "test, it",
     "org.scalatestplus.play" %% "scalatestplus-play"           % "5.1.0"             % "test, it",
-    "com.typesafe.akka"      %% "akka-testkit"                 % akkaVersion         % Test,
+    "org.apache.pekko"       %% "pekko-stream-testkit"         % PekkoVersion        % Test,
     "com.miguno.akka"        %% "akka-mock-scheduler"          % "0.5.5"             % Test
   )
 }

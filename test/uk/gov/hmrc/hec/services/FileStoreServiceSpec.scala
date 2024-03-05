@@ -43,7 +43,7 @@ class FileStoreServiceSpec
         ConfigFactory
           .defaultApplication()
           .resolve()
-          .withValue("akka.test.single-expect-default", ConfigValueFactory.fromAnyRef("3 seconds"))
+          .withValue("org.apache.pekko.test.single-expect-default", ConfigValueFactory.fromAnyRef("3 seconds"))
       )
     )
     with AnyWordSpecLike
