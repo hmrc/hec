@@ -20,8 +20,9 @@ import cats.data.EitherT
 import cats.implicits.catsSyntaxOptionId
 import cats.instances.future._
 import com.typesafe.config.ConfigFactory
+import org.apache.pekko.actor.ActorSystem
 import org.apache.pekko.stream.Materializer
-import org.apache.pekko.stream.testkit.NoMaterializer.system
+import org.apache.pekko.stream.testkit.NoMaterializer
 import play.api.Configuration
 import play.api.http.Status
 import play.api.inject.bind
@@ -190,7 +191,7 @@ class TaxCheckControllerWithInternalAuthEnabledSpec extends ControllerSpec with 
         Some(true)
       )
 
-      implicit val mat: Materializer = Materializer(system)
+      implicit val mat: Materializer = NoMaterializer
 
       def requestWithJson(json: JsValue): Request[JsValue] =
         FakeRequest().withBody(json).withHeaders(CONTENT_TYPE -> JSON)
