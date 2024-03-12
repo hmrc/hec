@@ -29,7 +29,7 @@ import play.api.mvc.{Request, Result}
 import play.api.test.Helpers._
 import play.api.test.{FakeRequest, Helpers}
 import uk.gov.hmrc.auth.core.AuthProvider.{GovernmentGateway, PrivilegedApplication}
-import uk.gov.hmrc.auth.core.retrieve.{GGCredId => AuthGGCredId, Name => RetrievalName, PAClientId, VerifyPid}
+import uk.gov.hmrc.auth.core.retrieve.{GGCredId => AuthGGCredId, Name => RetrievalName, OneTimeLogin, PAClientId}
 import uk.gov.hmrc.auth.core._
 import uk.gov.hmrc.hec.controllers.actions.AuthenticatedGGOrStrideRequest
 import uk.gov.hmrc.hec.models
@@ -255,7 +255,7 @@ class TaxCheckControllerWithInternalAuthEnabledSpec extends ControllerSpec with 
         }
 
         "there is no gg cred id or privileged application id found" in {
-          mockGGOrStrideAuth(VerifyPid(""), Enrolments(Set.empty), None, None)
+          mockGGOrStrideAuth(OneTimeLogin, Enrolments(Set.empty), None, None)
 
           val result = performAction(requestWithJson(Json.toJson(taxCheckDataIndividual)))
           status(result) shouldBe FORBIDDEN
