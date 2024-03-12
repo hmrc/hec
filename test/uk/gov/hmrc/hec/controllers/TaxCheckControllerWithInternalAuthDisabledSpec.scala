@@ -23,7 +23,7 @@ import play.api.Configuration
 import play.api.inject.bind
 import play.api.inject.guice.GuiceableModule
 import play.api.libs.json._
-import play.api.mvc.Result
+import play.api.mvc.{ControllerComponents, Result}
 import play.api.test.Helpers._
 import play.api.test.{FakeRequest, Helpers}
 import uk.gov.hmrc.auth.core.AuthConnector
@@ -40,19 +40,17 @@ import uk.gov.hmrc.internalauth.client.BackendAuthComponents
 import uk.gov.hmrc.internalauth.client.test.{BackendAuthComponentsStub, StubBehaviour}
 
 import java.time.{LocalDate, ZoneId, ZonedDateTime}
-import scala.annotation.nowarn
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
-@nowarn("msg=deprecated")
 class TaxCheckControllerWithInternalAuthDisabledSpec extends ControllerSpec with AuthSupport {
 
   val mockTaxCheckService = mock[TaxCheckService]
 
   val taxCheckStartDateTime = ZonedDateTime.of(2021, 10, 9, 9, 12, 34, 0, ZoneId.of("Europe/London"))
 
-  val ggCredId    = GGCredId("ggCredId")
-  implicit val cc = Helpers.stubControllerComponents()
+  val ggCredId                          = GGCredId("ggCredId")
+  implicit val cc: ControllerComponents = Helpers.stubControllerComponents()
 
   val mockInternalAuthStubBehaviour = mock[StubBehaviour]
   val mockBackendAuthComponents     = BackendAuthComponentsStub(mockInternalAuthStubBehaviour)

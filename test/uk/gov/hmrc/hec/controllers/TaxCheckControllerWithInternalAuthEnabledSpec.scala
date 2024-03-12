@@ -20,7 +20,6 @@ import cats.data.EitherT
 import cats.implicits.catsSyntaxOptionId
 import cats.instances.future._
 import com.typesafe.config.ConfigFactory
-import org.apache.pekko.actor.ActorSystem
 import org.apache.pekko.stream.Materializer
 import org.apache.pekko.stream.testkit.NoMaterializer
 import play.api.Configuration
@@ -28,7 +27,7 @@ import play.api.http.Status
 import play.api.inject.bind
 import play.api.inject.guice.GuiceableModule
 import play.api.libs.json._
-import play.api.mvc.{Request, Result}
+import play.api.mvc.{ControllerComponents, Request, Result}
 import play.api.test.Helpers._
 import play.api.test.{FakeRequest, Helpers}
 import uk.gov.hmrc.auth.core.AuthProvider.{GovernmentGateway, PrivilegedApplication}
@@ -56,19 +55,17 @@ import uk.gov.hmrc.internalauth.client.test.{BackendAuthComponentsStub, StubBeha
 import uk.gov.hmrc.internalauth.client._
 
 import java.time.{LocalDate, ZoneId, ZonedDateTime}
-import scala.annotation.nowarn
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
-@nowarn("msg=deprecated")
 class TaxCheckControllerWithInternalAuthEnabledSpec extends ControllerSpec with AuthSupport {
 
   val mockTaxCheckService = mock[TaxCheckService]
 
   val taxCheckStartDateTime = ZonedDateTime.of(2021, 10, 9, 9, 12, 34, 0, ZoneId.of("Europe/London"))
 
-  val ggCredId    = GGCredId("ggCredId")
-  implicit val cc = Helpers.stubControllerComponents()
+  val ggCredId                          = GGCredId("ggCredId")
+  implicit val cc: ControllerComponents = Helpers.stubControllerComponents()
 
   val mockInternalAuthStubBehaviour = mock[StubBehaviour]
   val mockBackendAuthComponents     = BackendAuthComponentsStub(mockInternalAuthStubBehaviour)

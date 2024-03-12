@@ -24,7 +24,6 @@ import uk.gov.hmrc.auth.core.retrieve._
 import uk.gov.hmrc.hec.controllers.AuthSupport._
 import uk.gov.hmrc.http.HeaderCarrier
 
-import scala.annotation.nowarn
 import scala.concurrent.{ExecutionContext, Future}
 
 trait AuthSupport { this: ControllerSpec =>
@@ -52,7 +51,6 @@ trait AuthSupport { this: ControllerSpec =>
       Future.successful(None)
     )
 
-  @nowarn("msg=deprecated")
   def mockGGOrStrideAuth(
     authProviderId: LegacyCredentials,
     enrolments: Enrolments,
@@ -68,7 +66,6 @@ trait AuthSupport { this: ControllerSpec =>
       )
     )
 
-  @nowarn("msg=deprecated")
   val ggOrStrideAuthRetrievals: Retrieval[LegacyCredentials ~ Enrolments ~ Option[Name] ~ Option[String]] =
     Retrievals.authProviderId and Retrievals.allEnrolments and Retrievals.name and Retrievals.email
 

@@ -27,9 +27,6 @@ lazy val microservice = Project(appName, file("."))
       "-Wconf:cat=unused-imports&src=html/.*:s", // Silence unused import warnings in twirl templates
       "-Wunused:nowarn"
     ),
-    Test / scalacOptions := Seq(
-      "-Ywarn-value-discard"
-    ),
     Compile / doc / sources := Seq.empty
   )
   .settings(
