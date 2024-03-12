@@ -31,7 +31,7 @@ import play.api.mvc.{Request, Result}
 import play.api.test.Helpers._
 import play.api.test.{FakeRequest, Helpers}
 import uk.gov.hmrc.auth.core.AuthProvider.{GovernmentGateway, PrivilegedApplication}
-import uk.gov.hmrc.auth.core.retrieve.{OneTimeLogin, PAClientId, GGCredId => AuthGGCredId, Name => RetrievalName}
+import uk.gov.hmrc.auth.core.retrieve.{GGCredId => AuthGGCredId, Name => RetrievalName, OneTimeLogin, PAClientId}
 import uk.gov.hmrc.auth.core._
 import uk.gov.hmrc.hec.controllers.actions.AuthenticatedGGOrStrideRequest
 import uk.gov.hmrc.hec.models
@@ -191,7 +191,6 @@ class TaxCheckControllerWithInternalAuthEnabledSpec extends ControllerSpec with 
       )
 
       implicit val mat: Materializer = Materializer(system)
-
 
       def requestWithJson(json: JsValue): Request[JsValue] =
         FakeRequest().withBody(json).withHeaders(CONTENT_TYPE -> JSON)

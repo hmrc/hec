@@ -19,7 +19,7 @@ lazy val microservice = Project(appName, file("."))
   .settings(addCompilerPlugin("org.typelevel" %% "kind-projector" % "0.13.2" cross CrossVersion.full))
   .settings(
     majorVersion := 1,
-    scalaVersion := "2.13.12",
+    scalaVersion := "2.13.11",
     libraryDependencies ++= AppDependencies.compile ++ AppDependencies.test,
     scalacOptions := Seq(
       "-Ymacro-annotations",
@@ -28,7 +28,7 @@ lazy val microservice = Project(appName, file("."))
       "-Wunused:nowarn"
     ),
     Test / scalacOptions := Seq(
-      "-Wconf:cat=value-discard:s"
+      "-Ywarn-value-discard"
     ),
     Compile / doc / sources := Seq.empty
   )
