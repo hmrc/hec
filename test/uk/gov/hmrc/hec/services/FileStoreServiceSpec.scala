@@ -36,8 +36,6 @@ import uk.gov.hmrc.objectstore.client.config.ObjectStoreClientConfig
 import uk.gov.hmrc.objectstore.client.play.test.stub.StubPlayObjectStoreClient
 import uk.gov.hmrc.objectstore.client.{Path, RetentionPeriod}
 
-import scala.concurrent.ExecutionContext.Implicits.global
-
 class FileStoreServiceSpec
     extends TestKit(
       ActorSystem(

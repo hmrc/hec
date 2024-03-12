@@ -20,6 +20,8 @@ import cats.data.EitherT
 import cats.implicits.catsSyntaxOptionId
 import cats.instances.future._
 import com.typesafe.config.ConfigFactory
+import org.apache.pekko.stream.Materializer
+import org.apache.pekko.stream.testkit.NoMaterializer.system
 import play.api.Configuration
 import play.api.http.Status
 import play.api.inject.bind
@@ -29,7 +31,7 @@ import play.api.mvc.{Request, Result}
 import play.api.test.Helpers._
 import play.api.test.{FakeRequest, Helpers}
 import uk.gov.hmrc.auth.core.AuthProvider.{GovernmentGateway, PrivilegedApplication}
-import uk.gov.hmrc.auth.core.retrieve.{GGCredId => AuthGGCredId, Name => RetrievalName, OneTimeLogin, PAClientId}
+import uk.gov.hmrc.auth.core.retrieve.{OneTimeLogin, PAClientId, GGCredId => AuthGGCredId, Name => RetrievalName}
 import uk.gov.hmrc.auth.core._
 import uk.gov.hmrc.hec.controllers.actions.AuthenticatedGGOrStrideRequest
 import uk.gov.hmrc.hec.models
@@ -188,6 +190,9 @@ class TaxCheckControllerWithInternalAuthEnabledSpec extends ControllerSpec with 
         Some(true)
       )
 
+      implicit val mat: Materializer = Materializer(system)
+
+
       def requestWithJson(json: JsValue): Request[JsValue] =
         FakeRequest().withBody(json).withHeaders(CONTENT_TYPE -> JSON)
 
@@ -196,7 +201,7 @@ class TaxCheckControllerWithInternalAuthEnabledSpec extends ControllerSpec with 
         "there is no body in the request" in {
           val requestWithNoBody = AuthenticatedGGOrStrideRequest(Right(GGCredId("")), FakeRequest())
 
-          val result: Future[Result] = controller.saveTaxCheck(requestWithNoBody).run()
+          val result: Future[Result] = controller.saveTaxCheck(requestWithNoBody).run()(mat)
           status(result) shouldBe UNSUPPORTED_MEDIA_TYPE
 
         }
