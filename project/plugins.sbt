@@ -8,7 +8,7 @@ resolvers += MavenRepository("HMRC-open-artefacts-maven2", "https://open.artefac
 // To resolve a bug with version 2.x.x of the scoverage plugin - https://github.com/sbt/sbt/issues/6997
 ThisBuild / libraryDependencySchemes ++= Seq("org.scala-lang.modules" %% "scala-xml" % VersionScheme.Always)
 
-addSbtPlugin("uk.gov.hmrc"               % "sbt-auto-build"     % "3.9.0")
+addSbtPlugin("uk.gov.hmrc"               % "sbt-auto-build"     % "3.20.0")
 addSbtPlugin("uk.gov.hmrc"               % "sbt-distributables" % "2.2.0")
 addSbtPlugin("org.playframework"         % "sbt-plugin"         % "3.0.1")
 addSbtPlugin("org.scalameta"             % "sbt-scalafmt"       % "2.4.6")
