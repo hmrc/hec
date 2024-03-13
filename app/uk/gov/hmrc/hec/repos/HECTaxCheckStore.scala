@@ -110,7 +110,7 @@ class HECTaxCheckStoreImpl @Inject() (
     )
   )
 
-  override def ensureIndexes: Future[Seq[String]] =
+  override def ensureIndexes(): Future[Seq[String]] =
     super.ensureIndexes.flatMap(_ => MongoUtils.ensureIndexes(collection, mongoIndexes, false))
 
   def get(taxCheckCode: HECTaxCheckCode)(implicit

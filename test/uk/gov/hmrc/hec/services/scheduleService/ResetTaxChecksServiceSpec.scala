@@ -16,8 +16,8 @@
 
 package uk.gov.hmrc.hec.services.scheduleService
 
-import akka.actor.ActorSystem
-import akka.testkit.TestKit
+import org.apache.pekko.actor.ActorSystem
+import org.apache.pekko.testkit.TestKit
 import cats.data.EitherT
 import com.typesafe.config.{ConfigFactory, ConfigValueFactory}
 import org.scalamock.scalatest.MockFactory
@@ -41,7 +41,7 @@ class ResetTaxChecksServiceSpec
         ConfigFactory
           .defaultApplication()
           .resolve()
-          .withValue("akka.test.single-expect-default", ConfigValueFactory.fromAnyRef("3 seconds"))
+          .withValue("org.apache.pekko.test.single-expect-default", ConfigValueFactory.fromAnyRef("3 seconds"))
       )
     )
     with AnyWordSpecLike

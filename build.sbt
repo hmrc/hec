@@ -1,6 +1,8 @@
 import scoverage.ScoverageKeys
 import uk.gov.hmrc.DefaultBuildSettings.integrationTestSettings
 
+import scala.collection.immutable.Seq
+
 val appName = "hec"
 
 lazy val scoverageSettings =
@@ -17,16 +19,13 @@ lazy val microservice = Project(appName, file("."))
   .settings(addCompilerPlugin("org.typelevel" %% "kind-projector" % "0.13.2" cross CrossVersion.full))
   .settings(
     majorVersion := 1,
-    scalaVersion := "2.13.10",
+    scalaVersion := "2.13.11",
     libraryDependencies ++= AppDependencies.compile ++ AppDependencies.test,
     scalacOptions := Seq(
       "-Ymacro-annotations",
       "-Wconf:src=routes/.*:s", // Silence warnings in generated routes
       "-Wconf:cat=unused-imports&src=html/.*:s", // Silence unused import warnings in twirl templates
       "-Wunused:nowarn"
-    ),
-    Test / scalacOptions := Seq(
-      "-Wconf:cat=value-discard:s"
     ),
     Compile / doc / sources := Seq.empty
   )

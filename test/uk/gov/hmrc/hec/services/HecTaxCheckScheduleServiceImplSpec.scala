@@ -16,11 +16,11 @@
 
 package uk.gov.hmrc.hec.services
 
-import akka.actor.{ActorRef, ActorSystem, Cancellable}
-import akka.pattern.ask
-import akka.testkit.{TestKit, TestProbe}
-import akka.util.Timeout
-import com.miguno.akka.testing.VirtualTime
+import org.apache.pekko.actor.{ActorRef, ActorSystem, Cancellable}
+import org.apache.pekko.pattern.ask
+import org.apache.pekko.testkit.{TestKit, TestProbe}
+import org.apache.pekko.util.Timeout
+import com.github.pjfanning.pekko.scheduler.mock.VirtualTime
 import com.typesafe.config.{ConfigFactory, ConfigValueFactory}
 import org.scalatest.BeforeAndAfterAll
 import org.scalatest.matchers.should.Matchers
@@ -49,7 +49,7 @@ class HecTaxCheckScheduleServiceImplSpec
         ConfigFactory
           .defaultApplication()
           .resolve()
-          .withValue("akka.test.single-expect-default", ConfigValueFactory.fromAnyRef("3 seconds"))
+          .withValue("org.apache.pekko.test.single-expect-default", ConfigValueFactory.fromAnyRef("3 seconds"))
       )
     )
     with AnyWordSpecLike

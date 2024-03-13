@@ -20,16 +20,18 @@ import cats.data.EitherT
 import cats.implicits.catsSyntaxOptionId
 import cats.instances.future._
 import com.typesafe.config.ConfigFactory
+import org.apache.pekko.stream.Materializer
+import org.apache.pekko.stream.testkit.NoMaterializer
 import play.api.Configuration
 import play.api.http.Status
 import play.api.inject.bind
 import play.api.inject.guice.GuiceableModule
 import play.api.libs.json._
-import play.api.mvc.{Request, Result}
+import play.api.mvc.{ControllerComponents, Request, Result}
 import play.api.test.Helpers._
 import play.api.test.{FakeRequest, Helpers}
 import uk.gov.hmrc.auth.core.AuthProvider.{GovernmentGateway, PrivilegedApplication}
-import uk.gov.hmrc.auth.core.retrieve.{GGCredId => AuthGGCredId, Name => RetrievalName, PAClientId, VerifyPid}
+import uk.gov.hmrc.auth.core.retrieve.{GGCredId => AuthGGCredId, Name => RetrievalName, OneTimeLogin, PAClientId}
 import uk.gov.hmrc.auth.core._
 import uk.gov.hmrc.hec.controllers.actions.AuthenticatedGGOrStrideRequest
 import uk.gov.hmrc.hec.models
@@ -53,19 +55,17 @@ import uk.gov.hmrc.internalauth.client.test.{BackendAuthComponentsStub, StubBeha
 import uk.gov.hmrc.internalauth.client._
 
 import java.time.{LocalDate, ZoneId, ZonedDateTime}
-import scala.annotation.nowarn
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
-@nowarn("msg=deprecated")
 class TaxCheckControllerWithInternalAuthEnabledSpec extends ControllerSpec with AuthSupport {
 
   val mockTaxCheckService = mock[TaxCheckService]
 
   val taxCheckStartDateTime = ZonedDateTime.of(2021, 10, 9, 9, 12, 34, 0, ZoneId.of("Europe/London"))
 
-  val ggCredId    = GGCredId("ggCredId")
-  implicit val cc = Helpers.stubControllerComponents()
+  val ggCredId                          = GGCredId("ggCredId")
+  implicit val cc: ControllerComponents = Helpers.stubControllerComponents()
 
   val mockInternalAuthStubBehaviour = mock[StubBehaviour]
   val mockBackendAuthComponents     = BackendAuthComponentsStub(mockInternalAuthStubBehaviour)
@@ -188,6 +188,8 @@ class TaxCheckControllerWithInternalAuthEnabledSpec extends ControllerSpec with 
         Some(true)
       )
 
+      implicit val mat: Materializer = NoMaterializer
+
       def requestWithJson(json: JsValue): Request[JsValue] =
         FakeRequest().withBody(json).withHeaders(CONTENT_TYPE -> JSON)
 
@@ -196,7 +198,7 @@ class TaxCheckControllerWithInternalAuthEnabledSpec extends ControllerSpec with 
         "there is no body in the request" in {
           val requestWithNoBody = AuthenticatedGGOrStrideRequest(Right(GGCredId("")), FakeRequest())
 
-          val result: Future[Result] = controller.saveTaxCheck(requestWithNoBody).run()
+          val result: Future[Result] = controller.saveTaxCheck(requestWithNoBody).run()(mat)
           status(result) shouldBe UNSUPPORTED_MEDIA_TYPE
 
         }
@@ -255,7 +257,7 @@ class TaxCheckControllerWithInternalAuthEnabledSpec extends ControllerSpec with 
         }
 
         "there is no gg cred id or privileged application id found" in {
-          mockGGOrStrideAuth(VerifyPid(""), Enrolments(Set.empty), None, None)
+          mockGGOrStrideAuth(OneTimeLogin, Enrolments(Set.empty), None, None)
 
           val result = performAction(requestWithJson(Json.toJson(taxCheckDataIndividual)))
           status(result) shouldBe FORBIDDEN
