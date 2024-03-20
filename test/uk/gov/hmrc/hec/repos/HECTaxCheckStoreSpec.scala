@@ -21,9 +21,11 @@ import com.typesafe.config.ConfigFactory
 import org.scalatest.concurrent.Eventually
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
+import org.scalatestplus.play.guice.GuiceOneAppPerSuite
 import play.api.Configuration
 import play.api.libs.json.{JsNumber, JsObject, Json}
 import play.api.test.Helpers._
+import uk.gov.hmrc.hec.config.AppConfig
 import uk.gov.hmrc.hec.models.Language
 import uk.gov.hmrc.hec.models.hecTaxCheck.ApplicantDetails.CompanyApplicantDetails
 import uk.gov.hmrc.hec.models.hecTaxCheck.HECTaxCheckData.CompanyHECTaxCheckData
@@ -43,17 +45,16 @@ import java.util.concurrent.TimeUnit
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
-class HECTaxCheckStoreImplSpec extends AnyWordSpec with Matchers with Eventually with MongoSupportSpec {
+class HECTaxCheckStoreSpec
+    extends AnyWordSpec
+    with GuiceOneAppPerSuite
+    with Matchers
+    with Eventually
+    with MongoSupportSpec {
 
-  val config: Configuration = Configuration(
-    ConfigFactory.parseString(
-      """
-        | hec-tax-check.ttl = 1 day
-        |""".stripMargin
-    )
-  )
+  lazy val config: AppConfig = app.injector.instanceOf[AppConfig]
 
-  val taxCheckStore: HECTaxCheckStoreImpl = new HECTaxCheckStoreImpl(mongoComponent, config)
+  val taxCheckStore: HECTaxCheckStore = new HECTaxCheckStore(mongoComponent, config)
 
   val uuid: UUID = UUID.randomUUID()
 

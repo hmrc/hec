@@ -23,8 +23,10 @@ import com.typesafe.config.ConfigFactory
 import org.scalamock.scalatest.MockFactory
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
+import org.scalatestplus.play.guice.GuiceOneAppPerSuite
 import play.api.test.FakeRequest
 import play.api.test.Helpers._
+import uk.gov.hmrc.hec.config.AppConfig
 import uk.gov.hmrc.hec.controllers.actions.AuthenticatedGGOrStrideRequest
 import uk.gov.hmrc.hec.models
 import uk.gov.hmrc.hec.models.AuditEvent.TaxCheckSuccess
@@ -48,24 +50,26 @@ import java.util.UUID
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.duration._
 
-class TaxCheckServiceImplSpec extends AnyWordSpec with Matchers with MockFactory with AuditServiceSupport {
+class TaxCheckServiceSpec
+    extends AnyWordSpec
+    with GuiceOneAppPerSuite
+    with Matchers
+    with MockFactory
+    with AuditServiceSupport {
 
   val mockTaxCheckCodeGeneratorService = mock[TaxCheckCodeGeneratorService]
   val mockTaxCheckStore                = mock[HECTaxCheckStore]
   val expiresAfter                     = 5.days
   val mockTimeProvider                 = mock[TimeProvider]
 
-  val config       = ConfigFactory.parseString(s"""{
-      |hec-tax-check.expires-after = ${expiresAfter.toDays} days
-      |}""".stripMargin)
   val key1: String = "hec-tax-check"
 
-  val service = new TaxCheckServiceImpl(
+  lazy val service = new TaxCheckService(
     mockTaxCheckCodeGeneratorService,
     mockAuditService,
     mockTimeProvider,
     mockTaxCheckStore,
-    config
+    app.injector.instanceOf[AppConfig]
   )
 
   def mockGenerateTaxCheckCode(taxCheckCode: HECTaxCheckCode) =

@@ -19,12 +19,12 @@ package uk.gov.hmrc.hec.repos
 import cats.data.{EitherT, OptionT}
 import cats.instances.either._
 import cats.syntax.either._
-import com.google.inject.{ImplementedBy, Inject, Singleton}
+import com.google.inject.{Inject, Singleton}
 import org.mongodb.scala.bson.{BsonDateTime, BsonDocument}
 import org.mongodb.scala.model.Filters.gte
 import org.mongodb.scala.model.{Filters, IndexModel, IndexOptions, Indexes, Sorts}
-import play.api.Configuration
 import play.api.libs.json.{JsError, JsSuccess, JsonValidationError}
+import uk.gov.hmrc.hec.config.AppConfig
 import uk.gov.hmrc.hec.models.ids.GGCredId
 import uk.gov.hmrc.hec.models.hecTaxCheck.{HECTaxCheck, HECTaxCheckCode}
 import uk.gov.hmrc.hec.models.Error
@@ -35,55 +35,22 @@ import uk.gov.hmrc.mongo.{CurrentTimestampSupport, MongoComponent, MongoUtils}
 import uk.gov.hmrc.play.http.logging.Mdc.preservingMdc
 
 import java.time.ZonedDateTime
-import scala.concurrent.duration._
 import scala.concurrent.{ExecutionContext, Future}
 
-@ImplementedBy(classOf[HECTaxCheckStoreImpl])
-trait HECTaxCheckStore {
-
-  def get(taxCheckCode: HECTaxCheckCode)(implicit
-    hc: HeaderCarrier
-  ): EitherT[Future, Error, Option[HECTaxCheck]]
-
-  def getTaxCheckCodes(GGCredId: GGCredId)(implicit
-    hc: HeaderCarrier
-  ): EitherT[Future, Error, List[HECTaxCheck]]
-
-  def store(
-    taxCheck: HECTaxCheck
-  )(implicit hc: HeaderCarrier): EitherT[Future, Error, Unit]
-
-  def delete(taxCheckCode: HECTaxCheckCode)(implicit hc: HeaderCarrier): EitherT[Future, Error, Unit]
-
-  def deleteAll()(implicit hc: HeaderCarrier): EitherT[Future, Error, Unit]
-
-  def getAllTaxCheckCodesByExtractedStatus(status: Boolean, skip: Int, limit: Int, sortBy: String)(implicit
-    hc: HeaderCarrier
-  ): EitherT[Future, Error, List[HECTaxCheck]]
-
-  def getAllTaxCheckCodesByFileCorrelationId(correlationId: String)(implicit
-    hc: HeaderCarrier
-  ): EitherT[Future, Error, List[HECTaxCheck]]
-
-  def resetTaxCheckIsExtractedFlag(createdOnOrAfter: ZonedDateTime): EitherT[Future, Error, Unit]
-
-}
-
 @Singleton
-class HECTaxCheckStoreImpl @Inject() (
+class HECTaxCheckStore @Inject() (
   mongo: MongoComponent,
-  configuration: Configuration
+  appConfig: AppConfig
 )(implicit
   ec: ExecutionContext
 ) extends MongoCacheRepository(
       mongoComponent = mongo,
       replaceIndexes = true,
       collectionName = "hecTaxChecks",
-      ttl = configuration.get[FiniteDuration]("hec-tax-check.ttl"),
+      ttl = appConfig.taxCheckTtl,
       timestampSupport = new CurrentTimestampSupport(), // Provide a different one for testing
       cacheIdType = CacheIdType.SimpleCacheId // Here, CacheId to be represented with `String`
     )
-    with HECTaxCheckStore
     with Logging {
 
   val key: String                       = "hec-tax-check"

@@ -18,16 +18,12 @@ package uk.gov.hmrc.hec.config
 
 import javax.inject.{Inject, Singleton}
 import play.api.Configuration
-import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
+
+import scala.concurrent.duration.FiniteDuration
 
 @Singleton
-class AppConfig @Inject() (
-  config: Configuration,
-  servicesConfig: ServicesConfig
-) {
+class AppConfig @Inject() (config: Configuration) {
 
-  val authBaseUrl: String = servicesConfig.baseUrl("auth")
-
-  val auditingEnabled: Boolean = config.get[Boolean]("auditing.enabled")
-  val graphiteHost: String     = config.get[String]("microservice.metrics.graphite.host")
+  val taxCheckExpires: Long       = config.get[FiniteDuration]("hec-tax-check.expires-after").toDays
+  val taxCheckTtl: FiniteDuration = config.get[FiniteDuration]("hec-tax-check.ttl")
 }

@@ -19,9 +19,11 @@ package uk.gov.hmrc.hec.services
 import org.scalamock.scalatest.MockFactory
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpecLike
+import org.scalatestplus.play.guice.GuiceOneAppPerSuite
 import play.api.libs.json.Json
 import play.api.mvc.{Headers, Request}
 import play.api.test.FakeRequest
+import uk.gov.hmrc.hec.config.AppConfig
 import uk.gov.hmrc.hec.models.AuditEvent.TaxCheckSuccess
 import uk.gov.hmrc.hec.models.Language
 import uk.gov.hmrc.hec.models.hecTaxCheck.ApplicantDetails.CompanyApplicantDetails
@@ -40,9 +42,11 @@ import java.time.{LocalDate, ZonedDateTime}
 import scala.concurrent.{ExecutionContext, Future}
 import scala.concurrent.ExecutionContext.Implicits.global
 
-class AuditServiceImplSpec extends Matchers with AnyWordSpecLike with MockFactory {
+class AuditServiceImplSpec extends Matchers with AnyWordSpecLike with GuiceOneAppPerSuite with MockFactory {
 
   val mockAuditConnector = mock[AuditConnector]
+
+  val config: AppConfig = app.injector.instanceOf[AppConfig]
 
   def mockSendExtendedEvent(expectedEvent: ExtendedDataEvent)(result: Future[AuditResult]) =
     (mockAuditConnector

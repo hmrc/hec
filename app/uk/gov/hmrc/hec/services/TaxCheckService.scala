@@ -21,8 +21,7 @@ import cats.syntax.eq._
 import cats.syntax.traverse._
 import cats.instances.option._
 import com.google.inject.{ImplementedBy, Inject, Singleton}
-import com.typesafe.config.Config
-import configs.syntax._
+import uk.gov.hmrc.hec.config.AppConfig
 import uk.gov.hmrc.hec.controllers.actions.AuthenticatedGGOrStrideRequest
 import uk.gov.hmrc.hec.models
 import uk.gov.hmrc.hec.models.AuditEvent.TaxCheckSuccess
@@ -36,55 +35,18 @@ import uk.gov.hmrc.hec.repos.HECTaxCheckStore
 import uk.gov.hmrc.hec.util.TimeProvider
 import uk.gov.hmrc.http.HeaderCarrier
 
-import scala.concurrent.duration.FiniteDuration
 import scala.concurrent.{ExecutionContext, Future}
 
-@ImplementedBy(classOf[TaxCheckServiceImpl])
-trait TaxCheckService {
-
-  def saveTaxCheck(taxCheckData: HECTaxCheckData)(implicit
-    hc: HeaderCarrier,
-    request: AuthenticatedGGOrStrideRequest[_]
-  ): EitherT[Future, Error, HECTaxCheck]
-
-  def updateAllHecTaxCheck(list: List[HECTaxCheck])(implicit
-    hc: HeaderCarrier
-  ): EitherT[Future, models.Error, List[HECTaxCheck]]
-
-  def matchTaxCheck(taxCheckMatchRequest: HECTaxCheckMatchRequest)(implicit
-    hc: HeaderCarrier
-  ): EitherT[Future, Error, HECTaxCheckMatchResult]
-
-  def getUnexpiredTaxCheckCodes(ggCredId: GGCredId)(implicit
-    hc: HeaderCarrier
-  ): EitherT[Future, Error, List[TaxCheckListItem]]
-
-  def getAllTaxCheckCodesByExtractedStatus(isExtracted: Boolean, skip: Int, limit: Int, sortBy: String)(implicit
-    hc: HeaderCarrier
-  ): EitherT[Future, Error, List[HECTaxCheck]]
-
-  def getAllTaxCheckCodesByFileCorrelationId(fileCorrelationId: String)(implicit
-    hc: HeaderCarrier
-  ): EitherT[Future, Error, List[HECTaxCheck]]
-
-  def saveEmailAddress(request: SaveEmailAddressRequest)(implicit
-    hc: HeaderCarrier
-  ): EitherT[Future, Error, Option[Unit]]
-
-}
-
 @Singleton
-class TaxCheckServiceImpl @Inject() (
+class TaxCheckService @Inject() (
   taxCheckCodeGeneratorService: TaxCheckCodeGeneratorService,
   auditService: AuditService,
   timeProvider: TimeProvider,
   taxCheckStore: HECTaxCheckStore,
-  config: Config
-)(implicit ec: ExecutionContext)
-    extends TaxCheckService {
-  val key: String                        = "hec-tax-check"
-  val taxCheckCodeExpiresAfterDays: Long =
-    config.get[FiniteDuration]("hec-tax-check.expires-after").value.toDays
+  appConfig: AppConfig
+)(implicit ec: ExecutionContext) {
+  val key: String                                = "hec-tax-check"
+  private val taxCheckCodeExpiresAfterDays: Long = appConfig.taxCheckExpires
 
   def saveTaxCheck(
     taxCheckData: HECTaxCheckData
@@ -183,17 +145,17 @@ class TaxCheckServiceImpl @Inject() (
       )
   }
 
-  override def getAllTaxCheckCodesByExtractedStatus(isExtracted: Boolean, skip: Int, limit: Int, sortBy: String)(
-    implicit hc: HeaderCarrier
+  def getAllTaxCheckCodesByExtractedStatus(isExtracted: Boolean, skip: Int, limit: Int, sortBy: String)(implicit
+    hc: HeaderCarrier
   ): EitherT[Future, Error, List[HECTaxCheck]] =
     taxCheckStore.getAllTaxCheckCodesByExtractedStatus(isExtracted, skip, limit, sortBy)
 
-  override def getAllTaxCheckCodesByFileCorrelationId(fileCorrelationId: String)(implicit
+  def getAllTaxCheckCodesByFileCorrelationId(fileCorrelationId: String)(implicit
     hc: HeaderCarrier
   ): EitherT[Future, Error, List[HECTaxCheck]] =
     taxCheckStore.getAllTaxCheckCodesByFileCorrelationId(fileCorrelationId)
 
-  override def saveEmailAddress(
+  def saveEmailAddress(
     request: SaveEmailAddressRequest
   )(implicit hc: HeaderCarrier): EitherT[Future, Error, Option[Unit]] =
     for {
