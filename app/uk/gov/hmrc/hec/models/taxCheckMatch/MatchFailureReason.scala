@@ -16,31 +16,20 @@
 
 package uk.gov.hmrc.hec.models.taxCheckMatch
 
-import ai.x.play.json.Jsonx
-import ai.x.play.json.SingletonEncoder.simpleName
-import ai.x.play.json.implicits.formatSingleton
-import play.api.libs.json.Format
+import enumeratum.{EnumEntry, PlayEnum}
 
-sealed trait MatchFailureReason extends Product with Serializable
+sealed trait MatchFailureReason extends EnumEntry
 
-object MatchFailureReason {
+object MatchFailureReason extends PlayEnum[MatchFailureReason] {
+
+  override val values: IndexedSeq[MatchFailureReason] = findValues
 
   case object TaxCheckCodeNotMatched extends MatchFailureReason
-
   case object EntityTypeNotMatched extends MatchFailureReason
-
   case object DateOfBirthNotMatched extends MatchFailureReason
-
   case object CRNNotMatched extends MatchFailureReason
-
   case object LicenceTypeNotMatched extends MatchFailureReason
-
   case object LicenceTypeEntityTypeNotMatched extends MatchFailureReason
-
   case object LicenceTypeDateOfBirthNotMatched extends MatchFailureReason
-
   case object LicenceTypeCRNNotMatched extends MatchFailureReason
-
-  implicit val format: Format[MatchFailureReason] = Jsonx.formatSealed[MatchFailureReason]
-
 }

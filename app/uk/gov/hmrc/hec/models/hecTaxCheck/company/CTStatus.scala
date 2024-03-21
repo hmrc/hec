@@ -16,21 +16,15 @@
 
 package uk.gov.hmrc.hec.models.hecTaxCheck.company
 
-import ai.x.play.json.Jsonx
-import ai.x.play.json.SingletonEncoder.simpleName
-import ai.x.play.json.implicits.formatSingleton
-import play.api.libs.json.Format
+import enumeratum.{EnumEntry, PlayEnum}
 
-sealed trait CTStatus extends Product with Serializable
+sealed trait CTStatus extends EnumEntry
 
-object CTStatus {
+object CTStatus extends PlayEnum[CTStatus] {
 
   case object ReturnFound extends CTStatus
-
   case object NoticeToFileIssued extends CTStatus
-
   case object NoReturnFound extends CTStatus
 
-  implicit val format: Format[CTStatus] = Jsonx.formatSealed[CTStatus]
-
+  override val values: IndexedSeq[CTStatus] = findValues
 }

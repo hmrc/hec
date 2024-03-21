@@ -16,22 +16,17 @@
 
 package uk.gov.hmrc.hec.models.hecTaxCheck
 
-import ai.x.play.json.Jsonx
-import ai.x.play.json.SingletonEncoder.simpleName
-import ai.x.play.json.implicits.formatSingleton
 import cats.Eq
-import play.api.libs.json.Format
+import enumeratum.{EnumEntry, PlayEnum}
 
-sealed trait HECTaxCheckSource extends Product with Serializable
+sealed trait HECTaxCheckSource extends EnumEntry
 
-object HECTaxCheckSource {
+object HECTaxCheckSource extends PlayEnum[HECTaxCheckSource] {
 
   case object Digital extends HECTaxCheckSource
-
   case object Stride extends HECTaxCheckSource
-
-  implicit val format: Format[HECTaxCheckSource] = Jsonx.formatSealed[HECTaxCheckSource]
 
   implicit val eq: Eq[HECTaxCheckSource] = Eq.fromUniversalEquals
 
+  override val values: IndexedSeq[HECTaxCheckSource] = findValues
 }

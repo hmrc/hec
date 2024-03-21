@@ -16,17 +16,13 @@
 
 package uk.gov.hmrc.hec.models.hecTaxCheck.licence
 
-import ai.x.play.json.Jsonx
-import ai.x.play.json.SingletonEncoder.simpleName
-import ai.x.play.json.implicits.formatSingleton
-import enumeratum.{Enum, EnumEntry}
-import play.api.libs.json.Format
+import enumeratum.{EnumEntry, PlayEnum}
 
 import scala.collection.immutable
 
-sealed trait LicenceValidityPeriod extends EnumEntry with Product with Serializable
+sealed trait LicenceValidityPeriod extends EnumEntry
 
-object LicenceValidityPeriod extends Enum[LicenceValidityPeriod] {
+object LicenceValidityPeriod extends PlayEnum[LicenceValidityPeriod] {
 
   case object UpToOneYear extends LicenceValidityPeriod
   case object UpToTwoYears extends LicenceValidityPeriod
@@ -35,7 +31,4 @@ object LicenceValidityPeriod extends Enum[LicenceValidityPeriod] {
   case object UpToFiveYears extends LicenceValidityPeriod
 
   val values: immutable.IndexedSeq[LicenceValidityPeriod] = findValues
-
-  implicit val format: Format[LicenceValidityPeriod] = Jsonx.formatSealed[LicenceValidityPeriod]
-
 }

@@ -22,12 +22,12 @@ import cats.syntax.either._
 import com.google.inject.{ImplementedBy, Inject, Singleton}
 import org.mongodb.scala.bson.{BsonDateTime, BsonDocument}
 import org.mongodb.scala.model.Filters.gte
-import org.mongodb.scala.model.{Filters, IndexModel, IndexOptions, Indexes, Sorts}
+import org.mongodb.scala.model._
 import play.api.Configuration
 import play.api.libs.json.{JsError, JsSuccess, JsonValidationError}
-import uk.gov.hmrc.hec.models.ids.GGCredId
-import uk.gov.hmrc.hec.models.hecTaxCheck.{HECTaxCheck, HECTaxCheckCode}
 import uk.gov.hmrc.hec.models.Error
+import uk.gov.hmrc.hec.models.hecTaxCheck.{HECTaxCheck, HECTaxCheckCode}
+import uk.gov.hmrc.hec.models.ids.GGCredId
 import uk.gov.hmrc.hec.util.Logging
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.mongo.cache.{CacheIdType, CacheItem, DataKey, MongoCacheRepository}

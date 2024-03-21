@@ -16,33 +16,22 @@
 
 package uk.gov.hmrc.hec.models.hecTaxCheck.licence
 
-import ai.x.play.json.Jsonx
-import ai.x.play.json.SingletonEncoder.simpleName
-import ai.x.play.json.implicits.formatSingleton
 import cats.Eq
 import enumeratum._
-import play.api.libs.json.Format
 
 import scala.collection.immutable
 
 sealed trait LicenceType extends EnumEntry with Product with Serializable
 
-object LicenceType extends Enum[LicenceType] {
+object LicenceType extends PlayEnum[LicenceType] {
 
   case object DriverOfTaxisAndPrivateHires extends LicenceType
-
   case object OperatorOfPrivateHireVehicles extends LicenceType
-
   case object ScrapMetalMobileCollector extends LicenceType
-
   case object ScrapMetalDealerSite extends LicenceType
-
   case object BookingOffice extends LicenceType
 
   val values: immutable.IndexedSeq[LicenceType] = findValues
 
-  implicit val format: Format[LicenceType] = Jsonx.formatSealed[LicenceType]
-
   implicit val eq: Eq[LicenceType] = Eq.fromUniversalEquals
-
 }
