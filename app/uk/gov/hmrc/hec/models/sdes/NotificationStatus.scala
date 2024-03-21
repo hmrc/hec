@@ -16,26 +16,19 @@
 
 package uk.gov.hmrc.hec.models.sdes
 
-import ai.x.play.json.Jsonx
-import ai.x.play.json.SingletonEncoder.simpleName
-import ai.x.play.json.implicits.formatSingleton
 import cats.Eq
-import play.api.libs.json.Format
+import enumeratum.{EnumEntry, PlayEnum}
 
-sealed trait NotificationStatus extends Product with Serializable
+sealed trait NotificationStatus extends EnumEntry
 
-object NotificationStatus {
+object NotificationStatus extends PlayEnum[NotificationStatus] {
 
   case object FileReady extends NotificationStatus
-
   case object FileReceived extends NotificationStatus
-
   case object FileProcessingFailure extends NotificationStatus
-
   case object FileProcessed extends NotificationStatus
-
-  implicit val format: Format[NotificationStatus] = Jsonx.formatSealed[NotificationStatus]
 
   implicit val eq: Eq[NotificationStatus] = Eq.fromUniversalEquals
 
+  override val values: IndexedSeq[NotificationStatus] = findValues
 }

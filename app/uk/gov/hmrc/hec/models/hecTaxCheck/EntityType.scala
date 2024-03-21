@@ -16,16 +16,14 @@
 
 package uk.gov.hmrc.hec.models.hecTaxCheck
 
-import ai.x.play.json.Jsonx
-import ai.x.play.json.SingletonEncoder.simpleName
-import ai.x.play.json.implicits.formatSingleton
-import play.api.libs.json.Format
+import enumeratum.{EnumEntry, PlayEnum}
 
-sealed trait EntityType extends Product with Serializable
+sealed trait EntityType extends EnumEntry
 
-object EntityType {
+object EntityType extends PlayEnum[EntityType] {
+
   case object Individual extends EntityType
   case object Company extends EntityType
 
-  implicit val format: Format[EntityType] = Jsonx.formatSealed[EntityType]
+  override val values: IndexedSeq[EntityType] = findValues
 }
