@@ -16,21 +16,14 @@
 
 package uk.gov.hmrc.hec.models.hecTaxCheck
 
-import ai.x.play.json.Jsonx
-import ai.x.play.json.SingletonEncoder.simpleName
-import ai.x.play.json.implicits.formatSingleton
-import enumeratum.{Enum, EnumEntry}
-import play.api.libs.json.Format
+import enumeratum.{EnumEntry, PlayEnum}
 
 sealed trait CorrectiveAction extends EnumEntry with Product with Serializable
 
-object CorrectiveAction extends Enum[CorrectiveAction] {
+object CorrectiveAction extends PlayEnum[CorrectiveAction] {
   case object RegisterNewSAAccount extends CorrectiveAction
   case object DormantAccountReactivated extends CorrectiveAction
   case object Other extends CorrectiveAction
 
   val values = findValues
-
-  implicit val format: Format[CorrectiveAction] = Jsonx.formatSealed[CorrectiveAction]
-
 }

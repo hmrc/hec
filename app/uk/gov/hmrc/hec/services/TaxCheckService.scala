@@ -17,21 +17,20 @@
 package uk.gov.hmrc.hec.services
 
 import cats.data.EitherT
+import cats.instances.option._
 import cats.syntax.eq._
 import cats.syntax.traverse._
-import cats.instances.option._
 import com.google.inject.{ImplementedBy, Inject, Singleton}
-import com.typesafe.config.Config
-import configs.syntax._
+import play.api.Configuration
 import uk.gov.hmrc.hec.controllers.actions.AuthenticatedGGOrStrideRequest
 import uk.gov.hmrc.hec.models
 import uk.gov.hmrc.hec.models.AuditEvent.TaxCheckSuccess
-import uk.gov.hmrc.hec.models.ids.GGCredId
 import uk.gov.hmrc.hec.models.hecTaxCheck.HECTaxCheckData.{CompanyHECTaxCheckData, IndividualHECTaxCheckData}
+import uk.gov.hmrc.hec.models.hecTaxCheck.licence.LicenceType
 import uk.gov.hmrc.hec.models.hecTaxCheck.{HECTaxCheck, HECTaxCheckData}
+import uk.gov.hmrc.hec.models.ids.GGCredId
 import uk.gov.hmrc.hec.models.taxCheckMatch.{HECTaxCheckMatchRequest, HECTaxCheckMatchResult, HECTaxCheckMatchStatus, MatchFailureReason}
 import uk.gov.hmrc.hec.models.{Error, SaveEmailAddressRequest, TaxCheckListItem}
-import uk.gov.hmrc.hec.models.hecTaxCheck.licence.LicenceType
 import uk.gov.hmrc.hec.repos.HECTaxCheckStore
 import uk.gov.hmrc.hec.util.TimeProvider
 import uk.gov.hmrc.http.HeaderCarrier
@@ -79,12 +78,12 @@ class TaxCheckServiceImpl @Inject() (
   auditService: AuditService,
   timeProvider: TimeProvider,
   taxCheckStore: HECTaxCheckStore,
-  config: Config
+  config: Configuration
 )(implicit ec: ExecutionContext)
     extends TaxCheckService {
   val key: String                        = "hec-tax-check"
   val taxCheckCodeExpiresAfterDays: Long =
-    config.get[FiniteDuration]("hec-tax-check.expires-after").value.toDays
+    config.get[FiniteDuration]("hec-tax-check.expires-after").toDays
 
   def saveTaxCheck(
     taxCheckData: HECTaxCheckData

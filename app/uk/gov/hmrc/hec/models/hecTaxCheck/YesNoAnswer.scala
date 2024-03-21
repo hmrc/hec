@@ -16,24 +16,17 @@
 
 package uk.gov.hmrc.hec.models.hecTaxCheck
 
-import ai.x.play.json.Jsonx
-import ai.x.play.json.SingletonEncoder.simpleName
-import ai.x.play.json.implicits.formatSingleton
 import cats.Eq
-import play.api.libs.json.Format
+import enumeratum.{EnumEntry, PlayEnum}
 
-sealed trait YesNoAnswer extends Product with Serializable
+sealed trait YesNoAnswer extends EnumEntry
 
-object YesNoAnswer {
+object YesNoAnswer extends PlayEnum[YesNoAnswer] {
 
   case object Yes extends YesNoAnswer
-
   case object No extends YesNoAnswer
 
   implicit val eq: Eq[YesNoAnswer] = Eq.fromUniversalEquals
 
-  implicit val format: Format[YesNoAnswer] = Jsonx.formatSealed[YesNoAnswer]
-
-  val values: List[YesNoAnswer] = List(Yes, No)
-
+  override val values: IndexedSeq[YesNoAnswer] = findValues
 }

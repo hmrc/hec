@@ -23,6 +23,7 @@ import com.typesafe.config.ConfigFactory
 import org.scalamock.scalatest.MockFactory
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
+import play.api.Configuration
 import play.api.test.FakeRequest
 import play.api.test.Helpers._
 import uk.gov.hmrc.hec.controllers.actions.AuthenticatedGGOrStrideRequest
@@ -55,9 +56,9 @@ class TaxCheckServiceImplSpec extends AnyWordSpec with Matchers with MockFactory
   val expiresAfter                     = 5.days
   val mockTimeProvider                 = mock[TimeProvider]
 
-  val config       = ConfigFactory.parseString(s"""{
+  val config       = Configuration(ConfigFactory.parseString(s"""{
       |hec-tax-check.expires-after = ${expiresAfter.toDays} days
-      |}""".stripMargin)
+      |}""".stripMargin))
   val key1: String = "hec-tax-check"
 
   val service = new TaxCheckServiceImpl(
