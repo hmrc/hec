@@ -3,8 +3,8 @@ import sbt.*
 
 object AppDependencies {
   val playVersion      = "-play-30"
-  val bootstrapVersion = "8.5.0"
-  val hmrcMongoVersion = "1.7.0"
+  val bootstrapVersion = "8.6.0"
+  val hmrcMongoVersion = "1.9.0"
   val PekkoVersion = "1.0.2"
 
   val compile = Seq(
@@ -13,7 +13,7 @@ object AppDependencies {
     "uk.gov.hmrc"             %% s"domain$playVersion"               % "9.0.0",
     "uk.gov.hmrc"             %% s"internal-auth-client$playVersion" % "1.10.0",
     "org.typelevel"           %% "cats-core"                         % "2.8.0",
-    "uk.gov.hmrc.objectstore" %% s"object-store-client$playVersion"  % "1.3.0",
+    "uk.gov.hmrc.objectstore" %% s"object-store-client$playVersion"  % "1.4.0",
     "com.beachape"            %% "enumeratum-play"                   % "1.8.0"
   )
 
