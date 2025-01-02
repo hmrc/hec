@@ -5,7 +5,7 @@ object AppDependencies {
   val playVersion      = "-play-30"
   val bootstrapVersion = "9.6.0"
   val hmrcMongoVersion = "2.3.0"
-  val PekkoVersion = "1.0.2"
+  val PekkoVersion = "1.0.3"
 
   val compile = Seq(
     "uk.gov.hmrc"             %% s"bootstrap-backend$playVersion"    % bootstrapVersion,
