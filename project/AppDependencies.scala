@@ -3,17 +3,17 @@ import sbt.*
 
 object AppDependencies {
   val playVersion      = "-play-30"
-  val bootstrapVersion = "8.6.0"
-  val hmrcMongoVersion = "1.9.0"
-  val PekkoVersion = "1.0.2"
+  val bootstrapVersion = "9.6.0"
+  val hmrcMongoVersion = "2.3.0"
+  val PekkoVersion = "1.0.3"
 
   val compile = Seq(
     "uk.gov.hmrc"             %% s"bootstrap-backend$playVersion"    % bootstrapVersion,
     "uk.gov.hmrc.mongo"       %% s"hmrc-mongo$playVersion"           % hmrcMongoVersion,
-    "uk.gov.hmrc"             %% s"domain$playVersion"               % "9.0.0",
-    "uk.gov.hmrc"             %% s"internal-auth-client$playVersion" % "1.10.0",
+    "uk.gov.hmrc"             %% s"domain$playVersion"               % "10.0.0",
+    "uk.gov.hmrc"             %% s"internal-auth-client$playVersion" % "3.0.0",
     "org.typelevel"           %% "cats-core"                         % "2.8.0",
-    "uk.gov.hmrc.objectstore" %% s"object-store-client$playVersion"  % "1.4.0",
+    "uk.gov.hmrc.objectstore" %% s"object-store-client$playVersion"  % "2.0.0",
     "com.beachape"            %% "enumeratum-play"                   % "1.8.0"
   )
 
