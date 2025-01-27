@@ -86,15 +86,17 @@ class HECTaxCheckStoreImpl @Inject() (
     with HECTaxCheckStore
     with Logging {
 
-  val key: String                       = "hec-tax-check"
-  private val ggCredIdField: String     = s"data.$key.taxCheckData.applicantDetails.ggCredId"
-  private val isExtractedField: String  = s"data.$key.isExtracted"
-  private val fileCorrelationId: String = s"data.$key.fileCorrelationId"
+  lazy val key: String                   = "hec-tax-check"
+  private lazy val ggCredIdField: String = s"data.$key.taxCheckData.applicantDetails.ggCredId"
+  private val isExtractedField: String   = s"data.$key.isExtracted"
+  private val fileCorrelationId: String  = s"data.$key.fileCorrelationId"
 
   // indexes for hecTaxChecks collection
   def mongoIndexes: Seq[IndexModel] = Seq(
     IndexModel(
-      Indexes.ascending("ggCredId")
+      Indexes.ascending(ggCredIdField),
+      IndexOptions()
+        .name("ggCredIdIndex")
     ),
     IndexModel(
       Indexes.ascending("isExtracted"),

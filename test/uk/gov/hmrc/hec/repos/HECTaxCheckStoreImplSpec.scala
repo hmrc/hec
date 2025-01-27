@@ -18,7 +18,10 @@ package uk.gov.hmrc.hec.repos
 
 import cats.implicits.catsSyntaxOptionId
 import com.typesafe.config.ConfigFactory
-import org.scalatest.concurrent.Eventually
+import org.mongodb.scala.Document
+import org.mongodb.scala.bson.BsonDocument
+import org.scalatest.{OptionValues, TryValues}
+import org.scalatest.concurrent.{Eventually, ScalaFutures}
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
 import play.api.Configuration
@@ -31,7 +34,7 @@ import uk.gov.hmrc.hec.models.hecTaxCheck.TaxDetails.CompanyTaxDetails
 import uk.gov.hmrc.hec.models.hecTaxCheck.company.CTAccountingPeriod.CTAccountingPeriodDigital
 import uk.gov.hmrc.hec.models.hecTaxCheck.company.{CTStatus, CTStatusResponse, CompanyHouseName}
 import uk.gov.hmrc.hec.models.hecTaxCheck.licence.{LicenceDetails, LicenceTimeTrading, LicenceType, LicenceValidityPeriod}
-import uk.gov.hmrc.hec.models.hecTaxCheck.{HECTaxCheck, HECTaxCheckCode, HECTaxCheckSource, YesNoAnswer}
+import uk.gov.hmrc.hec.models.hecTaxCheck.{HECTaxCheck, HECTaxCheckCode, HECTaxCheckData, HECTaxCheckSource, YesNoAnswer}
 import uk.gov.hmrc.hec.models.ids.{CRN, CTUTR, GGCredId}
 import uk.gov.hmrc.hec.util.TimeUtils
 import uk.gov.hmrc.http.HeaderCarrier
@@ -43,7 +46,14 @@ import java.util.concurrent.TimeUnit
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
-class HECTaxCheckStoreImplSpec extends AnyWordSpec with Matchers with Eventually with MongoSupportSpec {
+class HECTaxCheckStoreImplSpec
+    extends AnyWordSpec
+    with Matchers
+    with Eventually
+    with MongoSupportSpec
+    with ScalaFutures
+    with OptionValues
+    with TryValues {
 
   val config: Configuration = Configuration(
     ConfigFactory.parseString(
@@ -91,14 +101,15 @@ class HECTaxCheckStoreImplSpec extends AnyWordSpec with Matchers with Eventually
       None
     )
 
-    val taxCheckCode1 = HECTaxCheckCode("code1")
-    val taxCheckCode2 = HECTaxCheckCode("code12")
-    val taxCheckCode3 = HECTaxCheckCode("code13")
-    val taxCheckCode4 = HECTaxCheckCode("code14")
-    val taxCheck1     = HECTaxCheck(taxCheckData, taxCheckCode1, TimeUtils.today(), TimeUtils.now(), false, None, None)
-    val taxCheck2     = taxCheck1.copy(taxCheckCode = taxCheckCode2)
-    val taxCheck3     = taxCheck1.copy(taxCheckCode = taxCheckCode3, isExtracted = true)
-    val taxCheck4     = taxCheck1.copy(taxCheckCode = taxCheckCode4, isExtracted = false)
+    val taxCheckCode1          = HECTaxCheckCode("code1")
+    val taxCheckCode2          = HECTaxCheckCode("code12")
+    val taxCheckCode3          = HECTaxCheckCode("code13")
+    val taxCheckCode4          = HECTaxCheckCode("code14")
+    val taxCheck1: HECTaxCheck =
+      HECTaxCheck(taxCheckData, taxCheckCode1, TimeUtils.today(), TimeUtils.now(), false, None, None)
+    val taxCheck2: HECTaxCheck = taxCheck1.copy(taxCheckCode = taxCheckCode2)
+    val taxCheck3: HECTaxCheck = taxCheck1.copy(taxCheckCode = taxCheckCode3, isExtracted = true)
+    val taxCheck4: HECTaxCheck = taxCheck1.copy(taxCheckCode = taxCheckCode4, isExtracted = false)
 
     "be able to insert tax checks into mongo, read it back and delete it" in {
 
@@ -169,7 +180,7 @@ class HECTaxCheckStoreImplSpec extends AnyWordSpec with Matchers with Eventually
     }
 
     "be able to fetch all tax check codes using the GGCredId" in {
-      val ggCredId = taxCheckData.applicantDetails.ggCredId.getOrElse(sys.error("ggCredId not found in DB"))
+      val ggCredId = taxCheckData.applicantDetails.ggCredId.value
 
       // store some tax check codes in mongo
       await(taxCheckStore.store(taxCheck1).value) shouldBe Right(())
@@ -309,6 +320,24 @@ class HECTaxCheckStoreImplSpec extends AnyWordSpec with Matchers with Eventually
       await(taxCheckStore.get(taxCheckCode1).value) shouldBe Right(Some(initialTaxCheck1))
       await(taxCheckStore.get(taxCheckCode2).value) shouldBe Right(Some(initialTaxCheck2.copy(isExtracted = false)))
       await(taxCheckStore.get(taxCheckCode3).value) shouldBe Right(Some(initialTaxCheck3))
+    }
+
+    "have indexes" in {
+      taxCheckStore.ensureIndexes().futureValue
+
+      val indexes: List[Document] = taxCheckStore.collection
+        .listIndexes()
+        .toFuture()
+        .futureValue
+        .toList
+
+      indexes.map(_.get("key").value.asDocument()) should contain allElementsOf List(
+        BsonDocument("_id"                                                       -> 1),
+        BsonDocument("modifiedDetails.lastUpdated"                               -> 1),
+        BsonDocument("data.hec-tax-check.taxCheckData.applicantDetails.ggCredId" -> 1),
+        BsonDocument("isExtracted"                                               -> 1),
+        BsonDocument("fileCorrelationId"                                         -> 1)
+      )
     }
 
   }
