@@ -18,7 +18,10 @@ package uk.gov.hmrc.hec.repos
 
 import cats.implicits.catsSyntaxOptionId
 import com.typesafe.config.ConfigFactory
-import org.scalatest.concurrent.Eventually
+import org.mongodb.scala.Document
+import org.mongodb.scala.bson.BsonDocument
+import org.scalatest.{OptionValues, TryValues}
+import org.scalatest.concurrent.{Eventually, ScalaFutures}
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
 import play.api.Configuration
@@ -43,7 +46,14 @@ import java.util.concurrent.TimeUnit
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
-class HECTaxCheckStoreImplSpec extends AnyWordSpec with Matchers with Eventually with MongoSupportSpec {
+class HECTaxCheckStoreImplSpec
+    extends AnyWordSpec
+    with Matchers
+    with Eventually
+    with MongoSupportSpec
+    with ScalaFutures
+    with OptionValues
+    with TryValues {
 
   val config: Configuration = Configuration(
     ConfigFactory.parseString(
