@@ -18,10 +18,7 @@ package uk.gov.hmrc.hec.repos
 
 import cats.implicits.catsSyntaxOptionId
 import com.typesafe.config.ConfigFactory
-import org.mongodb.scala.Document
-import org.mongodb.scala.bson.BsonDocument
-import org.scalatest.{OptionValues, TryValues}
-import org.scalatest.concurrent.{Eventually, ScalaFutures}
+import org.scalatest.concurrent.Eventually
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
 import play.api.Configuration
@@ -34,7 +31,7 @@ import uk.gov.hmrc.hec.models.hecTaxCheck.TaxDetails.CompanyTaxDetails
 import uk.gov.hmrc.hec.models.hecTaxCheck.company.CTAccountingPeriod.CTAccountingPeriodDigital
 import uk.gov.hmrc.hec.models.hecTaxCheck.company.{CTStatus, CTStatusResponse, CompanyHouseName}
 import uk.gov.hmrc.hec.models.hecTaxCheck.licence.{LicenceDetails, LicenceTimeTrading, LicenceType, LicenceValidityPeriod}
-import uk.gov.hmrc.hec.models.hecTaxCheck.{HECTaxCheck, HECTaxCheckCode, HECTaxCheckData, HECTaxCheckSource, YesNoAnswer}
+import uk.gov.hmrc.hec.models.hecTaxCheck.{HECTaxCheck, HECTaxCheckCode, HECTaxCheckSource, YesNoAnswer}
 import uk.gov.hmrc.hec.models.ids.{CRN, CTUTR, GGCredId}
 import uk.gov.hmrc.hec.util.TimeUtils
 import uk.gov.hmrc.http.HeaderCarrier
@@ -46,14 +43,7 @@ import java.util.concurrent.TimeUnit
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
-class HECTaxCheckStoreImplSpec
-    extends AnyWordSpec
-    with Matchers
-    with Eventually
-    with MongoSupportSpec
-    with ScalaFutures
-    with OptionValues
-    with TryValues {
+class HECTaxCheckStoreImplSpec extends AnyWordSpec with Matchers with Eventually with MongoSupportSpec {
 
   val config: Configuration = Configuration(
     ConfigFactory.parseString(
@@ -180,7 +170,7 @@ class HECTaxCheckStoreImplSpec
     }
 
     "be able to fetch all tax check codes using the GGCredId" in {
-      val ggCredId = taxCheckData.applicantDetails.ggCredId.value
+      val ggCredId = taxCheckData.applicantDetails.ggCredId.getOrElse(sys.error("ggCredId not found in DB"))
 
       // store some tax check codes in mongo
       await(taxCheckStore.store(taxCheck1).value) shouldBe Right(())
