@@ -101,15 +101,14 @@ class HECTaxCheckStoreImplSpec
       None
     )
 
-    val taxCheckCode1          = HECTaxCheckCode("code1")
-    val taxCheckCode2          = HECTaxCheckCode("code12")
-    val taxCheckCode3          = HECTaxCheckCode("code13")
-    val taxCheckCode4          = HECTaxCheckCode("code14")
-    val taxCheck1: HECTaxCheck =
-      HECTaxCheck(taxCheckData, taxCheckCode1, TimeUtils.today(), TimeUtils.now(), false, None, None)
-    val taxCheck2: HECTaxCheck = taxCheck1.copy(taxCheckCode = taxCheckCode2)
-    val taxCheck3: HECTaxCheck = taxCheck1.copy(taxCheckCode = taxCheckCode3, isExtracted = true)
-    val taxCheck4: HECTaxCheck = taxCheck1.copy(taxCheckCode = taxCheckCode4, isExtracted = false)
+    val taxCheckCode1 = HECTaxCheckCode("code1")
+    val taxCheckCode2 = HECTaxCheckCode("code12")
+    val taxCheckCode3 = HECTaxCheckCode("code13")
+    val taxCheckCode4 = HECTaxCheckCode("code14")
+    val taxCheck1     = HECTaxCheck(taxCheckData, taxCheckCode1, TimeUtils.today(), TimeUtils.now(), false, None, None)
+    val taxCheck2     = taxCheck1.copy(taxCheckCode = taxCheckCode2)
+    val taxCheck3     = taxCheck1.copy(taxCheckCode = taxCheckCode3, isExtracted = true)
+    val taxCheck4     = taxCheck1.copy(taxCheckCode = taxCheckCode4, isExtracted = false)
 
     "be able to insert tax checks into mongo, read it back and delete it" in {
 
