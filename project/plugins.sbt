@@ -11,8 +11,9 @@ ThisBuild / libraryDependencySchemes ++= Seq("org.scala-lang.modules" %% "scala-
 addSbtPlugin("uk.gov.hmrc"               % "sbt-auto-build"     % "3.24.0")
 addSbtPlugin("uk.gov.hmrc"               % "sbt-distributables" % "2.5.0")
 addSbtPlugin("org.playframework"         % "sbt-plugin"         % "3.0.6")
-addSbtPlugin("org.scalameta"             % "sbt-scalafmt"       % "2.4.6")
-addSbtPlugin("org.scoverage"             % "sbt-scoverage"      % "2.0.9")
-addSbtPlugin("ch.epfl.scala"             % "sbt-scalafix"       % "0.9.34")
-addSbtPlugin("io.github.davidgregory084" % "sbt-tpolecat"       % "0.3.3")
+addSbtPlugin("org.scalameta"             % "sbt-scalafmt"       % "2.5.4")
+addSbtPlugin("org.scoverage"             % "sbt-scoverage"      % "2.3.0")
+addSbtPlugin("ch.epfl.scala"             % "sbt-scalafix"       % "0.14.0")
+addSbtPlugin("io.github.davidgregory084" % "sbt-tpolecat"       % "0.4.4")
+addSbtPlugin("com.timushev.sbt"          %  "sbt-updates"       % "0.6.4")
 addDependencyTreePlugin
