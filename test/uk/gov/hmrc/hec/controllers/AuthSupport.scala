@@ -52,9 +52,8 @@ trait AuthSupport { this: ControllerSpec =>
     )
 
   def mockGGOrStrideAuth(
-    authProviderId: LegacyCredentials,
+    credentials: Option[Credentials],
     enrolments: Enrolments,
-    name: Option[Name],
     email: Option[String]
   ): Unit =
     mockAuth(
@@ -62,12 +61,12 @@ trait AuthSupport { this: ControllerSpec =>
       ggOrStrideAuthRetrievals
     )(
       Future.successful(
-        new ~(authProviderId, enrolments) and name and email
+        new ~(credentials, enrolments) and email
       )
     )
 
-  val ggOrStrideAuthRetrievals: Retrieval[LegacyCredentials ~ Enrolments ~ Option[Name] ~ Option[String]] =
-    Retrievals.authProviderId and Retrievals.allEnrolments and Retrievals.name and Retrievals.email
+  val ggOrStrideAuthRetrievals: Retrieval[Option[Credentials] ~ Enrolments ~ Option[String]] =
+    Retrievals.credentials and Retrievals.allEnrolments and Retrievals.email
 
 }
 
