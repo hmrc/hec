@@ -31,7 +31,7 @@ import play.api.mvc.{ControllerComponents, Request, Result}
 import play.api.test.Helpers._
 import play.api.test.{FakeRequest, Helpers}
 import uk.gov.hmrc.auth.core.AuthProvider.{GovernmentGateway, PrivilegedApplication}
-import uk.gov.hmrc.auth.core.retrieve.{GGCredId => AuthGGCredId, Name => RetrievalName, OneTimeLogin, PAClientId}
+import uk.gov.hmrc.auth.core.retrieve.{Credentials, GGCredId => AuthGGCredId, Name => RetrievalName, OneTimeLogin, PAClientId}
 import uk.gov.hmrc.auth.core._
 import uk.gov.hmrc.hec.controllers.actions.AuthenticatedGGOrStrideRequest
 import uk.gov.hmrc.hec.models
@@ -220,7 +220,7 @@ class TaxCheckControllerWithInternalAuthEnabledSpec extends ControllerSpec with 
       "return a 400 (bad request)" when {
 
         "the JSON in the request cannot be parsed" in {
-          mockGGOrStrideAuth(AuthGGCredId(ggCredId.value), Enrolments(Set.empty), None, None)
+          mockGGOrStrideAuth(Some(Credentials(ggCredId.value, "GovernmentGateway")), Enrolments(Set.empty), None)
 
           status(performAction(requestWithJson(JsString("hi")))) shouldBe BAD_REQUEST
 
@@ -235,7 +235,7 @@ class TaxCheckControllerWithInternalAuthEnabledSpec extends ControllerSpec with 
           val authenticatedRequest = AuthenticatedGGOrStrideRequest(Right(GGCredId("id")), request)
 
           inSequence {
-            mockGGOrStrideAuth(AuthGGCredId("id"), Enrolments(Set.empty), None, None)
+            mockGGOrStrideAuth(Some(Credentials("id", "GovernmentGateway")), Enrolments(Set.empty), None)
             mockSaveTaxCheck(taxCheckDataIndividual, authenticatedRequest)(Left(Error(new Exception("Oh no!"))))
           }
 
@@ -257,8 +257,7 @@ class TaxCheckControllerWithInternalAuthEnabledSpec extends ControllerSpec with 
         }
 
         "there is no gg cred id or privileged application id found" in {
-          mockGGOrStrideAuth(OneTimeLogin, Enrolments(Set.empty), None, None)
-
+          mockGGOrStrideAuth(None, Enrolments(Set.empty), None)
           val result = performAction(requestWithJson(Json.toJson(taxCheckDataIndividual)))
           status(result) shouldBe FORBIDDEN
         }
@@ -277,7 +276,7 @@ class TaxCheckControllerWithInternalAuthEnabledSpec extends ControllerSpec with 
           val authenticatedRequest = AuthenticatedGGOrStrideRequest(Right(ggCredId), request)
 
           inSequence {
-            mockGGOrStrideAuth(AuthGGCredId(ggCredId.value), Enrolments(Set.empty), None, None)
+            mockGGOrStrideAuth(Some(Credentials(ggCredId.value, "GovernmentGateway")), Enrolments(Set.empty), None)
             mockSaveTaxCheck(taxCheckDataIndividual, authenticatedRequest)(Right(taxCheck))
           }
 
@@ -296,7 +295,7 @@ class TaxCheckControllerWithInternalAuthEnabledSpec extends ControllerSpec with 
           val authenticatedRequest = AuthenticatedGGOrStrideRequest(Right(ggCredId), request)
 
           inSequence {
-            mockGGOrStrideAuth(AuthGGCredId(ggCredId.value), Enrolments(Set.empty), None, None)
+            mockGGOrStrideAuth(Some(Credentials(ggCredId.value, "GovernmentGateway")), Enrolments(Set.empty), None)
             mockSaveTaxCheck(taxCheckDataCompany, authenticatedRequest)(Right(taxCheck))
           }
 
@@ -307,7 +306,7 @@ class TaxCheckControllerWithInternalAuthEnabledSpec extends ControllerSpec with 
 
         "the request has come from a stride operator" when {
 
-          def test(pid: PID, enrolments: Enrolments, name: Option[RetrievalName], email: Option[String])(
+          def test(pid: PID, enrolments: Enrolments, email: Option[String])(
             expectedStrideOperatorDetails: StrideOperatorDetails
           ) = {
             val taxCheckCode         = HECTaxCheckCode("code")
@@ -319,7 +318,7 @@ class TaxCheckControllerWithInternalAuthEnabledSpec extends ControllerSpec with 
             val authenticatedRequest = AuthenticatedGGOrStrideRequest(Left(expectedStrideOperatorDetails), request)
 
             inSequence {
-              mockGGOrStrideAuth(PAClientId(pid.value), enrolments, name, email)
+              mockGGOrStrideAuth(Some(Credentials(pid.value, "PrivilegedApplication")), enrolments, email)
               mockSaveTaxCheck(taxCheckDataIndividual, authenticatedRequest)(Right(taxCheck))
             }
 
@@ -332,13 +331,12 @@ class TaxCheckControllerWithInternalAuthEnabledSpec extends ControllerSpec with 
             test(
               PID("pid"),
               Enrolments(Set(Enrolment("role1"))),
-              Some(RetrievalName(Some("first"), Some("last"))),
               Some("email")
             )(
               StrideOperatorDetails(
                 PID("pid"),
                 List("role1"),
-                Some("first last"),
+                None,
                 Some("email")
               )
             )
@@ -353,7 +351,6 @@ class TaxCheckControllerWithInternalAuthEnabledSpec extends ControllerSpec with 
                 test(
                   PID("pid"),
                   Enrolments(Set(Enrolment("role1"))),
-                  emptyName,
                   Some("email")
                 )(
                   StrideOperatorDetails(
@@ -372,13 +369,12 @@ class TaxCheckControllerWithInternalAuthEnabledSpec extends ControllerSpec with 
             test(
               PID("pid"),
               Enrolments(Set(Enrolment("role1"))),
-              Some(RetrievalName(Some("first"), None)),
               Some("email")
             )(
               StrideOperatorDetails(
                 PID("pid"),
                 List("role1"),
-                Some("first"),
+                None,
                 Some("email")
               )
             )
@@ -388,13 +384,12 @@ class TaxCheckControllerWithInternalAuthEnabledSpec extends ControllerSpec with 
             test(
               PID("pid"),
               Enrolments(Set(Enrolment("role1"), Enrolment("role2"))),
-              Some(RetrievalName(None, Some("last"))),
               Some("email")
             )(
               StrideOperatorDetails(
                 PID("pid"),
                 List("role1", "role2"),
-                Some("last"),
+                None,
                 Some("email")
               )
             )

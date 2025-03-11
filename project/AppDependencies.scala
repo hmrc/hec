@@ -3,8 +3,8 @@ import sbt.*
 
 object AppDependencies {
   val playVersion      = "-play-30"
-  val bootstrapVersion = "9.7.0"
-  val hmrcMongoVersion = "2.4.0"
+  val bootstrapVersion = "9.10.0"
+  val hmrcMongoVersion = "2.5.0"
   val pekkoVersion = "1.0.3" //version has to match already existing pekko version in play
 
   val compile = Seq(
