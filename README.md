@@ -18,9 +18,31 @@ All HEC services can run via
 ```
 sm2 --start HEC_ALL
 ```
+
+To stop the frontend microservice from running on service manager (e.g. to run your own version locally), you can run:
+
+```
+sm2 -stop HEC
+```
+
 By default, this service runs on port `10105`. Test-only endpoint can be accessed by running with the option:
 ```
 sbt run -Dplay.http.router=testOnlyDoNotUseInAppConf.Routes
+```
+
+## Running tests
+
+You can run tests in Intellij by running:
+
+```
+sbt test
+```
+
+This service uses sbt-scoverage to provide test coverage reports.
+Use the following command to run the tests with coverage and generate a report:
+
+```
+sbt clean coverage test coverageReport
 ```
 
 ## Endpoints
