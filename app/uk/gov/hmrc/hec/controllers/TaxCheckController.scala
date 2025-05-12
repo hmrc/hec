@@ -19,8 +19,8 @@ package uk.gov.hmrc.hec.controllers
 import cats.instances.future._
 import com.google.inject.{Inject, Singleton}
 import play.api.Configuration
-import play.api.libs.json.{JsError, JsSuccess, JsValue, Json}
-import play.api.mvc.{Action, AnyContent, ControllerComponents}
+import play.api.libs.json._
+import play.api.mvc._
 import uk.gov.hmrc.hec.controllers.actions.{GGAuthenticateAction, GGOrStrideAuthenticateAction}
 import uk.gov.hmrc.hec.models.SaveEmailAddressRequest
 import uk.gov.hmrc.hec.models.hecTaxCheck.HECTaxCheckData
@@ -28,6 +28,7 @@ import uk.gov.hmrc.hec.models.taxCheckMatch.HECTaxCheckMatchRequest
 import uk.gov.hmrc.hec.services.TaxCheckService
 import uk.gov.hmrc.hec.util.Logging
 import uk.gov.hmrc.hec.util.Logging.LoggerOps
+import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.internalauth.client.{BackendAuthComponents, IAAction, Predicate, Resource, ResourceLocation, ResourceType}
 import uk.gov.hmrc.play.bootstrap.backend.controller.BackendController
 
@@ -41,7 +42,7 @@ class TaxCheckController @Inject() (
   config: Configuration,
   auth: BackendAuthComponents,
   cc: ControllerComponents
-)(implicit ec: ExecutionContext)
+)(implicit ec: ExecutionContext, hc: HeaderCarrier)
     extends BackendController(cc)
     with Logging {
 
