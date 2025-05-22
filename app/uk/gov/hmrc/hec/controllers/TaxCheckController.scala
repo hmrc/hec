@@ -28,7 +28,6 @@ import uk.gov.hmrc.hec.models.taxCheckMatch.HECTaxCheckMatchRequest
 import uk.gov.hmrc.hec.services.TaxCheckService
 import uk.gov.hmrc.hec.util.Logging
 import uk.gov.hmrc.hec.util.Logging.LoggerOps
-import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.internalauth.client.{BackendAuthComponents, IAAction, Predicate, Resource, ResourceLocation, ResourceType}
 import uk.gov.hmrc.play.bootstrap.backend.controller.BackendController
 
@@ -42,7 +41,7 @@ class TaxCheckController @Inject() (
   config: Configuration,
   auth: BackendAuthComponents,
   cc: ControllerComponents
-)(implicit ec: ExecutionContext, hc: HeaderCarrier)
+)(implicit ec: ExecutionContext)
     extends BackendController(cc)
     with Logging {
 
@@ -78,7 +77,7 @@ class TaxCheckController @Inject() (
   }
 
   val matchTaxCheck: Action[JsValue] =
-    (if (internalAuthEnabled) auth.authorizedAction(predicate = internalAuthPermission)(parse.json)
+    (if (internalAuthEnabled) auth.authorizedAction(internalAuthPermission).apply(parse.json)
      else Action(parse.json)).async { implicit request =>
       Json.fromJson[HECTaxCheckMatchRequest](request.body) match {
         case JsSuccess(matchRequest, _) =>
