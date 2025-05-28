@@ -22,7 +22,7 @@ import org.scalatest.matchers.should._
 import org.scalatest.wordspec._
 import play.api.Configuration
 import uk.gov.hmrc.hec.models.ids.CRN
-import uk.gov.hmrc.http.{HeaderCarrier, HttpResponse}
+import uk.gov.hmrc.http.{HeaderCarrier, HttpResponse, StringContextOps}
 import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
 
 import scala.concurrent.ExecutionContext.Implicits.global
@@ -55,10 +55,10 @@ class DESConnectorSpec extends AnyWordSpec with Matchers with MockFactory with H
     implicit val hc: HeaderCarrier = HeaderCarrier()
 
     "handling requests to fetch CTUTR" must {
-      val expectedUrl = s"$protocol://$host:$port/corporation-tax/identifiers/crn/$crn"
+      val expectedUrl = url"$protocol://$host:$port/corporation-tax/identifiers/crn/$crn"
 
       behave like connectorBehaviour(
-        mockGet[HttpResponse](expectedUrl, headers)(_),
+        mockGet(expectedUrl)(_),
         () => connector.getCtutr(CRN(crn))
       )
     }

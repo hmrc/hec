@@ -25,7 +25,7 @@ import org.scalatest.wordspec._
 import play.api.Configuration
 import uk.gov.hmrc.hec.models.hecTaxCheck.TaxYear
 import uk.gov.hmrc.hec.models.ids.{CTUTR, SAUTR}
-import uk.gov.hmrc.http.{HeaderCarrier, HttpResponse}
+import uk.gov.hmrc.http.{HeaderCarrier, StringContextOps}
 import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
 
 import scala.concurrent.ExecutionContext.Implicits.global
@@ -62,10 +62,10 @@ class IFConnectorSpec extends AnyWordSpec with Matchers with MockFactory with Ht
     "handling requests to fetch SA status" must {
       val taxYear = 2020
 
-      val expectedUrl = s"$protocol://$host:$port/individuals/self-assessment/account-overview/$utr/${taxYear + 1}"
+      val expectedUrl = url"$protocol://$host:$port/individuals/self-assessment/account-overview/$utr/${taxYear + 1}"
 
       behave like connectorBehaviour(
-        mockGet[HttpResponse](expectedUrl, headers)(_),
+        mockGet(expectedUrl)(_),
         () => connector.getSAStatus(SAUTR(utr), TaxYear(taxYear), correlationId)
       )
     }
@@ -75,10 +75,10 @@ class IFConnectorSpec extends AnyWordSpec with Matchers with MockFactory with Ht
       val toDate   = "2021-10-01"
 
       val expectedUrl =
-        s"$protocol://$host:$port/organisations/corporation-tax/$utr/company/accounting-periods?startDate=$fromDate&endDate=$toDate"
+        url"$protocol://$host:$port/organisations/corporation-tax/$utr/company/accounting-periods?startDate=$fromDate&endDate=$toDate"
 
       behave like connectorBehaviour(
-        mockGet[HttpResponse](expectedUrl, headers)(_),
+        mockGet(expectedUrl)(_),
         () => connector.getCTStatus(CTUTR(utr), LocalDate.of(2020, 10, 1), LocalDate.of(2021, 10, 1), correlationId)
       )
     }

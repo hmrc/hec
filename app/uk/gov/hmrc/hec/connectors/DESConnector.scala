@@ -21,7 +21,8 @@ import com.google.inject.{ImplementedBy, Inject, Singleton}
 import uk.gov.hmrc.hec.models.Error
 import uk.gov.hmrc.hec.models.ids.CRN
 import uk.gov.hmrc.http.HttpReads.Implicits._
-import uk.gov.hmrc.http.{HeaderCarrier, HttpClient, HttpReads, HttpResponse}
+import uk.gov.hmrc.http.client.HttpClientV2
+import uk.gov.hmrc.http.{HeaderCarrier, HttpResponse, StringContextOps}
 import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
 
 import scala.concurrent.{ExecutionContext, Future}
@@ -33,7 +34,7 @@ trait DESConnector {
 
 @Singleton
 class DESConnectorImpl @Inject() (
-  http: HttpClient,
+  http: HttpClientV2,
   servicesConfig: ServicesConfig
 )(implicit ec: ExecutionContext)
     extends DESConnector {
@@ -50,16 +51,16 @@ class DESConnectorImpl @Inject() (
     "Environment"   -> environment
   )
 
-  override def getCtutr(crn: CRN)(implicit hc: HeaderCarrier): EitherT[Future, Error, HttpResponse] =
+  override def getCtutr(crn: CRN)(implicit hc: HeaderCarrier): EitherT[Future, Error, HttpResponse] = {
+    val currentUrl: String = getCturtUrl(crn)
     EitherT[Future, Error, HttpResponse](
       http
-        .GET[HttpResponse](getCturtUrl(crn), Seq.empty, headers)(
-          HttpReads[HttpResponse],
-          hc.copy(authorization = None),
-          ec
-        )
+        .get(url"$currentUrl")
+        .execute[HttpResponse]
         .map(Right(_))
         .recover { case e => Left(Error(e)) }
     )
+
+  }
 
 }

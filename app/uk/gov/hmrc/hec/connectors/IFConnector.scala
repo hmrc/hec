@@ -25,7 +25,8 @@ import uk.gov.hmrc.hec.models.ids.{CTUTR, SAUTR}
 import uk.gov.hmrc.hec.models.Error
 import uk.gov.hmrc.hec.models.hecTaxCheck.TaxYear
 import uk.gov.hmrc.http.HttpReads.Implicits._
-import uk.gov.hmrc.http.{HeaderCarrier, HttpClient, HttpReads, HttpResponse}
+import uk.gov.hmrc.http.client.HttpClientV2
+import uk.gov.hmrc.http.{HeaderCarrier, HttpResponse, StringContextOps}
 import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
 
 import scala.concurrent.{ExecutionContext, Future}
@@ -47,7 +48,7 @@ trait IFConnector {
 }
 
 @Singleton
-class IFConnectorImpl @Inject() (http: HttpClient, servicesConfig: ServicesConfig)(implicit
+class IFConnectorImpl @Inject() (http: HttpClientV2, servicesConfig: ServicesConfig)(implicit
   ec: ExecutionContext
 ) extends IFConnector {
 
@@ -77,17 +78,18 @@ class IFConnectorImpl @Inject() (http: HttpClient, servicesConfig: ServicesConfi
     correlationId: UUID
   )(implicit
     hc: HeaderCarrier
-  ): EitherT[Future, Error, HttpResponse] =
+  ): EitherT[Future, Error, HttpResponse] = {
+    val requestUrl: String = saStatusUrl(utr, taxYear)
     EitherT[Future, Error, HttpResponse](
       http
-        .GET[HttpResponse](saStatusUrl(utr, taxYear), Seq.empty, headers(correlationId))(
-          HttpReads[HttpResponse],
-          hc.copy(authorization = None),
-          ec
-        )
+        .get(url"$requestUrl")
+        .execute[HttpResponse]
         .map(Right(_))
-        .recover { case e => Left(Error(e)) }
+        .recover { case e =>
+          Left(Error(e))
+        }
     )
+  }
 
   override def getCTStatus(
     utr: CTUTR,
@@ -96,16 +98,15 @@ class IFConnectorImpl @Inject() (http: HttpClient, servicesConfig: ServicesConfi
     correlationId: UUID
   )(implicit
     hc: HeaderCarrier
-  ): EitherT[Future, Error, HttpResponse] =
+  ): EitherT[Future, Error, HttpResponse] = {
+    val requestUrl: String = ctStatusUrl(utr, startDate, endDate)
     EitherT[Future, Error, HttpResponse](
       http
-        .GET[HttpResponse](ctStatusUrl(utr, startDate, endDate), Seq.empty, headers(correlationId))(
-          HttpReads[HttpResponse],
-          hc.copy(authorization = None),
-          ec
-        )
+        .get(url"$requestUrl")
+        .execute[HttpResponse]
         .map(Right(_))
         .recover { case e => Left(Error(e)) }
     )
+  }
 
 }
