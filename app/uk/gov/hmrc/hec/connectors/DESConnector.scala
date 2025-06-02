@@ -56,6 +56,7 @@ class DESConnectorImpl @Inject() (
     EitherT[Future, Error, HttpResponse](
       http
         .get(url"$currentUrl")
+        .setHeader(headers: _*)
         .execute[HttpResponse]
         .map(Right(_))
         .recover { case e => Left(Error(e)) }

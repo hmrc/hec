@@ -83,6 +83,7 @@ class IFConnectorImpl @Inject() (http: HttpClientV2, servicesConfig: ServicesCon
     EitherT[Future, Error, HttpResponse](
       http
         .get(url"$requestUrl")
+        .setHeader(headers(correlationId): _*)
         .execute[HttpResponse]
         .map(Right(_))
         .recover { case e =>
@@ -103,6 +104,7 @@ class IFConnectorImpl @Inject() (http: HttpClientV2, servicesConfig: ServicesCon
     EitherT[Future, Error, HttpResponse](
       http
         .get(url"$requestUrl")
+        .setHeader(headers(correlationId): _*)
         .execute[HttpResponse]
         .map(Right(_))
         .recover { case e => Left(Error(e)) }
