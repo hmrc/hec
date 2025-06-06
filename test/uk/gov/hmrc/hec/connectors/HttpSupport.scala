@@ -16,6 +16,8 @@
 
 package uk.gov.hmrc.hec.connectors
 
+import org.mockito.ArgumentMatchers.any
+import org.mockito.Mockito.when
 import org.scalamock.scalatest.MockFactory
 import org.scalatest.matchers.should._
 import play.api.libs.json.{JsValue, Json, Writes}
@@ -28,6 +30,7 @@ import scala.concurrent.{ExecutionContext, Future}
 
 trait HttpSupport { this: MockFactory with Matchers =>
 
+  @SuppressWarnings(Array("org.wartremover.warts.Any"))
   val mockHttp: HttpClientV2 = mock[HttpClientV2]("mockHttp")
 
   val mockRequestBuilder: RequestBuilder = mock[RequestBuilder]("mockRequestBuilder")
@@ -37,6 +40,12 @@ trait HttpSupport { this: MockFactory with Matchers =>
       .get(_: URL)(_: HeaderCarrier))
       .expects(url, *)
       .returning(mockRequestBuilder)
+
+    (mockRequestBuilder
+      .setHeader(_: (String, String)))
+      .expects(*)
+      .returning(mockRequestBuilder)
+
     mockExecute(httpResponse)
   }
 
@@ -45,10 +54,11 @@ trait HttpSupport { this: MockFactory with Matchers =>
       .post(_: URL)(_: HeaderCarrier))
       .expects(url, *)
       .returning(mockRequestBuilder)
+
     mockWithBody(requestBody)
     mockExecute(httpResponse)
   }
-  def mockExecute(httpResponse: Option[HttpResponse])                                    =
+  def mockExecute(httpResponse: Option[HttpResponse]): Unit                              =
     (mockRequestBuilder
       .execute[HttpResponse](_: HttpReads[HttpResponse], _: ExecutionContext))
       .expects(*, *)
@@ -57,7 +67,8 @@ trait HttpSupport { this: MockFactory with Matchers =>
           Future.failed(new Exception("Test exception message"))
         )(Future.successful)
       )
-  def mockWithBody[B : Writes](requestBody: B)                                           = {
+
+  def mockWithBody[B : Writes](requestBody: B) = {
     val jsonBody: JsValue = Json.toJson(requestBody)
     (mockRequestBuilder
       .withBody(_: JsValue)(_: BodyWritable[JsValue], _: izumi.reflect.Tag[JsValue], _: ExecutionContext))
