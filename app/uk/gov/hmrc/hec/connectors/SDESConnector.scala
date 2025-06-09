@@ -19,11 +19,12 @@ package uk.gov.hmrc.hec.connectors
 import cats.data.EitherT
 import com.google.inject.{ImplementedBy, Inject, Singleton}
 import play.api.Configuration
-import play.api.libs.json.Writes
+import play.api.libs.json.Json
 import uk.gov.hmrc.hec.models.Error
 import uk.gov.hmrc.hec.models.sdes.SDESFileNotifyRequest
+import uk.gov.hmrc.http.client.HttpClientV2
 import uk.gov.hmrc.http.HttpReads.Implicits._
-import uk.gov.hmrc.http.{HeaderCarrier, HttpClient, HttpReads, HttpResponse}
+import uk.gov.hmrc.http.{HeaderCarrier, HttpResponse, StringContextOps}
 import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
 
 import scala.concurrent.{ExecutionContext, Future}
@@ -34,7 +35,7 @@ trait SDESConnector {
 }
 
 @Singleton
-class SDESConnectorImpl @Inject() (http: HttpClient, servicesConfig: ServicesConfig, config: Configuration)(implicit
+class SDESConnectorImpl @Inject() (http: HttpClientV2, servicesConfig: ServicesConfig, config: Configuration)(implicit
   ec: ExecutionContext
 ) extends SDESConnector {
 
@@ -55,16 +56,14 @@ class SDESConnectorImpl @Inject() (http: HttpClient, servicesConfig: ServicesCon
 
   override def notify(
     fileNotifyRequest: SDESFileNotifyRequest
-  )(implicit hc: HeaderCarrier): EitherT[Future, Error, HttpResponse] =
+  )(implicit hc: HeaderCarrier): EitherT[Future, Error, HttpResponse] = {
+    val request = http
+      .post(url"$sdesUrl")
+      .withBody(Json.toJson(fileNotifyRequest))
+      .execute[HttpResponse]
     EitherT[Future, Error, HttpResponse](
-      http
-        .POST[SDESFileNotifyRequest, HttpResponse](sdesUrl, fileNotifyRequest, extraHeaders)(
-          implicitly[Writes[SDESFileNotifyRequest]],
-          implicitly[HttpReads[HttpResponse]],
-          hc.copy(authorization = None),
-          ec
-        )
-        .map(Right(_))
-        .recover { case e => Left(Error(e)) }
+      request.map(Right(_)).recover { case e => Left(Error(e)) }
     )
+
+  }
 }

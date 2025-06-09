@@ -22,7 +22,7 @@ import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
 import play.api.Configuration
 import uk.gov.hmrc.hec.models.sdes.{FileAudit, FileChecksum, FileMetaData, SDESFileNotifyRequest}
-import uk.gov.hmrc.http.{Authorization, HeaderCarrier}
+import uk.gov.hmrc.http.{Authorization, HeaderCarrier, StringContextOps}
 import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
 
 import java.util.UUID
@@ -64,13 +64,13 @@ class SDESConnectorSpec extends AnyWordSpec with Matchers with MockFactory with 
   )
 
   "SDESConnectorImpl" when {
-    val expectedUrl = s"$protocol://$host:$port/sdes-stub/notification/fileready"
+    val expectedUrl = url"$protocol://$host:$port/sdes-stub/notification/fileready"
 
     "handling requests to notify  SDES about the files generated" must {
       implicit val hc: HeaderCarrier = HeaderCarrier().copy(authorization = Some(Authorization("bearer")))
 
       behave like connectorBehaviour(
-        mockPost(expectedUrl, Seq(serverTokenHeader -> serverTokenValue), notifyRequest)(_),
+        mockPost(expectedUrl, notifyRequest)(_),
         () => connector.notify(notifyRequest)
       )
     }

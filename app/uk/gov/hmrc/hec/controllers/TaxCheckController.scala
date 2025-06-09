@@ -19,8 +19,8 @@ package uk.gov.hmrc.hec.controllers
 import cats.instances.future._
 import com.google.inject.{Inject, Singleton}
 import play.api.Configuration
-import play.api.libs.json.{JsError, JsSuccess, JsValue, Json}
-import play.api.mvc.{Action, AnyContent, ControllerComponents}
+import play.api.libs.json._
+import play.api.mvc._
 import uk.gov.hmrc.hec.controllers.actions.{GGAuthenticateAction, GGOrStrideAuthenticateAction}
 import uk.gov.hmrc.hec.models.SaveEmailAddressRequest
 import uk.gov.hmrc.hec.models.hecTaxCheck.HECTaxCheckData
@@ -77,7 +77,7 @@ class TaxCheckController @Inject() (
   }
 
   val matchTaxCheck: Action[JsValue] =
-    (if (internalAuthEnabled) auth.authorizedAction(predicate = internalAuthPermission)(parse.json)
+    (if (internalAuthEnabled) auth.authorizedAction(internalAuthPermission).apply(parse.json)
      else Action(parse.json)).async { implicit request =>
       Json.fromJson[HECTaxCheckMatchRequest](request.body) match {
         case JsSuccess(matchRequest, _) =>
