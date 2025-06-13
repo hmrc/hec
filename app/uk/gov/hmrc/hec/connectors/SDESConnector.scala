@@ -60,6 +60,7 @@ class SDESConnectorImpl @Inject() (http: HttpClientV2, servicesConfig: ServicesC
     val request = http
       .post(url"$sdesUrl")
       .withBody(Json.toJson(fileNotifyRequest))
+      .setHeader(extraHeaders: _*)
       .execute[HttpResponse]
     EitherT[Future, Error, HttpResponse](
       request.map(Right(_)).recover { case e => Left(Error(e)) }
