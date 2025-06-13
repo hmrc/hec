@@ -54,7 +54,10 @@ trait HttpSupport { this: MockFactory with Matchers =>
       .post(_: URL)(_: HeaderCarrier))
       .expects(url, *)
       .returning(mockRequestBuilder)
-
+    (mockRequestBuilder
+      .setHeader(_: (String, String)))
+      .expects(*)
+      .returning(mockRequestBuilder)
     mockWithBody(requestBody)
     mockExecute(httpResponse)
   }
