@@ -58,7 +58,7 @@ class DESConnectorSpec extends AnyWordSpec with Matchers with MockFactory with H
       val expectedUrl = url"$protocol://$host:$port/corporation-tax/identifiers/crn/$crn"
 
       behave like connectorBehaviour(
-        mockGet(expectedUrl)(_),
+        mockGet(expectedUrl, headers)(_),
         () => connector.getCtutr(CRN(crn))
       )
     }
