@@ -16,8 +16,6 @@
 
 package uk.gov.hmrc.hec.connectors
 
-import org.mockito.ArgumentMatchers.any
-import org.mockito.Mockito.when
 import org.scalamock.scalatest.MockFactory
 import org.scalatest.matchers.should._
 import play.api.libs.json.{JsValue, Json, Writes}
@@ -35,7 +33,7 @@ trait HttpSupport { this: MockFactory with Matchers =>
 
   val mockRequestBuilder: RequestBuilder = mock[RequestBuilder]("mockRequestBuilder")
 
-  def mockGet(url: URL)(httpResponse: Option[HttpResponse]) = {
+  def mockGet(url: URL, headers: Seq[(String, String)])(httpResponse: Option[HttpResponse]) = {
     (mockHttp
       .get(_: URL)(_: HeaderCarrier))
       .expects(url, *)
@@ -49,16 +47,24 @@ trait HttpSupport { this: MockFactory with Matchers =>
     mockExecute(httpResponse)
   }
 
-  def mockPost[B : Writes](url: URL, requestBody: B)(httpResponse: Option[HttpResponse]) = {
+  def mockPost[B : Writes](url: URL, headers: Seq[(String, String)], requestBody: B)(
+    httpResponse: Option[HttpResponse]
+  ) = {
     (mockHttp
       .post(_: URL)(_: HeaderCarrier))
       .expects(url, *)
       .returning(mockRequestBuilder)
 
+    (mockRequestBuilder
+      .setHeader(_: (String, String)))
+      .expects(*)
+      .returning(mockRequestBuilder)
+
     mockWithBody(requestBody)
     mockExecute(httpResponse)
   }
-  def mockExecute(httpResponse: Option[HttpResponse]): Unit                              =
+
+  def mockExecute(httpResponse: Option[HttpResponse]): Unit =
     (mockRequestBuilder
       .execute[HttpResponse](_: HttpReads[HttpResponse], _: ExecutionContext))
       .expects(*, *)

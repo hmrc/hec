@@ -65,7 +65,7 @@ class IFConnectorSpec extends AnyWordSpec with Matchers with MockFactory with Ht
       val expectedUrl = url"$protocol://$host:$port/individuals/self-assessment/account-overview/$utr/${taxYear + 1}"
 
       behave like connectorBehaviour(
-        mockGet(expectedUrl)(_),
+        mockGet(expectedUrl, headers)(_),
         () => connector.getSAStatus(SAUTR(utr), TaxYear(taxYear), correlationId)
       )
     }
@@ -78,7 +78,7 @@ class IFConnectorSpec extends AnyWordSpec with Matchers with MockFactory with Ht
         url"$protocol://$host:$port/organisations/corporation-tax/$utr/company/accounting-periods?startDate=$fromDate&endDate=$toDate"
 
       behave like connectorBehaviour(
-        mockGet(expectedUrl)(_),
+        mockGet(expectedUrl, headers)(_),
         () => connector.getCTStatus(CTUTR(utr), LocalDate.of(2020, 10, 1), LocalDate.of(2021, 10, 1), correlationId)
       )
     }

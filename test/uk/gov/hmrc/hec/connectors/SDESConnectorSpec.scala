@@ -68,9 +68,8 @@ class SDESConnectorSpec extends AnyWordSpec with Matchers with MockFactory with 
 
     "handling requests to notify  SDES about the files generated" must {
       implicit val hc: HeaderCarrier = HeaderCarrier().copy(authorization = Some(Authorization("bearer")))
-
       behave like connectorBehaviour(
-        mockPost(expectedUrl, notifyRequest)(_),
+        mockPost(expectedUrl, Seq(serverTokenHeader -> serverTokenValue), notifyRequest)(_),
         () => connector.notify(notifyRequest)
       )
     }
