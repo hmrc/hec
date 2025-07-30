@@ -108,7 +108,6 @@ class HECTaxCheckStoreImpl @Inject() (
       Indexes.ascending("fileCorrelationId"),
       IndexOptions()
         .name("fileCorrelationIdIndex")
-        .partialFilterExpression(Filters.exists("fileCorrelationId"))
     )
   )
 
