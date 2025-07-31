@@ -108,6 +108,11 @@ class HECTaxCheckStoreImpl @Inject() (
       Indexes.ascending("fileCorrelationId"),
       IndexOptions()
         .name("fileCorrelationIdIndex")
+    ),
+    IndexModel(
+      Indexes.ascending("data.hec-tax-check.fileCorrelationId"),
+      IndexOptions()
+        .name("dataFileCorrIndex")
     )
   )
 
