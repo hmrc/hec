@@ -335,7 +335,8 @@ class HECTaxCheckStoreImplSpec
         BsonDocument("modifiedDetails.lastUpdated"                               -> 1),
         BsonDocument("data.hec-tax-check.taxCheckData.applicantDetails.ggCredId" -> 1),
         BsonDocument("isExtracted"                                               -> 1),
-        BsonDocument("fileCorrelationId"                                         -> 1)
+        BsonDocument("fileCorrelationId"                                         -> 1),
+        BsonDocument("data.hec-tax-check.fileCorrelationId"                      -> 1)
       )
     }
 
