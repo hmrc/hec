@@ -39,6 +39,7 @@ import uk.gov.hmrc.hec.models.ids.{CRN, CTUTR, GGCredId}
 import uk.gov.hmrc.hec.util.TimeUtils
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.mongo.cache.{CacheItem, DataKey}
+import uk.gov.hmrc.mongo.logging.ObservableFutureImplicits.ObservableFuture
 
 import java.time.{LocalDate, ZoneId, ZonedDateTime}
 import java.util.UUID

@@ -32,7 +32,7 @@ import uk.gov.hmrc.hec.util.Logging
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.mongo.cache.{CacheIdType, CacheItem, DataKey, MongoCacheRepository}
 import uk.gov.hmrc.mongo.{CurrentTimestampSupport, MongoComponent, MongoUtils}
-import uk.gov.hmrc.play.http.logging.Mdc.preservingMdc
+import uk.gov.hmrc.mdc.Mdc.preservingMdc
 
 import java.time.ZonedDateTime
 import scala.concurrent.duration._
@@ -117,7 +117,7 @@ class HECTaxCheckStoreImpl @Inject() (
   )
 
   override def ensureIndexes(): Future[Seq[String]] =
-    super.ensureIndexes.flatMap(_ => MongoUtils.ensureIndexes(collection, mongoIndexes, false))
+    super.ensureIndexes().flatMap(_ => MongoUtils.ensureIndexes(collection, mongoIndexes, false))
 
   def get(taxCheckCode: HECTaxCheckCode)(implicit
     hc: HeaderCarrier
@@ -126,14 +126,15 @@ class HECTaxCheckStoreImpl @Inject() (
       preservingMdc {
         findById(taxCheckCode.value)
           .map { maybeCache =>
-            val response: OptionT[Either[Error, *], HECTaxCheck] = for {
-              cache      <- OptionT.fromOption[Either[Error, *]](maybeCache)
+            type ErrorOr[A] = Either[Error, A]
+            val response: OptionT[ErrorOr, HECTaxCheck] = for {
+              cache      <- OptionT.fromOption[ErrorOr](maybeCache)
               // even if there is no data , cache returns with -> {"id" : "code1", data : {}}
               // so added a logic if the json is empty, then return None
               // but if there is, then proceed to validate json
               cacheLength = cache.data.keys.size
-              data       <- OptionT.fromOption[Either[Error, *]](if (cacheLength == 0) None else Some(cache.data))
-              result     <- OptionT.liftF[Either[Error, *], HECTaxCheck](
+              data       <- OptionT.fromOption[ErrorOr](if (cacheLength == 0) None else Some(cache.data))
+              result     <- OptionT.liftF[ErrorOr, HECTaxCheck](
                               (data \ key)
                                 .validate[HECTaxCheck]
                                 .asEither

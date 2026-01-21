@@ -107,8 +107,10 @@ class TaxCheckServiceImpl @Inject() (
 
   def updateAllHecTaxCheck(list: List[HECTaxCheck])(implicit
     hc: HeaderCarrier
-  ): EitherT[Future, models.Error, List[HECTaxCheck]] =
-    list.traverse[EitherT[Future, models.Error, *], HECTaxCheck](updateHecTaxCheck)
+  ): EitherT[Future, models.Error, List[HECTaxCheck]] = {
+    type ErrorT[A] = EitherT[Future, models.Error, A]
+    list.traverse[ErrorT, HECTaxCheck](updateHecTaxCheck)
+  }
 
   def matchTaxCheck(taxCheckMatchRequest: HECTaxCheckMatchRequest)(implicit
     hc: HeaderCarrier
@@ -194,11 +196,13 @@ class TaxCheckServiceImpl @Inject() (
 
   override def saveEmailAddress(
     request: SaveEmailAddressRequest
-  )(implicit hc: HeaderCarrier): EitherT[Future, Error, Option[Unit]] =
+  )(implicit hc: HeaderCarrier): EitherT[Future, Error, Option[Unit]] = {
+    type ErrorOr[A] = EitherT[Future, Error, A]
     for {
       taxCheck       <- taxCheckStore.get(request.taxCheckCode)
       updatedTaxCheck = taxCheck.map(_.copy(latestTaxCheckEmailSentTo = Some(request.emailAddress)))
-      result         <- updatedTaxCheck.map(taxCheckStore.store).sequence[EitherT[Future, Error, *], Unit]
+      result         <- updatedTaxCheck.map(taxCheckStore.store).sequence[ErrorOr, Unit]
     } yield result
+  }
 
 }

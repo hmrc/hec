@@ -17,6 +17,7 @@
 package uk.gov.hmrc.hec
 
 import play.api.mvc.Result
+import scala.language.implicitConversions
 
 import scala.concurrent.Future
 

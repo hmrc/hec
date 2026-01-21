@@ -26,13 +26,12 @@ import uk.gov.hmrc.hec.models.Error
 import uk.gov.hmrc.hec.models.ids.{CRN, CTUTR}
 import uk.gov.hmrc.hec.services.DESService.{BackendError, DESError, DataNotFoundError, InvalidCRNError}
 import uk.gov.hmrc.hec.services.DESServiceImpl._
-import uk.gov.hmrc.hec.util.HttpResponseOps._
 import uk.gov.hmrc.hec.util.Logging
 import uk.gov.hmrc.http.{HeaderCarrier, HttpResponse}
 
 import scala.concurrent.{ExecutionContext, Future}
 
-@ImplementedBy(classOf[DESServiceImpl])
+//@ImplementedBy(classOf[DESServiceImpl])
 trait DESService {
 
   def getCtutr(crn: CRN)(implicit hc: HeaderCarrier): EitherT[Future, DESError, CTUTR]
@@ -53,6 +52,7 @@ class DESServiceImpl @Inject() (
 )(implicit ec: ExecutionContext)
     extends DESService
     with Logging {
+  import uk.gov.hmrc.hec.util.HttpResponseOps._
 
   private def handleErrorPath(httpResponse: HttpResponse) = {
     val responseError = s"Response to get CTUTR came back with status ${httpResponse.status}"
@@ -71,7 +71,7 @@ class DESServiceImpl @Inject() (
   override def getCtutr(crn: CRN)(implicit hc: HeaderCarrier): EitherT[Future, DESError, CTUTR] =
     DESConnector
       .getCtutr(crn)
-      .leftMap(BackendError)
+      .leftMap(uk.gov.hmrc.hec.services.DESService.BackendError.apply)
       .subflatMap { httpResponse =>
         logger.info(s"Fetch CTUTR API returned correlationId = ${httpResponse.header("CorrelationId")}")
         if (httpResponse.status === OK) {

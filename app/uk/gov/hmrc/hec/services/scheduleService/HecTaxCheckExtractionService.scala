@@ -18,7 +18,7 @@ package uk.gov.hmrc.hec.services.scheduleService
 
 import cats.data.EitherT
 import cats.implicits._
-import com.google.inject.{ImplementedBy, Inject}
+import com.google.inject.Inject
 import play.api.Configuration
 import uk.gov.hmrc.hec.models
 import uk.gov.hmrc.hec.models.hecTaxCheck.licence.{LicenceTimeTrading, LicenceType, LicenceValidityPeriod}
@@ -27,7 +27,7 @@ import uk.gov.hmrc.hec.models.hecTaxCheck.{CorrectiveAction, HECTaxCheck, HECTax
 import uk.gov.hmrc.hec.models.Error
 import uk.gov.hmrc.hec.services._
 import uk.gov.hmrc.hec.services.scheduleService.HecTaxCheckExtractionServiceImpl._
-import uk.gov.hmrc.hec.util.{FileMapOps, Logging, UUIDGenerator}
+import uk.gov.hmrc.hec.util.{FileMapOps, UUIDGenerator}
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.objectstore.client.{Md5Hash, ObjectSummaryWithMd5}
 
@@ -35,7 +35,7 @@ import java.util.{Base64, UUID}
 import javax.inject.Singleton
 import scala.concurrent.Future
 
-@ImplementedBy(classOf[HecTaxCheckExtractionServiceImpl])
+//@ImplementedBy(classOf[HecTaxCheckExtractionServiceImpl])
 trait HecTaxCheckExtractionService {
 
   def lockAndProcessHecData(): Future[Option[Either[models.Error, Unit]]]
@@ -54,7 +54,7 @@ class HecTaxCheckExtractionServiceImpl @Inject() (
 )(implicit
   hecTaxCheckExtractionContext: HECTaxCheckExtractionContext
 ) extends HecTaxCheckExtractionService
-    with Logging {
+    with uk.gov.hmrc.hec.util.Logging {
 
   implicit val hc: HeaderCarrier = HeaderCarrier()
   val maxTaxChecksPerFile: Int   = config.get[Int]("hec-file-extraction-details.maximum-rows-per-file")

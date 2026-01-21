@@ -93,7 +93,7 @@ class IFServiceImpl @Inject() (
   ): EitherT[Future, IFError, SAStatusResponse] =
     IFConnector
       .getSAStatus(utr, taxYear, correlationId)
-      .leftMap(BackendError)
+      .leftMap(uk.gov.hmrc.hec.services.IFService.BackendError.apply)
       .subflatMap { httpResponse =>
         if (httpResponse.status === OK) {
           httpResponse
@@ -117,7 +117,7 @@ class IFServiceImpl @Inject() (
   ): EitherT[Future, IFError, CTStatusResponse] =
     IFConnector
       .getCTStatus(utr, startDate, endDate, correlationId)
-      .leftMap(BackendError)
+      .leftMap(uk.gov.hmrc.hec.services.IFService.BackendError.apply)
       .subflatMap { httpResponse =>
         if (httpResponse.status === OK) {
           httpResponse
@@ -142,9 +142,10 @@ class IFServiceImpl @Inject() (
         Right(List.empty)
 
       case CTLookupStatus.Successful =>
+        type BackendEither[A] = Either[BackendError, A]
         response.accountingPeriods
           .getOrElse(List.empty[RawAccountingPeriod])
-          .traverse[Either[BackendError, *], CTAccountingPeriod](a =>
+          .traverse[BackendEither, CTAccountingPeriod](a =>
             toCtStatus(a)
               .map(status => CTAccountingPeriodDigital(a.accountingPeriodStartDate, a.accountingPeriodEndDate, status))
           )

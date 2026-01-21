@@ -22,6 +22,6 @@ final case class EmailAddress(value: String)
 
 object EmailAddress {
 
-  implicit val format: Format[EmailAddress] = Json.valueFormat
+  implicit val format: Format[EmailAddress] = Json.format[EmailAddress]
 
 }

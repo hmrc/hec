@@ -39,9 +39,8 @@ trait HttpSupport { this: MockFactory with Matchers =>
       .expects(url, *)
       .returning(mockRequestBuilder)
 
-    (mockRequestBuilder
-      .setHeader(_: (String, String)))
-      .expects(*)
+    ((h: Seq[(String, String)]) => mockRequestBuilder.setHeader(h: _*))
+      .expects(headers)
       .returning(mockRequestBuilder)
 
     mockExecute(httpResponse)
@@ -55,9 +54,8 @@ trait HttpSupport { this: MockFactory with Matchers =>
       .expects(url, *)
       .returning(mockRequestBuilder)
 
-    (mockRequestBuilder
-      .setHeader(_: (String, String)))
-      .expects(*)
+    ((h: Seq[(String, String)]) => mockRequestBuilder.setHeader(h: _*))
+      .expects(headers)
       .returning(mockRequestBuilder)
 
     mockWithBody(requestBody)
