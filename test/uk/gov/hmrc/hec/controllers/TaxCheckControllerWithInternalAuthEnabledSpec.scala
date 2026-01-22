@@ -57,6 +57,9 @@ import uk.gov.hmrc.internalauth.client._
 import java.time.{LocalDate, ZoneId, ZonedDateTime}
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
+import org.mockito.ArgumentMatchers
+import org.mockito.Mockito.when
+import org.mockito.ArgumentMatchers.any
 
 class TaxCheckControllerWithInternalAuthEnabledSpec extends ControllerSpec with AuthSupport {
 
@@ -96,39 +99,44 @@ class TaxCheckControllerWithInternalAuthEnabledSpec extends ControllerSpec with 
   val expectedPredicate: Permission =
     Permission(expectedResource, IAAction("READ"))
 
-  def mockSaveTaxCheck(taxCheckData: HECTaxCheckData, request: AuthenticatedGGOrStrideRequest[_])(
+  def mockSaveTaxCheck(taxCheckData: HECTaxCheckData, request: AuthenticatedGGOrStrideRequest[?])(
     result: Either[Error, HECTaxCheck]
   ) =
-    (mockTaxCheckService
-      .saveTaxCheck(_: HECTaxCheckData)(_: HeaderCarrier, _: AuthenticatedGGOrStrideRequest[_]))
-      .expects(taxCheckData, *, request)
-      .returning(EitherT.fromEither(result))
+    when(
+      mockTaxCheckService
+        .saveTaxCheck(ArgumentMatchers.eq(taxCheckData))(any[HeaderCarrier], ArgumentMatchers.eq(request))
+    )
+      .thenReturn(EitherT.fromEither(result))
 
-  def mockInternalAuth(predicate: Predicate)(result: Future[_]) =
-    (mockInternalAuthStubBehaviour
-      .stubAuth(_: Option[Predicate], _: Retrieval[_]))
-      .expects(Some(predicate), EmptyRetrieval)
-      .returning(result)
+  def mockInternalAuth(predicate: Predicate)(result: Future[Unit]) =
+    when(
+      mockInternalAuthStubBehaviour
+        .stubAuth(Some(predicate), EmptyRetrieval)
+    )
+      .thenReturn(result)
 
   def mockMatchTaxCheck(matchRequest: HECTaxCheckMatchRequest)(result: Either[Error, HECTaxCheckMatchResult]) =
-    (mockTaxCheckService
-      .matchTaxCheck(_: HECTaxCheckMatchRequest)(_: HeaderCarrier))
-      .expects(matchRequest, *)
-      .returning(EitherT.fromEither(result))
+    when(
+      mockTaxCheckService
+        .matchTaxCheck(ArgumentMatchers.eq(matchRequest))(any[HeaderCarrier])
+    )
+      .thenReturn(EitherT.fromEither(result))
 
   def mockGetValidTaxCheckCodes(ggCredId: GGCredId)(result: Either[Error, List[TaxCheckListItem]]) =
-    (mockTaxCheckService
-      .getUnexpiredTaxCheckCodes(_: GGCredId)(_: HeaderCarrier))
-      .expects(ggCredId, *)
-      .returning(EitherT.fromEither(result))
+    when(
+      mockTaxCheckService
+        .getUnexpiredTaxCheckCodes(ArgumentMatchers.eq(ggCredId))(any[HeaderCarrier])
+    )
+      .thenReturn(EitherT.fromEither(result))
 
   def mockSaveEmailAddress(saveEmailAddressRequest: SaveEmailAddressRequest)(
     result: Either[Error, Option[Unit]]
   ) =
-    (mockTaxCheckService
-      .saveEmailAddress(_: SaveEmailAddressRequest)(_: HeaderCarrier))
-      .expects(saveEmailAddressRequest, *)
-      .returning(EitherT.fromEither(result))
+    when(
+      mockTaxCheckService
+        .saveEmailAddress(ArgumentMatchers.eq(saveEmailAddressRequest))(any[HeaderCarrier])
+    )
+      .thenReturn(EitherT.fromEither(result))
 
   "TaxCheckController" when {
 
