@@ -29,6 +29,9 @@ import uk.gov.hmrc.hec.models.Error
 import uk.gov.hmrc.hec.models.hecTaxCheck.HECTaxCheck
 import uk.gov.hmrc.hec.repos.HECTaxCheckStore
 import uk.gov.hmrc.hec.services.MongoLockService
+import org.mockito.Mockito.{never, verify, when}
+import org.mockito.ArgumentMatchers.{any, eq => eqTo}
+import scala.concurrent.{ExecutionContext, Future}
 
 import java.time.format.DateTimeFormatter
 import java.time.{ZoneId, ZonedDateTime}
@@ -64,6 +67,23 @@ class ResetTaxChecksServiceSpec
         else
           Future.successful(None)
       }
+
+//  def mockWithLock[T](lockId: String, lockObtained: Boolean): Unit =
+//    when(
+//      mockMongoLockService.withLock[T](
+//        eqTo(lockId),
+//        any[Future[T]]
+//      )(
+//        any[HECTaxCheckExtractionContext]
+//      )
+//    ).thenAnswer { invocation =>
+//      val body = invocation.getArgument
+//
+//      if (lockObtained)
+//        body.map(Some(_))(ExecutionContext.global)
+//      else
+//        Future.successful(None)
+//    }
 
   def mockResetTaxCheckIsExtractedFlag(resetTaxChecksCreatedOnOrAfter: ZonedDateTime)(result: Either[Error, Unit]) =
     (mockTaxCheckStore.resetTaxCheckIsExtractedFlag _)
@@ -117,6 +137,9 @@ class ResetTaxChecksServiceSpec
         mockWithLock(lockId, lockObtained = false)
 
         startService()
+
+//        verify(mockHECTaxCheckStore, never())
+//          .resetTaxCheckIsExtractedFlag(any())
       }
 
     }

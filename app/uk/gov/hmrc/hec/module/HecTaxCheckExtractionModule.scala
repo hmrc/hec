@@ -28,6 +28,7 @@ class HecTaxCheckExtractionModule extends AbstractModule {
     bind(classOf[DESService]).to(classOf[DESServiceImpl])
 //    bind(classOf[HecTaxCheckExtractionService])
 //      .to(classOf[HecTaxCheckExtractionServiceImpl])
+
   }
 
 }
