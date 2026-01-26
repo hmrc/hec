@@ -18,25 +18,25 @@ package uk.gov.hmrc.hec.controllers
 
 import cats.data.EitherT
 import cats.implicits.catsSyntaxOptionId
-import cats.instances.future._
+import cats.instances.future.*
 import play.api.inject.bind
 import play.api.inject.guice.GuiceableModule
-import play.api.libs.json._
+import play.api.libs.json.*
 import play.api.mvc.Result
 import play.api.test.FakeRequest
-import play.api.test.Helpers._
+import play.api.test.Helpers.*
 import uk.gov.hmrc.hec.models
 import uk.gov.hmrc.hec.models.hecTaxCheck.ApplicantDetails.CompanyApplicantDetails
 import uk.gov.hmrc.hec.models.hecTaxCheck.HECTaxCheckData.CompanyHECTaxCheckData
 import uk.gov.hmrc.hec.models.hecTaxCheck.TaxDetails.CompanyTaxDetails
-import uk.gov.hmrc.hec.models.hecTaxCheck._
+import uk.gov.hmrc.hec.models.hecTaxCheck.*
 import uk.gov.hmrc.hec.models.hecTaxCheck.company.{CTStatusResponse, CompanyHouseName}
 import uk.gov.hmrc.hec.models.ids.{CRN, CTUTR, GGCredId}
 import uk.gov.hmrc.hec.models.hecTaxCheck.licence.{LicenceDetails, LicenceTimeTrading, LicenceType, LicenceValidityPeriod}
-import uk.gov.hmrc.hec.models.sdes.NotificationStatus._
+import uk.gov.hmrc.hec.models.sdes.NotificationStatus.*
 import uk.gov.hmrc.hec.models.sdes.{CallBackNotification, NotificationStatus}
 import uk.gov.hmrc.hec.models.{Error, hecTaxCheck}
-import uk.gov.hmrc.hec.services.scheduleService.HECTaxCheckExtractionContext
+import uk.gov.hmrc.hec.services.scheduleService.{HECTaxCheckExtractionContext, HecTaxCheckExtractionService}
 import uk.gov.hmrc.hec.services.{FileStoreService, TaxCheckService}
 import uk.gov.hmrc.hec.util.TimeUtils
 import uk.gov.hmrc.http.HeaderCarrier
@@ -48,8 +48,9 @@ import scala.concurrent.Future
 
 class SDESCallbackControllerSpec extends ControllerSpec {
 
-  val mockFileStoreService = mock[FileStoreService]
-  val mockTaxCheckService  = mock[TaxCheckService]
+  val mockFileStoreService             = mock[FileStoreService]
+  val mockTaxCheckService              = mock[TaxCheckService]
+  val mockHecTaxCheckExtractionService = mock[HecTaxCheckExtractionService]
 
   def mockDeleteFile(fileName: String, dirName: String)(result: Either[Error, Unit]) = (mockFileStoreService
     .deleteFile(_: String, _: String)(_: HeaderCarrier, _: HECTaxCheckExtractionContext))
@@ -71,7 +72,8 @@ class SDESCallbackControllerSpec extends ControllerSpec {
   override val overrideBindings =
     List[GuiceableModule](
       bind[FileStoreService].toInstance(mockFileStoreService),
-      bind[TaxCheckService].toInstance(mockTaxCheckService)
+      bind[TaxCheckService].toInstance(mockTaxCheckService),
+      bind[HecTaxCheckExtractionService].toInstance(mockHecTaxCheckExtractionService)
     )
   val controller                = instanceOf[SDESCallbackController]
 

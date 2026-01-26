@@ -53,6 +53,7 @@ import uk.gov.hmrc.internalauth.client.Predicate.Permission
 import uk.gov.hmrc.internalauth.client.Retrieval.EmptyRetrieval
 import uk.gov.hmrc.internalauth.client.test.{BackendAuthComponentsStub, StubBehaviour}
 import uk.gov.hmrc.internalauth.client._
+import uk.gov.hmrc.hec.services.scheduleService.HecTaxCheckExtractionService
 
 import java.time.{LocalDate, ZoneId, ZonedDateTime}
 import scala.concurrent.ExecutionContext.Implicits.global
@@ -70,14 +71,16 @@ class TaxCheckControllerWithInternalAuthEnabledSpec extends ControllerSpec with 
   val ggCredId                          = GGCredId("ggCredId")
   implicit val cc: ControllerComponents = Helpers.stubControllerComponents()
 
-  val mockInternalAuthStubBehaviour = mock[StubBehaviour]
-  val mockBackendAuthComponents     = BackendAuthComponentsStub(mockInternalAuthStubBehaviour)
+  val mockInternalAuthStubBehaviour    = mock[StubBehaviour]
+  val mockBackendAuthComponents        = BackendAuthComponentsStub(mockInternalAuthStubBehaviour)
+  val mockHecTaxCheckExtractionService = mock[HecTaxCheckExtractionService]
 
   override val overrideBindings =
     List[GuiceableModule](
       bind[AuthConnector].toInstance(mockAuthConnector),
       bind[TaxCheckService].toInstance(mockTaxCheckService),
-      bind[BackendAuthComponents].toInstance(mockBackendAuthComponents)
+      bind[BackendAuthComponents].toInstance(mockBackendAuthComponents),
+      bind[HecTaxCheckExtractionService].toInstance(mockHecTaxCheckExtractionService)
     )
 
   val controller = instanceOf[TaxCheckController]
@@ -102,41 +105,37 @@ class TaxCheckControllerWithInternalAuthEnabledSpec extends ControllerSpec with 
   def mockSaveTaxCheck(taxCheckData: HECTaxCheckData, request: AuthenticatedGGOrStrideRequest[?])(
     result: Either[Error, HECTaxCheck]
   ) =
-    when(
-      mockTaxCheckService
-        .saveTaxCheck(ArgumentMatchers.eq(taxCheckData))(any[HeaderCarrier], ArgumentMatchers.eq(request))
-    )
-      .thenReturn(EitherT.fromEither(result))
+    (mockTaxCheckService
+      .saveTaxCheck(_: HECTaxCheckData)(
+        _: HeaderCarrier,
+        _: AuthenticatedGGOrStrideRequest[_]
+      ))
+      .expects(taxCheckData, *, *)
+      .returning(EitherT.fromEither(result))
 
   def mockInternalAuth(predicate: Predicate)(result: Future[Unit]) =
-    when(
-      mockInternalAuthStubBehaviour
-        .stubAuth(Some(predicate), EmptyRetrieval)
-    )
-      .thenReturn(result)
+    (mockInternalAuthStubBehaviour
+      .stubAuth(_: Option[Predicate], _: Retrieval[Unit]))
+      .expects(Some(predicate), *)
+      .returning(result)
 
   def mockMatchTaxCheck(matchRequest: HECTaxCheckMatchRequest)(result: Either[Error, HECTaxCheckMatchResult]) =
-    when(
-      mockTaxCheckService
-        .matchTaxCheck(ArgumentMatchers.eq(matchRequest))(any[HeaderCarrier])
-    )
-      .thenReturn(EitherT.fromEither(result))
+    (mockTaxCheckService
+      .matchTaxCheck(_: HECTaxCheckMatchRequest)(_: HeaderCarrier))
+      .expects(matchRequest, *)
+      .returning(EitherT.fromEither(result))
 
   def mockGetValidTaxCheckCodes(ggCredId: GGCredId)(result: Either[Error, List[TaxCheckListItem]]) =
-    when(
-      mockTaxCheckService
-        .getUnexpiredTaxCheckCodes(ArgumentMatchers.eq(ggCredId))(any[HeaderCarrier])
-    )
-      .thenReturn(EitherT.fromEither(result))
+    (mockTaxCheckService
+      .getUnexpiredTaxCheckCodes(_: GGCredId)(_: HeaderCarrier))
+      .expects(ggCredId, *)
+      .returning(EitherT.fromEither(result))
 
-  def mockSaveEmailAddress(saveEmailAddressRequest: SaveEmailAddressRequest)(
-    result: Either[Error, Option[Unit]]
-  ) =
-    when(
-      mockTaxCheckService
-        .saveEmailAddress(ArgumentMatchers.eq(saveEmailAddressRequest))(any[HeaderCarrier])
-    )
-      .thenReturn(EitherT.fromEither(result))
+  def mockSaveEmailAddress(saveEmailAddressRequest: SaveEmailAddressRequest)(result: Either[Error, Option[Unit]]) =
+    (mockTaxCheckService
+      .saveEmailAddress(_: SaveEmailAddressRequest)(_: HeaderCarrier))
+      .expects(saveEmailAddressRequest, *)
+      .returning(EitherT.fromEither(result))
 
   "TaxCheckController" when {
 

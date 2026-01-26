@@ -39,6 +39,7 @@ import uk.gov.hmrc.hec.testonly.models.SaveTaxCheckRequest
 import uk.gov.hmrc.hec.testonly.services.TaxCheckService
 import uk.gov.hmrc.hec.util.TimeUtils
 import uk.gov.hmrc.http.HeaderCarrier
+import uk.gov.hmrc.hec.services.scheduleService.HecTaxCheckExtractionService
 
 import java.time.format.DateTimeFormatter
 import java.time.{LocalDate, ZoneId, ZonedDateTime}
@@ -47,11 +48,13 @@ import scala.concurrent.Future
 
 class TaxCheckControllerSpec extends ControllerSpec {
 
-  val mockTaxCheckService = mock[TaxCheckService]
+  val mockTaxCheckService              = mock[TaxCheckService]
+  val mockHecTaxCheckExtractionService = mock[HecTaxCheckExtractionService]
 
   override val overrideBindings =
     List[GuiceableModule](
-      bind[TaxCheckService].toInstance(mockTaxCheckService)
+      bind[TaxCheckService].toInstance(mockTaxCheckService),
+      bind[HecTaxCheckExtractionService].toInstance(mockHecTaxCheckExtractionService)
     )
 
   def mockSaveTaxCheck(request: SaveTaxCheckRequest)(result: Either[Error, Unit]) =

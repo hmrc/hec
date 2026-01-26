@@ -86,7 +86,7 @@ class HecTaxCheckExtractionServiceSpec
 
   def mockWithLock(lockId: String, lockObtained: Boolean) =
     (mockMongoLockService
-      .withLock(_: String, _: Future[Either[models.Error, List[HECTaxCheck]]])(_: HECTaxCheckExtractionContext))
+      .withLock(_: String, _: () => Future[Either[models.Error, List[HECTaxCheck]]])(_: HECTaxCheckExtractionContext))
       .expects(lockId, *, *)
       .onCall { test =>
         if (lockObtained)

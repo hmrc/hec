@@ -38,6 +38,7 @@ import uk.gov.hmrc.hec.util.TimeUtils
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.internalauth.client.BackendAuthComponents
 import uk.gov.hmrc.internalauth.client.test.{BackendAuthComponentsStub, StubBehaviour}
+import uk.gov.hmrc.hec.services.scheduleService.HecTaxCheckExtractionService
 
 import java.time.{LocalDate, ZoneId, ZonedDateTime}
 import scala.concurrent.ExecutionContext.Implicits.global
@@ -45,7 +46,8 @@ import scala.concurrent.Future
 
 class TaxCheckControllerWithInternalAuthDisabledSpec extends ControllerSpec with AuthSupport {
 
-  val mockTaxCheckService = mock[TaxCheckService]
+  val mockTaxCheckService              = mock[TaxCheckService]
+  val mockHecTaxCheckExtractionService = mock[HecTaxCheckExtractionService]
 
   val taxCheckStartDateTime = ZonedDateTime.of(2021, 10, 9, 9, 12, 34, 0, ZoneId.of("Europe/London"))
 
@@ -59,7 +61,8 @@ class TaxCheckControllerWithInternalAuthDisabledSpec extends ControllerSpec with
     List[GuiceableModule](
       bind[AuthConnector].toInstance(mockAuthConnector),
       bind[TaxCheckService].toInstance(mockTaxCheckService),
-      bind[BackendAuthComponents].toInstance(mockBackendAuthComponents)
+      bind[BackendAuthComponents].toInstance(mockBackendAuthComponents),
+      bind[HecTaxCheckExtractionService].toInstance(mockHecTaxCheckExtractionService)
     )
 
   val controller = instanceOf[TaxCheckController]

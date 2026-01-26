@@ -17,29 +17,32 @@
 package uk.gov.hmrc.hec.controllers
 
 import cats.data.EitherT
-import cats.instances.future._
+import cats.instances.future.*
 import play.api.inject.bind
 import play.api.inject.guice.GuiceableModule
 import play.api.libs.json.Json
 import play.api.test.FakeRequest
-import play.api.test.Helpers._
+import play.api.test.Helpers.*
 import uk.gov.hmrc.auth.core.AuthConnector
-import uk.gov.hmrc.hec.models._
+import uk.gov.hmrc.hec.models.*
 import uk.gov.hmrc.hec.models.ids.{CRN, CTUTR, GGCredId}
 import uk.gov.hmrc.hec.services.DESService
 import uk.gov.hmrc.hec.services.DESService.{BackendError, DESError, DataNotFoundError, InvalidCRNError}
+import uk.gov.hmrc.hec.services.scheduleService.HecTaxCheckExtractionService
 import uk.gov.hmrc.http.HeaderCarrier
 
 import scala.concurrent.ExecutionContext.Implicits.global
 
 class DESControllerSpec extends ControllerSpec with AuthSupport {
 
-  private val mockDESService = mock[DESService]
+  private val mockDESService           = mock[DESService]
+  val mockHecTaxCheckExtractionService = mock[HecTaxCheckExtractionService]
 
   override val overrideBindings =
     List[GuiceableModule](
       bind[AuthConnector].toInstance(mockAuthConnector),
-      bind[DESService].toInstance(mockDESService)
+      bind[DESService].toInstance(mockDESService),
+      bind[HecTaxCheckExtractionService].toInstance(mockHecTaxCheckExtractionService)
     )
   val ggCredId                  = GGCredId("ggCredId")
 

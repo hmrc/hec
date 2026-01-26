@@ -57,7 +57,8 @@ class ResetTaxChecksSentFlagService @Inject() (
 
   private def resetSentFlags(): Future[Option[Unit]] =
     mongoLockService.withLock(
-      lockId, {
+      lockId,
+      () => {
         logger.info(s"Resetting 'sent' flag for all tax checks created on or after $resetTaxChecksCreatedOnOrAfter")
         taxCheckStore
           .resetTaxCheckIsExtractedFlag(resetTaxChecksCreatedOnOrAfter)
