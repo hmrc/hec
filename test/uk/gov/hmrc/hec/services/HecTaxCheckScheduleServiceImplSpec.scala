@@ -39,7 +39,7 @@ import uk.gov.hmrc.http.HeaderCarrier
 import java.time.format.DateTimeFormatter
 import java.time.{LocalTime, ZoneId}
 import scala.concurrent.ExecutionContext.{global => globalExecutionContext}
-import scala.concurrent.duration._
+import scala.concurrent.duration.*
 import scala.concurrent.{Await, ExecutionContext, Future}
 
 class HecTaxCheckScheduleServiceImplSpec

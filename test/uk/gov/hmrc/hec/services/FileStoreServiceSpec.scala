@@ -29,7 +29,7 @@ import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpecLike
 import org.scalatest.{BeforeAndAfterAll, OptionValues}
 import play.api.Configuration
-import play.api.test.Helpers._
+import play.api.test.Helpers.*
 import uk.gov.hmrc.hec.services.scheduleService.HECTaxCheckExtractionContext
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.objectstore.client.config.ObjectStoreClientConfig
@@ -95,7 +95,7 @@ class FileStoreServiceSpec
       } yield l shouldBe r).futureValue
 
     "storeFile must store the file in object store " in {
-      import uk.gov.hmrc.objectstore.client.play.Implicits._
+      import uk.gov.hmrc.objectstore.client.play.Implicits.*
       implicit val hc: HeaderCarrier = HeaderCarrier()
       await(fileStoreService.storeFile(fileContent, fileName, dirName).value)
       val expectedPath               = Path.File(s"$dirName/$fileName")
@@ -107,7 +107,7 @@ class FileStoreServiceSpec
     }
 
     "deleteObject must delete the file from object store " in {
-      import uk.gov.hmrc.objectstore.client.play.Implicits._
+      import uk.gov.hmrc.objectstore.client.play.Implicits.*
       implicit val hc: HeaderCarrier = HeaderCarrier()
       client.deleteObject(Path.File(s"$dirName/$fileName"), objectStoreConfig.owner).futureValue
       val getObject                  = client

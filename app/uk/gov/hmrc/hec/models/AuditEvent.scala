@@ -18,7 +18,7 @@ package uk.gov.hmrc.hec.models
 
 import play.api.libs.json.{JsObject, Json, OWrites}
 import uk.gov.hmrc.hec.models.hecTaxCheck.HECTaxCheck
-import uk.gov.hmrc.hec.util.JsObjectUtils._
+import uk.gov.hmrc.hec.util.JsObjectUtils.*
 
 sealed trait AuditEvent {
 

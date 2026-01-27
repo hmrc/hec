@@ -17,11 +17,11 @@
 package uk.gov.hmrc.hec.controllers.actions
 
 import com.google.inject.ImplementedBy
-import play.api.mvc._
+import play.api.mvc.*
 import uk.gov.hmrc.auth.core.AuthProvider.{GovernmentGateway, PrivilegedApplication}
-import uk.gov.hmrc.auth.core._
+import uk.gov.hmrc.auth.core.*
 import uk.gov.hmrc.auth.core.retrieve.{Credentials, GGCredId => AuthGGCredId, PAClientId, ~}
-import uk.gov.hmrc.auth.core.retrieve.v2.Retrievals._
+import uk.gov.hmrc.auth.core.retrieve.v2.Retrievals.*
 import uk.gov.hmrc.hec.models.StrideOperatorDetails
 import uk.gov.hmrc.hec.models.ids.{GGCredId, PID}
 import uk.gov.hmrc.hec.util.Logging

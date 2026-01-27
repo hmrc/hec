@@ -18,14 +18,14 @@ package uk.gov.hmrc.hec.services
 
 import cats.data.EitherT
 import cats.implicits.catsSyntaxOptionId
-import cats.instances.future._
+import cats.instances.future.*
 import com.typesafe.config.ConfigFactory
 import org.scalamock.scalatest.MockFactory
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
 import play.api.Configuration
 import play.api.test.FakeRequest
-import play.api.test.Helpers._
+import play.api.test.Helpers.*
 import uk.gov.hmrc.hec.controllers.actions.AuthenticatedGGOrStrideRequest
 import uk.gov.hmrc.hec.models
 import uk.gov.hmrc.hec.models.AuditEvent.TaxCheckSuccess
@@ -35,9 +35,9 @@ import uk.gov.hmrc.hec.models.hecTaxCheck.TaxDetails.{CompanyTaxDetails, Individ
 import uk.gov.hmrc.hec.models.hecTaxCheck.company.{CTStatus, CTStatusResponse, CompanyHouseName}
 import uk.gov.hmrc.hec.models.hecTaxCheck.individual.{DateOfBirth, Name}
 import uk.gov.hmrc.hec.models.hecTaxCheck.licence.{LicenceDetails, LicenceTimeTrading, LicenceType, LicenceValidityPeriod}
-import uk.gov.hmrc.hec.models.hecTaxCheck._
+import uk.gov.hmrc.hec.models.hecTaxCheck.*
 import uk.gov.hmrc.hec.models.hecTaxCheck.company.CTAccountingPeriod.CTAccountingPeriodDigital
-import uk.gov.hmrc.hec.models.ids._
+import uk.gov.hmrc.hec.models.ids.*
 import uk.gov.hmrc.hec.models.taxCheckMatch.{HECTaxCheckMatchRequest, HECTaxCheckMatchResult, HECTaxCheckMatchStatus, MatchFailureReason}
 import uk.gov.hmrc.hec.models.{EmailAddress, Error, SaveEmailAddressRequest, StrideOperatorDetails, TaxCheckListItem, hecTaxCheck, taxCheckMatch}
 import uk.gov.hmrc.hec.repos.HECTaxCheckStore
@@ -47,7 +47,7 @@ import uk.gov.hmrc.http.HeaderCarrier
 import java.time.{LocalDate, ZoneId, ZonedDateTime}
 import java.util.UUID
 import scala.concurrent.ExecutionContext.Implicits.global
-import scala.concurrent.duration._
+import scala.concurrent.duration.*
 
 class TaxCheckServiceImplSpec extends AnyWordSpec with Matchers with MockFactory with AuditServiceSupport {
 
@@ -147,7 +147,7 @@ class TaxCheckServiceImplSpec extends AnyWordSpec with Matchers with MockFactory
       "return an error" when {
 
         "there is an error saving the tax check" in {
-          implicit val request: AuthenticatedGGOrStrideRequest[_] =
+          implicit val request: AuthenticatedGGOrStrideRequest[?] =
             AuthenticatedGGOrStrideRequest(Right(GGCredId("")), FakeRequest())
 
           inSequence {
@@ -167,7 +167,7 @@ class TaxCheckServiceImplSpec extends AnyWordSpec with Matchers with MockFactory
 
         "the tax check has been saved" in {
           val strideOperatorDetails                               = StrideOperatorDetails(PID(""), List.empty, None, None)
-          implicit val request: AuthenticatedGGOrStrideRequest[_] =
+          implicit val request: AuthenticatedGGOrStrideRequest[?] =
             AuthenticatedGGOrStrideRequest(Left(strideOperatorDetails), FakeRequest())
 
           inSequence {

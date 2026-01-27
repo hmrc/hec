@@ -17,21 +17,21 @@
 package uk.gov.hmrc.hec.controllers
 
 import cats.data.EitherT
-import cats.instances.future._
+import cats.instances.future.*
 import com.typesafe.config.ConfigFactory
 import play.api.Configuration
 import play.api.inject.bind
 import play.api.inject.guice.GuiceableModule
-import play.api.libs.json._
+import play.api.libs.json.*
 import play.api.mvc.{ControllerComponents, Result}
-import play.api.test.Helpers._
+import play.api.test.Helpers.*
 import play.api.test.{FakeRequest, Helpers}
 import uk.gov.hmrc.auth.core.AuthConnector
 import uk.gov.hmrc.hec.models.Error
 import uk.gov.hmrc.hec.models.hecTaxCheck.HECTaxCheckCode
 import uk.gov.hmrc.hec.models.hecTaxCheck.individual.DateOfBirth
 import uk.gov.hmrc.hec.models.hecTaxCheck.licence.LicenceType
-import uk.gov.hmrc.hec.models.ids._
+import uk.gov.hmrc.hec.models.ids.*
 import uk.gov.hmrc.hec.models.taxCheckMatch.{HECTaxCheckMatchRequest, HECTaxCheckMatchResult, HECTaxCheckMatchStatus, MatchFailureReason}
 import uk.gov.hmrc.hec.services.TaxCheckService
 import uk.gov.hmrc.hec.util.TimeUtils

@@ -67,7 +67,7 @@ class FileStoreServiceImpl @Inject() (client: PlayObjectStoreClient, config: Con
     hecTaxCheckExtractionContext: HECTaxCheckExtractionContext
   ): EitherT[Future, models.Error, ObjectSummaryWithMd5] = {
     val bytes = StringUtils.getBytes(fileContent, StandardCharsets.UTF_8)
-    import uk.gov.hmrc.objectstore.client.play.Implicits._
+    import uk.gov.hmrc.objectstore.client.play.Implicits.*
     EitherT(
       client
         .putObject(

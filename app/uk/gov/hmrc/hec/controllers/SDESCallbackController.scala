@@ -23,7 +23,7 @@ import play.api.libs.json.{JsError, JsSuccess, JsValue, Json}
 import play.api.mvc.{Action, ControllerComponents}
 import uk.gov.hmrc.hec.models
 import uk.gov.hmrc.hec.models.sdes.CallBackNotification
-import uk.gov.hmrc.hec.models.sdes.NotificationStatus._
+import uk.gov.hmrc.hec.models.sdes.NotificationStatus.*
 import uk.gov.hmrc.hec.services.scheduleService.HECTaxCheckExtractionContext
 import uk.gov.hmrc.hec.services.{FileStoreService, TaxCheckService}
 import uk.gov.hmrc.hec.util.{FileMapOps, Logging}

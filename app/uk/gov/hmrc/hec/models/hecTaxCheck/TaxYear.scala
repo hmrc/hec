@@ -16,8 +16,8 @@
 
 package uk.gov.hmrc.hec.models.hecTaxCheck
 
-import cats.instances.int._
-import cats.syntax.eq._
+import cats.instances.int.*
+import cats.syntax.eq.*
 import play.api.libs.json.{Format, Json}
 
 final case class TaxYear(startYear: Int) extends AnyVal

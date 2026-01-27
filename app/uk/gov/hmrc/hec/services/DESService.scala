@@ -17,7 +17,7 @@
 package uk.gov.hmrc.hec.services
 
 import cats.data.EitherT
-import cats.implicits._
+import cats.implicits.*
 import com.google.inject.{ImplementedBy, Inject, Singleton}
 import play.api.http.Status.{BAD_REQUEST, NOT_FOUND, OK}
 import play.api.libs.json.{Json, Reads}
@@ -25,13 +25,12 @@ import uk.gov.hmrc.hec.connectors.DESConnector
 import uk.gov.hmrc.hec.models.Error
 import uk.gov.hmrc.hec.models.ids.{CRN, CTUTR}
 import uk.gov.hmrc.hec.services.DESService.{BackendError, DESError, DataNotFoundError, InvalidCRNError}
-import uk.gov.hmrc.hec.services.DESServiceImpl._
+import uk.gov.hmrc.hec.services.DESServiceImpl.*
 import uk.gov.hmrc.hec.util.Logging
 import uk.gov.hmrc.http.{HeaderCarrier, HttpResponse}
 
 import scala.concurrent.{ExecutionContext, Future}
 
-//@ImplementedBy(classOf[DESServiceImpl])
 trait DESService {
 
   def getCtutr(crn: CRN)(implicit hc: HeaderCarrier): EitherT[Future, DESError, CTUTR]
@@ -52,7 +51,7 @@ class DESServiceImpl @Inject() (
 )(implicit ec: ExecutionContext)
     extends DESService
     with Logging {
-  import uk.gov.hmrc.hec.util.HttpResponseOps._
+  import uk.gov.hmrc.hec.util.HttpResponseOps.*
 
   private def handleErrorPath(httpResponse: HttpResponse) = {
     val responseError = s"Response to get CTUTR came back with status ${httpResponse.status}"

@@ -17,11 +17,11 @@
 package uk.gov.hmrc.hec.services
 
 import cats.data.EitherT
-import cats.instances.future._
+import cats.instances.future.*
 import org.scalamock.scalatest.MockFactory
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
-import play.api.test.Helpers._
+import play.api.test.Helpers.*
 import uk.gov.hmrc.hec.connectors.SDESConnector
 import uk.gov.hmrc.hec.models.Error
 import uk.gov.hmrc.hec.models.sdes.{FileAudit, FileChecksum, FileMetaData, SDESFileNotifyRequest}

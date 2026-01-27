@@ -17,9 +17,9 @@
 package uk.gov.hmrc.hec.services
 
 import cats.data.EitherT
-import cats.instances.option._
-import cats.syntax.eq._
-import cats.syntax.traverse._
+import cats.instances.option.*
+import cats.syntax.eq.*
+import cats.syntax.traverse.*
 import com.google.inject.{ImplementedBy, Inject, Singleton}
 import play.api.Configuration
 import uk.gov.hmrc.hec.controllers.actions.AuthenticatedGGOrStrideRequest
@@ -43,7 +43,7 @@ trait TaxCheckService {
 
   def saveTaxCheck(taxCheckData: HECTaxCheckData)(implicit
     hc: HeaderCarrier,
-    request: AuthenticatedGGOrStrideRequest[_]
+    request: AuthenticatedGGOrStrideRequest[?]
   ): EitherT[Future, Error, HECTaxCheck]
 
   def updateAllHecTaxCheck(list: List[HECTaxCheck])(implicit
@@ -87,7 +87,7 @@ class TaxCheckServiceImpl @Inject() (
 
   def saveTaxCheck(
     taxCheckData: HECTaxCheckData
-  )(implicit hc: HeaderCarrier, request: AuthenticatedGGOrStrideRequest[_]): EitherT[Future, Error, HECTaxCheck] = {
+  )(implicit hc: HeaderCarrier, request: AuthenticatedGGOrStrideRequest[?]): EitherT[Future, Error, HECTaxCheck] = {
     val taxCheckCode = taxCheckCodeGeneratorService.generateTaxCheckCode()
     val expiryDate   = timeProvider.currentDate.plusDays(taxCheckCodeExpiresAfterDays)
     val createDate   = timeProvider.currentDateTime

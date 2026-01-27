@@ -21,7 +21,7 @@ import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
 import uk.gov.hmrc.hec.util.TimeProvider
 import java.time.{LocalTime, ZoneId}
-import scala.concurrent.duration._
+import scala.concurrent.duration.*
 
 class TimeCalculatorSpec extends AnyWordSpec with Matchers with MockFactory {
 

@@ -18,17 +18,17 @@ package uk.gov.hmrc.hec.testonly.services
 
 import cats.data.EitherT
 import cats.implicits.catsSyntaxOptionId
-import cats.instances.future._
+import cats.instances.future.*
 import org.scalamock.scalatest.MockFactory
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
-import play.api.test.Helpers._
+import play.api.test.Helpers.*
 import uk.gov.hmrc.hec.models
 import uk.gov.hmrc.hec.models.{Error, Language}
 import uk.gov.hmrc.hec.models.hecTaxCheck.ApplicantDetails.IndividualApplicantDetails
 import uk.gov.hmrc.hec.models.hecTaxCheck.HECTaxCheckData.IndividualHECTaxCheckData
 import uk.gov.hmrc.hec.models.hecTaxCheck.TaxDetails.IndividualTaxDetails
-import uk.gov.hmrc.hec.models.hecTaxCheck._
+import uk.gov.hmrc.hec.models.hecTaxCheck.*
 import uk.gov.hmrc.hec.models.hecTaxCheck.individual.{DateOfBirth, Name}
 import uk.gov.hmrc.hec.models.ids.{CRN, GGCredId, NINO, SAUTR}
 import uk.gov.hmrc.hec.models.hecTaxCheck.licence.{LicenceDetails, LicenceTimeTrading, LicenceType, LicenceValidityPeriod}

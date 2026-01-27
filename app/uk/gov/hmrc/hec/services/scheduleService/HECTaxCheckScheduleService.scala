@@ -22,7 +22,7 @@ import uk.gov.hmrc.hec.actors.TimeCalculator
 import uk.gov.hmrc.hec.models
 import uk.gov.hmrc.hec.models.Error
 import uk.gov.hmrc.hec.util.Logging
-import uk.gov.hmrc.hec.util.Logging._
+import uk.gov.hmrc.hec.util.Logging.*
 
 import java.time.{LocalTime, ZoneId}
 import scala.concurrent.duration.FiniteDuration

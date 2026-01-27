@@ -21,7 +21,7 @@ import play.api.Configuration
 import uk.gov.hmrc.hec.repos.HECTaxCheckStore
 import uk.gov.hmrc.hec.services.MongoLockService
 import uk.gov.hmrc.hec.util.Logging
-import uk.gov.hmrc.hec.util.Logging._
+import uk.gov.hmrc.hec.util.Logging.*
 
 import java.time.ZonedDateTime
 import scala.concurrent.Future

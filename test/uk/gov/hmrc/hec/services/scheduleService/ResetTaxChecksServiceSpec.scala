@@ -68,23 +68,6 @@ class ResetTaxChecksServiceSpec
           Future.successful(None)
       }
 
-//  def mockWithLock[T](lockId: String, lockObtained: Boolean): Unit =
-//    when(
-//      mockMongoLockService.withLock[T](
-//        eqTo(lockId),
-//        any[Future[T]]
-//      )(
-//        any[HECTaxCheckExtractionContext]
-//      )
-//    ).thenAnswer { invocation =>
-//      val body = invocation.getArgument
-//
-//      if (lockObtained)
-//        body.map(Some(_))(ExecutionContext.global)
-//      else
-//        Future.successful(None)
-//    }
-
   def mockResetTaxCheckIsExtractedFlag(resetTaxChecksCreatedOnOrAfter: ZonedDateTime)(result: Either[Error, Unit]) =
     (mockTaxCheckStore.resetTaxCheckIsExtractedFlag _)
       .expects(resetTaxChecksCreatedOnOrAfter)
@@ -137,9 +120,6 @@ class ResetTaxChecksServiceSpec
         mockWithLock(lockId, lockObtained = false)
 
         startService()
-
-//        verify(mockHECTaxCheckStore, never())
-//          .resetTaxCheckIsExtractedFlag(any())
       }
 
     }

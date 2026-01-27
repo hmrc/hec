@@ -17,12 +17,12 @@
 package uk.gov.hmrc.hec.repos
 
 import cats.data.{EitherT, OptionT}
-import cats.instances.either._
-import cats.syntax.either._
+import cats.instances.either.*
+import cats.syntax.either.*
 import com.google.inject.{ImplementedBy, Inject, Singleton}
 import org.mongodb.scala.bson.{BsonDateTime, BsonDocument}
 import org.mongodb.scala.model.Filters.gte
-import org.mongodb.scala.model._
+import org.mongodb.scala.model.*
 import play.api.Configuration
 import play.api.libs.json.{JsError, JsSuccess, JsonValidationError}
 import uk.gov.hmrc.hec.models.Error
@@ -35,7 +35,7 @@ import uk.gov.hmrc.mongo.{CurrentTimestampSupport, MongoComponent, MongoUtils}
 import uk.gov.hmrc.mdc.Mdc.preservingMdc
 
 import java.time.ZonedDateTime
-import scala.concurrent.duration._
+import scala.concurrent.duration.*
 import scala.concurrent.{ExecutionContext, Future}
 
 @ImplementedBy(classOf[HECTaxCheckStoreImpl])

@@ -19,25 +19,25 @@ package uk.gov.hmrc.hec.services
 import org.apache.pekko.actor.ActorSystem
 import org.apache.pekko.testkit.TestKit
 import cats.data.EitherT
-import cats.implicits._
+import cats.implicits.*
 import com.typesafe.config.{ConfigFactory, ConfigValueFactory}
 import org.scalamock.scalatest.MockFactory
 import org.scalatest.BeforeAndAfterAll
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpecLike
 import play.api.Configuration
-import play.api.test.Helpers._
+import play.api.test.Helpers.*
 import uk.gov.hmrc.hec.models
-import uk.gov.hmrc.hec.models._
+import uk.gov.hmrc.hec.models.*
 import uk.gov.hmrc.hec.models.hecTaxCheck.ApplicantDetails.CompanyApplicantDetails
 import uk.gov.hmrc.hec.models.hecTaxCheck.HECTaxCheckData.CompanyHECTaxCheckData
 import uk.gov.hmrc.hec.models.hecTaxCheck.TaxDetails.CompanyTaxDetails
-import uk.gov.hmrc.hec.models.hecTaxCheck._
+import uk.gov.hmrc.hec.models.hecTaxCheck.*
 import uk.gov.hmrc.hec.models.hecTaxCheck.company.CTAccountingPeriod.CTAccountingPeriodDigital
 import uk.gov.hmrc.hec.models.hecTaxCheck.company.{CTStatus, CTStatusResponse, CompanyHouseName}
 import uk.gov.hmrc.hec.models.hecTaxCheck.licence.{LicenceDetails, LicenceTimeTrading, LicenceType, LicenceValidityPeriod}
 import uk.gov.hmrc.hec.models.ids.{CRN, CTUTR, GGCredId}
-import uk.gov.hmrc.hec.models.sdes._
+import uk.gov.hmrc.hec.models.sdes.*
 import uk.gov.hmrc.hec.services.scheduleService.{HECTaxCheckExtractionContext, HecTaxCheckExtractionServiceImpl}
 import uk.gov.hmrc.hec.util.{TimeUtils, UUIDGenerator}
 import uk.gov.hmrc.http.HeaderCarrier

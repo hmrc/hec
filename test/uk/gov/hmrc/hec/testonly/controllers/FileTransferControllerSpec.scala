@@ -20,7 +20,7 @@ import play.api.inject.bind
 import play.api.inject.guice.GuiceableModule
 import play.api.mvc.Result
 import play.api.test.FakeRequest
-import play.api.test.Helpers._
+import play.api.test.Helpers.*
 import uk.gov.hmrc.hec.controllers.ControllerSpec
 import uk.gov.hmrc.hec.models
 import uk.gov.hmrc.hec.models.Error

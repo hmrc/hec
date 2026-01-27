@@ -26,11 +26,11 @@ import uk.gov.hmrc.hec.models.hecTaxCheck.HECTaxCheckSource.Digital
 import uk.gov.hmrc.hec.models.hecTaxCheck.TaxDetails.{CompanyTaxDetails, IndividualTaxDetails}
 import uk.gov.hmrc.hec.models.hecTaxCheck.company.{CTStatus, CTStatusResponse, CompanyHouseName}
 import uk.gov.hmrc.hec.models.hecTaxCheck.individual.{DateOfBirth, Name, SAStatus, SAStatusResponse}
-import uk.gov.hmrc.hec.models.hecTaxCheck.licence.LicenceType._
+import uk.gov.hmrc.hec.models.hecTaxCheck.licence.LicenceType.*
 import uk.gov.hmrc.hec.models.hecTaxCheck.licence.{LicenceDetails, LicenceTimeTrading, LicenceType, LicenceValidityPeriod}
-import uk.gov.hmrc.hec.models.hecTaxCheck._
+import uk.gov.hmrc.hec.models.hecTaxCheck.*
 import uk.gov.hmrc.hec.models.hecTaxCheck.company.CTAccountingPeriod.{CTAccountingPeriodDigital, CTAccountingPeriodStride}
-import uk.gov.hmrc.hec.models.ids._
+import uk.gov.hmrc.hec.models.ids.*
 import uk.gov.hmrc.hec.models.{EmailAddress, Error, Language, hecTaxCheck}
 import uk.gov.hmrc.hec.util.TimeProvider
 

@@ -17,7 +17,7 @@
 package uk.gov.hmrc.hec.services.scheduleService
 
 import cats.data.EitherT
-import cats.implicits._
+import cats.implicits.*
 import com.google.inject.Inject
 import play.api.Configuration
 import uk.gov.hmrc.hec.models
@@ -25,8 +25,8 @@ import uk.gov.hmrc.hec.models.hecTaxCheck.licence.{LicenceTimeTrading, LicenceTy
 import uk.gov.hmrc.hec.models.sdes.{FileAudit, FileChecksum, FileMetaData, SDESFileNotifyRequest}
 import uk.gov.hmrc.hec.models.hecTaxCheck.{CorrectiveAction, HECTaxCheck, HECTaxCheckFileBodyList}
 import uk.gov.hmrc.hec.models.Error
-import uk.gov.hmrc.hec.services._
-import uk.gov.hmrc.hec.services.scheduleService.HecTaxCheckExtractionServiceImpl._
+import uk.gov.hmrc.hec.services.*
+import uk.gov.hmrc.hec.services.scheduleService.HecTaxCheckExtractionServiceImpl.*
 import uk.gov.hmrc.hec.util.{FileMapOps, UUIDGenerator}
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.objectstore.client.{Md5Hash, ObjectSummaryWithMd5}
@@ -35,7 +35,6 @@ import java.util.{Base64, UUID}
 import javax.inject.Singleton
 import scala.concurrent.Future
 
-//@ImplementedBy(classOf[HecTaxCheckExtractionServiceImpl])
 trait HecTaxCheckExtractionService {
 
   def lockAndProcessHecData(): Future[Option[Either[models.Error, Unit]]]

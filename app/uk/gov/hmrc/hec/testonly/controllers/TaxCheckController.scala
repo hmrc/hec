@@ -16,9 +16,9 @@
 
 package uk.gov.hmrc.hec.testonly.controllers
 
-import cats.instances.future._
-import cats.instances.int._
-import cats.syntax.eq._
+import cats.instances.future.*
+import cats.instances.int.*
+import cats.syntax.eq.*
 import com.google.inject.{Inject, Singleton}
 import play.api.libs.json.{JsError, JsSuccess, JsValue, Json}
 import play.api.mvc.{Action, AnyContent, ControllerComponents}
@@ -27,7 +27,7 @@ import uk.gov.hmrc.hec.controllers.toFuture
 import uk.gov.hmrc.hec.models.hecTaxCheck.HECTaxCheckCode
 import uk.gov.hmrc.hec.testonly.models.SaveTaxCheckRequest
 import uk.gov.hmrc.hec.util.Logging
-import uk.gov.hmrc.hec.util.Logging._
+import uk.gov.hmrc.hec.util.Logging.*
 import uk.gov.hmrc.play.bootstrap.backend.controller.BackendController
 
 import scala.concurrent.ExecutionContext

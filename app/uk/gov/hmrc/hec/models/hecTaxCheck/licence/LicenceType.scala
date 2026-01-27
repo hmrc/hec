@@ -17,7 +17,7 @@
 package uk.gov.hmrc.hec.models.hecTaxCheck.licence
 
 import cats.Eq
-import enumeratum._
+import enumeratum.*
 
 import scala.collection.immutable
 

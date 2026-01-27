@@ -21,7 +21,7 @@ import play.api.mvc.Request
 import uk.gov.hmrc.hec.models.AuditEvent
 import uk.gov.hmrc.hec.util.Logging
 import uk.gov.hmrc.http.HeaderCarrier
-import uk.gov.hmrc.play.audit.AuditExtensions._
+import uk.gov.hmrc.play.audit.AuditExtensions.*
 import uk.gov.hmrc.play.audit.http.connector.AuditConnector
 import uk.gov.hmrc.play.audit.model.ExtendedDataEvent
 
@@ -34,7 +34,7 @@ trait AuditService {
   def sendEvent[A <: AuditEvent](auditEvent: A)(implicit
     hc: HeaderCarrier,
     writes: Writes[A],
-    request: Request[_]
+    request: Request[?]
   ): Unit
 
 }
@@ -51,7 +51,7 @@ class AuditServiceImpl @Inject() (auditConnector: AuditConnector)(implicit ec: E
   )(implicit
     hc: HeaderCarrier,
     writes: Writes[A],
-    request: Request[_]
+    request: Request[?]
   ): Unit = {
     val extendedDataEvent = ExtendedDataEvent(
       auditSource = auditSource,

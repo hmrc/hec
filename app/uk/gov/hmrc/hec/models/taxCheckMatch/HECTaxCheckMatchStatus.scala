@@ -16,7 +16,7 @@
 
 package uk.gov.hmrc.hec.models.taxCheckMatch
 
-import play.api.libs.json._
+import play.api.libs.json.*
 
 sealed trait HECTaxCheckMatchStatus extends Product with Serializable
 

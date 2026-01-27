@@ -16,11 +16,11 @@
 
 package uk.gov.hmrc.hec.controllers
 
-import cats.instances.future._
+import cats.instances.future.*
 import com.google.inject.{Inject, Singleton}
 import play.api.Configuration
-import play.api.libs.json._
-import play.api.mvc._
+import play.api.libs.json.*
+import play.api.mvc.*
 import uk.gov.hmrc.hec.controllers.actions.{GGAuthenticateAction, GGOrStrideAuthenticateAction}
 import uk.gov.hmrc.hec.models.SaveEmailAddressRequest
 import uk.gov.hmrc.hec.models.hecTaxCheck.HECTaxCheckData

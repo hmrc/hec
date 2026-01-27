@@ -18,7 +18,7 @@ package uk.gov.hmrc.hec.controllers
 
 import cats.data.EitherT
 import cats.implicits.catsSyntaxOptionId
-import cats.instances.future._
+import cats.instances.future.*
 import com.typesafe.config.ConfigFactory
 import org.apache.pekko.stream.Materializer
 import org.apache.pekko.stream.testkit.NoMaterializer
@@ -26,24 +26,24 @@ import play.api.Configuration
 import play.api.http.Status
 import play.api.inject.bind
 import play.api.inject.guice.GuiceableModule
-import play.api.libs.json._
+import play.api.libs.json.*
 import play.api.mvc.{ControllerComponents, Request, Result}
-import play.api.test.Helpers._
+import play.api.test.Helpers.*
 import play.api.test.{FakeRequest, Helpers}
 import uk.gov.hmrc.auth.core.AuthProvider.{GovernmentGateway, PrivilegedApplication}
 import uk.gov.hmrc.auth.core.retrieve.{Credentials, GGCredId => AuthGGCredId, Name => RetrievalName, OneTimeLogin, PAClientId}
-import uk.gov.hmrc.auth.core._
+import uk.gov.hmrc.auth.core.*
 import uk.gov.hmrc.hec.controllers.actions.AuthenticatedGGOrStrideRequest
 import uk.gov.hmrc.hec.models
 import uk.gov.hmrc.hec.models.hecTaxCheck.ApplicantDetails.{CompanyApplicantDetails, IndividualApplicantDetails}
 import uk.gov.hmrc.hec.models.hecTaxCheck.HECTaxCheckData.{CompanyHECTaxCheckData, IndividualHECTaxCheckData}
 import uk.gov.hmrc.hec.models.hecTaxCheck.TaxDetails.{CompanyTaxDetails, IndividualTaxDetails}
-import uk.gov.hmrc.hec.models.hecTaxCheck._
+import uk.gov.hmrc.hec.models.hecTaxCheck.*
 import uk.gov.hmrc.hec.models.hecTaxCheck.company.CTAccountingPeriod.CTAccountingPeriodDigital
 import uk.gov.hmrc.hec.models.hecTaxCheck.company.{CTStatus, CTStatusResponse, CompanyHouseName}
 import uk.gov.hmrc.hec.models.hecTaxCheck.individual.{DateOfBirth, Name}
 import uk.gov.hmrc.hec.models.hecTaxCheck.licence.{LicenceDetails, LicenceTimeTrading, LicenceType, LicenceValidityPeriod}
-import uk.gov.hmrc.hec.models.ids._
+import uk.gov.hmrc.hec.models.ids.*
 import uk.gov.hmrc.hec.models.taxCheckMatch.{HECTaxCheckMatchRequest, HECTaxCheckMatchResult, HECTaxCheckMatchStatus, MatchFailureReason}
 import uk.gov.hmrc.hec.models.{EmailAddress, Error, SaveEmailAddressRequest, StrideOperatorDetails, TaxCheckListItem, taxCheckMatch}
 import uk.gov.hmrc.hec.services.TaxCheckService
@@ -52,7 +52,7 @@ import uk.gov.hmrc.http.{HeaderCarrier, UpstreamErrorResponse}
 import uk.gov.hmrc.internalauth.client.Predicate.Permission
 import uk.gov.hmrc.internalauth.client.Retrieval.EmptyRetrieval
 import uk.gov.hmrc.internalauth.client.test.{BackendAuthComponentsStub, StubBehaviour}
-import uk.gov.hmrc.internalauth.client._
+import uk.gov.hmrc.internalauth.client.*
 import uk.gov.hmrc.hec.services.scheduleService.HecTaxCheckExtractionService
 
 import java.time.{LocalDate, ZoneId, ZonedDateTime}
@@ -108,7 +108,7 @@ class TaxCheckControllerWithInternalAuthEnabledSpec extends ControllerSpec with 
     (mockTaxCheckService
       .saveTaxCheck(_: HECTaxCheckData)(
         _: HeaderCarrier,
-        _: AuthenticatedGGOrStrideRequest[_]
+        _: AuthenticatedGGOrStrideRequest[?]
       ))
       .expects(taxCheckData, *, *)
       .returning(EitherT.fromEither(result))

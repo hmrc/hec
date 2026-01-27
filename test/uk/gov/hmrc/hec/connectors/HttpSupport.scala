@@ -17,7 +17,7 @@
 package uk.gov.hmrc.hec.connectors
 
 import org.scalamock.scalatest.MockFactory
-import org.scalatest.matchers.should._
+import org.scalatest.matchers.should.*
 import play.api.libs.json.{JsValue, Json, Writes}
 import play.api.libs.ws.BodyWritable
 import uk.gov.hmrc.http.client.{HttpClientV2, RequestBuilder}
