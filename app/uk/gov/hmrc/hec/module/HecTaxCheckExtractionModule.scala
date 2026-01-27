@@ -26,6 +26,10 @@ class HecTaxCheckExtractionModule extends AbstractModule {
     bind(classOf[ResetTaxChecksSentFlagService]).asEagerSingleton()
     bind(classOf[HECTaxCheckScheduleService]).asEagerSingleton()
     bind(classOf[DESService]).to(classOf[DESServiceImpl])
+    bind(classOf[HecTaxCheckExtractionService])
+      .to(classOf[HecTaxCheckExtractionServiceImpl])
+      .asEagerSingleton()
+
   }
 
 }
