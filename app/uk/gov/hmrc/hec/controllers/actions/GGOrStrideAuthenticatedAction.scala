@@ -50,7 +50,7 @@ class GGOrStrideAuthenticateActionBuilder @Inject() (
 
   // authProviderId retrieval is deprecated but is necessary for the AuthProvider type PrivilegedApplication
   // since the recommended alternative retrieval does not work for it
-  // @nowarn("msg=deprecated")
+  @nowarn("msg=deprecated")
   override def invokeBlock[A](
     request: Request[A],
     block: AuthenticatedGGOrStrideRequest[A] => Future[Result]
