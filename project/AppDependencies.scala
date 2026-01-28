@@ -4,7 +4,7 @@ import sbt.*
 object AppDependencies {
   val playVersion      = "-play-30"
   val bootstrapVersion = "10.5.0"
-  val hmrcMongoVersion = "2.11.0"
+  val hmrcMongoVersion = "2.12.0"
   val pekkoVersion = "1.0.3" //version has to match already existing pekko version in play
 
   val compile = Seq(
