@@ -16,7 +16,7 @@
 
 package uk.gov.hmrc.hec.util
 
-import uk.gov.hmrc.hec.services.scheduleService.HecTaxCheckExtractionServiceImpl.FileDetails
+import uk.gov.hmrc.hec.services.scheduleService.HecTaxCheckExtractionService.FileDetails
 
 object FileMapOps {
   val hec: String           = "HEC"

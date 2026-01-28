@@ -26,7 +26,7 @@ import uk.gov.hmrc.hec.models.sdes.{FileAudit, FileChecksum, FileMetaData, SDESF
 import uk.gov.hmrc.hec.models.hecTaxCheck.{CorrectiveAction, HECTaxCheck, HECTaxCheckFileBodyList}
 import uk.gov.hmrc.hec.models.Error
 import uk.gov.hmrc.hec.services.*
-import uk.gov.hmrc.hec.services.scheduleService.HecTaxCheckExtractionServiceImpl.*
+import uk.gov.hmrc.hec.services.scheduleService.HecTaxCheckExtractionService.*
 import uk.gov.hmrc.hec.util.{FileMapOps, UUIDGenerator}
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.objectstore.client.{Md5Hash, ObjectSummaryWithMd5}
@@ -238,7 +238,7 @@ class HecTaxCheckExtractionServiceImpl @Inject() (
 
 }
 
-object HecTaxCheckExtractionServiceImpl {
+object HecTaxCheckExtractionService {
   final case class FileDetails[A](dirName: String, partialFileName: String)
 
 }
