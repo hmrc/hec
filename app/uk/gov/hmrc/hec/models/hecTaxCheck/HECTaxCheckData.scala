@@ -16,7 +16,7 @@
 
 package uk.gov.hmrc.hec.models.hecTaxCheck
 
-import play.api.libs.json._
+import play.api.libs.json.*
 import uk.gov.hmrc.hec.models.Language
 import uk.gov.hmrc.hec.models.hecTaxCheck.ApplicantDetails.{CompanyApplicantDetails, IndividualApplicantDetails}
 import uk.gov.hmrc.hec.models.hecTaxCheck.TaxDetails.{CompanyTaxDetails, IndividualTaxDetails}

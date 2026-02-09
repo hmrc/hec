@@ -12,16 +12,15 @@ lazy val scoverageSettings =
 lazy val microservice = Project(appName, file("."))
   .enablePlugins(play.sbt.PlayScala, SbtDistributablesPlugin)
   .disablePlugins(JUnitXmlReportPlugin)
-  .settings(addCompilerPlugin("org.typelevel" %% "kind-projector" % "0.13.3" cross CrossVersion.full))
   .settings(
     majorVersion := 1,
-    scalaVersion := "2.13.16",
+    scalaVersion := "3.3.6",
     libraryDependencies ++= AppDependencies.compile ++ AppDependencies.test,
     scalacOptions := Seq(
-      "-Ymacro-annotations",
-      "-Wconf:src=routes/.*:s", // Silence warnings in generated routes
-      "-Wconf:cat=unused-imports&src=html/.*:s", // Silence unused import warnings in twirl templates
-      "-Wunused:nowarn"
+      "-Wconf:src=html/.*:s",
+      "-Wconf:src=routes/.*:s",
+      "-deprecation",
+      "-feature"
     ),
     Compile / doc / sources := Seq.empty
   )

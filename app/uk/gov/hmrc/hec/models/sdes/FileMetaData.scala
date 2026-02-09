@@ -16,7 +16,8 @@
 
 package uk.gov.hmrc.hec.models.sdes
 
-import play.api.libs.json.{Json, OFormat}
+import play.api.libs.functional.syntax.*
+import play.api.libs.json.{OFormat, __}
 
 final case class FileMetaData(
   recipientOrSender: String,
@@ -28,5 +29,13 @@ final case class FileMetaData(
 )
 
 object FileMetaData {
-  implicit val format: OFormat[FileMetaData] = Json.format
+
+  implicit val format: OFormat[FileMetaData] = (
+    (__ \ "recipientOrSender").format[String] and
+      (__ \ "name").format[String] and
+      (__ \ "location").format[String] and
+      (__ \ "checksum").format[FileChecksum] and
+      (__ \ "size").format[Long] and
+      (__ \ "properties").format[List[String]]
+  )(FileMetaData.apply, o => Tuple.fromProductTyped(o))
 }

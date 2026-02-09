@@ -17,7 +17,7 @@
 package uk.gov.hmrc.hec.connectors
 
 import org.scalamock.scalatest.MockFactory
-import org.scalatest.matchers.should._
+import org.scalatest.matchers.should.*
 import play.api.libs.json.{JsValue, Json, Writes}
 import play.api.libs.ws.BodyWritable
 import uk.gov.hmrc.http.client.{HttpClientV2, RequestBuilder}
@@ -39,9 +39,8 @@ trait HttpSupport { this: MockFactory with Matchers =>
       .expects(url, *)
       .returning(mockRequestBuilder)
 
-    (mockRequestBuilder
-      .setHeader(_: (String, String)))
-      .expects(*)
+    ((h: Seq[(String, String)]) => mockRequestBuilder.setHeader(h: _*))
+      .expects(headers)
       .returning(mockRequestBuilder)
 
     mockExecute(httpResponse)
@@ -55,9 +54,8 @@ trait HttpSupport { this: MockFactory with Matchers =>
       .expects(url, *)
       .returning(mockRequestBuilder)
 
-    (mockRequestBuilder
-      .setHeader(_: (String, String)))
-      .expects(*)
+    ((h: Seq[(String, String)]) => mockRequestBuilder.setHeader(h: _*))
+      .expects(headers)
       .returning(mockRequestBuilder)
 
     mockWithBody(requestBody)

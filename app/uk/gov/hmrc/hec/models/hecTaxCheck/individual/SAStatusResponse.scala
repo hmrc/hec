@@ -16,7 +16,8 @@
 
 package uk.gov.hmrc.hec.models.hecTaxCheck.individual
 
-import play.api.libs.json.{Json, OFormat}
+import play.api.libs.functional.syntax.*
+import play.api.libs.json.{OFormat, __}
 import uk.gov.hmrc.hec.models.hecTaxCheck.TaxYear
 import uk.gov.hmrc.hec.models.ids.SAUTR
 
@@ -27,5 +28,9 @@ final case class SAStatusResponse(
 )
 
 object SAStatusResponse {
-  implicit val format: OFormat[SAStatusResponse] = Json.format
+  implicit val format: OFormat[SAStatusResponse] = (
+    (__ \ "sautr").format[SAUTR] and
+      (__ \ "taxYear").format[TaxYear] and
+      (__ \ "status").format[SAStatus]
+  )(SAStatusResponse.apply, o => Tuple.fromProductTyped(o))
 }

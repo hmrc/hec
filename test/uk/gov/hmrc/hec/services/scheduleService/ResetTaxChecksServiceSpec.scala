@@ -29,6 +29,9 @@ import uk.gov.hmrc.hec.models.Error
 import uk.gov.hmrc.hec.models.hecTaxCheck.HECTaxCheck
 import uk.gov.hmrc.hec.repos.HECTaxCheckStore
 import uk.gov.hmrc.hec.services.MongoLockService
+import org.mockito.Mockito.{never, verify, when}
+import org.mockito.ArgumentMatchers.{any, eq => eqTo}
+import scala.concurrent.{ExecutionContext, Future}
 
 import java.time.format.DateTimeFormatter
 import java.time.{ZoneId, ZonedDateTime}
@@ -56,7 +59,7 @@ class ResetTaxChecksServiceSpec
 
   def mockWithLock(lockId: String, lockObtained: Boolean) =
     (mockMongoLockService
-      .withLock(_: String, _: Future[Either[Error, List[HECTaxCheck]]])(_: HECTaxCheckExtractionContext))
+      .withLock(_: String, _: () => Future[Either[Error, List[HECTaxCheck]]])(_: HECTaxCheckExtractionContext))
       .expects(lockId, *, *)
       .onCall { test =>
         if (lockObtained)

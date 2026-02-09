@@ -18,8 +18,8 @@ package uk.gov.hmrc.hec.connectors
 
 import com.typesafe.config.ConfigFactory
 import org.scalamock.scalatest.MockFactory
-import org.scalatest.matchers.should._
-import org.scalatest.wordspec._
+import org.scalatest.matchers.should.*
+import org.scalatest.wordspec.*
 import play.api.Configuration
 import uk.gov.hmrc.hec.models.ids.CRN
 import uk.gov.hmrc.http.{HeaderCarrier, HttpResponse, StringContextOps}

@@ -17,7 +17,7 @@
 package uk.gov.hmrc.hec.services
 
 import cats.data.EitherT
-import cats.implicits._
+import cats.implicits.*
 import com.google.inject.{ImplementedBy, Inject, Singleton}
 import play.api.http.Status.{NOT_FOUND, OK}
 import play.api.libs.json.{Json, Reads}
@@ -30,7 +30,7 @@ import uk.gov.hmrc.hec.models.ids.{CTUTR, SAUTR}
 import uk.gov.hmrc.hec.models.{CTLookupStatus, Error}
 import uk.gov.hmrc.hec.services.IFService.{BackendError, DataNotFoundError, IFError}
 import uk.gov.hmrc.hec.services.IFServiceImpl.{RawAccountingPeriod, RawCTSuccessResponse, RawFailureResponse, RawSASuccessResponse}
-import uk.gov.hmrc.hec.util.HttpResponseOps._
+import uk.gov.hmrc.hec.util.HttpResponseOps.*
 import uk.gov.hmrc.http.{HeaderCarrier, HttpResponse}
 
 import java.time.LocalDate
@@ -93,7 +93,7 @@ class IFServiceImpl @Inject() (
   ): EitherT[Future, IFError, SAStatusResponse] =
     IFConnector
       .getSAStatus(utr, taxYear, correlationId)
-      .leftMap(BackendError)
+      .leftMap(uk.gov.hmrc.hec.services.IFService.BackendError.apply)
       .subflatMap { httpResponse =>
         if (httpResponse.status === OK) {
           httpResponse
@@ -117,7 +117,7 @@ class IFServiceImpl @Inject() (
   ): EitherT[Future, IFError, CTStatusResponse] =
     IFConnector
       .getCTStatus(utr, startDate, endDate, correlationId)
-      .leftMap(BackendError)
+      .leftMap(uk.gov.hmrc.hec.services.IFService.BackendError.apply)
       .subflatMap { httpResponse =>
         if (httpResponse.status === OK) {
           httpResponse
@@ -142,9 +142,10 @@ class IFServiceImpl @Inject() (
         Right(List.empty)
 
       case CTLookupStatus.Successful =>
+        type BackendEither[A] = Either[BackendError, A]
         response.accountingPeriods
           .getOrElse(List.empty[RawAccountingPeriod])
-          .traverse[Either[BackendError, *], CTAccountingPeriod](a =>
+          .traverse[BackendEither, CTAccountingPeriod](a =>
             toCtStatus(a)
               .map(status => CTAccountingPeriodDigital(a.accountingPeriodStartDate, a.accountingPeriodEndDate, status))
           )

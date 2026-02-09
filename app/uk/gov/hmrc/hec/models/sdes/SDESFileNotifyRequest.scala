@@ -16,7 +16,8 @@
 
 package uk.gov.hmrc.hec.models.sdes
 
-import play.api.libs.json.{Json, OFormat}
+import play.api.libs.functional.syntax.*
+import play.api.libs.json.{OFormat, __}
 
 final case class SDESFileNotifyRequest(
   informationType: String,
@@ -24,5 +25,9 @@ final case class SDESFileNotifyRequest(
   audit: FileAudit
 )
 object SDESFileNotifyRequest {
-  implicit val format: OFormat[SDESFileNotifyRequest] = Json.format
+  implicit val format: OFormat[SDESFileNotifyRequest] = (
+    (__ \ "informationType").format[String] and
+      (__ \ "file").format[FileMetaData] and
+      (__ \ "audit").format[FileAudit]
+  )(SDESFileNotifyRequest.apply, o => Tuple.fromProductTyped(o))
 }

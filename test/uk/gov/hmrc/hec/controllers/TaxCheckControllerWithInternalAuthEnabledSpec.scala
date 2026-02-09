@@ -18,7 +18,7 @@ package uk.gov.hmrc.hec.controllers
 
 import cats.data.EitherT
 import cats.implicits.catsSyntaxOptionId
-import cats.instances.future._
+import cats.instances.future.*
 import com.typesafe.config.ConfigFactory
 import org.apache.pekko.stream.Materializer
 import org.apache.pekko.stream.testkit.NoMaterializer
@@ -26,24 +26,24 @@ import play.api.Configuration
 import play.api.http.Status
 import play.api.inject.bind
 import play.api.inject.guice.GuiceableModule
-import play.api.libs.json._
+import play.api.libs.json.*
 import play.api.mvc.{ControllerComponents, Request, Result}
-import play.api.test.Helpers._
+import play.api.test.Helpers.*
 import play.api.test.{FakeRequest, Helpers}
 import uk.gov.hmrc.auth.core.AuthProvider.{GovernmentGateway, PrivilegedApplication}
 import uk.gov.hmrc.auth.core.retrieve.{Credentials, GGCredId => AuthGGCredId, Name => RetrievalName, OneTimeLogin, PAClientId}
-import uk.gov.hmrc.auth.core._
+import uk.gov.hmrc.auth.core.*
 import uk.gov.hmrc.hec.controllers.actions.AuthenticatedGGOrStrideRequest
 import uk.gov.hmrc.hec.models
 import uk.gov.hmrc.hec.models.hecTaxCheck.ApplicantDetails.{CompanyApplicantDetails, IndividualApplicantDetails}
 import uk.gov.hmrc.hec.models.hecTaxCheck.HECTaxCheckData.{CompanyHECTaxCheckData, IndividualHECTaxCheckData}
 import uk.gov.hmrc.hec.models.hecTaxCheck.TaxDetails.{CompanyTaxDetails, IndividualTaxDetails}
-import uk.gov.hmrc.hec.models.hecTaxCheck._
+import uk.gov.hmrc.hec.models.hecTaxCheck.*
 import uk.gov.hmrc.hec.models.hecTaxCheck.company.CTAccountingPeriod.CTAccountingPeriodDigital
 import uk.gov.hmrc.hec.models.hecTaxCheck.company.{CTStatus, CTStatusResponse, CompanyHouseName}
 import uk.gov.hmrc.hec.models.hecTaxCheck.individual.{DateOfBirth, Name}
 import uk.gov.hmrc.hec.models.hecTaxCheck.licence.{LicenceDetails, LicenceTimeTrading, LicenceType, LicenceValidityPeriod}
-import uk.gov.hmrc.hec.models.ids._
+import uk.gov.hmrc.hec.models.ids.*
 import uk.gov.hmrc.hec.models.taxCheckMatch.{HECTaxCheckMatchRequest, HECTaxCheckMatchResult, HECTaxCheckMatchStatus, MatchFailureReason}
 import uk.gov.hmrc.hec.models.{EmailAddress, Error, SaveEmailAddressRequest, StrideOperatorDetails, TaxCheckListItem, taxCheckMatch}
 import uk.gov.hmrc.hec.services.TaxCheckService
@@ -52,11 +52,15 @@ import uk.gov.hmrc.http.{HeaderCarrier, UpstreamErrorResponse}
 import uk.gov.hmrc.internalauth.client.Predicate.Permission
 import uk.gov.hmrc.internalauth.client.Retrieval.EmptyRetrieval
 import uk.gov.hmrc.internalauth.client.test.{BackendAuthComponentsStub, StubBehaviour}
-import uk.gov.hmrc.internalauth.client._
+import uk.gov.hmrc.internalauth.client.*
+import uk.gov.hmrc.hec.services.scheduleService.HecTaxCheckExtractionService
 
 import java.time.{LocalDate, ZoneId, ZonedDateTime}
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
+import org.mockito.ArgumentMatchers
+import org.mockito.Mockito.when
+import org.mockito.ArgumentMatchers.any
 
 class TaxCheckControllerWithInternalAuthEnabledSpec extends ControllerSpec with AuthSupport {
 
@@ -67,14 +71,16 @@ class TaxCheckControllerWithInternalAuthEnabledSpec extends ControllerSpec with 
   val ggCredId                          = GGCredId("ggCredId")
   implicit val cc: ControllerComponents = Helpers.stubControllerComponents()
 
-  val mockInternalAuthStubBehaviour = mock[StubBehaviour]
-  val mockBackendAuthComponents     = BackendAuthComponentsStub(mockInternalAuthStubBehaviour)
+  val mockInternalAuthStubBehaviour    = mock[StubBehaviour]
+  val mockBackendAuthComponents        = BackendAuthComponentsStub(mockInternalAuthStubBehaviour)
+  val mockHecTaxCheckExtractionService = mock[HecTaxCheckExtractionService]
 
   override val overrideBindings =
     List[GuiceableModule](
       bind[AuthConnector].toInstance(mockAuthConnector),
       bind[TaxCheckService].toInstance(mockTaxCheckService),
-      bind[BackendAuthComponents].toInstance(mockBackendAuthComponents)
+      bind[BackendAuthComponents].toInstance(mockBackendAuthComponents),
+      bind[HecTaxCheckExtractionService].toInstance(mockHecTaxCheckExtractionService)
     )
 
   val controller = instanceOf[TaxCheckController]
@@ -96,18 +102,21 @@ class TaxCheckControllerWithInternalAuthEnabledSpec extends ControllerSpec with 
   val expectedPredicate: Permission =
     Permission(expectedResource, IAAction("READ"))
 
-  def mockSaveTaxCheck(taxCheckData: HECTaxCheckData, request: AuthenticatedGGOrStrideRequest[_])(
+  def mockSaveTaxCheck(taxCheckData: HECTaxCheckData, request: AuthenticatedGGOrStrideRequest[?])(
     result: Either[Error, HECTaxCheck]
   ) =
     (mockTaxCheckService
-      .saveTaxCheck(_: HECTaxCheckData)(_: HeaderCarrier, _: AuthenticatedGGOrStrideRequest[_]))
-      .expects(taxCheckData, *, request)
+      .saveTaxCheck(_: HECTaxCheckData)(
+        _: HeaderCarrier,
+        _: AuthenticatedGGOrStrideRequest[?]
+      ))
+      .expects(taxCheckData, *, *)
       .returning(EitherT.fromEither(result))
 
-  def mockInternalAuth(predicate: Predicate)(result: Future[_]) =
+  def mockInternalAuth(predicate: Predicate)(result: Future[Unit]) =
     (mockInternalAuthStubBehaviour
-      .stubAuth(_: Option[Predicate], _: Retrieval[_]))
-      .expects(Some(predicate), EmptyRetrieval)
+      .stubAuth(_: Option[Predicate], _: Retrieval[Unit]))
+      .expects(Some(predicate), *)
       .returning(result)
 
   def mockMatchTaxCheck(matchRequest: HECTaxCheckMatchRequest)(result: Either[Error, HECTaxCheckMatchResult]) =
@@ -122,9 +131,7 @@ class TaxCheckControllerWithInternalAuthEnabledSpec extends ControllerSpec with 
       .expects(ggCredId, *)
       .returning(EitherT.fromEither(result))
 
-  def mockSaveEmailAddress(saveEmailAddressRequest: SaveEmailAddressRequest)(
-    result: Either[Error, Option[Unit]]
-  ) =
+  def mockSaveEmailAddress(saveEmailAddressRequest: SaveEmailAddressRequest)(result: Either[Error, Option[Unit]]) =
     (mockTaxCheckService
       .saveEmailAddress(_: SaveEmailAddressRequest)(_: HeaderCarrier))
       .expects(saveEmailAddressRequest, *)

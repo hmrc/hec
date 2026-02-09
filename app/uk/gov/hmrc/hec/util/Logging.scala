@@ -21,7 +21,7 @@ import uk.gov.hmrc.hec.models.Error
 
 trait Logging {
 
-  val logger: Logger = Logger(this.getClass)
+  protected lazy val logger: Logger = Logger(getClass)
 
 }
 

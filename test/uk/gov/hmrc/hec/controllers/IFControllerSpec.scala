@@ -17,13 +17,13 @@
 package uk.gov.hmrc.hec.controllers
 
 import cats.data.EitherT
-import cats.instances.future._
+import cats.instances.future.*
 import play.api.inject.bind
 import play.api.inject.guice.GuiceableModule
 import play.api.test.FakeRequest
-import play.api.test.Helpers._
+import play.api.test.Helpers.*
 import uk.gov.hmrc.auth.core.AuthConnector
-import uk.gov.hmrc.hec.models._
+import uk.gov.hmrc.hec.models.*
 import uk.gov.hmrc.hec.models.hecTaxCheck.TaxYear
 import uk.gov.hmrc.hec.models.hecTaxCheck.company.CTStatusResponse
 import uk.gov.hmrc.hec.models.hecTaxCheck.individual.{SAStatus, SAStatusResponse}
@@ -31,6 +31,7 @@ import uk.gov.hmrc.hec.models.ids.{CTUTR, GGCredId, SAUTR}
 import uk.gov.hmrc.hec.services.IFService
 import uk.gov.hmrc.hec.services.IFService.{BackendError, DataNotFoundError, IFError}
 import uk.gov.hmrc.http.HeaderCarrier
+import uk.gov.hmrc.hec.services.scheduleService.HecTaxCheckExtractionService
 
 import java.time.LocalDate
 import java.util.UUID
@@ -38,12 +39,16 @@ import scala.concurrent.ExecutionContext.Implicits.global
 
 class IFControllerSpec extends ControllerSpec with AuthSupport {
 
-  val mockIFService = mock[IFService]
+  val mockIFService                    = mock[IFService]
+  val mockHecTaxCheckExtractionService =
+    mock[HecTaxCheckExtractionService]
 
   override val overrideBindings =
     List[GuiceableModule](
       bind[AuthConnector].toInstance(mockAuthConnector),
-      bind[IFService].toInstance(mockIFService)
+      bind[IFService].toInstance(mockIFService),
+      bind[HecTaxCheckExtractionService]
+        .toInstance(mockHecTaxCheckExtractionService)
     )
 
   val controller = instanceOf[IFController]

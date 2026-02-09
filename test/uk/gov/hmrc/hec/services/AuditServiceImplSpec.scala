@@ -32,7 +32,7 @@ import uk.gov.hmrc.hec.models.hecTaxCheck.company.{CTStatusResponse, CompanyHous
 import uk.gov.hmrc.hec.models.hecTaxCheck.licence.{LicenceDetails, LicenceTimeTrading, LicenceType, LicenceValidityPeriod}
 import uk.gov.hmrc.hec.models.ids.{CRN, CTUTR}
 import uk.gov.hmrc.http.HeaderCarrier
-import uk.gov.hmrc.play.audit.AuditExtensions._
+import uk.gov.hmrc.play.audit.AuditExtensions.*
 import uk.gov.hmrc.play.audit.http.connector.{AuditConnector, AuditResult}
 import uk.gov.hmrc.play.audit.model.ExtendedDataEvent
 
@@ -66,7 +66,7 @@ class AuditServiceImplSpec extends Matchers with AnyWordSpecLike with MockFactor
 
         val requestUri = "/uri"
 
-        implicit val request: Request[_] = FakeRequest("GET", requestUri, Headers(), "")
+        implicit val request: Request[?] = FakeRequest("GET", requestUri, Headers(), "")
 
         implicit val hc: HeaderCarrier = HeaderCarrier()
 

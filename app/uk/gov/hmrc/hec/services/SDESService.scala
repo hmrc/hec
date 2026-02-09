@@ -18,7 +18,7 @@ package uk.gov.hmrc.hec.services
 
 import cats.data.EitherT
 import com.google.inject.{ImplementedBy, Inject, Singleton}
-import play.api.http.Status._
+import play.api.http.Status.*
 import play.api.libs.json.Json
 import uk.gov.hmrc.hec.connectors.SDESConnector
 import uk.gov.hmrc.hec.models.Error

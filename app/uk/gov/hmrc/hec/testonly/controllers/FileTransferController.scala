@@ -20,7 +20,7 @@ import com.google.inject.Inject
 import play.api.mvc.{Action, AnyContent, ControllerComponents}
 import uk.gov.hmrc.hec.services.scheduleService.HecTaxCheckExtractionService
 import uk.gov.hmrc.hec.util.Logging
-import uk.gov.hmrc.hec.util.Logging._
+import uk.gov.hmrc.hec.util.Logging.*
 import uk.gov.hmrc.play.bootstrap.backend.controller.BackendController
 
 import scala.concurrent.ExecutionContext

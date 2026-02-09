@@ -18,20 +18,20 @@ package uk.gov.hmrc.hec.testonly.controllers
 
 import cats.data.EitherT
 import cats.implicits.catsSyntaxOptionId
-import cats.instances.future._
+import cats.instances.future.*
 import play.api.inject.bind
 import play.api.inject.guice.GuiceableModule
 import play.api.libs.json.{JsString, JsValue, Json}
 import play.api.mvc.Result
 import play.api.test.FakeRequest
-import play.api.test.Helpers._
+import play.api.test.Helpers.*
 import uk.gov.hmrc.hec.controllers.ControllerSpec
 import uk.gov.hmrc.hec.models
 import uk.gov.hmrc.hec.models.{Error, Language}
 import uk.gov.hmrc.hec.models.hecTaxCheck.ApplicantDetails.IndividualApplicantDetails
 import uk.gov.hmrc.hec.models.hecTaxCheck.HECTaxCheckData.IndividualHECTaxCheckData
 import uk.gov.hmrc.hec.models.hecTaxCheck.TaxDetails.IndividualTaxDetails
-import uk.gov.hmrc.hec.models.hecTaxCheck._
+import uk.gov.hmrc.hec.models.hecTaxCheck.*
 import uk.gov.hmrc.hec.models.hecTaxCheck.individual.{DateOfBirth, Name}
 import uk.gov.hmrc.hec.models.ids.{CRN, GGCredId, NINO, SAUTR}
 import uk.gov.hmrc.hec.models.hecTaxCheck.licence.{LicenceDetails, LicenceTimeTrading, LicenceType, LicenceValidityPeriod}
@@ -39,6 +39,7 @@ import uk.gov.hmrc.hec.testonly.models.SaveTaxCheckRequest
 import uk.gov.hmrc.hec.testonly.services.TaxCheckService
 import uk.gov.hmrc.hec.util.TimeUtils
 import uk.gov.hmrc.http.HeaderCarrier
+import uk.gov.hmrc.hec.services.scheduleService.HecTaxCheckExtractionService
 
 import java.time.format.DateTimeFormatter
 import java.time.{LocalDate, ZoneId, ZonedDateTime}
@@ -47,11 +48,13 @@ import scala.concurrent.Future
 
 class TaxCheckControllerSpec extends ControllerSpec {
 
-  val mockTaxCheckService = mock[TaxCheckService]
+  val mockTaxCheckService              = mock[TaxCheckService]
+  val mockHecTaxCheckExtractionService = mock[HecTaxCheckExtractionService]
 
   override val overrideBindings =
     List[GuiceableModule](
-      bind[TaxCheckService].toInstance(mockTaxCheckService)
+      bind[TaxCheckService].toInstance(mockTaxCheckService),
+      bind[HecTaxCheckExtractionService].toInstance(mockHecTaxCheckExtractionService)
     )
 
   def mockSaveTaxCheck(request: SaveTaxCheckRequest)(result: Either[Error, Unit]) =

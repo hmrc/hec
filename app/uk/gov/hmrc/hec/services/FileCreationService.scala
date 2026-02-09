@@ -17,22 +17,22 @@
 package uk.gov.hmrc.hec.services
 
 import cats.implicits.catsSyntaxOptionId
-import cats.syntax.eq._
+import cats.syntax.eq.*
 import com.google.inject.{ImplementedBy, Inject}
 import uk.gov.hmrc.hec.models.Error
 import uk.gov.hmrc.hec.models.fileFormat.FileFormat.toFileContent
-import uk.gov.hmrc.hec.models.fileFormat._
-import uk.gov.hmrc.hec.models.hecTaxCheck.CorrectiveAction._
+import uk.gov.hmrc.hec.models.fileFormat.*
+import uk.gov.hmrc.hec.models.hecTaxCheck.CorrectiveAction.*
 import uk.gov.hmrc.hec.models.hecTaxCheck.HECTaxCheckData.{CompanyHECTaxCheckData, IndividualHECTaxCheckData}
 import uk.gov.hmrc.hec.models.hecTaxCheck.HECTaxCheckSource.Digital
-import uk.gov.hmrc.hec.models.hecTaxCheck.TaxSituation._
-import uk.gov.hmrc.hec.models.hecTaxCheck._
+import uk.gov.hmrc.hec.models.hecTaxCheck.TaxSituation.*
+import uk.gov.hmrc.hec.models.hecTaxCheck.*
 import uk.gov.hmrc.hec.models.hecTaxCheck.company.CTAccountingPeriod.{CTAccountingPeriodDigital, CTAccountingPeriodStride}
 import uk.gov.hmrc.hec.models.hecTaxCheck.company.{CTAccountingPeriod, CTStatus}
 import uk.gov.hmrc.hec.models.hecTaxCheck.individual.SAStatus
-import uk.gov.hmrc.hec.models.hecTaxCheck.individual.SAStatus._
+import uk.gov.hmrc.hec.models.hecTaxCheck.individual.SAStatus.*
 import uk.gov.hmrc.hec.models.hecTaxCheck.licence.LicenceTimeTrading.{EightYearsOrMore, FourToEightYears, TwoToFourYears, ZeroToTwoYears}
-import uk.gov.hmrc.hec.models.hecTaxCheck.licence.LicenceType._
+import uk.gov.hmrc.hec.models.hecTaxCheck.licence.LicenceType.*
 import uk.gov.hmrc.hec.models.hecTaxCheck.licence.LicenceValidityPeriod.{UpToFiveYears, UpToFourYears, UpToOneYear, UpToThreeYears, UpToTwoYears}
 import uk.gov.hmrc.hec.models.hecTaxCheck.licence.{LicenceTimeTrading, LicenceType, LicenceValidityPeriod}
 import uk.gov.hmrc.hec.util.TimeProvider

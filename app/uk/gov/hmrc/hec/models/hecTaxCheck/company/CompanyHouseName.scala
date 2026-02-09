@@ -18,8 +18,8 @@ package uk.gov.hmrc.hec.models.hecTaxCheck.company
 
 import play.api.libs.json.{Format, Json}
 
-final case class CompanyHouseName(name: String)
+final case class CompanyHouseName(name: String) extends AnyVal
 
 object CompanyHouseName {
-  implicit val format: Format[CompanyHouseName] = Json.valueFormat
+  implicit val format: Format[CompanyHouseName] = Json.valueFormat[CompanyHouseName]
 }

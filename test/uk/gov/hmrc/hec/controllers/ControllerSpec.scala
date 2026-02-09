@@ -23,7 +23,7 @@ import org.scalatest.BeforeAndAfterAll
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
 import play.api.inject.guice.{GuiceApplicationBuilder, GuiceableModule}
-import play.api._
+import play.api.*
 import uk.gov.hmrc.hec.config.AppConfig
 
 import scala.reflect.ClassTag

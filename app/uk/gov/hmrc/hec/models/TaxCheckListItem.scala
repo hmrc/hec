@@ -16,7 +16,8 @@
 
 package uk.gov.hmrc.hec.models
 
-import play.api.libs.json.{Json, OFormat}
+import play.api.libs.functional.syntax.*
+import play.api.libs.json.{OFormat, __}
 import uk.gov.hmrc.hec.models.hecTaxCheck.licence.LicenceType
 import uk.gov.hmrc.hec.models.hecTaxCheck.{HECTaxCheck, HECTaxCheckCode}
 
@@ -30,7 +31,13 @@ final case class TaxCheckListItem(
 )
 
 object TaxCheckListItem {
-  implicit val format: OFormat[TaxCheckListItem] = Json.format
+
+  implicit val format: OFormat[TaxCheckListItem] = (
+    (__ \ "licenceType").format[LicenceType] and
+      (__ \ "taxCheckCode").format[HECTaxCheckCode] and
+      (__ \ "expiresAfter").format[LocalDate] and
+      (__ \ "createDate").format[ZonedDateTime]
+  )(TaxCheckListItem.apply, o => Tuple.fromProductTyped(o))
 
   def fromHecTaxCheck(taxCheck: HECTaxCheck): TaxCheckListItem = TaxCheckListItem(
     licenceType = taxCheck.taxCheckData.licenceDetails.licenceType,

@@ -21,7 +21,7 @@ import play.api.Configuration
 import uk.gov.hmrc.hec.repos.HECTaxCheckStore
 import uk.gov.hmrc.hec.services.MongoLockService
 import uk.gov.hmrc.hec.util.Logging
-import uk.gov.hmrc.hec.util.Logging._
+import uk.gov.hmrc.hec.util.Logging.*
 
 import java.time.ZonedDateTime
 import scala.concurrent.Future
@@ -57,7 +57,8 @@ class ResetTaxChecksSentFlagService @Inject() (
 
   private def resetSentFlags(): Future[Option[Unit]] =
     mongoLockService.withLock(
-      lockId, {
+      lockId,
+      () => {
         logger.info(s"Resetting 'sent' flag for all tax checks created on or after $resetTaxChecksCreatedOnOrAfter")
         taxCheckStore
           .resetTaxCheckIsExtractedFlag(resetTaxChecksCreatedOnOrAfter)

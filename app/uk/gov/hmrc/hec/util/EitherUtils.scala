@@ -16,7 +16,7 @@
 
 package uk.gov.hmrc.hec.util
 
-import play.api.libs.json._
+import play.api.libs.json.*
 
 import java.util.Locale
 import scala.reflect.ClassTag

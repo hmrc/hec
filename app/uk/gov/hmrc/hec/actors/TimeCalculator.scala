@@ -20,7 +20,7 @@ import com.google.inject.{ImplementedBy, Inject, Singleton}
 import uk.gov.hmrc.hec.util.TimeProvider
 
 import java.time.{LocalTime, ZoneId}
-import scala.concurrent.duration._
+import scala.concurrent.duration.*
 
 @ImplementedBy(classOf[TimeCalculatorImpl])
 trait TimeCalculator {

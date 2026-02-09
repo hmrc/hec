@@ -17,17 +17,17 @@
 package uk.gov.hmrc.hec.services.scheduleService
 
 import cats.data.EitherT
-import cats.implicits._
-import com.google.inject.{ImplementedBy, Inject}
+import cats.implicits.*
+import com.google.inject.Inject
 import play.api.Configuration
 import uk.gov.hmrc.hec.models
 import uk.gov.hmrc.hec.models.hecTaxCheck.licence.{LicenceTimeTrading, LicenceType, LicenceValidityPeriod}
 import uk.gov.hmrc.hec.models.sdes.{FileAudit, FileChecksum, FileMetaData, SDESFileNotifyRequest}
 import uk.gov.hmrc.hec.models.hecTaxCheck.{CorrectiveAction, HECTaxCheck, HECTaxCheckFileBodyList}
 import uk.gov.hmrc.hec.models.Error
-import uk.gov.hmrc.hec.services._
-import uk.gov.hmrc.hec.services.scheduleService.HecTaxCheckExtractionServiceImpl._
-import uk.gov.hmrc.hec.util.{FileMapOps, Logging, UUIDGenerator}
+import uk.gov.hmrc.hec.services.*
+import uk.gov.hmrc.hec.services.scheduleService.HecTaxCheckExtractionService.*
+import uk.gov.hmrc.hec.util.{FileMapOps, UUIDGenerator}
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.objectstore.client.{Md5Hash, ObjectSummaryWithMd5}
 
@@ -35,7 +35,6 @@ import java.util.{Base64, UUID}
 import javax.inject.Singleton
 import scala.concurrent.Future
 
-@ImplementedBy(classOf[HecTaxCheckExtractionServiceImpl])
 trait HecTaxCheckExtractionService {
 
   def lockAndProcessHecData(): Future[Option[Either[models.Error, Unit]]]
@@ -54,7 +53,7 @@ class HecTaxCheckExtractionServiceImpl @Inject() (
 )(implicit
   hecTaxCheckExtractionContext: HECTaxCheckExtractionContext
 ) extends HecTaxCheckExtractionService
-    with Logging {
+    with uk.gov.hmrc.hec.util.Logging {
 
   implicit val hc: HeaderCarrier = HeaderCarrier()
   val maxTaxChecksPerFile: Int   = config.get[Int]("hec-file-extraction-details.maximum-rows-per-file")
@@ -85,7 +84,7 @@ class HecTaxCheckExtractionServiceImpl @Inject() (
   val lockId: String = "hecTaxChecks"
 
   override def lockAndProcessHecData(): Future[Option[Either[models.Error, Unit]]] =
-    mongoLockService.withLock(lockId, processHecData())
+    mongoLockService.withLock(lockId, processHecData)
 
   private def processHecData()(implicit hc: HeaderCarrier): Future[Either[models.Error, Unit]] = {
     val seqNum                                      = "0001"
@@ -239,7 +238,7 @@ class HecTaxCheckExtractionServiceImpl @Inject() (
 
 }
 
-object HecTaxCheckExtractionServiceImpl {
+object HecTaxCheckExtractionService {
   final case class FileDetails[A](dirName: String, partialFileName: String)
 
 }

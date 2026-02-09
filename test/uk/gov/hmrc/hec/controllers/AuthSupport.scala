@@ -17,11 +17,11 @@
 package uk.gov.hmrc.hec.controllers
 
 import uk.gov.hmrc.auth.core.AuthProvider.{GovernmentGateway, PrivilegedApplication}
-import uk.gov.hmrc.auth.core._
+import uk.gov.hmrc.auth.core.*
 import uk.gov.hmrc.auth.core.authorise.Predicate
 import uk.gov.hmrc.auth.core.retrieve.v2.Retrievals
-import uk.gov.hmrc.auth.core.retrieve._
-import uk.gov.hmrc.hec.controllers.AuthSupport._
+import uk.gov.hmrc.auth.core.retrieve.*
+import uk.gov.hmrc.hec.controllers.AuthSupport.*
 import uk.gov.hmrc.http.HeaderCarrier
 
 import scala.concurrent.{ExecutionContext, Future}

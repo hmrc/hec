@@ -28,7 +28,7 @@ import scala.concurrent.duration.FiniteDuration
 @ImplementedBy(classOf[MongoLockServiceImpl])
 trait MongoLockService {
 
-  def withLock[T](lockId: String, data: => Future[T])(implicit
+  def withLock[T](lockId: String, data: () => Future[T])(implicit
     hecTaxCheckExtractionContext: HECTaxCheckExtractionContext
   ): Future[Option[T]]
 
@@ -47,8 +47,8 @@ class MongoLockServiceImpl @Inject() (mongoLockRepository: MongoLockRepository, 
     ttl = forceLockReleaseAfter
   )
 
-  override def withLock[T](lockId: String, data: => Future[T])(implicit
+  override def withLock[T](lockId: String, data: () => Future[T])(implicit
     hecTaxCheckExtractionContext: HECTaxCheckExtractionContext
   ): Future[Option[T]] =
-    lockService(lockId).withLock(data)
+    lockService(lockId).withLock(data())
 }
