@@ -18,10 +18,10 @@ package uk.gov.hmrc.hec.models
 
 import play.api.libs.json.{Format, Json}
 
-final case class EmailAddress(value: String)
+final case class EmailAddress(value: String) extends AnyVal
 
 object EmailAddress {
 
-  implicit val format: Format[EmailAddress] = Json.format[EmailAddress]
+  implicit val format: Format[EmailAddress] = Json.valueFormat[EmailAddress]
 
 }
