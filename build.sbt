@@ -16,6 +16,7 @@ lazy val microservice = Project(appName, file("."))
     majorVersion := 1,
     scalaVersion := "3.3.6",
     libraryDependencies ++= AppDependencies.compile ++ AppDependencies.test,
+    excludeDependencies += ExclusionRule("org.lz4", "lz4-java"),
     scalacOptions := Seq(
       "-Wconf:src=html/.*:s",
       "-Wconf:src=routes/.*:s",

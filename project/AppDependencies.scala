@@ -8,7 +8,7 @@ object AppDependencies {
   val pekkoVersion = "1.0.3" //version has to match already existing pekko version in play
 
   val compile = Seq(
-    "uk.gov.hmrc"             %% s"bootstrap-backend$playVersion"    % bootstrapVersion,
+    "uk.gov.hmrc"             %% s"bootstrap-backend$playVersion"    % bootstrapVersion exclude("org.apache.commons", "commons-lang3"),
     "uk.gov.hmrc.mongo"       %% s"hmrc-mongo$playVersion"           % hmrcMongoVersion,
     "uk.gov.hmrc"             %% s"domain$playVersion"               % "13.0.0",
     "uk.gov.hmrc"             %% s"internal-auth-client$playVersion" % "4.3.0",
