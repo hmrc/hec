@@ -62,7 +62,7 @@ class IFConnectorSpec extends AnyWordSpec with Matchers with MockFactory with Ht
     "handling requests to fetch SA status" must {
       val taxYear = 2020
 
-      val expectedUrl = url"$protocol://$host:$port/individuals/self-assessment/account-overview/$utr/$taxYear"
+      val expectedUrl = url"$protocol://$host:$port/individuals/self-assessment/account-overview/$utr/${taxYear + 1}"
 
       behave like connectorBehaviour(
         mockGet(expectedUrl, headers)(_),
