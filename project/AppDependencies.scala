@@ -3,7 +3,7 @@ import sbt.*
 
 object AppDependencies {
   val playVersion      = "-play-30"
-  val bootstrapVersion = "10.5.0"
+  val bootstrapVersion = "10.7.1"
   val hmrcMongoVersion = "2.14.0"
   val pekkoVersion = "1.0.3" //version has to match already existing pekko version in play
 
@@ -11,9 +11,9 @@ object AppDependencies {
     "uk.gov.hmrc"             %% s"bootstrap-backend$playVersion"    % bootstrapVersion exclude("org.apache.commons", "commons-lang3"),
     "uk.gov.hmrc.mongo"       %% s"hmrc-mongo$playVersion"           % hmrcMongoVersion,
     "uk.gov.hmrc"             %% s"domain$playVersion"               % "13.0.0",
-    "uk.gov.hmrc"             %% s"internal-auth-client$playVersion" % "4.3.0",
+    "uk.gov.hmrc"             %% s"internal-auth-client$playVersion" % "4.4.0",
     "org.typelevel"           %% "cats-core"                         % "2.13.0",
-    "uk.gov.hmrc.objectstore" %% s"object-store-client$playVersion"  % "2.5.0",
+    "uk.gov.hmrc.objectstore" %% s"object-store-client$playVersion"  % "2.6.0",
     "com.beachape"            %% "enumeratum-play"                   % "1.9.4",
     "org.apache.commons"      % "commons-lang3"                      % "3.18.0",
     "ch.qos.logback"          % "logback-core"                       % "1.5.21",
